@@ -1,0 +1,1007 @@
+/* ==========================================================================
+   푸드홀(인제대학교) — 키오스크 스타일 정적 메뉴판
+   색상: 흰 배경 + 파란색 포인트, 회색 테두리. 그라데이션/과도한 그림자 없음.
+   ========================================================================== */
+
+:root {
+  --blue: #1957d6;
+  --blue-dark: #123f9e;
+  --border-gray: #d3d7de;
+  --text-dark: #1f2328;
+  --text-mid: #4b5563;
+  --bg-page: #f4f5f7;
+  --bg-card: #ffffff;
+  --red: #d92626;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---------------- 헤더 (고정) ---------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-gray);
+  padding: 14px 16px 12px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 0 auto 12px;
+}
+
+.site-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--blue);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.lang-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--text-mid);
+  border-radius: var(--radius-sm);
+}
+
+.lang-btn:hover,
+.lang-btn:focus-visible {
+  color: var(--blue);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.lang-btn.active {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.lang-sep {
+  color: var(--border-gray);
+}
+
+.store-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.store-tab {
+  flex: 0 0 auto;
+  min-width: 128px;
+  min-height: 84px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.store-tab-brand {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.store-tab-floor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.store-tab-pronunciation {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9aa1ab;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.store-tab.active .store-tab-floor {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.store-tab.active .store-tab-pronunciation {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.store-tab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.store-tab.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
+@media (min-width: 700px) {
+  .store-tabs { justify-content: center; overflow-x: visible; }
+}
+
+/* ---------------- 무료 콜라 쿠폰 배너 ---------------- */
+
+.cola-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 14px auto 0;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 2px solid var(--red);
+  border-radius: var(--radius-md);
+}
+
+.cola-banner[hidden] { display: none; }
+
+.cola-banner-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: #f7f8fa;
+}
+
+.cola-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cola-banner-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--red);
+  overflow-wrap: anywhere;
+}
+
+.cola-banner-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.cola-banner-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: var(--red);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cola-banner-btn:hover,
+.cola-banner-btn:focus-visible {
+  background: #b81f1f;
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .cola-banner { flex-wrap: wrap; }
+  .cola-banner-btn { width: 100%; }
+}
+
+/* ---------------- 콜라 쿠폰 상세창 ---------------- */
+
+.cola-modal-title {
+  color: var(--red);
+}
+
+.cola-stores-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--text-mid);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cola-plain-value {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.cola-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cola-show-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--red);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cola-show-btn:hover,
+.cola-show-btn:focus-visible {
+  background: #b81f1f;
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+/* ---------------- 직원에게 보여주기 화면 ---------------- */
+
+.staff-show-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 200;
+}
+
+.staff-show-overlay[hidden] { display: none; }
+
+.staff-show-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.staff-show-close:hover,
+.staff-show-close:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+.staff-show-card {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  max-width: 420px;
+  width: 100%;
+  padding: 40px 26px;
+  text-align: center;
+}
+
+.staff-show-title {
+  margin: 0 0 14px;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--red);
+  overflow-wrap: anywhere;
+}
+
+.staff-show-subtitle {
+  margin: 0 0 24px;
+  font-size: 16px;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.staff-show-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.staff-show-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+}
+
+.staff-show-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.staff-show-period {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+/* ---------------- 사장님께 말해요 ---------------- */
+
+.owner-chat-banner {
+  max-width: 1200px;
+  margin: 32px auto 0;
+  padding: 22px 18px 26px;
+  border-top: 1px solid var(--border-gray);
+  text-align: center;
+}
+
+.owner-chat-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.owner-chat-desc {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.owner-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #FEE500;
+  color: #3A1E1E;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.owner-chat-btn:hover,
+.owner-chat-btn:focus-visible {
+  background: #f5d800;
+  outline: 2px solid #3A1E1E;
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .owner-chat-btn { width: 100%; }
+}
+
+.owner-chat-fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 16px;
+  background: #FEE500;
+  color: #3A1E1E;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  max-width: calc(100vw - 32px);
+  overflow-wrap: anywhere;
+}
+
+.owner-chat-fab:hover,
+.owner-chat-fab:focus-visible {
+  background: #f5d800;
+  outline: 2px solid #3A1E1E;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .owner-chat-fab { display: inline-flex; }
+}
+
+/* ---------------- 본문 ---------------- */
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+.store-heading {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--blue);
+  margin: 4px 0 18px;
+}
+
+/* ---------------- 밥심 서브탭 (일반 메뉴 / 천원의 아침밥) ---------------- */
+
+.bapsim-subtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.bapsim-subtabs[hidden] { display: none; }
+
+.bapsim-subtab {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  color: var(--text-mid);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.bapsim-subtab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.bapsim-subtab.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
+/* ---------------- 천원의 아침밥 전용 영역 ---------------- */
+
+.breakfast-area {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--blue);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 22px 18px 24px;
+  text-align: center;
+}
+
+.breakfast-area[hidden] { display: none; }
+
+.ba-top-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--blue);
+}
+
+.ba-title {
+  margin: 8px 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--blue-dark);
+  overflow-wrap: anywhere;
+}
+
+.ba-price {
+  margin: 0 0 6px;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--blue);
+  line-height: 1.2;
+}
+
+.ba-block {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-gray);
+  text-align: left;
+}
+
+.ba-block:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ba-block-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.ba-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-mid);
+  margin-bottom: 4px;
+}
+
+.ba-value {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.ba-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.ba-list li {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.ba-steps-list {
+  counter-reset: ba-step;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ba-steps-list li {
+  counter-increment: ba-step;
+  position: relative;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px 10px 42px;
+  font-size: 14px;
+}
+
+.ba-steps-list li::before {
+  content: counter(ba-step);
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- 오늘 · 내일 아침 메뉴 카드 ---- */
+
+.ba-meal-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto 20px;
+}
+
+@media (min-width: 720px) {
+  .ba-meal-cards { grid-template-columns: 1fr 1fr; }
+}
+
+.ba-meal-card {
+  text-align: left;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.ba-meal-card-today {
+  background: #ffffff;
+  border: 2px solid var(--blue);
+}
+
+.ba-meal-card-tomorrow {
+  background: #eef2fa;
+  border: 1px solid var(--border-gray);
+}
+
+.ba-meal-card-title {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ba-meal-card-today .ba-meal-card-title {
+  color: var(--blue-dark);
+  font-size: 18px;
+}
+
+.ba-meal-card-tomorrow .ba-meal-card-title {
+  color: var(--text-mid);
+  font-size: 16px;
+}
+
+.ba-meal-card-date {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.ba-today-meal {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+  color: var(--text-dark);
+}
+
+.ba-meal-card-today .ba-today-meal li {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.ba-meal-card-tomorrow .ba-today-meal li {
+  font-size: 16px;
+  color: var(--text-mid);
+}
+
+.ba-today-meal li {
+  overflow-wrap: anywhere;
+}
+
+.today-meal-closed {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-mid);
+  text-align: center;
+  list-style: none;
+}
+
+.ba-view-original-btn {
+  min-height: 44px;
+  padding: 10px 20px;
+  background: #ffffff;
+  border: 1px solid var(--blue);
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.ba-view-original-btn[hidden] { display: none; }
+
+.ba-view-original-btn:hover,
+.ba-view-original-btn:focus-visible {
+  background: var(--blue);
+  color: #ffffff;
+  outline: none;
+}
+
+.weekly-image-modal {
+  max-width: 92vw;
+  max-height: 90vh;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekly-image-modal img {
+  max-width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.menu-grid[hidden] { display: none; }
+
+@media (min-width: 640px) {
+  .menu-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1000px) {
+  .menu-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ---------------- 메뉴 카드 ---------------- */
+
+.menu-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.card-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f7f8fa;
+  border-bottom: 1px solid var(--border-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.image-pending {
+  font-size: 13px;
+  color: var(--text-mid);
+  text-align: center;
+  padding: 0 10px;
+}
+
+.sold-out-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--red);
+  color: var(--red);
+  background: rgba(255, 255, 255, 0.9);
+  font-weight: 800;
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 12px 14px;
+  min-height: 96px;
+  text-align: center;
+}
+
+.card-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-name-ko {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.card-name-translated {
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blue-dark);
+  margin-top: 8px;
+}
+
+.card-price.tbd {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 500;
+}
+
+/* ---------------- 이전/다음 ---------------- */
+
+.group-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.group-btn {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 8px 20px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.group-btn:hover:not(:disabled),
+.group-btn:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue);
+  outline: none;
+}
+
+.group-btn:disabled {
+  color: #b8bcc4;
+  cursor: not-allowed;
+}
+
+.group-indicator {
+  font-size: 14px;
+  color: var(--text-mid);
+  min-width: 48px;
+  text-align: center;
+}
+
+.fallback-msg {
+  text-align: center;
+  color: var(--text-mid);
+  padding: 30px 10px;
+}
+
+/* ---------------- 모달 ---------------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 22, 26, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] { display: none; }
+
+.modal {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px 22px 24px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--text-mid);
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+  color: var(--blue);
+  outline: none;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--blue);
+  margin: 0 0 10px;
+}
+
+.modal-desc {
+  font-size: 15px;
+  color: var(--text-dark);
+  margin: 0 0 18px;
+}
+
+.modal-section {
+  margin-top: 16px;
+}
+
+.modal-section h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 8px;
+  border-top: 1px solid var(--border-gray);
+  padding-top: 14px;
+}
+
+.modal-section ul,
+.modal-section ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--text-mid);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

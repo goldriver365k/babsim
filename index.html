@@ -1,0 +1,2624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>푸드홀(인제대학교)</title>
+<meta name="description" content="인제대학교 푸드홀 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
+
+<!-- 홈 화면 추가(PWA) 아이콘 -->
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/icon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./images/icon/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./images/icon/apple-touch-icon.png">
+<meta name="theme-color" content="#1957d6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="푸드홀">
+<style>
+/* ==========================================================================
+   푸드홀(인제대학교) — 키오스크 스타일 정적 메뉴판
+   색상: 흰 배경 + 파란색 포인트, 회색 테두리. 그라데이션/과도한 그림자 없음.
+   ========================================================================== */
+
+:root {
+  --blue: #1957d6;
+  --blue-dark: #123f9e;
+  --border-gray: #d3d7de;
+  --text-dark: #1f2328;
+  --text-mid: #4b5563;
+  --bg-page: #f4f5f7;
+  --bg-card: #ffffff;
+  --red: #d92626;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---------------- 헤더 (고정) ---------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-gray);
+  padding: 14px 16px 12px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 0 auto 12px;
+}
+
+.site-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--blue);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.lang-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--text-mid);
+  border-radius: var(--radius-sm);
+}
+
+.lang-btn:hover,
+.lang-btn:focus-visible {
+  color: var(--blue);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.lang-btn.active {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.lang-sep {
+  color: var(--border-gray);
+}
+
+.store-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.store-tab {
+  flex: 0 0 auto;
+  min-width: 128px;
+  min-height: 84px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.store-tab-brand {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.store-tab-floor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.store-tab-pronunciation {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9aa1ab;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.store-tab.active .store-tab-floor {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.store-tab.active .store-tab-pronunciation {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.store-tab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.store-tab.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
+@media (min-width: 700px) {
+  .store-tabs { justify-content: center; overflow-x: visible; }
+}
+
+/* ---------------- 무료 콜라 쿠폰 배너 ---------------- */
+
+.cola-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 14px auto 0;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 2px solid var(--red);
+  border-radius: var(--radius-md);
+}
+
+.cola-banner[hidden] { display: none; }
+
+.cola-banner-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: #f7f8fa;
+}
+
+.cola-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cola-banner-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--red);
+  overflow-wrap: anywhere;
+}
+
+.cola-banner-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.cola-banner-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: var(--red);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cola-banner-btn:hover,
+.cola-banner-btn:focus-visible {
+  background: #b81f1f;
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .cola-banner { flex-wrap: wrap; }
+  .cola-banner-btn { width: 100%; }
+}
+
+/* ---------------- 콜라 쿠폰 상세창 ---------------- */
+
+.cola-modal-title {
+  color: var(--red);
+}
+
+.cola-stores-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--text-mid);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cola-plain-value {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.cola-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cola-show-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--red);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cola-show-btn:hover,
+.cola-show-btn:focus-visible {
+  background: #b81f1f;
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+/* ---------------- 직원에게 보여주기 화면 ---------------- */
+
+.staff-show-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 200;
+}
+
+.staff-show-overlay[hidden] { display: none; }
+
+.staff-show-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.staff-show-close:hover,
+.staff-show-close:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+.staff-show-card {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  max-width: 420px;
+  width: 100%;
+  padding: 40px 26px;
+  text-align: center;
+}
+
+.staff-show-title {
+  margin: 0 0 14px;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--red);
+  overflow-wrap: anywhere;
+}
+
+.staff-show-subtitle {
+  margin: 0 0 24px;
+  font-size: 16px;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.staff-show-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.staff-show-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+}
+
+.staff-show-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.staff-show-period {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+/* ---------------- 사장님께 말해요 ---------------- */
+
+.owner-chat-banner {
+  max-width: 1200px;
+  margin: 32px auto 0;
+  padding: 22px 18px 26px;
+  border-top: 1px solid var(--border-gray);
+  text-align: center;
+}
+
+.owner-chat-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.owner-chat-desc {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.owner-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #FEE500;
+  color: #3A1E1E;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.owner-chat-btn:hover,
+.owner-chat-btn:focus-visible {
+  background: #f5d800;
+  outline: 2px solid #3A1E1E;
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .owner-chat-btn { width: 100%; }
+}
+
+.owner-chat-fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 16px;
+  background: #FEE500;
+  color: #3A1E1E;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  max-width: calc(100vw - 32px);
+  overflow-wrap: anywhere;
+}
+
+.owner-chat-fab:hover,
+.owner-chat-fab:focus-visible {
+  background: #f5d800;
+  outline: 2px solid #3A1E1E;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .owner-chat-fab { display: inline-flex; }
+}
+
+/* ---------------- 본문 ---------------- */
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+.store-heading {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--blue);
+  margin: 4px 0 18px;
+}
+
+/* ---------------- 밥심 서브탭 (일반 메뉴 / 천원의 아침밥) ---------------- */
+
+.bapsim-subtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.bapsim-subtabs[hidden] { display: none; }
+
+.bapsim-subtab {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  color: var(--text-mid);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.bapsim-subtab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.bapsim-subtab.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
+/* ---------------- 천원의 아침밥 전용 영역 ---------------- */
+
+.breakfast-area {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--blue);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 22px 18px 24px;
+  text-align: center;
+}
+
+.breakfast-area[hidden] { display: none; }
+
+.ba-top-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--blue);
+}
+
+.ba-title {
+  margin: 8px 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--blue-dark);
+  overflow-wrap: anywhere;
+}
+
+.ba-price {
+  margin: 0 0 6px;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--blue);
+  line-height: 1.2;
+}
+
+.ba-block {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-gray);
+  text-align: left;
+}
+
+.ba-block:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ba-block-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.ba-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-mid);
+  margin-bottom: 4px;
+}
+
+.ba-value {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.ba-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.ba-list li {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.ba-steps-list {
+  counter-reset: ba-step;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ba-steps-list li {
+  counter-increment: ba-step;
+  position: relative;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px 10px 42px;
+  font-size: 14px;
+}
+
+.ba-steps-list li::before {
+  content: counter(ba-step);
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- 오늘 · 내일 아침 메뉴 카드 ---- */
+
+.ba-meal-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto 20px;
+}
+
+@media (min-width: 720px) {
+  .ba-meal-cards { grid-template-columns: 1fr 1fr; }
+}
+
+.ba-meal-card {
+  text-align: left;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.ba-meal-card-today {
+  background: #ffffff;
+  border: 2px solid var(--blue);
+}
+
+.ba-meal-card-tomorrow {
+  background: #eef2fa;
+  border: 1px solid var(--border-gray);
+}
+
+.ba-meal-card-title {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ba-meal-card-today .ba-meal-card-title {
+  color: var(--blue-dark);
+  font-size: 18px;
+}
+
+.ba-meal-card-tomorrow .ba-meal-card-title {
+  color: var(--text-mid);
+  font-size: 16px;
+}
+
+.ba-meal-card-date {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.ba-today-meal {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+  color: var(--text-dark);
+}
+
+.ba-meal-card-today .ba-today-meal li {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.ba-meal-card-tomorrow .ba-today-meal li {
+  font-size: 16px;
+  color: var(--text-mid);
+}
+
+.ba-today-meal li {
+  overflow-wrap: anywhere;
+}
+
+.today-meal-closed {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-mid);
+  text-align: center;
+  list-style: none;
+}
+
+.ba-view-original-btn {
+  min-height: 44px;
+  padding: 10px 20px;
+  background: #ffffff;
+  border: 1px solid var(--blue);
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.ba-view-original-btn[hidden] { display: none; }
+
+.ba-view-original-btn:hover,
+.ba-view-original-btn:focus-visible {
+  background: var(--blue);
+  color: #ffffff;
+  outline: none;
+}
+
+.weekly-image-modal {
+  max-width: 92vw;
+  max-height: 90vh;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekly-image-modal img {
+  max-width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.menu-grid[hidden] { display: none; }
+
+@media (min-width: 640px) {
+  .menu-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1000px) {
+  .menu-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ---------------- 메뉴 카드 ---------------- */
+
+.menu-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.card-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f7f8fa;
+  border-bottom: 1px solid var(--border-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.image-pending {
+  font-size: 13px;
+  color: var(--text-mid);
+  text-align: center;
+  padding: 0 10px;
+}
+
+.sold-out-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--red);
+  color: var(--red);
+  background: rgba(255, 255, 255, 0.9);
+  font-weight: 800;
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 12px 14px;
+  min-height: 96px;
+  text-align: center;
+}
+
+.card-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-name-ko {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.card-name-translated {
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blue-dark);
+  margin-top: 8px;
+}
+
+.card-price.tbd {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 500;
+}
+
+/* ---------------- 이전/다음 ---------------- */
+
+.group-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.group-btn {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 8px 20px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.group-btn:hover:not(:disabled),
+.group-btn:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue);
+  outline: none;
+}
+
+.group-btn:disabled {
+  color: #b8bcc4;
+  cursor: not-allowed;
+}
+
+.group-indicator {
+  font-size: 14px;
+  color: var(--text-mid);
+  min-width: 48px;
+  text-align: center;
+}
+
+.fallback-msg {
+  text-align: center;
+  color: var(--text-mid);
+  padding: 30px 10px;
+}
+
+/* ---------------- 모달 ---------------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 22, 26, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] { display: none; }
+
+.modal {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px 22px 24px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--text-mid);
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+  color: var(--blue);
+  outline: none;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--blue);
+  margin: 0 0 10px;
+}
+
+.modal-desc {
+  font-size: 15px;
+  color: var(--text-dark);
+  margin: 0 0 18px;
+}
+
+.modal-section {
+  margin-top: 16px;
+}
+
+.modal-section h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 8px;
+  border-top: 1px solid var(--border-gray);
+  padding-top: 14px;
+}
+
+.modal-section ul,
+.modal-section ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--text-mid);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-top">
+    <h1 class="site-title" id="siteTitle">푸드홀(인제대학교)</h1>
+    <div class="lang-select" role="group" aria-label="언어 선택" id="langSelect">
+      <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+    </div>
+  </div>
+  <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
+    <button type="button" class="store-tab" data-store="bapsim">밥심<br>1층</button>
+    <button type="button" class="store-tab" data-store="mangwon">만권화밥<br>1층</button>
+    <button type="button" class="store-tab" data-store="hururuk">후루룩찹찹<br>2층</button>
+  </nav>
+</header>
+
+<div class="cola-banner" id="colaBanner" hidden>
+  <img class="cola-banner-icon" src="images/bapsim/cola.jpg" alt="" aria-hidden="true">
+  <div class="cola-banner-text">
+    <p class="cola-banner-title" id="colaBannerTitle">🎁 무료 콜라 쿠폰</p>
+    <p class="cola-banner-subtitle" id="colaBannerSubtitle">음식 주문하고 콜라 1캔 무료로 받으세요!</p>
+  </div>
+  <button type="button" class="cola-banner-btn" id="colaBannerBtn">쿠폰 보기</button>
+</div>
+
+<main>
+  <h2 class="store-heading" id="storeHeading">밥심1층</h2>
+
+  <div class="bapsim-subtabs" id="bapsimSubtabs" hidden role="group" aria-label="밥심 화면 전환">
+    <button type="button" class="bapsim-subtab" id="bapsimTabBreakfast">천원의 아침밥</button>
+    <button type="button" class="bapsim-subtab" id="bapsimTabMenu">일반 메뉴</button>
+  </div>
+
+  <div class="menu-grid" id="menuGrid" aria-live="polite"></div>
+
+  <section class="breakfast-area" id="breakfastArea" hidden aria-labelledby="baTitle">
+    <div class="ba-top-strip"></div>
+    <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
+    <p class="ba-price" id="baPriceValue">1,000원</p>
+
+    <div class="ba-meal-cards">
+      <div class="ba-meal-card ba-meal-card-today">
+        <h4 class="ba-meal-card-title" id="baTodayMenuTitle">오늘의 아침 메뉴</h4>
+        <p class="ba-meal-card-date" id="baTodayDateValue"></p>
+        <ul class="ba-today-meal" id="todayMealList"></ul>
+      </div>
+      <div class="ba-meal-card ba-meal-card-tomorrow">
+        <h4 class="ba-meal-card-title" id="baTomorrowMenuTitle">내일의 아침 메뉴</h4>
+        <p class="ba-meal-card-date" id="baTomorrowDateValue"></p>
+        <ul class="ba-today-meal" id="tomorrowMealList"></ul>
+      </div>
+    </div>
+
+    <div class="ba-block">
+      <span class="ba-label" id="baHoursLabel"></span>
+      <p class="ba-value" id="baHoursValue"></p>
+    </div>
+
+    <div class="ba-block">
+      <span class="ba-label" id="baEligLabel"></span>
+      <ul class="ba-list" id="baEligList"></ul>
+    </div>
+
+    <div class="ba-block">
+      <span class="ba-label" id="baStepsLabel"></span>
+      <ol class="ba-list ba-steps-list" id="baStepsList"></ol>
+    </div>
+
+    <button type="button" class="ba-view-original-btn" id="baViewOriginalBtn" hidden>주간 메뉴 원본 보기</button>
+  </section>
+
+  <div class="group-nav" id="groupNav" hidden>
+    <button type="button" class="group-btn" id="prevBtn">이전</button>
+    <span class="group-indicator" id="groupIndicator"></span>
+    <button type="button" class="group-btn" id="nextBtn">다음</button>
+  </div>
+
+  <p class="fallback-msg" id="fallbackMsg" hidden></p>
+</main>
+
+<footer class="owner-chat-banner" id="ownerChatBanner">
+  <h3 class="owner-chat-title" id="ownerChatTitle">사장님께 말해요</h3>
+  <p class="owner-chat-desc" id="ownerChatDescLine1">메뉴 제안, 칭찬, 불편사항을 편하게 알려주세요.</p>
+  <p class="owner-chat-desc" id="ownerChatDescLine2">작성한 내용은 홈페이지에 공개되거나 저장되지 않습니다.</p>
+  <a class="owner-chat-btn" id="ownerChatBtn" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer">
+    <span aria-hidden="true">💬</span>
+    <span id="ownerChatBtnLabel">카카오톡으로 말하기</span>
+  </a>
+</footer>
+
+<a class="owner-chat-fab" id="ownerChatFab" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer" aria-label="사장님께 말해요">
+  <span aria-hidden="true">💬</span>
+  <span id="ownerChatFabLabel">사장님께 말해요</span>
+</a>
+
+<!-- 주간 메뉴 원본 이미지 팝업 -->
+<div class="modal-overlay" id="weeklyImageOverlay" hidden>
+  <div class="modal weekly-image-modal" role="dialog" aria-modal="true" aria-label="주간 메뉴 원본 이미지">
+    <button type="button" class="modal-close" id="weeklyImageClose" aria-label="닫기">×</button>
+    <img id="weeklyImageImg" src="" alt="">
+  </div>
+</div>
+
+<!-- 무료 콜라 쿠폰 상세창 -->
+<div class="modal-overlay" id="colaDetailOverlay" hidden>
+  <div class="modal cola-modal" role="dialog" aria-modal="true" aria-labelledby="colaDetailTitle">
+    <button type="button" class="modal-close" id="colaDetailClose" aria-label="닫기">×</button>
+    <h3 class="modal-title cola-modal-title" id="colaDetailTitle">무료 콜라 쿠폰</h3>
+    <p class="modal-desc" id="colaDetailSubtitle"></p>
+
+    <div class="modal-section">
+      <h4 id="colaStoresLabel"></h4>
+      <ul id="colaStoresList" class="cola-stores-list"></ul>
+    </div>
+    <div class="modal-section">
+      <h4 id="colaConditionLabel"></h4>
+      <ul id="colaConditionList"></ul>
+    </div>
+    <div class="modal-section">
+      <h4 id="colaCountLabel"></h4>
+      <p id="colaCountValue" class="cola-plain-value"></p>
+    </div>
+    <div class="modal-section">
+      <h4 id="colaHowToLabel"></h4>
+      <p id="colaHowToValue" class="cola-plain-value"></p>
+    </div>
+    <div class="modal-section">
+      <h4 id="colaCaptureLabel"></h4>
+      <p id="colaCaptureValue" class="cola-plain-value"></p>
+    </div>
+    <div class="modal-section">
+      <h4 id="colaPeriodLabel"></h4>
+      <p id="colaPeriodValue" class="cola-plain-value"></p>
+    </div>
+
+    <ul class="bp-notes" id="colaNotesList"></ul>
+
+    <div class="cola-modal-actions">
+      <button type="button" class="cola-show-btn" id="colaShowStaffBtn">직원에게 보여주기</button>
+      <button type="button" class="group-btn" id="colaDetailCloseBtn">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 직원에게 보여주기 화면 -->
+<div class="staff-show-overlay" id="staffShowOverlay" hidden>
+  <button type="button" class="staff-show-close" id="staffShowClose" aria-label="닫기">×</button>
+  <div class="staff-show-card">
+    <p class="staff-show-title" id="staffShowTitle">무료 콜라 1캔</p>
+    <p class="staff-show-subtitle" id="staffShowSubtitle"></p>
+    <div class="staff-show-field">
+      <span class="staff-show-label" id="staffShowStoresLabel"></span>
+      <span class="staff-show-value" id="staffShowStoresValue"></span>
+    </div>
+    <p class="staff-show-period" id="staffShowPeriod"></p>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   공통 UI 문구 번역 (매장명, 버튼, 안내문, 오류문)
+   ========================================================================== */
+
+const UI_TEXT = {
+  siteTitle: {
+    ko: "푸드홀(인제대학교)",
+    en: "Food Hall (Inje University)",
+    zh: "美食广场(仁济大学)",
+    vi: "Food Hall (Đại học Inje)",
+    mn: "Хүнсний танхим (Inje их сургууль)"
+  },
+  storeNames: {
+    bapsim: {
+      brand: "밥심",
+      floor: { ko: "1층", en: "1st Floor", zh: "1楼", vi: "Tầng 1", mn: "1-р давхар" },
+      pronunciation: { en: "Bap-sim", zh: "巴普心", vi: "Báp-sim", mn: "Бап-сим" }
+    },
+    mangwon: {
+      brand: "만권화밥",
+      floor: { ko: "1층", en: "1st Floor", zh: "1楼", vi: "Tầng 1", mn: "1-р давхар" },
+      pronunciation: { en: "Man-gwon-hwa-bap", zh: "曼关花巴普", vi: "Man-guôn-hoa-báp", mn: "Ман-гвон-хва-бап" }
+    },
+    hururuk: {
+      brand: "후루룩찹찹",
+      floor: { ko: "2층", en: "2nd Floor", zh: "2楼", vi: "Tầng 2", mn: "2-р давхар" },
+      pronunciation: { en: "Hu-ru-ruk-chap-chap", zh: "呼噜噜恰普恰普", vi: "Hu-ru-rúc-cháp-cháp", mn: "Ху-ру-рук-чап-чап" }
+    }
+  },
+  storeHeading: {
+    bapsim: { ko: "밥심1층", en: "밥심 1F", zh: "밥심 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар" },
+    mangwon: { ko: "만권화밥1층", en: "만권화밥 1F", zh: "만권화밥 1楼", vi: "만권화밥, tầng 1", mn: "만권화밥, 1-р давхар" },
+    hururuk: { ko: "후루룩찹찹 2층", en: "후루룩찹찹 2F", zh: "후루룩찹찹 2楼", vi: "후루룩찹찹, tầng 2", mn: "후루룩찹찹, 2-р давхар" }
+  },
+  langLabel: { ko: "언어 선택", en: "Language", zh: "语言", vi: "Ngôn ngữ", mn: "Хэл сонгох" },
+  langNames: {
+    ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", mn: "Монгол"
+  },
+  prevButton: { ko: "이전", en: "Previous", zh: "上一页", vi: "Trước", mn: "Өмнөх" },
+  nextButton: { ko: "다음", en: "Next", zh: "下一页", vi: "Tiếp theo", mn: "Дараах" },
+  soldOut: { ko: "품절", en: "SOLD OUT", zh: "已售罄", vi: "Hết hàng", mn: "Дууссан" },
+  closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах" },
+  imagePending: { ko: "이미지 준비 중", en: "Image coming soon", zh: "图片准备中", vi: "Hình ảnh đang chuẩn bị", mn: "Зураг бэлтгэж байна" },
+  priceTBD: { ko: "가격 확인 필요", en: "Price to be confirmed", zh: "价格待确认", vi: "Giá đang xác nhận", mn: "Үнийг баталгаажуулах шаардлагатай" },
+  won: { ko: "원", en: "won", zh: "韩元", vi: "won", mn: " вон" },
+  loadError: {
+    ko: "메뉴를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    en: "There was a problem loading the menu. Please try again shortly.",
+    zh: "加载菜单时出现问题，请稍后重试。",
+    vi: "Đã xảy ra sự cố khi tải menu. Vui lòng thử lại sau.",
+    mn: "Цэсийг ачаалахад алдаа гарлаа. Түр хүлээгээд дахин оролдоно уу."
+  },
+  infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл" },
+  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" }
+};
+
+</script>
+<script>
+/* ==========================================================================
+   메뉴 데이터
+   - 이 파일만 수정하면 가격/품절/메뉴명이 바로 반영됩니다.
+   - price: 숫자만 입력 (화면에는 자동으로 쉼표+원이 붙습니다)
+   - soldOut: true 로 바꾸면 품절 표시가 나타납니다.
+   - needsReview: true 인 항목은 원본 사진과 이름/가격이 다르게 보이거나
+     확인이 필요한 항목입니다. 확인 후 false 로 바꿔주세요.
+   - image: null 인 항목은 원본 사진에서 음식 이미지를 추출할 수 없었던
+     항목입니다. "이미지 준비 중"으로 표시됩니다.
+   ========================================================================== */
+
+const MENU_DATA = [
+
+  /* ------------------------- 밥심 1층 ------------------------- */
+  {
+    id: "bapsim-breakfast-1000",
+    store: "bapsim", group: 1, order: 1,
+    image: null,
+    name: { ko: "천원의아침밥", en: "Breakfast for 1,000 Won", zh: "1000韩元早餐", vi: "Bữa sáng 1.000 Won", mn: "1,000 воны өглөөний хоол" },
+    price: 1000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-breakfast-buffet",
+    store: "bapsim", group: 1, order: 2,
+    image: "images/bapsim/breakfast-buffet-icon.jpg",
+    name: { ko: "아침뷔페", en: "Breakfast Buffet", zh: "早餐自助", vi: "Buffet sáng", mn: "Өглөөний буфет" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-lunch-buffet",
+    store: "bapsim", group: 1, order: 3,
+    image: "images/bapsim/lunch-buffet-icon.jpg",
+    name: { ko: "점심뷔페", en: "Lunch Buffet", zh: "午餐自助", vi: "Buffet trưa", mn: "Өдрийн хоолны буфет" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-lunch-buffet-ramen",
+    store: "bapsim", group: 1, order: 4,
+    image: "images/bapsim/korean-buffet-instant-ramen.png",
+    name: { ko: "한식뷔페 즉석라면", en: "Korean Buffet + Instant Ramen", zh: "韩式自助餐＋方便面", vi: "Buffet Hàn Quốc + Mì ăn liền", mn: "Солонгос хоолны буфет + Бэлэн рамен" },
+    price: 8000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-self-ramen",
+    store: "bapsim", group: 1, order: 5,
+    image: "images/bapsim/self-ramen.jpg",
+    name: { ko: "셀프라면", en: "Self-Serve Ramen", zh: "自助拉面", vi: "Mì tự phục vụ", mn: "Өөрөө хийх рамен" },
+    price: 3000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-fried-eggs",
+    store: "bapsim", group: 1, order: 6,
+    image: "images/bapsim/fried-eggs.jpg",
+    name: { ko: "계란후라이 2개", en: "2 Fried Eggs", zh: "煎蛋2个", vi: "2 quả trứng ốp la", mn: "2 ширхэг шарсан өндөг" },
+    price: 1000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-pork-bulbaek",
+    store: "bapsim", group: 1, order: 7,
+    image: null,
+    name: { ko: "돼지불백 한접시 200g", en: "Pork Bulgogi Plate 200g", zh: "烤猪肉一份200g", vi: "Thịt heo nướng 200g", mn: "Амталж шарсан гахайн мах 200г таваг" },
+    price: null, soldOut: true, needsReview: true
+    // 원본 키오스크 사진과 정확한 가격 확인 필요 (가격이 취소선으로 가려져 있음)
+  },
+  {
+    id: "bapsim-cola",
+    store: "bapsim", group: 1, order: 8,
+    image: "images/bapsim/cola.jpg",
+    name: { ko: "콜라(355ml)밥심", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола (355мл)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-zero-cola",
+    store: "bapsim", group: 1, order: 9,
+    image: "images/bapsim/zero-cola.jpg",
+    name: { ko: "제로콜라(355ml)밥심", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола (355мл)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-fanta-pine",
+    store: "bapsim", group: 1, order: 10,
+    image: "images/bapsim/fanta-pine.jpg",
+    name: { ko: "환타파인(355ml)밥심", en: "Fanta Pineapple (355ml)", zh: "芬达菠萝(355ml)", vi: "Fanta Dứa (355ml)", mn: "Фанта ананас (355мл)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-sprite",
+    store: "bapsim", group: 1, order: 11,
+    image: "images/bapsim/sprite.jpg",
+    name: { ko: "스프라이트(355ml)밥심", en: "Sprite (355ml)", zh: "雪碧(355ml)", vi: "Sprite (355ml)", mn: "Спрайт (355мл)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 만권화밥 1층 - 화면1 ------------------------- */
+  {
+    id: "mangwon-mul-naengmyeon",
+    store: "mangwon", group: 1, order: 1,
+    image: "images/mangwon/mul-naengmyeon.jpg",
+    name: { ko: "물냉면", en: "Mul Naengmyeon (Cold Noodle Soup)", zh: "水冷面", vi: "Mì lạnh nước", mn: "Хүйтэн шөлтэй гоймон" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-mul-naengmyeon-bulgogi",
+    store: "mangwon", group: 1, order: 2,
+    image: "images/mangwon/mul-naengmyeon-bulgogi.jpg",
+    name: { ko: "물냉면 + 돼지불고기", en: "Mul Naengmyeon + Pork Bulgogi", zh: "水冷面+烤猪肉", vi: "Mì lạnh nước + Thịt heo nướng", mn: "Хүйтэн шөлтэй гоймон + Амталж шарсан гахайн мах" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bibim-naengmyeon",
+    store: "mangwon", group: 1, order: 3,
+    image: "images/mangwon/bibim-naengmyeon.jpg",
+    name: { ko: "비빔냉면", en: "Bibim Naengmyeon (Spicy Cold Noodles)", zh: "拌冷面", vi: "Mì lạnh trộn cay", mn: "Халуун ногоотой хүйтэн гоймон" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bibim-naengmyeon-bulgogi",
+    store: "mangwon", group: 1, order: 4,
+    image: "images/mangwon/bibim-naengmyeon-bulgogi.jpg",
+    name: { ko: "비빔냉면 + 돼지불고기", en: "Bibim Naengmyeon + Pork Bulgogi", zh: "拌冷面+烤猪肉", vi: "Mì lạnh trộn cay + Thịt heo nướng", mn: "Халуун ногоотой хүйтэн гоймон + Амталж шарсан гахайн мах" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-seafood-sundubu",
+    store: "mangwon", group: 1, order: 5,
+    image: "images/mangwon/seafood-sundubu.jpg",
+    name: { ko: "해물순두부(공기밥포함)", en: "Seafood Sundubu (Rice Included)", zh: "海鲜豆腐汤(含米饭)", vi: "Canh đậu phụ hải sản (kèm cơm)", mn: "Далайн бүтээгдэхүүнтэй зөөлөн дүпүний шөл (будаатай)" },
+    price: 6000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-usamgyeop-sundubu",
+    store: "mangwon", group: 1, order: 6,
+    image: "images/mangwon/usamgyeop-sundubu.jpg",
+    name: { ko: "우삼겹순두부", en: "Beef Belly Sundubu", zh: "牛五花豆腐汤", vi: "Canh đậu phụ ba chỉ bò", mn: "Үхрийн цээжний махтай зөөлөн дүпүний шөл" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-jikhwa-beef-deopbap",
+    store: "mangwon", group: 1, order: 7,
+    image: "images/mangwon/jikhwa-beef-deopbap.jpg",
+    name: { ko: "직화소고기덮밥", en: "Grilled Beef Rice Bowl", zh: "炭烤牛肉盖饭", vi: "Cơm bò nướng", mn: "Гал дээр шарсан үхрийн махтай будаа" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dwaeji-bulbaek",
+    store: "mangwon", group: 1, order: 8,
+    image: "images/mangwon/dwaeji-bulbaek.jpg",
+    name: { ko: "돼지불백", en: "Pork Bulgogi", zh: "烤猪肉", vi: "Thịt heo nướng", mn: "Амталж шарсан гахайн мах" },
+    price: 6500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-jikhwa-beef-kimchi-deopbap",
+    store: "mangwon", group: 1, order: 9,
+    image: "images/mangwon/bulhyang-jikhwa-beef-kimchi-deopbap.jpg",
+    name: { ko: "불향직화소고기김치덮밥", en: "Smoky Grilled Beef Kimchi Rice Bowl", zh: "炭火牛肉泡菜盖饭", vi: "Cơm bò nướng kimchi", mn: "Утаат гал дээр шарсан үхэр, кимчитэй будаа" },
+    price: 7400, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-jikhwa-pork-kimchi-deopbap",
+    store: "mangwon", group: 1, order: 10,
+    image: "images/mangwon/bulhyang-jikhwa-pork-kimchi-deopbap.jpg",
+    name: { ko: "불향직화돼지김치덮밥", en: "Smoky Grilled Pork Kimchi Rice Bowl", zh: "炭火猪肉泡菜盖饭", vi: "Cơm heo nướng kimchi", mn: "Утаат гал дээр шарсан гахай, кимчитэй будаа" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dwaeji-kimchi-jjigae",
+    store: "mangwon", group: 1, order: 11,
+    image: "images/mangwon/dwaeji-kimchi-jjigae.jpg",
+    name: { ko: "돼지김치찌개(공기밥포함)", en: "Pork Kimchi Stew (Rice Included)", zh: "猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo (kèm cơm)", mn: "Гахайн кимчийн шөл (будаатай)" },
+    price: 6500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-spam-dwaeji-kimchi-jjigae",
+    store: "mangwon", group: 1, order: 12,
+    image: "images/mangwon/spam-dwaeji-kimchi-jjigae.jpg",
+    name: { ko: "스팸돼지김치찌개(공기밥포함)", en: "Spam & Pork Kimchi Stew (Rice Included)", zh: "午餐肉猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo & Spam (kèm cơm)", mn: "Спам, гахайн кимчийн шөл (будаатай)" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 만권화밥 1층 - 화면2 ------------------------- */
+  {
+    id: "mangwon-spam-sundubu",
+    store: "mangwon", group: 2, order: 1,
+    image: "images/mangwon/spam-sundubu.jpg",
+    name: { ko: "스팸순두부(공기밥포함)", en: "Spam Sundubu (Rice Included)", zh: "午餐肉豆腐汤(含米饭)", vi: "Canh đậu phụ Spam (kèm cơm)", mn: "Спамтай зөөлөн дүпүний шөл (будаатай)" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-jikhwa-beef-jjigae-set",
+    store: "mangwon", group: 2, order: 2,
+    image: "images/mangwon/jikhwa-beef-jjigae-set.jpg",
+    name: { ko: "직화소고기 + 찌개", en: "Grilled Beef + Stew Set", zh: "炭烤牛肉+汤套餐", vi: "Bò nướng + Canh", mn: "Гал дээр шарсан үхрийн мах + шөл" },
+    price: 9900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dwaeji-bulbaek-jjigae-set",
+    store: "mangwon", group: 2, order: 3,
+    image: "images/mangwon/dwaeji-bulbaek-jjigae-set.jpg",
+    name: { ko: "돼지불백 + 찌개", en: "Pork Bulgogi + Stew Set", zh: "烤猪肉+汤套餐", vi: "Thịt heo nướng + Canh", mn: "Амталж шарсан гахайн мах + шөл" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-garlic-soy-chicken-deopbap",
+    store: "mangwon", group: 2, order: 4,
+    image: "images/mangwon/garlic-soy-chicken-deopbap.jpg",
+    name: { ko: "갈릭소이치킨덮밥", en: "Garlic Soy Chicken Rice Bowl", zh: "蒜香酱油鸡肉盖饭", vi: "Cơm gà sốt tỏi tương", mn: "Сармис-соевын соустай тахианы будаа" },
+    price: 5900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-gochujang-chicken-deopbap",
+    store: "mangwon", group: 2, order: 5,
+    image: "images/mangwon/bulhyang-gochujang-chicken-deopbap.jpg",
+    name: { ko: "불향고추장치킨덮밥", en: "Smoky Gochujang Chicken Rice Bowl", zh: "炭火辣椒酱鸡肉盖饭", vi: "Cơm gà sốt ớt cay", mn: "Утаат гочужан соустай тахианы будаа" },
+    price: 5900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-garlic-soy-chicken-deopbap-jjigae-set",
+    store: "mangwon", group: 2, order: 6,
+    image: "images/mangwon/garlic-soy-chicken-deopbap-jjigae-set.jpg",
+    name: { ko: "갈릭소이치킨덮밥 + 찌개", en: "Garlic Soy Chicken Rice Bowl + Stew", zh: "蒜香酱油鸡肉盖饭+汤", vi: "Cơm gà sốt tỏi tương + Canh", mn: "Сармис-соевын соустай тахианы будаа + шөл" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-gochujang-chicken-deopbap-jjigae-set",
+    store: "mangwon", group: 2, order: 7,
+    image: "images/mangwon/bulhyang-gochujang-chicken-deopbap-jjigae-set.jpg",
+    name: { ko: "불향고추장치킨덮밥 + 찌개", en: "Smoky Gochujang Chicken Rice Bowl + Stew", zh: "炭火辣椒酱鸡肉盖饭+汤", vi: "Cơm gà sốt ớt cay + Canh", mn: "Утаат гочужан соустай тахианы будаа + шөл" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-flying-fish-roe-bap",
+    store: "mangwon", group: 2, order: 8,
+    image: "images/mangwon/flying-fish-roe-bap.jpg",
+    name: { ko: "날아라날치알밥", en: "Flying Fish Roe Rice Bowl", zh: "飞鱼子拌饭", vi: "Cơm trứng cá bay", mn: "Нисдэг загасны өндөгтэй будаа" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-spam-flying-fish-roe-bap",
+    store: "mangwon", group: 2, order: 9,
+    image: "images/mangwon/spam-flying-fish-roe-bap.jpg",
+    name: { ko: "스팸날치알밥", en: "Spam & Flying Fish Roe Rice Bowl", zh: "午餐肉飞鱼子拌饭", vi: "Cơm trứng cá bay & Spam", mn: "Спамтай нисдэг загасны өндөгний будаа" },
+    price: 7000, soldOut: false, needsReview: true
+    // 원본 키오스크 사진과 정확한 메뉴명 확인 필요 (사진에는 "스팸펄알밥"으로 보임, 지시서 기준 "스팸날치알밥" 사용)
+  },
+  {
+    id: "mangwon-dukkeobi-yukgaejang",
+    store: "mangwon", group: 2, order: 10,
+    image: "images/mangwon/dukkeobi-yukgaejang.jpg",
+    name: { ko: "두꺼비육개장", en: "Dukkeobi Yukgaejang (Spicy Beef Soup)", zh: "杜鸡比牛肉辣汤", vi: "Canh cay Yukgaejang Dukkeobi", mn: "Дуккэби югэжан (халуун үхрийн шөл)" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dukkeobi-udon-yukgaejang",
+    store: "mangwon", group: 2, order: 11,
+    image: "images/mangwon/dukkeobi-udon-yukgaejang.jpg",
+    name: { ko: "두꺼비우동육개장", en: "Dukkeobi Udon Yukgaejang", zh: "杜鸡比乌冬辣汤", vi: "Canh cay Yukgaejang Udon Dukkeobi", mn: "Дуккэби удон югэжан" },
+    price: 5500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-jikhwa-samgyeop-deopbap",
+    store: "mangwon", group: 2, order: 12,
+    image: "images/mangwon/jikhwa-samgyeop-deopbap.jpg",
+    name: { ko: "직화삼겹덮밥", en: "Grilled Pork Belly Rice Bowl", zh: "炭烤五花肉盖饭", vi: "Cơm ba chỉ nướng", mn: "Гал дээр шарсан цээжний махтай будаа" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면1 ------------------------- */
+  {
+    id: "hururuk-usamgyeop-malatang-samgak-kimbap-set",
+    store: "hururuk", group: 1, order: 1,
+    image: "images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
+    name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл" },
+    price: 11900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bomb-riceNoodle-samgak-kimbap-set",
+    store: "hururuk", group: 1, order: 2,
+    image: "images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
+    name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл" },
+    price: 11900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set",
+    store: "hururuk", group: 1, order: 3,
+    image: "images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
+    name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл" },
+    price: 12500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-malatang",
+    store: "hururuk", group: 1, order: 4,
+    image: "images/hururuk/usamgyeop-malatang.jpg",
+    name: { ko: "우삼겹마라탕", en: "Beef Belly Malatang", zh: "牛五花麻辣烫", vi: "Malatang ba chỉ bò", mn: "Үхрийн цээжний махтай малатан" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bomb-rice-noodle",
+    store: "hururuk", group: 1, order: 5,
+    image: "images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
+    name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-deopbap",
+    store: "hururuk", group: 1, order: 6,
+    image: "images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
+    name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-pork-malatang",
+    store: "hururuk", group: 1, order: 7,
+    image: "images/hururuk/pork-malatang.jpg",
+    name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-king-chicken-rice-noodles",
+    store: "hururuk", group: 1, order: 8,
+    image: "images/hururuk/king-chicken-rice-noodles.jpg",
+    name: { ko: "왕다리쌀국수", en: "Chicken Leg Pho", zh: "大鸡腿米粉", vi: "Phở đùi gà lớn", mn: "Том тахианы хөлтэй будааны гоймон" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-rice-noodle",
+    store: "hururuk", group: 1, order: 9,
+    image: "images/hururuk/duthum-chashu-rice-noodle.jpg",
+    name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-ganjang-usamgyeop-bokkeummyeon",
+    store: "hururuk", group: 1, order: 10,
+    image: "images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
+    name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-hwakkeun-gochujang-usamgyeop-bokkeummyeon",
+    store: "hururuk", group: 1, order: 11,
+    image: "images/hururuk/hwakkeun-gochujang-usamgyeop-bokkeummyeon.jpg",
+    name: { ko: "화끈고추장우삼겹볶음면", en: "Fiery Gochujang Beef Belly Stir-Fried Noodles", zh: "香辣辣椒酱牛五花炒面", vi: "Mì xào ba chỉ bò sốt ớt cay", mn: "Халуун гочужан соустай үхрийн цээжний хуурсан гоймон" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-meat-ragu-spaghetti",
+    store: "hururuk", group: 1, order: 12,
+    image: "images/hururuk/meat-ragu-spaghetti.jpg",
+    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면2 ------------------------- */
+  {
+    id: "hururuk-meat-ragu-deopbap",
+    store: "hururuk", group: 2, order: 1,
+    image: "images/hururuk/meat-ragu-deopbap.jpg",
+    name: { ko: "고기듬뿍 라구덮밥", en: "Meat-Loaded Ragu Rice Bowl", zh: "肉酱盖饭(加量)", vi: "Cơm sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай будаа" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sausage-ragu-deopbap",
+    store: "hururuk", group: 2, order: 2,
+    image: "images/hururuk/sausage-ragu-deopbap.jpg",
+    name: { ko: "통소세지 라구덮밥", en: "Whole Sausage Ragu Rice Bowl", zh: "整根香肠肉酱盖饭", vi: "Cơm sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай будаа" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 3,
+    image: "images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
+    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sausage-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 4,
+    image: "images/hururuk/sausage-ragu-spaghetti.jpg",
+    name: { ko: "통소세지 라구스파게티", en: "Whole Sausage Ragu Spaghetti", zh: "整根香肠肉酱意面", vi: "Spaghetti sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай спагетти" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 5,
+    image: "images/hururuk/duthum-chashu-ragu-spaghetti.jpg",
+    name: { ko: "두툼차슈 라구스파게티", en: "Thick-Cut Chashu Ragu Spaghetti", zh: "厚切叉烧肉酱意面", vi: "Spaghetti sốt ragu xá xíu dày", mn: "Зузаан чашүтэй рагу соустай спагетти" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-clam-chowder-spaghetti",
+    store: "hururuk", group: 2, order: 6,
+    image: "images/hururuk/clam-chowder-spaghetti.jpg",
+    name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-eolkeun-usamgyeop-haejang-pasta",
+    store: "hururuk", group: 2, order: 7,
+    image: "images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
+    name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-kimchi-cream-pasta",
+    store: "hururuk", group: 2, order: 8,
+    image: "images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
+    name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-kimchi-bulgogi-deopbap",
+    store: "hururuk", group: 2, order: 9,
+    image: "images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
+    name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-garlic-pork-deopbap",
+    store: "hururuk", group: 2, order: 10,
+    image: "images/hururuk/garlic-pork-deopbap.jpg",
+    name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-deopbap",
+    store: "hururuk", group: 2, order: 11,
+    image: "images/hururuk/duthum-chashu-deopbap.jpg",
+    name: { ko: "두툼차슈덮밥", en: "Thick-Cut Chashu Rice Bowl", zh: "厚切叉烧盖饭", vi: "Cơm xá xíu dày", mn: "Зузаан чашүтэй будаа" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-tomato-pork-curry",
+    store: "hururuk", group: 2, order: 12,
+    image: "images/hururuk/tomato-pork-curry.jpg",
+    name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면3 ------------------------- */
+  {
+    id: "hururuk-italian-crispy-pork-cheese-deopbap",
+    store: "hururuk", group: 3, order: 1,
+    image: "images/hururuk/italian-crispy-pork-cheese-deopbap.jpg",
+    name: { ko: "이태리 바삭포크치즈덮밥", en: "Italian Crispy Pork & Cheese Rice Bowl", zh: "意式脆皮猪肉芝士盖饭", vi: "Cơm heo giòn phô mai kiểu Ý", mn: "Итали маягийн хурц, бяслагтай гахайн махны будаа" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-ramen-rice",
+    store: "hururuk", group: 3, order: 2,
+    image: null,
+    name: { ko: "우삼겹라면 + 공기밥", en: "Beef Belly Ramen + Rice", zh: "牛五花拉面+米饭", vi: "Mì ramen ba chỉ bò + Cơm", mn: "Үхрийн цээжний махтай рамен + будаа" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-cola",
+    store: "hururuk", group: 3, order: 3,
+    image: "images/hururuk/cola.jpg",
+    name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-zero-cola",
+    store: "hururuk", group: 3, order: 4,
+    image: "images/hururuk/zero-cola.jpg",
+    name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-fanta",
+    store: "hururuk", group: 3, order: 5,
+    image: "images/hururuk/fanta.jpg",
+    name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта" },
+    price: 1500, soldOut: false, needsReview: false
+  }
+];
+
+/* 천원의 아침밥 안내 (밥심 화면 상단 고정 안내칸 + 상세 모달 공용 데이터) */
+const BREAKFAST_INFO = {
+  title: { ko: "천원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐", vi: "Bữa sáng 1.000 won", mn: "1,000 воны өглөөний хоол" },
+  tabLabel: { ko: "일반 메뉴", en: "Menu", zh: "普通菜单", vi: "Thực đơn thường", mn: "Ерөнхий цэс" },
+  todayMenuTitle: { ko: "오늘의 아침 메뉴", en: "Today\u2019s Breakfast Menu", zh: "今日早餐菜单", vi: "Thực đơn bữa sáng hôm nay", mn: "Өнөөдрийн өглөөний цэс" },
+  tomorrowMenuTitle: { ko: "내일의 아침 메뉴", en: "Tomorrow\u2019s Breakfast Menu", zh: "明日早餐菜单", vi: "Thực đơn bữa sáng ngày mai", mn: "Маргаашийн өглөөний цэс" },
+  todayClosedMessage: {
+    ko: "오늘은 천원의 아침밥을 운영하지 않습니다.",
+    en: "The 1,000 Won Breakfast is not available today.",
+    zh: "今天不提供1,000韩元早餐。",
+    vi: "Hôm nay không phục vụ bữa sáng 1.000 won.",
+    mn: "Өнөөдөр 1,000 воны өглөөний хоол үйлчлэхгүй."
+  },
+  tomorrowClosedMessage: {
+    ko: "내일은 천원의 아침밥을 운영하지 않습니다.",
+    en: "The 1,000 Won Breakfast is not available tomorrow.",
+    zh: "明天不提供1,000韩元早餐。",
+    vi: "Ngày mai không phục vụ bữa sáng 1.000 won.",
+    mn: "Маргааш 1,000 воны өглөөний хоол үйлчлэхгүй."
+  },
+  mealFieldLabels: {
+    rice: { ko: "밥", en: "Rice", zh: "米饭", vi: "Cơm", mn: "Будаа" },
+    soup: { ko: "국", en: "Soup", zh: "汤", vi: "Canh", mn: "Шөл" },
+    main: { ko: "주메뉴", en: "Main", zh: "主菜", vi: "Món chính", mn: "Гол хоол" },
+    side1: { ko: "반찬1", en: "Side 1", zh: "小菜1", vi: "Món phụ 1", mn: "Дагалдах хоол 1" },
+    side2: { ko: "반찬2", en: "Side 2", zh: "小菜2", vi: "Món phụ 2", mn: "Дагалдах хоол 2" },
+    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи" }
+  },
+  viewOriginalButton: {
+    ko: "주간 메뉴 원본 보기",
+    en: "View Weekly Menu",
+    zh: "查看每周菜单原图",
+    vi: "Xem ảnh thực đơn tuần",
+    mn: "Долоо хоногийн цэсийн зургийг үзэх"
+  },
+  tagline: {
+    ko: "단돈 1,000원으로 든든한 아침을 시작하세요.",
+    en: "Start your day with a filling breakfast for only \u20A91,000.",
+    zh: "只需1,000韩元，即可享用一份丰盛的早餐。",
+    vi: "Bắt đầu ngày mới với bữa sáng đầy đủ chỉ với 1.000 won.",
+    mn: "Ердөө 1,000 воноор цатгалан өглөөгөө эхлүүлээрэй."
+  },
+  fieldLabels: {
+    location: { ko: "장소", en: "Location", zh: "地点", vi: "Địa điểm", mn: "Байршил" },
+    hours: { ko: "운영시간", en: "Hours", zh: "时间", vi: "Thời gian", mn: "Ажиллах цаг" },
+    price: { ko: "이용요금", en: "Price", zh: "价格", vi: "Giá", mn: "Үнэ" },
+    eligibility: { ko: "이용대상", en: "Eligibility", zh: "适用对象", vi: "Đối tượng sử dụng", mn: "Хэрэглэгч" },
+    steps: { ko: "이용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" }
+  },
+  location: { ko: "밥심, 1층", en: "밥심, 1st Floor", zh: "밥심, 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар" },
+  hours: { ko: "오전 7:30~9:30", en: "7:30 AM\u20139:30 AM", zh: "上午7:30\u20139:30", vi: "7:30\u20139:30", mn: "Өглөө 7:30~9:30" },
+  price: { ko: "1,000원", en: "\u20A91,000", zh: "1,000韩元", vi: "1.000 won", mn: "1,000 вон" },
+  eligibility: {
+    ko: ["인제대학교 학생", "외국인 유학생", "인제글로벌어학원\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
+    en: ["Inje University students", "International students", "INJE GLOBAL LANGUAGE INSTITUTE students"],
+    zh: ["仁济大学学生", "外国留学生", "INJE GLOBAL LANGUAGE INSTITUTE 学生"],
+    vi: ["Sinh viên Đại học Inje", "Du học sinh quốc tế", "Học viên INJE GLOBAL LANGUAGE INSTITUTE"],
+    mn: ["Inje их сургуулийн оюутан", "Гадаад оюутан", "Inje глобал хэлний сургууль\n(INJE GLOBAL LANGUAGE INSTITUTE)"]
+  },
+  steps: {
+    ko: ["헤이영 앱에서 QR 인증", "1,000원 식권 구매", "밥 또는 빵 라인 중 한 곳 선택"],
+    en: ["Verify the QR code using the HeyYoung app.", "Purchase a \u20A91,000 meal ticket.", "Choose either the rice line or the bread line."],
+    zh: ["使用HeyYoung应用程序进行二维码认证。", "购买1,000韩元餐券。", "米饭餐线和面包餐线中选择一种。"],
+    vi: ["Xác thực mã QR bằng ứng dụng HeyYoung.", "Mua phiếu ăn giá 1.000 won.", "Chọn một trong hai quầy: cơm hoặc bánh mì."],
+    mn: ["HeyYoung апп-аар QR код баталгаажуулах", "1,000 воны хоолны тасалбар худалдаж авах", "Будаа эсвэл талхны эгнээнээс сонгох"]
+  },
+  notes: {
+    ko: ["준비된 수량 소진 시 조기 종료될 수 있습니다.", "밥과 빵은 중복 이용할 수 없습니다."],
+    en: ["Available while supplies last.", "You may use only one line: rice or bread."],
+    zh: ["数量有限，售完即止。", "米饭和面包不可重复领取。"],
+    vi: ["Có thể kết thúc sớm khi hết suất.", "Không được sử dụng đồng thời cả hai quầy."],
+    mn: ["Бэлтгэсэн хэмжээ дуусвал эрт зогсож болно.", "Будаа, талхыг давхар ашиглах боломжгүй."]
+  }
+};
+
+/* 무료 콜라 쿠폰 (만권화밥 · 후루룩찹찹 전용 배너 + 상세창 + 직원 제시 화면) */
+const COLA_COUPON = {
+  eligibleStores: ["mangwon", "hururuk"],
+  banner: {
+    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН" },
+    subtitle: {
+      ko: "음식 주문하고 콜라 1캔 무료로 받으세요!",
+      en: "Order food and get 1 can of Coke free!",
+      zh: "点餐即可免费获得1罐可乐！",
+      vi: "Gọi món và nhận miễn phí 1 lon Coca-Cola!",
+      mn: "Хоол захиалаад 1 лааз кола үнэгүй аваарай!"
+    },
+    button: { ko: "쿠폰 보기", en: "View Coupon", zh: "查看优惠券", vi: "Xem phiếu", mn: "Купон харах" }
+  },
+  detail: {
+    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН" },
+    subtitle: {
+      ko: "음식 구매 시 콜라 1캔 무료!",
+      en: "Get 1 can of Coke free with any food purchase!",
+      zh: "购买餐点即可免费获得1罐可乐！",
+      vi: "Mua món ăn được tặng miễn phí 1 lon Coca-Cola!",
+      mn: "Хоол худалдаж авахад 1 лааз кола үнэгүй!"
+    },
+    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар" },
+    stores: [
+      { brand: "만권화밥", floor: { ko: "1층", en: "1F", zh: "1楼", vi: "tầng 1", mn: "1-р давхар" } },
+      { brand: "후루룩찹찹", floor: { ko: "2층", en: "2F", zh: "2楼", vi: "tầng 2", mn: "2-р давхар" } }
+    ],
+    conditionLabel: { ko: "사용 조건", en: "Conditions", zh: "使用条件", vi: "Điều kiện sử dụng", mn: "Ашиглах нөхцөл" },
+    conditions: {
+      ko: ["음식 1개 구매 시 1인 1매", "콜라 1캔 무료 제공"],
+      en: ["1 coupon per person with 1 food item purchased", "1 free can of Coke provided"],
+      zh: ["购买1份餐点，每人限用1张", "赠送可乐1罐"],
+      vi: ["Mỗi người 1 phiếu khi mua 1 món ăn", "Tặng 1 lon Coca-Cola miễn phí"],
+      mn: ["Хоол худалдаж авах үед нэг хүн нэг купон ашиглана.", "1 лааз кола үнэгүй өгнө."]
+    },
+    countLabel: { ko: "사용 횟수", en: "Usage Limit", zh: "使用次数", vi: "Số lần sử dụng", mn: "Ашиглах тоо" },
+    count: { ko: "횟수 제한 없음", en: "No limit", zh: "次数不限", vi: "Không giới hạn", mn: "Ашиглах давтамжийн хязгааргүй" },
+    howToLabel: { ko: "사용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" },
+    howTo: {
+      ko: "음식을 제공받을 때 직원에게 이 쿠폰을 보여주세요.",
+      en: "Show this coupon to staff when you receive your food.",
+      zh: "领取餐点时向工作人员出示此优惠券。",
+      vi: "Xuất trình phiếu này cho nhân viên khi nhận món ăn.",
+      mn: "Хоолоо авахдаа купоноо үзүүлнэ үү."
+    },
+    captureLabel: { ko: "캡처 화면", en: "Screenshot", zh: "截图", vi: "Ảnh chụp màn hình", mn: "Дэлгэцийн зураг" },
+    capture: {
+      ko: "캡처한 쿠폰 화면도 사용할 수 있습니다.",
+      en: "A screenshot of this coupon can also be used.",
+      zh: "截图保存的优惠券画面同样可以使用。",
+      vi: "Có thể sử dụng ảnh chụp màn hình của phiếu này.",
+      mn: "Дэлгэцийн зураг ашиглаж болно."
+    },
+    periodLabel: { ko: "사용기간", en: "Valid Until", zh: "使用期限", vi: "Thời hạn sử dụng", mn: "Хугацаа" },
+    period: {
+      ko: "2026년 9월 30일까지",
+      en: "Until September 30, 2026",
+      zh: "至2026年9月30日",
+      vi: "Đến hết ngày 30/9/2026",
+      mn: "2026 оны 9-р сарын 30 хүртэл"
+    },
+    notes: {
+      ko: ["음식 구매 고객에게만 제공됩니다.", "음식 1개 구매 시 콜라 1캔을 제공합니다.", "매장 사정에 따라 제공 음료가 변경되거나 조기 종료될 수 있습니다."],
+      en: ["Available only to customers who purchase food.", "1 can of Coke is provided per 1 food item purchased.", "The provided drink may change or the offer may end early depending on store circumstances."],
+      zh: ["仅限购买餐点的顾客使用。", "购买1份餐点可获得可乐1罐。", "根据门店情况，提供的饮品可能变更或提前结束。"],
+      vi: ["Chỉ áp dụng cho khách hàng mua món ăn.", "Mua 1 món ăn được tặng 1 lon Coca-Cola.", "Loại nước uống cung cấp có thể thay đổi hoặc chương trình có thể kết thúc sớm tùy tình hình cửa hàng."],
+      mn: ["Зөвхөн хоол худалдаж авсан үйлчлүүлэгчид олгоно.", "1 хоол авахад 1 лааз кола өгнө.", "Дэлгүүрийн нөхцөл байдлаас шалтгаалан ундаа солигдох эсвэл эрт дуусч болно."]
+    },
+    showButton: { ko: "직원에게 보여주기", en: "Show to Staff", zh: "出示给工作人员", vi: "Xuất trình cho nhân viên", mn: "Ажилтанд үзүүлэх" },
+    closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах" }
+  },
+  staffShow: {
+    title: { ko: "무료 콜라 1캔", en: "1 Free Coke", zh: "免费可乐1罐", vi: "1 lon Coca-Cola miễn phí", mn: "1 лааз үнэгүй кола" },
+    subtitle: {
+      ko: "음식 수령 시 직원에게 보여주세요.",
+      en: "Show this to staff when you receive your food.",
+      zh: "领取餐点时请出示给工作人员。",
+      vi: "Vui lòng xuất trình cho nhân viên khi nhận món ăn.",
+      mn: "Хоолоо авахдаа ажилтанд үзүүлнэ үү."
+    },
+    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар" },
+    storesValue: "만권화밥 · 후루룩찹찹",
+    period: { ko: "2026. 9. 30.까지", en: "Until 2026. 9. 30.", zh: "至2026.9.30.", vi: "Đến 30.9.2026", mn: "2026.9.30 хүртэл" }
+  }
+};
+
+/* 사장님께 말해요 (하단 안내칸 + 모바일 고정 버튼, 카카오톡 오픈채팅 연결) */
+const OWNER_CHAT = {
+  url: "https://open.kakao.com/o/sxJlUwMi",
+  title: { ko: "사장님께 말해요", en: "Talk to the Owner", zh: "告诉店主", vi: "Nhắn với chủ quán", mn: "Эзэнд нь хэлэх" },
+  desc: {
+    ko: ["메뉴 제안, 칭찬, 불편사항을 편하게 알려주세요.", "작성한 내용은 홈페이지에 공개되거나 저장되지 않습니다."],
+    en: ["Share your menu suggestions, compliments, or concerns with us.", "Your message will not be posted or stored on this website."],
+    zh: ["欢迎通过KakaoTalk告诉我们您的菜单建议、意见或遇到的问题。", "您的留言不会在本网站公开或保存。"],
+    vi: ["Hãy chia sẻ đề xuất món ăn, lời khen hoặc điều bất tiện với chúng tôi.", "Nội dung của bạn sẽ không được đăng hoặc lưu trên trang web này."],
+    mn: ["Цэсийн санал, магтаал, эсвэл тав тухгүй зүйлээ чөлөөтэй мэдэгдээрэй.", "Таны бичсэн зүйл вэбсайтад нийтлэгдэхгүй, хадгалагдахгүй."]
+  },
+  button: { ko: "카카오톡으로 말하기", en: "Chat on KakaoTalk", zh: "通过KakaoTalk联系", vi: "Trò chuyện qua KakaoTalk", mn: "KakaoTalk-аар холбогдох" }
+};
+
+</script>
+<script>
+/* ==========================================================================
+   천원의 아침밥 - 주간 메뉴 데이터
+   ------------------------------------------------------------------------
+   매주 하는 일은 이 파일 하나만 수정하는 것입니다.
+
+   1. 새로 받은 엑셀 주간 메뉴 스크린샷을 images/breakfast/ 폴더에 저장한다.
+      (파일명 예시: 2026-09-07-weekly-menu.jpg)
+   2. 아래 weekStart, weekEnd, sourceImage 값을 이번 주에 맞게 수정한다.
+   3. days 안에 해당 주의 날짜(YYYY-MM-DD)별로 스크린샷에 적힌 메뉴를
+      그대로 옮겨 적는다. 메뉴명을 추측하거나 새로 만들지 않는다.
+   4. 데이터가 없는 날(주말 등)은 항목을 아예 넣지 않거나 비워둔다 —
+      화면에는 "오늘은 운영하지 않습니다" 문구가 자동으로 표시된다.
+   5. 화면 코드는 건드릴 필요가 없다. 이 파일만 저장하면 끝난다.
+
+   각 항목은 { ko: "..." } 형태의 한글 값만 있어도 충분히 작동한다
+   (없는 언어는 화면에서 자동으로 한글로 대체 표시된다).
+   번역까지 넣고 싶다면 en/zh/vi/mn 키를 추가하면 된다.
+
+   예)
+     rice: { ko: "쌀밥" }                         // 한글만 입력해도 정상 작동
+     rice: { ko: "쌀�b", en: "Steamed Rice" }      // 번역을 일부만 추가해도 됨
+
+   ========================================================================== */
+
+const BREAKFAST_WEEKLY_MENU = {
+  weekStart: "",
+  weekEnd: "",
+  sourceImage: null,
+  days: {
+    /*
+    "2026-09-08": {
+      rice: { ko: "쌀밥" },
+      soup: { ko: "콩나물국" },
+      main: { ko: "돼지불고기" },
+      side1: { ko: "계란말이" },
+      side2: { ko: "콩나물무침" },
+      kimchi: { ko: "배추김치" }
+    },
+    */
+  }
+};
+
+</script>
+<script>
+/* ==========================================================================
+   푸드홀(인제대학교) app.js
+   - 매장 선택 / 언어 선택 / 메뉴 그룹 이전·다음 / 천원의 아침밥 모달
+   - 외부 라이브러리 없이 순수 JavaScript로 동작합니다.
+   ========================================================================== */
+
+(function () {
+  "use strict";
+
+  var STORE_ORDER = ["bapsim", "mangwon", "hururuk"];
+  var LANG_KEY = "foodhall_lang";
+  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+
+  var state = {
+    store: "bapsim",
+    bapsimView: "breakfast",
+    groupByStore: { bapsim: 1, mangwon: 1, hururuk: 1 },
+    lang: "ko"
+  };
+
+  var els = {};
+
+  function qs(id) { return document.getElementById(id); }
+
+  function formatPrice(price, lang) {
+    if (price === null || typeof price === "undefined") {
+      return { text: UI_TEXT.priceTBD[lang] || UI_TEXT.priceTBD.ko, tbd: true };
+    }
+    var withComma = price.toLocaleString("ko-KR");
+    return { text: withComma + UI_TEXT.won[lang], tbd: false };
+  }
+
+  function getGroupsForStore(store) {
+    var groups = {};
+    MENU_DATA.forEach(function (item) {
+      if (item.store === store) groups[item.group] = true;
+    });
+    return Object.keys(groups).map(Number).sort(function (a, b) { return a - b; });
+  }
+
+  function getItems(store, group) {
+    return MENU_DATA
+      .filter(function (item) { return item.store === store && item.group === group; })
+      .sort(function (a, b) { return a.order - b.order; });
+  }
+
+  function buildCard(item) {
+    var card = document.createElement("div");
+    card.className = "menu-card";
+
+    var imgWrap = document.createElement("div");
+    imgWrap.className = "card-image-wrap";
+
+    if (item.image) {
+      var img = document.createElement("img");
+      img.src = item.image;
+      img.alt = item.name.ko;
+      img.loading = "lazy";
+      img.onerror = function () {
+        if (imgWrap.dataset.fallbackApplied) return;
+        imgWrap.dataset.fallbackApplied = "1";
+        imgWrap.innerHTML = "";
+        var pending = document.createElement("span");
+        pending.className = "image-pending";
+        pending.textContent = UI_TEXT.imagePending[state.lang] || UI_TEXT.imagePending.ko;
+        imgWrap.appendChild(pending);
+      };
+      imgWrap.appendChild(img);
+    } else {
+      var pendingEl = document.createElement("span");
+      pendingEl.className = "image-pending";
+      pendingEl.textContent = UI_TEXT.imagePending[state.lang] || UI_TEXT.imagePending.ko;
+      imgWrap.appendChild(pendingEl);
+    }
+
+    if (item.soldOut) {
+      var badge = document.createElement("span");
+      badge.className = "sold-out-badge";
+      badge.textContent = UI_TEXT.soldOut[state.lang] || UI_TEXT.soldOut.ko;
+      imgWrap.appendChild(badge);
+    }
+
+    card.appendChild(imgWrap);
+
+    var body = document.createElement("div");
+    body.className = "card-body";
+
+    var names = document.createElement("div");
+    names.className = "card-names";
+
+    var koName = document.createElement("p");
+    koName.className = "card-name-ko";
+    koName.textContent = item.name.ko;
+    names.appendChild(koName);
+
+    if (state.lang !== "ko") {
+      var translated = document.createElement("p");
+      translated.className = "card-name-translated";
+      translated.textContent = item.name[state.lang] || "";
+      names.appendChild(translated);
+    }
+
+    body.appendChild(names);
+
+    var priceInfo = formatPrice(item.price, state.lang);
+    var priceEl = document.createElement("p");
+    priceEl.className = "card-price" + (priceInfo.tbd ? " tbd" : "");
+    priceEl.textContent = priceInfo.text;
+    body.appendChild(priceEl);
+
+    card.appendChild(body);
+
+    return card;
+  }
+
+  function renderGrid() {
+    var grid = els.menuGrid;
+    grid.innerHTML = "";
+    var items = getItems(state.store, state.groupByStore[state.store]);
+    var frag = document.createDocumentFragment();
+    items.forEach(function (item) { frag.appendChild(buildCard(item)); });
+    grid.appendChild(frag);
+  }
+
+  function renderGroupNav() {
+    var groups = getGroupsForStore(state.store);
+    if (groups.length <= 1) {
+      els.groupNav.hidden = true;
+      return;
+    }
+    els.groupNav.hidden = false;
+    var current = state.groupByStore[state.store];
+    els.prevBtn.disabled = current <= groups[0];
+    els.nextBtn.disabled = current >= groups[groups.length - 1];
+    els.groupIndicator.textContent = current + " / " + groups.length;
+  }
+
+  function renderHeader() {
+    els.siteTitle.textContent = UI_TEXT.siteTitle[state.lang];
+    document.title = UI_TEXT.siteTitle[state.lang];
+
+    STORE_ORDER.forEach(function (store) {
+      var btn = els.storeTabButtons[store];
+      var info = UI_TEXT.storeNames[store];
+      btn.innerHTML = "";
+
+      var brandEl = document.createElement("span");
+      brandEl.className = "store-tab-brand";
+      brandEl.textContent = info.brand;
+      btn.appendChild(brandEl);
+
+      var floorEl = document.createElement("span");
+      floorEl.className = "store-tab-floor";
+      floorEl.textContent = info.floor[state.lang];
+      btn.appendChild(floorEl);
+
+      if (state.lang !== "ko") {
+        var pronEl = document.createElement("span");
+        pronEl.className = "store-tab-pronunciation";
+        pronEl.textContent = info.pronunciation[state.lang];
+        btn.appendChild(pronEl);
+      }
+
+      btn.classList.toggle("active", store === state.store);
+      btn.setAttribute("aria-pressed", store === state.store ? "true" : "false");
+    });
+
+    SUPPORTED_LANGS.forEach(function (lang) {
+      var btn = els.langButtons[lang];
+      btn.classList.toggle("active", lang === state.lang);
+      btn.setAttribute("aria-pressed", lang === state.lang ? "true" : "false");
+    });
+
+    els.storeHeading.textContent = UI_TEXT.storeHeading[state.store][state.lang];
+    els.prevBtn.textContent = UI_TEXT.prevButton[state.lang];
+    els.nextBtn.textContent = UI_TEXT.nextButton[state.lang];
+  }
+
+  function renderAll() {
+    try {
+      renderHeader();
+      renderBapsimSubtabs();
+      renderColaBanner();
+      renderOwnerChat();
+      renderGrid();
+      renderGroupNav();
+      updateBapsimViewVisibility();
+      if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
+      els.fallbackMsg.hidden = true;
+    } catch (err) {
+      console.error("메뉴 렌더링 오류:", err);
+      els.menuGrid.innerHTML = "";
+      els.fallbackMsg.hidden = false;
+      els.fallbackMsg.textContent = UI_TEXT.loadError[state.lang] || UI_TEXT.loadError.ko;
+    }
+  }
+
+  function setStore(store) {
+    if (state.store === store) return;
+    state.store = store;
+    state.bapsimView = "breakfast";
+    renderAll();
+  }
+
+  function setLang(lang) {
+    if (SUPPORTED_LANGS.indexOf(lang) === -1 || state.lang === lang) return;
+    state.lang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* localStorage 미지원 시 무시 */ }
+    renderAll();
+    if (!els.colaDetailOverlay.hidden) renderColaDetail();
+    if (!els.staffShowOverlay.hidden) renderStaffShow();
+  }
+
+  function changeGroup(delta) {
+    var groups = getGroupsForStore(state.store);
+    var current = state.groupByStore[state.store];
+    var idx = groups.indexOf(current);
+    var nextIdx = idx + delta;
+    if (nextIdx < 0 || nextIdx >= groups.length) return;
+    state.groupByStore[state.store] = groups[nextIdx];
+    renderGrid();
+    renderGroupNav();
+  }
+
+  /* ---------------- 날짜 계산 (Asia/Seoul 기준) ---------------- */
+
+  var SEOUL_TZ = "Asia/Seoul";
+  var DATE_LOCALE_MAP = { ko: "ko-KR", en: "en-US", zh: "zh-CN", vi: "vi-VN", mn: "mn-MN" };
+
+  function seoulInstant(offsetDays) {
+    return new Date(Date.now() + (offsetDays || 0) * 24 * 60 * 60 * 1000);
+  }
+
+  function getSeoulDateKey(offsetDays) {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: SEOUL_TZ, year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(seoulInstant(offsetDays));
+  }
+
+  function isSeoulWeekend(offsetDays) {
+    var weekday = new Intl.DateTimeFormat("en-US", { timeZone: SEOUL_TZ, weekday: "long" }).format(seoulInstant(offsetDays));
+    return weekday === "Saturday" || weekday === "Sunday";
+  }
+
+  function formatSeoulDateDisplay(lang, offsetDays) {
+    var locale = DATE_LOCALE_MAP[lang] || "ko-KR";
+    var opts = { timeZone: SEOUL_TZ, month: "long", day: "numeric", weekday: "long" };
+    try {
+      return new Intl.DateTimeFormat(locale, opts).format(seoulInstant(offsetDays));
+    } catch (e) {
+      return new Intl.DateTimeFormat("ko-KR", opts).format(seoulInstant(offsetDays));
+    }
+  }
+
+  /* ---------------- 밥심 서브탭 (일반 메뉴 / 천원의 아침밥) ---------------- */
+
+  function renderBapsimSubtabs() {
+    var show = state.store === "bapsim";
+    els.bapsimSubtabs.hidden = !show;
+    if (!show) return;
+
+    var lang = state.lang;
+    els.bapsimTabMenu.textContent = BREAKFAST_INFO.tabLabel[lang];
+    els.bapsimTabBreakfast.textContent = BREAKFAST_INFO.title[lang];
+
+    els.bapsimTabMenu.classList.toggle("active", state.bapsimView === "menu");
+    els.bapsimTabMenu.setAttribute("aria-pressed", state.bapsimView === "menu" ? "true" : "false");
+    els.bapsimTabBreakfast.classList.toggle("active", state.bapsimView === "breakfast");
+    els.bapsimTabBreakfast.setAttribute("aria-pressed", state.bapsimView === "breakfast" ? "true" : "false");
+  }
+
+  function setBapsimView(view) {
+    if (state.bapsimView === view) return;
+    state.bapsimView = view;
+    renderBapsimSubtabs();
+    updateBapsimViewVisibility();
+    if (view === "breakfast") renderBreakfastArea();
+  }
+
+  function updateBapsimViewVisibility() {
+    var showBreakfast = state.store === "bapsim" && state.bapsimView === "breakfast";
+    els.breakfastArea.hidden = !showBreakfast;
+    els.menuGrid.hidden = showBreakfast;
+    els.groupNav.hidden = showBreakfast || getGroupsForStore(state.store).length <= 1;
+  }
+
+  /* ---------------- 천원의 아침밥 전용 영역 (오늘·내일) ---------------- */
+
+  function renderMealList(listEl, lang, offsetDays, closedText) {
+    var dateKey = getSeoulDateKey(offsetDays);
+    var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+
+    listEl.innerHTML = "";
+
+    if (isSeoulWeekend(offsetDays) || !day) {
+      var closedP = document.createElement("p");
+      closedP.className = "today-meal-closed";
+      closedP.textContent = closedText;
+      listEl.appendChild(closedP);
+      return;
+    }
+
+    var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
+    var anyLine = false;
+    order.forEach(function (key) {
+      var field = day[key];
+      if (!field) return;
+      var text = field[lang] || field.ko;
+      if (!text) return;
+      anyLine = true;
+      var li = document.createElement("li");
+      li.textContent = text;
+      listEl.appendChild(li);
+    });
+
+    if (!anyLine) {
+      var closedP2 = document.createElement("p");
+      closedP2.className = "today-meal-closed";
+      closedP2.textContent = closedText;
+      listEl.appendChild(closedP2);
+    }
+  }
+
+  function renderBreakfastArea() {
+    if (state.store !== "bapsim" || state.bapsimView !== "breakfast") return;
+    var lang = state.lang;
+    var info = BREAKFAST_INFO;
+    var labels = info.fieldLabels;
+
+    els.baTitle.textContent = info.title[lang];
+    els.baPriceValue.textContent = info.price[lang];
+
+    els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
+    els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
+    renderMealList(els.todayMealList, lang, 0, info.todayClosedMessage[lang] || info.todayClosedMessage.ko);
+
+    els.baTomorrowMenuTitle.textContent = info.tomorrowMenuTitle[lang];
+    els.baTomorrowDateValue.textContent = formatSeoulDateDisplay(lang, 1);
+    renderMealList(els.tomorrowMealList, lang, 1, info.tomorrowClosedMessage[lang] || info.tomorrowClosedMessage.ko);
+
+    els.baHoursLabel.textContent = labels.hours[lang];
+    els.baHoursValue.textContent = info.hours[lang];
+
+    els.baEligLabel.textContent = labels.eligibility[lang];
+    els.baEligList.innerHTML = "";
+    info.eligibility[lang].forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      els.baEligList.appendChild(li);
+    });
+
+    els.baStepsLabel.textContent = labels.steps[lang];
+    els.baStepsList.innerHTML = "";
+    info.steps[lang].forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      els.baStepsList.appendChild(li);
+    });
+
+    var hasImage = !!(BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage);
+    els.baViewOriginalBtn.hidden = !hasImage;
+    if (hasImage) {
+      els.baViewOriginalBtn.textContent = info.viewOriginalButton[lang];
+    }
+  }
+
+  /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */
+  var lastKnownSeoulDateKey = null;
+  function checkMidnightRollover() {
+    var currentKey = getSeoulDateKey(0);
+    if (lastKnownSeoulDateKey === null) {
+      lastKnownSeoulDateKey = currentKey;
+      return;
+    }
+    if (currentKey !== lastKnownSeoulDateKey) {
+      lastKnownSeoulDateKey = currentKey;
+      if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
+    }
+  }
+
+  /* ---------------- 주간 메뉴 원본 이미지 팝업 ---------------- */
+
+  var weeklyImageLastFocusedEl = null;
+
+  function openWeeklyImage() {
+    if (!BREAKFAST_WEEKLY_MENU || !BREAKFAST_WEEKLY_MENU.sourceImage) return;
+    els.weeklyImageImg.src = BREAKFAST_WEEKLY_MENU.sourceImage;
+    els.weeklyImageImg.alt = BREAKFAST_INFO.viewOriginalButton[state.lang];
+    weeklyImageLastFocusedEl = document.activeElement;
+    els.weeklyImageOverlay.hidden = false;
+    els.weeklyImageClose.focus();
+    document.addEventListener("keydown", onWeeklyImageKeydown);
+  }
+
+  function closeWeeklyImage() {
+    els.weeklyImageOverlay.hidden = true;
+    document.removeEventListener("keydown", onWeeklyImageKeydown);
+    if (weeklyImageLastFocusedEl && typeof weeklyImageLastFocusedEl.focus === "function") weeklyImageLastFocusedEl.focus();
+  }
+
+  function onWeeklyImageKeydown(e) {
+    if (e.key === "Escape") closeWeeklyImage();
+  }
+
+  /* ---------------- 무료 콜라 쿠폰 배너 ---------------- */
+
+  function renderColaBanner() {
+    var eligible = COLA_COUPON.eligibleStores.indexOf(state.store) !== -1;
+    els.colaBanner.hidden = !eligible;
+    if (!eligible) return;
+    var lang = state.lang;
+    els.colaBannerTitle.textContent = "\uD83C\uDF81 " + COLA_COUPON.banner.title[lang];
+    els.colaBannerSubtitle.textContent = COLA_COUPON.banner.subtitle[lang];
+    els.colaBannerBtn.textContent = COLA_COUPON.banner.button[lang];
+  }
+
+  /* ---------------- 콜라 쿠폰 상세창 ---------------- */
+
+  function renderColaDetail() {
+    var lang = state.lang;
+    var d = COLA_COUPON.detail;
+
+    els.colaDetailTitle.textContent = d.title[lang];
+    els.colaDetailSubtitle.textContent = d.subtitle[lang];
+
+    els.colaStoresLabel.textContent = d.storesLabel[lang];
+    els.colaStoresList.innerHTML = "";
+    d.stores.forEach(function (store) {
+      var li = document.createElement("li");
+      li.textContent = store.brand + " " + store.floor[lang];
+      els.colaStoresList.appendChild(li);
+    });
+
+    els.colaConditionLabel.textContent = d.conditionLabel[lang];
+    els.colaConditionList.innerHTML = "";
+    d.conditions[lang].forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = line;
+      els.colaConditionList.appendChild(li);
+    });
+
+    els.colaCountLabel.textContent = d.countLabel[lang];
+    els.colaCountValue.textContent = d.count[lang];
+
+    els.colaHowToLabel.textContent = d.howToLabel[lang];
+    els.colaHowToValue.textContent = d.howTo[lang];
+
+    els.colaCaptureLabel.textContent = d.captureLabel[lang];
+    els.colaCaptureValue.textContent = d.capture[lang];
+
+    els.colaPeriodLabel.textContent = d.periodLabel[lang];
+    els.colaPeriodValue.textContent = d.period[lang];
+
+    els.colaNotesList.innerHTML = "";
+    d.notes[lang].forEach(function (line) {
+      var li = document.createElement("li");
+      li.textContent = "\u203B " + line;
+      els.colaNotesList.appendChild(li);
+    });
+
+    els.colaShowStaffBtn.textContent = d.showButton[lang];
+    els.colaDetailCloseBtn.textContent = d.closeButton[lang];
+  }
+
+  var colaLastFocusedEl = null;
+
+  function openColaDetail() {
+    renderColaDetail();
+    colaLastFocusedEl = document.activeElement;
+    els.colaDetailOverlay.hidden = false;
+    els.colaDetailClose.focus();
+    document.addEventListener("keydown", onColaDetailKeydown);
+  }
+
+  function closeColaDetail() {
+    els.colaDetailOverlay.hidden = true;
+    document.removeEventListener("keydown", onColaDetailKeydown);
+    if (colaLastFocusedEl && typeof colaLastFocusedEl.focus === "function") colaLastFocusedEl.focus();
+  }
+
+  function onColaDetailKeydown(e) {
+    if (e.key === "Escape") closeColaDetail();
+  }
+
+  /* ---------------- 직원에게 보여주기 화면 ---------------- */
+
+  function renderStaffShow() {
+    var lang = state.lang;
+    var s = COLA_COUPON.staffShow;
+    els.staffShowTitle.textContent = s.title[lang];
+    els.staffShowSubtitle.textContent = s.subtitle[lang];
+    els.staffShowStoresLabel.textContent = s.storesLabel[lang];
+    els.staffShowStoresValue.textContent = s.storesValue;
+    els.staffShowPeriod.textContent = s.period[lang];
+  }
+
+  var staffShowLastFocusedEl = null;
+
+  function openStaffShow() {
+    renderStaffShow();
+    staffShowLastFocusedEl = document.activeElement;
+    els.staffShowOverlay.hidden = false;
+    els.staffShowClose.focus();
+    document.addEventListener("keydown", onStaffShowKeydown);
+  }
+
+  function closeStaffShow() {
+    els.staffShowOverlay.hidden = true;
+    document.removeEventListener("keydown", onStaffShowKeydown);
+    if (staffShowLastFocusedEl && typeof staffShowLastFocusedEl.focus === "function") staffShowLastFocusedEl.focus();
+  }
+
+  function onStaffShowKeydown(e) {
+    if (e.key === "Escape") closeStaffShow();
+  }
+
+  /* ---------------- 사장님께 말해요 ---------------- */
+
+  function renderOwnerChat() {
+    var lang = state.lang;
+    els.ownerChatTitle.textContent = OWNER_CHAT.title[lang];
+    els.ownerChatDescLine1.textContent = OWNER_CHAT.desc[lang][0];
+    els.ownerChatDescLine2.textContent = OWNER_CHAT.desc[lang][1];
+    els.ownerChatBtnLabel.textContent = OWNER_CHAT.button[lang];
+    els.ownerChatFabLabel.textContent = OWNER_CHAT.title[lang];
+  }
+
+  /* ---------------- 초기화 ---------------- */
+
+  function loadSavedLang() {
+    try {
+      var saved = localStorage.getItem(LANG_KEY);
+      if (saved && SUPPORTED_LANGS.indexOf(saved) !== -1) return saved;
+    } catch (e) { /* localStorage 미지원 시 무시 */ }
+    return "ko";
+  }
+
+  function init() {
+    els.siteTitle = qs("siteTitle");
+    els.storeTabs = qs("storeTabs");
+    els.storeHeading = qs("storeHeading");
+    els.menuGrid = qs("menuGrid");
+    els.groupNav = qs("groupNav");
+    els.prevBtn = qs("prevBtn");
+    els.nextBtn = qs("nextBtn");
+    els.groupIndicator = qs("groupIndicator");
+    els.fallbackMsg = qs("fallbackMsg");
+
+    els.bapsimSubtabs = qs("bapsimSubtabs");
+    els.bapsimTabMenu = qs("bapsimTabMenu");
+    els.bapsimTabBreakfast = qs("bapsimTabBreakfast");
+
+    els.breakfastArea = qs("breakfastArea");
+    els.baTitle = qs("baTitle");
+    els.baPriceValue = qs("baPriceValue");
+    els.baTodayMenuTitle = qs("baTodayMenuTitle");
+    els.baTodayDateValue = qs("baTodayDateValue");
+    els.todayMealList = qs("todayMealList");
+    els.baTomorrowMenuTitle = qs("baTomorrowMenuTitle");
+    els.baTomorrowDateValue = qs("baTomorrowDateValue");
+    els.tomorrowMealList = qs("tomorrowMealList");
+    els.baHoursLabel = qs("baHoursLabel");
+    els.baHoursValue = qs("baHoursValue");
+    els.baEligLabel = qs("baEligLabel");
+    els.baEligList = qs("baEligList");
+    els.baStepsLabel = qs("baStepsLabel");
+    els.baStepsList = qs("baStepsList");
+    els.baViewOriginalBtn = qs("baViewOriginalBtn");
+
+    els.weeklyImageOverlay = qs("weeklyImageOverlay");
+    els.weeklyImageClose = qs("weeklyImageClose");
+    els.weeklyImageImg = qs("weeklyImageImg");
+
+    els.colaBanner = qs("colaBanner");
+    els.colaBannerTitle = qs("colaBannerTitle");
+    els.colaBannerSubtitle = qs("colaBannerSubtitle");
+    els.colaBannerBtn = qs("colaBannerBtn");
+
+    els.colaDetailOverlay = qs("colaDetailOverlay");
+    els.colaDetailClose = qs("colaDetailClose");
+    els.colaDetailTitle = qs("colaDetailTitle");
+    els.colaDetailSubtitle = qs("colaDetailSubtitle");
+    els.colaStoresLabel = qs("colaStoresLabel");
+    els.colaStoresList = qs("colaStoresList");
+    els.colaConditionLabel = qs("colaConditionLabel");
+    els.colaConditionList = qs("colaConditionList");
+    els.colaCountLabel = qs("colaCountLabel");
+    els.colaCountValue = qs("colaCountValue");
+    els.colaHowToLabel = qs("colaHowToLabel");
+    els.colaHowToValue = qs("colaHowToValue");
+    els.colaCaptureLabel = qs("colaCaptureLabel");
+    els.colaCaptureValue = qs("colaCaptureValue");
+    els.colaPeriodLabel = qs("colaPeriodLabel");
+    els.colaPeriodValue = qs("colaPeriodValue");
+    els.colaNotesList = qs("colaNotesList");
+    els.colaShowStaffBtn = qs("colaShowStaffBtn");
+    els.colaDetailCloseBtn = qs("colaDetailCloseBtn");
+
+    els.staffShowOverlay = qs("staffShowOverlay");
+    els.staffShowClose = qs("staffShowClose");
+    els.staffShowTitle = qs("staffShowTitle");
+    els.staffShowSubtitle = qs("staffShowSubtitle");
+    els.staffShowStoresLabel = qs("staffShowStoresLabel");
+    els.staffShowStoresValue = qs("staffShowStoresValue");
+    els.staffShowPeriod = qs("staffShowPeriod");
+
+    els.ownerChatTitle = qs("ownerChatTitle");
+    els.ownerChatDescLine1 = qs("ownerChatDescLine1");
+    els.ownerChatDescLine2 = qs("ownerChatDescLine2");
+    els.ownerChatBtnLabel = qs("ownerChatBtnLabel");
+    els.ownerChatFabLabel = qs("ownerChatFabLabel");
+
+    els.storeTabButtons = {};
+    Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab"), function (btn) {
+      var store = btn.getAttribute("data-store");
+      els.storeTabButtons[store] = btn;
+      btn.addEventListener("click", function () { setStore(store); });
+    });
+
+    els.langButtons = {};
+    Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
+      var lang = btn.getAttribute("data-lang");
+      els.langButtons[lang] = btn;
+      btn.addEventListener("click", function () { setLang(lang); });
+    });
+
+    els.prevBtn.addEventListener("click", function () { changeGroup(-1); });
+    els.nextBtn.addEventListener("click", function () { changeGroup(1); });
+
+    els.bapsimTabMenu.addEventListener("click", function () { setBapsimView("menu"); });
+    els.bapsimTabBreakfast.addEventListener("click", function () { setBapsimView("breakfast"); });
+
+    els.baViewOriginalBtn.addEventListener("click", openWeeklyImage);
+    els.weeklyImageClose.addEventListener("click", closeWeeklyImage);
+    els.weeklyImageOverlay.addEventListener("click", function (e) {
+      if (e.target === els.weeklyImageOverlay) closeWeeklyImage();
+    });
+
+    els.colaBannerBtn.addEventListener("click", openColaDetail);
+    els.colaDetailClose.addEventListener("click", closeColaDetail);
+    els.colaDetailCloseBtn.addEventListener("click", closeColaDetail);
+    els.colaDetailOverlay.addEventListener("click", function (e) {
+      if (e.target === els.colaDetailOverlay) closeColaDetail();
+    });
+    els.colaShowStaffBtn.addEventListener("click", function () {
+      closeColaDetail();
+      openStaffShow();
+    });
+
+    els.staffShowClose.addEventListener("click", closeStaffShow);
+    els.staffShowOverlay.addEventListener("click", function (e) {
+      if (e.target === els.staffShowOverlay) closeStaffShow();
+    });
+
+    state.lang = loadSavedLang();
+
+    renderAll();
+
+    lastKnownSeoulDateKey = getSeoulDateKey(0);
+    setInterval(checkMidnightRollover, 60000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+</body>
+</html>
