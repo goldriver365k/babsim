@@ -42,6 +42,8 @@ def build():
     weekly_menu = read("data/breakfast-weekly-menu.js")
     firebase_config = read("js/firebase-config.js")
     breakfast_rating = read("js/breakfast-rating.js")
+    language_stats = read("js/language-stats.js")
+    weekly_menu_sync = read("js/weekly-menu-sync.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -260,6 +262,12 @@ def build():
 """ + breakfast_rating + """
 </script>
 <script>
+""" + language_stats + """
+</script>
+<script>
+""" + weekly_menu_sync + """
+</script>
+<script>
 """ + app + """
 </script>
 </body>
@@ -301,13 +309,19 @@ def build_admin():
     <p class="error" id="adminGateError"></p>
     <button type="submit">확인</button>
   </form>
-  <p class="note">천원의 아침밥 메뉴 평가 통계를 확인하는 내부 페이지입니다.</p>
+  <p class="note">천원의 아침밥 메뉴 평가 · 언어 통계 · 주간메뉴 관리를 위한 내부 페이지입니다.</p>
 </div>
 
 <div id="adminApp" hidden>
   <header class="admin-header">
-    <h1 class="admin-title">천원의 아침밥 — 메뉴 평가 통계</h1>
-    <p class="admin-sub">학생들이 남긴 오늘의 메뉴 평가를 날짜별로 확인합니다.</p>
+    <h1 class="admin-title">푸드홀 관리자 페이지</h1>
+    <p class="admin-sub">평가 통계, 언어 통계, 주간메뉴를 관리합니다.</p>
+    <nav class="admin-nav" id="adminNav">
+      <button type="button" class="admin-nav-btn active" data-page="dashboard">대시보드</button>
+      <button type="button" class="admin-nav-btn" data-page="ratings">메뉴 평가</button>
+      <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
+      <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
+    </nav>
   </header>
 
   <main class="admin-main">
@@ -316,80 +330,222 @@ def build_admin():
       입력하기 전까지는 통계에 표시되는 데이터가 없습니다. (학생 화면은 정상 작동합니다.)
     </p>
 
-    <section class="admin-card">
-      <h2>오늘 평가</h2>
-      <div class="today-stats">
-        <div class="stat-box">
-          <p class="stat-label">참여자</p>
-          <p class="stat-value" id="todayParticipants">-</p>
+    <!-- ================= 대시보드 ================= -->
+    <section class="admin-page" id="pageDashboard">
+      <div class="admin-card">
+        <h2>오늘 한눈에 보기</h2>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <p class="stat-label">오늘 접속자</p>
+            <p class="stat-value" id="dashVisitors">-</p>
+            <p class="stat-sub">언어 통계 기준 고유 기기 수</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">평가 참여</p>
+            <p class="stat-value" id="dashRatingParticipants">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">평균평점</p>
+            <p class="stat-value" id="dashAvgRating">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">최다 선택 언어</p>
+            <p class="stat-value" id="dashTopLang">-</p>
+          </div>
         </div>
-        <div class="stat-box">
-          <p class="stat-label">평균평점</p>
-          <p class="stat-value" id="todayAvg">-</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>오늘 평가 분포</h2>
+        <div class="dist-list" id="dashRatingDistList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>오늘 언어 선택 분포</h2>
+        <div class="dist-list" id="dashLangDistList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>최근 7일 접속자 추이</h2>
+        <svg class="trend-chart" id="dashVisitorTrend"></svg>
+        <p class="trend-caption">가로축 최근 7일(MM/DD)</p>
+      </div>
+    </section>
+
+    <!-- ================= 메뉴 평가 ================= -->
+    <section class="admin-page" id="pageRatings" hidden>
+      <div class="admin-card">
+        <h2>오늘 평가</h2>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <p class="stat-label">참여자</p>
+            <p class="stat-value" id="todayParticipants">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">평균평점</p>
+            <p class="stat-value" id="todayAvg">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">긍정평가</p>
+            <p class="stat-value" id="todayPositive">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">부정평가</p>
+            <p class="stat-value" id="todayNegative">-</p>
+          </div>
         </div>
-        <div class="stat-box">
-          <p class="stat-label">긍정평가</p>
-          <p class="stat-value" id="todayPositive">-</p>
+        <div class="dist-list" id="todayDistList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>기간 선택</h2>
+        <div class="filter-bar">
+          <button type="button" class="filter-btn active" data-filter="today">오늘</button>
+          <button type="button" class="filter-btn" data-filter="7d">최근 7일</button>
+          <button type="button" class="filter-btn" data-filter="month">이번 달</button>
+          <button type="button" class="filter-btn" data-filter="custom">날짜 직접 선택</button>
+        </div>
+        <div class="filter-range" id="customRange" hidden>
+          <input type="date" id="customStartInput">
+          <span>~</span>
+          <input type="date" id="customEndInput">
+          <button type="button" class="filter-apply-btn" id="customRangeApply">적용</button>
         </div>
       </div>
-      <div class="dist-list" id="todayDistList"></div>
-    </section>
 
-    <section class="admin-card">
-      <h2>기간 선택</h2>
-      <div class="filter-bar">
-        <button type="button" class="filter-btn active" data-filter="today">오늘</button>
-        <button type="button" class="filter-btn" data-filter="7d">최근 7일</button>
-        <button type="button" class="filter-btn" data-filter="month">이번 달</button>
-        <button type="button" class="filter-btn" data-filter="custom">날짜 직접 선택</button>
+      <div class="admin-card">
+        <h2>날짜별 결과</h2>
+        <p class="loading-note" id="tableLoading">불러오는 중...</p>
+        <p class="empty-note" id="tableEmpty" hidden></p>
+        <div class="table-scroll">
+          <table class="results-table" id="resultsTable">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>오늘의 메뉴</th>
+                <th>평가수</th>
+                <th>평균평점</th>
+                <th>5점</th>
+                <th>4점</th>
+                <th>3점</th>
+                <th>2점</th>
+                <th>1점</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTableBody"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="filter-range" id="customRange" hidden>
-        <input type="date" id="customStartInput">
-        <span>~</span>
-        <input type="date" id="customEndInput">
-        <button type="button" class="filter-apply-btn" id="customRangeApply">적용</button>
+
+      <div class="admin-card">
+        <h2>선택 날짜 (<span id="selectedDateLabel">-</span>) 평가 분포</h2>
+        <div class="dist-list" id="selectedDistList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>최근 7일 평균평점 변화</h2>
+        <svg class="trend-chart" id="trendChart"></svg>
+        <p class="trend-caption">세로축 0~5점, 가로축 최근 7일(MM/DD)</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>최근 30일 평균평점 변화</h2>
+        <svg class="trend-chart" id="trendChart30"></svg>
+        <p class="trend-caption">세로축 0~5점, 가로축 최근 30일</p>
       </div>
     </section>
 
-    <section class="admin-card">
-      <h2>날짜별 결과</h2>
-      <p class="loading-note" id="tableLoading">불러오는 중...</p>
-      <p class="empty-note" id="tableEmpty" hidden></p>
-      <div class="table-scroll">
-        <table class="results-table" id="resultsTable">
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>오늘의 메뉴</th>
-              <th>평가수</th>
-              <th>평균평점</th>
-              <th>5점</th>
-              <th>4점</th>
-              <th>3점</th>
-              <th>2점</th>
-              <th>1점</th>
-            </tr>
-          </thead>
-          <tbody id="resultsTableBody"></tbody>
-        </table>
+    <!-- ================= 언어 통계 ================= -->
+    <section class="admin-page" id="pageLanguage" hidden>
+      <div class="admin-card">
+        <h2>기간 선택</h2>
+        <div class="filter-bar">
+          <button type="button" class="filter-btn active" data-filter="today">오늘</button>
+          <button type="button" class="filter-btn" data-filter="7d">최근 7일</button>
+          <button type="button" class="filter-btn" data-filter="month">이번 달</button>
+          <button type="button" class="filter-btn" data-filter="custom">날짜 직접 선택</button>
+        </div>
+        <div class="filter-range" id="langCustomRange" hidden>
+          <input type="date" id="langCustomStartInput">
+          <span>~</span>
+          <input type="date" id="langCustomEndInput">
+          <button type="button" class="filter-apply-btn" id="langCustomRangeApply">적용</button>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2>언어별 통계</h2>
+        <p class="loading-note" id="langLoading">불러오는 중...</p>
+        <p class="empty-note" id="langEmpty" hidden></p>
+        <div class="dist-list" id="langDistList"></div>
       </div>
     </section>
 
-    <section class="admin-card">
-      <h2>선택 날짜 (<span id="selectedDateLabel">-</span>) 평가 분포</h2>
-      <div class="dist-list" id="selectedDistList"></div>
-    </section>
+    <!-- ================= 주간메뉴 관리 ================= -->
+    <section class="admin-page" id="pageWeeklyMenu" hidden>
+      <div class="admin-card">
+        <h2>관리자 로그인 (주간메뉴 등록·수정 권한)</h2>
+        <p class="empty-note" style="padding:0 0 10px;">통계를 보는 암호와는 별개입니다. 주간메뉴를 등록·수정·삭제하거나 이미지를 업로드하려면 아래에서 관리자 계정으로 로그인해야 합니다.</p>
+        <div id="weeklyAuthSignedOut">
+          <form class="weekly-auth-box" id="weeklyAuthForm">
+            <input type="email" id="weeklyAuthEmail" placeholder="관리자 이메일" autocomplete="username">
+            <input type="password" id="weeklyAuthPassword" placeholder="비밀번호" autocomplete="current-password">
+            <button type="submit">로그인</button>
+          </form>
+          <p class="form-error" id="weeklyAuthError"></p>
+        </div>
+        <div id="weeklyAuthSignedIn" hidden>
+          <div class="weekly-auth-status">
+            <span>로그인됨: <span class="signed-in-email" id="weeklyAuthEmailLabel"></span></span>
+            <button type="button" id="weeklyAuthSignOutBtn">로그아웃</button>
+          </div>
+        </div>
+      </div>
 
-    <section class="admin-card">
-      <h2>최근 7일 평균평점 변화</h2>
-      <svg class="trend-chart" id="trendChart"></svg>
-      <p class="trend-caption">세로축 0~5점, 가로축 최근 7일(MM/DD)</p>
+      <div class="admin-card" id="weeklyMenuLockedNote" hidden>
+        <p>주간메뉴를 등록·수정하려면 먼저 위에서 관리자 계정으로 로그인해야 합니다.</p>
+      </div>
+
+      <div id="weeklyMenuEditorArea" hidden>
+        <div class="admin-card">
+          <h2>주 선택</h2>
+          <div class="week-select-bar">
+            <label for="weekStartInput">주 시작일(월요일)</label>
+            <input type="date" id="weekStartInput">
+            <button type="button" class="filter-apply-btn" id="weekLoadBtn">이 주 불러오기</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h2>직접 입력 (요일별 메뉴)</h2>
+          <div class="week-day-grid" id="weekDayGrid"></div>
+        </div>
+
+        <div class="admin-card">
+          <h2>스크린샷 / 이미지 업로드</h2>
+          <div class="image-upload-box">
+            <p class="image-upload-caption">이번 주(월~금) 메뉴표 이미지를 등록하면, 직접 입력이 없는 날짜에 학생 화면에서 이미지로 대신 보여줍니다. (jpg, jpeg, png, webp / 최대 10MB)</p>
+            <div class="image-upload-row">
+              <input type="file" id="weekImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+              <button type="button" class="image-upload-btn" id="weekImageSaveBtn">저장</button>
+              <button type="button" class="image-delete-btn" id="weekImageDeleteBtn" hidden>이미지 삭제</button>
+            </div>
+            <div class="image-preview-wrap" id="weekImagePreviewWrap" hidden>
+              <img id="weekImagePreviewImg" alt="주간메뉴 이미지 미리보기">
+            </div>
+            <p class="form-error" id="weekImageError"></p>
+            <p class="form-success" id="weekImageSuccess"></p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script>
 """ + firebase_config + """
 </script>

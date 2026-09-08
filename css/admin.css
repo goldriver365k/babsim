@@ -50,6 +50,36 @@ button, input { font-family: inherit; }
   color: var(--text-mid);
 }
 
+/* ---- 상단 탭 내비게이션 ---- */
+
+.admin-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  margin-top: 12px;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.admin-nav-btn {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-mid);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-nav-btn.active {
+  color: var(--blue-dark);
+  border-bottom-color: var(--blue);
+}
+
 .admin-main {
   max-width: 960px;
   margin: 0 auto;
@@ -58,6 +88,24 @@ button, input { font-family: inherit; }
   flex-direction: column;
   gap: 20px;
 }
+
+.admin-page[hidden] { display: none; }
+.admin-page { display: flex; flex-direction: column; gap: 20px; }
+
+/* ---- 대시보드 요약 카드 (4개) / 언어 탭 요약 ---- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.stat-grid .stat-box .stat-value { font-size: 20px; }
+.stat-grid .stat-box .stat-sub { font-size: 11px; color: var(--text-mid); margin: 2px 0 0; }
 
 /* ---- 로그인 게이트 ---- */
 
@@ -149,7 +197,7 @@ button, input { font-family: inherit; }
 .dist-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .dist-row .dist-label { width: 76px; flex: 0 0 auto; color: var(--text-mid); }
 .dist-row .dist-bar-track { flex: 1 1 auto; height: 14px; background: #eef0f3; border-radius: 999px; overflow: hidden; }
-.dist-row .dist-bar-fill { height: 100%; background: var(--blue); border-radius: 999px; }
+.dist-row .dist-bar-fill { display: block; height: 100%; background: var(--blue); border-radius: 999px; }
 .dist-row .dist-count { width: 40px; flex: 0 0 auto; text-align: right; font-weight: 700; }
 
 /* ---- 필터 ---- */
@@ -242,3 +290,262 @@ table.results-table {
 .trend-caption { font-size: 12px; color: var(--text-mid); text-align: center; margin: 6px 0 0; }
 
 .loading-note { color: var(--text-mid); font-size: 13px; }
+
+/* ---- 폼 공용 메시지 ---- */
+
+.form-error {
+  color: var(--red);
+  font-size: 13px;
+  margin: 6px 0 0;
+  min-height: 18px;
+}
+
+.form-success {
+  color: var(--green);
+  font-size: 13px;
+  margin: 6px 0 0;
+  min-height: 18px;
+}
+
+/* ---- 언어 통계 탭 (요약은 .stat-grid, 분포는 .dist-list 재사용) ---- */
+
+.lang-dist-row .dist-label { width: 92px; }
+
+/* ---- 주간메뉴 관리: 관리자 로그인 (쓰기 권한용, 통계 열람 암호와는 별개) ---- */
+
+.weekly-auth-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.weekly-auth-box input {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.weekly-auth-box button {
+  min-height: 42px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weekly-auth-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.weekly-auth-status .signed-in-email { font-weight: 700; color: var(--blue-dark); }
+
+.weekly-auth-status button {
+  min-height: 36px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.weekly-locked-note {
+  color: var(--text-mid);
+  font-size: 13px;
+  background: #f4f5f7;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+/* ---- 주간메뉴 관리: 주 선택 ---- */
+
+.week-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.week-select-bar input[type="date"] {
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+/* ---- 주간메뉴 관리: 요일별 카드 ---- */
+
+.week-day-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .week-day-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+.week-day-card {
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.week-day-card h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.week-day-card input[type="date"] {
+  width: 100%;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.week-item-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.week-item-row input[type="text"] {
+  flex: 1 1 auto;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  min-width: 0;
+}
+
+.week-item-remove-btn {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-gray);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  color: var(--text-mid);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.week-add-item-btn {
+  min-height: 34px;
+  padding: 6px 10px;
+  background: #f4f5f7;
+  border: 1px dashed var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+
+.week-day-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.week-save-btn {
+  flex: 1 1 auto;
+  min-height: 38px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.week-delete-btn {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid var(--red);
+  color: var(--red);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.week-day-msg { font-size: 12px; min-height: 16px; }
+.week-day-msg.error { color: var(--red); }
+.week-day-msg.success { color: var(--green); }
+
+/* ---- 주간메뉴 관리: 이미지 업로드 ---- */
+
+.image-upload-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.image-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.image-upload-row input[type="file"] { font-size: 13px; }
+
+.image-upload-btn,
+.image-delete-btn {
+  min-height: 38px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.image-upload-btn {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+}
+
+.image-upload-btn:disabled { background: #b8bcc4; cursor: not-allowed; }
+
+.image-delete-btn {
+  background: #fff;
+  border: 1px solid var(--red);
+  color: var(--red);
+}
+
+.image-preview-wrap {
+  max-width: 320px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.image-preview-wrap img { display: block; width: 100%; height: auto; }
+
+.image-upload-caption { font-size: 12px; color: var(--text-mid); margin: 0; }

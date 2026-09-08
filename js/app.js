@@ -209,6 +209,9 @@
     renderAll();
     if (!els.colaDetailOverlay.hidden) renderColaDetail();
     if (!els.staffShowOverlay.hidden) renderStaffShow();
+    if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
+      window.LanguageStats.record(lang);
+    }
   }
 
   function changeGroup(delta) {
@@ -300,18 +303,32 @@
       return;
     }
 
-    var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
     var anyLine = false;
-    order.forEach(function (key) {
-      var field = day[key];
-      if (!field) return;
-      var text = field[lang] || field.ko;
-      if (!text) return;
-      anyLine = true;
-      var li = document.createElement("li");
-      li.textContent = text;
-      listEl.appendChild(li);
-    });
+
+    if (day.items && day.items.length) {
+      // 관리자 페이지 "주간메뉴 관리 → 직접 입력"으로 등록된 데이터
+      // (요일별 고정 항목이 아닌 자유 목록 형태)
+      day.items.forEach(function (item) {
+        var text = typeof item === "string" ? item : (item[lang] || item.ko);
+        if (!text) return;
+        anyLine = true;
+        var li = document.createElement("li");
+        li.textContent = text;
+        listEl.appendChild(li);
+      });
+    } else {
+      var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
+      order.forEach(function (key) {
+        var field = day[key];
+        if (!field) return;
+        var text = field[lang] || field.ko;
+        if (!text) return;
+        anyLine = true;
+        var li = document.createElement("li");
+        li.textContent = text;
+        listEl.appendChild(li);
+      });
+    }
 
     if (!anyLine) {
       var closedP2 = document.createElement("p");
@@ -370,8 +387,17 @@
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (day.main || day.rice || day.soup));
-    var menuText = day && day.main ? day.main.ko : "";
+    var hasItems = !!(day && day.items && day.items.length);
+    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasItems || day.main || day.rice || day.soup));
+    var menuText = "";
+    if (day) {
+      if (hasItems) {
+        var first = day.items[0];
+        menuText = typeof first === "string" ? first : (first.ko || "");
+      } else if (day.main) {
+        menuText = day.main.ko;
+      }
+    }
     window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText);
   }
 
@@ -669,6 +695,18 @@
 
     lastKnownSeoulDateKey = getSeoulDateKey(0);
     setInterval(checkMidnightRollover, 60000);
+
+    /* 언어 통계 기록 (새 UI 없음, 방문 시점의 언어를 그대로 기록) */
+    if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
+      window.LanguageStats.record(state.lang);
+    }
+
+    /* 관리자 페이지에서 등록한 주간메뉴로 동기화 (없으면 정적 데이터 유지) */
+    if (window.WeeklyMenuSync && typeof window.WeeklyMenuSync.sync === "function") {
+      window.WeeklyMenuSync.sync(function () {
+        if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
+      });
+    }
   }
 
   if (document.readyState === "loading") {

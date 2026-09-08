@@ -2113,37 +2113,89 @@ const BREAKFAST_WEEKLY_MENU = {
 <script>
 /* ==========================================================================
    Firebase 프로젝트 연결 설정
-   - "천원의 아침밥 오늘의 메뉴 평가" 기능이 사용하는 Firestore(DB) 연결 정보입니다.
    - babsim-46284 프로젝트 값으로 연결되어 있습니다 (2026-09-09 연동 완료).
+   - Firestore(DB)는 학생 화면(천원의 아침밥 평가, 언어 통계, 주간메뉴)과
+     관리자 페이지가 함께 사용합니다.
+   - Firebase Authentication과 Storage는 관리자 페이지의 "주간메뉴 관리"
+     (이미지 업로드, 직접 입력 저장/수정/삭제)에서만 사용합니다.
+     학생 화면(index.html)은 이 둘을 전혀 불러오지 않습니다(가벼운 상태 유지).
 
-   ⚠ Firestore 보안 규칙을 아직 설정하지 않았다면 Firebase 콘솔의
-   Firestore Database → "규칙" 탭에서 아래 규칙을 반드시 적용하세요.
-   (breakfastRatings 컬렉션에 유효성 검사를 통과하는 생성만 허용하고,
-   그 외 컬렉션·수정·삭제는 모두 막습니다. 기본 테스트 모드 규칙을
-   그대로 두면 누구나 임의로 읽고 쓸 수 있으니 반드시 아래로 교체하세요.)
+   ⚠ Firestore 보안 규칙 — 아래 규칙 전체를 Firebase 콘솔의
+   Firestore Database → "규칙" 탭에 그대로 붙여넣어야 합니다.
+   (컬렉션마다 허용 범위가 다르므로 하나라도 빠지면 그 기능이 막힙니다.)
 
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
+
+          // 천원의 아침밥 평가 (학생이 직접 씀, 누구나 생성만 가능)
           match /breakfastRatings/{docId} {
             allow create: if request.resource.data.rating is int
               && request.resource.data.rating >= 1
               && request.resource.data.rating <= 5
               && request.resource.data.date is string
               && request.resource.data.keys().hasAll(['date','menuId','rating','language','deviceId']);
-            allow read: if true;   // 관리자 페이지가 통계 조회 시 사용
+            allow read: if true;   // 관리자 페이지 통계 조회용
             allow update, delete: if false;
+          }
+
+          // 언어 선택 통계 (학생 화면이 방문/언어변경 시 자동 기록)
+          // 문서 ID를 "날짜_기기ID"로 고정해서 하루 1기기당 문서 1개만
+          // 남도록 하고(=최종 선택 언어로 덮어쓰기), 방문자 수 집계에도 씁니다.
+          match /languageStats/{docId} {
+            allow create, update: if request.resource.data.language is string
+              && request.resource.data.date is string
+              && request.resource.data.deviceId is string
+              && docId == request.resource.data.date + '_' + request.resource.data.deviceId;
+            allow read: if true;   // 관리자 페이지 통계 조회용
+            allow delete: if false;
+          }
+
+          // 주간메뉴 직접 입력 (관리자만 쓰기, 학생 화면은 읽기만)
+          match /weeklyMenus/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
+          // 주간메뉴 이미지 등록 정보 (관리자만 쓰기, 학생 화면은 읽기만)
+          match /weeklyMenuImages/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
           }
         }
       }
+
+   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"에 필요합니다.
+   Firebase 콘솔 → Storage → "규칙" 탭에 아래를 붙여넣으세요.
+   (Storage를 아직 한 번도 안 켰다면 "시작하기"부터 눌러 생성해야 합니다.)
+
+      rules_version = '2';
+      service firebase.storage {
+        match /b/{bucket}/o {
+          match /weeklyMenuImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
+        }
+      }
+
+   ⚠ Firebase Authentication — 관리자 로그인에 필요합니다.
+   Firebase 콘솔 → Authentication → "Sign-in method" 탭 →
+   "이메일/비밀번호" 제공업체 사용 설정 → "Users" 탭에서 관리자 계정
+   (이메일 + 비밀번호) 1개를 직접 추가하세요. 그 계정으로만
+   주간메뉴를 등록·수정·삭제하고 이미지를 업로드할 수 있습니다.
+   (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
+   별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
 
    다른 Firebase 프로젝트로 바꾸고 싶다면 프로젝트 설정(톱니바퀴 아이콘)
    → "일반" 탭 → "내 앱" → 웹 앱의 firebaseConfig 값을 아래 6개 값에
    그대로 옮겨 적고 `python3 scripts/build-inline.py`를 다시 실행하세요.
 
-   참고: apiKey가 REPLACE_ME 상태이면 평가 기능은 화면에는 정상적으로
-   보이지만, 저장은 각 학생의 기기(localStorage)에만 남고 관리자 페이지
-   통계에는 집계되지 않습니다. (학생 화면이 깨지지 않도록 하기 위한 안전장치)
+   참고: apiKey가 REPLACE_ME 상태이면 학생 화면은 정상적으로 보이지만,
+   저장은 각 학생의 기기(localStorage)에만 남고 관리자 페이지 통계에는
+   집계되지 않습니다. (학생 화면이 깨지지 않도록 하기 위한 안전장치)
    ========================================================================== */
 
 var FIREBASE_CONFIG = {
@@ -2160,16 +2212,50 @@ function isFirebaseConfigured() {
   return !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "REPLACE_ME");
 }
 
-function getFirestoreDb() {
-  if (!isFirebaseConfigured()) return null;
-  if (typeof firebase === "undefined") return null;
+function ensureFirebaseApp() {
+  if (!isFirebaseConfigured()) return false;
+  if (typeof firebase === "undefined") return false;
   try {
     if (!firebase.apps || !firebase.apps.length) {
       firebase.initializeApp(FIREBASE_CONFIG);
     }
-    return firebase.firestore();
+    return true;
   } catch (e) {
     console.error("Firebase 초기화 오류:", e);
+    return false;
+  }
+}
+
+function getFirestoreDb() {
+  if (!ensureFirebaseApp()) return null;
+  try {
+    return firebase.firestore();
+  } catch (e) {
+    console.error("Firestore 초기화 오류:", e);
+    return null;
+  }
+}
+
+/* 관리자 페이지(admin.html) 전용 — 학생 화면(index.html)은 이 두 함수를 쓰지 않습니다. */
+
+function getFirebaseAuth() {
+  if (!ensureFirebaseApp()) return null;
+  if (typeof firebase === "undefined" || !firebase.auth) return null;
+  try {
+    return firebase.auth();
+  } catch (e) {
+    console.error("Firebase Auth 초기화 오류:", e);
+    return null;
+  }
+}
+
+function getFirebaseStorage() {
+  if (!ensureFirebaseApp()) return null;
+  if (typeof firebase === "undefined" || !firebase.storage) return null;
+  try {
+    return firebase.storage();
+  } catch (e) {
+    console.error("Firebase Storage 초기화 오류:", e);
     return null;
   }
 }
@@ -2418,6 +2504,184 @@ var BreakfastRating = (function () {
 </script>
 <script>
 /* ==========================================================================
+   언어 선택 통계 (js/language-stats.js)
+   - 새로운 언어 선택 UI를 만들지 않습니다. 기존 언어 버튼(app.js의
+     setLang)에서 이 모듈의 record()만 호출해 기록합니다.
+   - 문서 ID를 "날짜_기기ID"로 고정해서, 같은 기기가 하루에 여러 번
+     새로고침하거나 언어를 여러 번 바꿔도 하루 1개 문서만 남습니다
+     (매번 set()으로 덮어쓰므로 "그날의 최종 선택 언어"가 자동으로 남음).
+   - 이 컬렉션은 "오늘 접속자" 수를 세는 데도 함께 쓰입니다(기기 단위
+     고유 방문 근사치 — 서버 로그 기반의 정확한 트래픽 집계는 아닙니다).
+   ========================================================================== */
+
+var LanguageStats = (function () {
+  "use strict";
+
+  var DEVICE_ID_KEY = "foodhall_device_id";
+  var SEOUL_TZ = "Asia/Seoul";
+
+  function getSeoulDateKey() {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: SEOUL_TZ, year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(new Date());
+  }
+
+  function getDeviceId() {
+    try {
+      var id = localStorage.getItem(DEVICE_ID_KEY);
+      if (id) return id;
+      id = (window.crypto && typeof crypto.randomUUID === "function")
+        ? crypto.randomUUID()
+        : ("dev-" + Date.now() + "-" + Math.random().toString(16).slice(2));
+      localStorage.setItem(DEVICE_ID_KEY, id);
+      return id;
+    } catch (e) {
+      return "dev-nostorage";
+    }
+  }
+
+  var lastRecordedLang = null;
+
+  /**
+   * 오늘 날짜 + 이 기기의 언어 선택 기록을 남깁니다(덮어쓰기).
+   * 같은 언어를 연속으로 다시 기록하려는 호출은(예: 화면 재방문) 생략해
+   * 불필요한 쓰기를 줄이되, 페이지 로드 시 최초 1회는 방문 집계를 위해
+   * 항상 기록합니다.
+   * @param {string} lang 현재 선택된 언어 코드
+   * @param {boolean} [force] true면 같은 언어라도 다시 기록(변경 이력 확장용)
+   */
+  function record(lang, force) {
+    if (!lang) return;
+    if (!force && lastRecordedLang === lang) return;
+
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!db) {
+      lastRecordedLang = lang; // Firebase 미설정 시에도 중복 시도만 방지
+      return;
+    }
+
+    var dateKey = getSeoulDateKey();
+    var deviceId = getDeviceId();
+    var docId = dateKey + "_" + deviceId;
+
+    db.collection("languageStats").doc(docId).set({
+      date: dateKey,
+      language: lang,
+      deviceId: deviceId,
+      updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
+        ? firebase.firestore.FieldValue.serverTimestamp()
+        : new Date().toISOString(),
+      changeCount: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
+        ? firebase.firestore.FieldValue.increment(1)
+        : 1
+    }, { merge: true }).then(function () {
+      lastRecordedLang = lang;
+    }).catch(function (err) {
+      console.error("언어 통계 저장 오류:", err);
+    });
+  }
+
+  return { record: record };
+})();
+
+</script>
+<script>
+/* ==========================================================================
+   주간메뉴 Firestore 동기화 (js/weekly-menu-sync.js)
+   - 관리자 페이지("주간메뉴 관리")에서 등록한 데이터를 읽어와
+     data/breakfast-weekly-menu.js의 정적 BREAKFAST_WEEKLY_MENU 객체에
+     덮어씁니다. Firestore에 해당 날짜 데이터가 없으면 정적 파일의
+     내용이 그대로 유지됩니다(기존 방식과 100% 호환되는 안전한 대체 동작).
+
+   우선순위 (관리자 페이지 안내와 동일):
+     1) weeklyMenus에 그 날짜의 직접 입력 데이터가 있으면 그것을 사용
+     2) 없고 그 주의 weeklyMenuImages 이미지가 있으면 이미지를 사용
+        (기존 "주간 메뉴 원본 보기" 팝업을 그대로 재사용 —
+        BREAKFAST_WEEKLY_MENU.sourceImage 값만 바꿔주면 됩니다)
+     3) 둘 다 없으면 정적 파일 내용(대개 비어있음 → "운영하지 않습니다")
+
+   화면은 렌더링이 끝난 뒤 비동기로 동기화하고, 데이터가 갱신되면
+   콜백으로 다시 그리게 합니다(초기 표시가 늦어지지 않도록).
+   ========================================================================== */
+
+var WeeklyMenuSync = (function () {
+  "use strict";
+
+  var SEOUL_TZ = "Asia/Seoul";
+
+  function getSeoulDateKey(offsetDays) {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: SEOUL_TZ, year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(new Date(Date.now() + (offsetDays || 0) * 24 * 60 * 60 * 1000));
+  }
+
+  function addDaysToKey(dateKey, days) {
+    var parts = dateKey.split("-").map(Number);
+    var d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function mondayKeyOf(dateKey) {
+    var parts = dateKey.split("-").map(Number);
+    var d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    var weekday = (d.getUTCDay() + 6) % 7; // 0=월 ... 6=일
+    return addDaysToKey(dateKey, -weekday);
+  }
+
+  function applyDayDoc(dateKey, data) {
+    if (!data || !data.items || !data.items.length) return;
+    if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
+    if (!BREAKFAST_WEEKLY_MENU.days) BREAKFAST_WEEKLY_MENU.days = {};
+    BREAKFAST_WEEKLY_MENU.days[dateKey] = { items: data.items };
+  }
+
+  function sync(onReady) {
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!db || typeof BREAKFAST_WEEKLY_MENU === "undefined") {
+      if (onReady) onReady();
+      return;
+    }
+
+    var todayKey = getSeoulDateKey(0);
+    var tomorrowKey = getSeoulDateKey(1);
+    var weekKey = mondayKeyOf(todayKey);
+
+    Promise.all([
+      db.collection("weeklyMenus").doc(todayKey).get().catch(function () { return null; }),
+      db.collection("weeklyMenus").doc(tomorrowKey).get().catch(function () { return null; }),
+      db.collection("weeklyMenuImages").doc(weekKey).get().catch(function () { return null; })
+    ]).then(function (results) {
+      var todaySnap = results[0];
+      var tomorrowSnap = results[1];
+      var imageSnap = results[2];
+
+      if (todaySnap && todaySnap.exists) applyDayDoc(todayKey, todaySnap.data());
+      if (tomorrowSnap && tomorrowSnap.exists) applyDayDoc(tomorrowKey, tomorrowSnap.data());
+
+      // 직접 입력 데이터가 없는 날에 한해서만 이미지로 보완
+      var todayHasItems = !!(BREAKFAST_WEEKLY_MENU.days[todayKey] && BREAKFAST_WEEKLY_MENU.days[todayKey].items);
+      var tomorrowHasItems = !!(BREAKFAST_WEEKLY_MENU.days[tomorrowKey] && BREAKFAST_WEEKLY_MENU.days[tomorrowKey].items);
+      if (imageSnap && imageSnap.exists && (!todayHasItems || !tomorrowHasItems)) {
+        var imgData = imageSnap.data();
+        if (imgData && imgData.imageUrl) {
+          BREAKFAST_WEEKLY_MENU.sourceImage = imgData.imageUrl;
+        }
+      }
+
+      if (onReady) onReady();
+    }).catch(function (err) {
+      console.error("주간메뉴 동기화 오류:", err);
+      if (onReady) onReady();
+    });
+  }
+
+  return { sync: sync };
+})();
+
+</script>
+<script>
+/* ==========================================================================
    푸드홀(인제대학교) app.js
    - 매장 선택 / 언어 선택 / 메뉴 그룹 이전·다음 / 천원의 아침밥 모달
    - 외부 라이브러리 없이 순수 JavaScript로 동작합니다.
@@ -2628,6 +2892,9 @@ var BreakfastRating = (function () {
     renderAll();
     if (!els.colaDetailOverlay.hidden) renderColaDetail();
     if (!els.staffShowOverlay.hidden) renderStaffShow();
+    if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
+      window.LanguageStats.record(lang);
+    }
   }
 
   function changeGroup(delta) {
@@ -2719,18 +2986,32 @@ var BreakfastRating = (function () {
       return;
     }
 
-    var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
     var anyLine = false;
-    order.forEach(function (key) {
-      var field = day[key];
-      if (!field) return;
-      var text = field[lang] || field.ko;
-      if (!text) return;
-      anyLine = true;
-      var li = document.createElement("li");
-      li.textContent = text;
-      listEl.appendChild(li);
-    });
+
+    if (day.items && day.items.length) {
+      // 관리자 페이지 "주간메뉴 관리 → 직접 입력"으로 등록된 데이터
+      // (요일별 고정 항목이 아닌 자유 목록 형태)
+      day.items.forEach(function (item) {
+        var text = typeof item === "string" ? item : (item[lang] || item.ko);
+        if (!text) return;
+        anyLine = true;
+        var li = document.createElement("li");
+        li.textContent = text;
+        listEl.appendChild(li);
+      });
+    } else {
+      var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
+      order.forEach(function (key) {
+        var field = day[key];
+        if (!field) return;
+        var text = field[lang] || field.ko;
+        if (!text) return;
+        anyLine = true;
+        var li = document.createElement("li");
+        li.textContent = text;
+        listEl.appendChild(li);
+      });
+    }
 
     if (!anyLine) {
       var closedP2 = document.createElement("p");
@@ -2789,8 +3070,17 @@ var BreakfastRating = (function () {
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (day.main || day.rice || day.soup));
-    var menuText = day && day.main ? day.main.ko : "";
+    var hasItems = !!(day && day.items && day.items.length);
+    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasItems || day.main || day.rice || day.soup));
+    var menuText = "";
+    if (day) {
+      if (hasItems) {
+        var first = day.items[0];
+        menuText = typeof first === "string" ? first : (first.ko || "");
+      } else if (day.main) {
+        menuText = day.main.ko;
+      }
+    }
     window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText);
   }
 
@@ -3088,6 +3378,18 @@ var BreakfastRating = (function () {
 
     lastKnownSeoulDateKey = getSeoulDateKey(0);
     setInterval(checkMidnightRollover, 60000);
+
+    /* 언어 통계 기록 (새 UI 없음, 방문 시점의 언어를 그대로 기록) */
+    if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
+      window.LanguageStats.record(state.lang);
+    }
+
+    /* 관리자 페이지에서 등록한 주간메뉴로 동기화 (없으면 정적 데이터 유지) */
+    if (window.WeeklyMenuSync && typeof window.WeeklyMenuSync.sync === "function") {
+      window.WeeklyMenuSync.sync(function () {
+        if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
+      });
+    }
   }
 
   if (document.readyState === "loading") {
