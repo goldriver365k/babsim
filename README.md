@@ -158,9 +158,15 @@ Firebase(Firestore)가 필요합니다. `js/firebase-config.js` 파일 맨 위 �
 ### 9-2. 관리자 페이지
 
 `admin.html`을 열면 통계를 확인할 수 있습니다. (기본 임시 암호:
-`foodhall2026` — `js/admin.js` 맨 위 `ADMIN_PASSPHRASE` 값을 바꿔서
-꼭 변경하세요. 이 암호는 화면 접근을 막는 최소한의 장치일 뿐,
-실제 보안은 Firestore 보안 규칙이 담당합니다.)
+`foodhall2026` — `js/admin.js` 맨 위 `ADMIN_PASSPHRASE` 값을 바꾼 뒤
+`python3 scripts/build-inline.py`를 다시 실행해서 꼭 변경하세요.
+이 암호는 화면 접근을 막는 최소한의 장치일 뿐, 실제 보안은
+Firestore 보안 규칙이 담당합니다.)
+
+`admin.html`도 `index.html`과 마찬가지로 CSS/JS를 전부 내장한
+독립 실행형 파일입니다. `css/admin.css`, `js/admin.js`를 수정했다면
+`python3 scripts/build-inline.py`를 실행해야 `admin.html`에 반영됩니다
+(직접 `admin.html`을 열어서 수정하지 마세요 — 다음 빌드 때 덮어써집니다).
 
 - 오늘 평가(참여자·평균평점·긍정평가·5단계 분포)
 - 기간 선택(오늘 / 최근 7일 / 이번 달 / 날짜 직접 선택)에 따른 날짜별 결과 표

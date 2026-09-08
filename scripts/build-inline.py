@@ -1,26 +1,29 @@
 """
-css/style.css, js/translations.js, js/menu-data.js, js/app.js 파일을
-index.html 안에 <style>/<script>로 직접 합쳐 넣는 스크립트입니다.
+css/style.css, js/translations.js, js/menu-data.js, js/app.js 등의 원본
+파일을 index.html / admin.html 안에 <style>/<script>로 직접 합쳐 넣는
+스크립트입니다.
 
 왜 필요한가:
   일부 미리보기 환경(iframe, 샌드박스 등)에서는 <link>나
   <script src="...">로 불러오는 외부 파일을 읽지 못해 CSS와 JS가
   전혀 적용되지 않는 문제가 있었습니다. 이를 근본적으로 피하기 위해
-  실제 배포용 index.html은 외부 파일을 참조하지 않고
-  CSS/JS를 전부 내장한 "독립 실행형" 파일로 만듭니다.
+  실제 배포용 index.html·admin.html은 프로젝트 자체 CSS/JS는
+  외부 참조 없이 전부 내장한 "독립 실행형" 파일로 만듭니다.
+  (Firebase SDK처럼 외부 CDN에서 불러오는 라이브러리는 예외입니다.)
 
 사용법:
-  메뉴, 번역, 동작, 디자인을 수정할 때는
+  메뉴, 번역, 동작, 디자인, 관리자 페이지를 수정할 때는
   css/style.css, js/translations.js, js/menu-data.js, js/app.js,
-  js/firebase-config.js, js/breakfast-rating.js
+  js/firebase-config.js, js/breakfast-rating.js,
+  css/admin.css, js/admin.js
   이 원본 파일들만 수정하고, 그 다음 아래 명령을 실행하세요.
 
       python3 scripts/build-inline.py
 
-  실행하면 index.html이 최신 내용으로 자동 갱신됩니다.
+  실행하면 index.html과 admin.html이 최신 내용으로 자동 갱신됩니다.
   (이 스크립트는 배포에 필요한 빌드 과정이 아니라,
    로컬에서 편집을 도와주는 선택적 도구입니다.
-   Netlify에는 이미 완성된 index.html만 그대로 올리면 됩니다.)
+   Netlify에는 이미 완성된 index.html·admin.html만 그대로 올리면 됩니다.)
 """
 import os
 
@@ -269,5 +272,140 @@ def build():
     print("index.html 갱신 완료:", len(html), "바이트")
 
 
+def build_admin():
+    """admin.html도 index.html과 동일한 이유로 CSS/JS를 전부 내장한
+    독립 실행형 파일로 만듭니다. (외부 파일을 읽지 못하는 환경에서
+    관리자 페이지가 빈 화면이나 "암호가 작동하지 않는" 상태로 보이는
+    문제를 근본적으로 피하기 위함)"""
+    admin_css = read("css/admin.css")
+    firebase_config = read("js/firebase-config.js")
+    admin_js = read("js/admin.js")
+
+    html = """<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 - 메뉴 평가 통계</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+""" + admin_css + """
+</style>
+</head>
+<body>
+
+<div class="admin-gate" id="adminGate">
+  <h1>관리자 로그인</h1>
+  <form id="adminGateForm">
+    <input type="password" id="adminGateInput" placeholder="암호를 입력하세요" autocomplete="current-password">
+    <p class="error" id="adminGateError"></p>
+    <button type="submit">확인</button>
+  </form>
+  <p class="note">천원의 아침밥 메뉴 평가 통계를 확인하는 내부 페이지입니다.</p>
+</div>
+
+<div id="adminApp" hidden>
+  <header class="admin-header">
+    <h1 class="admin-title">천원의 아침밥 — 메뉴 평가 통계</h1>
+    <p class="admin-sub">학생들이 남긴 오늘의 메뉴 평가를 날짜별로 확인합니다.</p>
+  </header>
+
+  <main class="admin-main">
+    <p class="admin-warn" id="adminFirebaseWarning" hidden>
+      ⚠ Firebase가 아직 연결되지 않았습니다. js/firebase-config.js에 실제 프로젝트 값을
+      입력하기 전까지는 통계에 표시되는 데이터가 없습니다. (학생 화면은 정상 작동합니다.)
+    </p>
+
+    <section class="admin-card">
+      <h2>오늘 평가</h2>
+      <div class="today-stats">
+        <div class="stat-box">
+          <p class="stat-label">참여자</p>
+          <p class="stat-value" id="todayParticipants">-</p>
+        </div>
+        <div class="stat-box">
+          <p class="stat-label">평균평점</p>
+          <p class="stat-value" id="todayAvg">-</p>
+        </div>
+        <div class="stat-box">
+          <p class="stat-label">긍정평가</p>
+          <p class="stat-value" id="todayPositive">-</p>
+        </div>
+      </div>
+      <div class="dist-list" id="todayDistList"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>기간 선택</h2>
+      <div class="filter-bar">
+        <button type="button" class="filter-btn active" data-filter="today">오늘</button>
+        <button type="button" class="filter-btn" data-filter="7d">최근 7일</button>
+        <button type="button" class="filter-btn" data-filter="month">이번 달</button>
+        <button type="button" class="filter-btn" data-filter="custom">날짜 직접 선택</button>
+      </div>
+      <div class="filter-range" id="customRange" hidden>
+        <input type="date" id="customStartInput">
+        <span>~</span>
+        <input type="date" id="customEndInput">
+        <button type="button" class="filter-apply-btn" id="customRangeApply">적용</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>날짜별 결과</h2>
+      <p class="loading-note" id="tableLoading">불러오는 중...</p>
+      <p class="empty-note" id="tableEmpty" hidden></p>
+      <div class="table-scroll">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>오늘의 메뉴</th>
+              <th>평가수</th>
+              <th>평균평점</th>
+              <th>5점</th>
+              <th>4점</th>
+              <th>3점</th>
+              <th>2점</th>
+              <th>1점</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>선택 날짜 (<span id="selectedDateLabel">-</span>) 평가 분포</h2>
+      <div class="dist-list" id="selectedDistList"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>최근 7일 평균평점 변화</h2>
+      <svg class="trend-chart" id="trendChart"></svg>
+      <p class="trend-caption">세로축 0~5점, 가로축 최근 7일(MM/DD)</p>
+    </section>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+""" + firebase_config + """
+</script>
+<script>
+""" + admin_js + """
+</script>
+</body>
+</html>
+"""
+
+    out_path = os.path.join(BASE, "admin.html")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    print("admin.html 갱신 완료:", len(html), "바이트")
+
+
 if __name__ == "__main__":
     build()
+    build_admin()
