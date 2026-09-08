@@ -714,6 +714,37 @@ main {
   overflow-wrap: anywhere;
 }
 
+/* ---- 일반식 / 간편식 (관리자 페이지 직접 입력 데이터) ---- */
+
+.ba-meal-group {
+  list-style: none;
+}
+
+.ba-meal-group + .ba-meal-group {
+  margin-top: 10px;
+}
+
+.ba-meal-group-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.ba-meal-subgroup {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ba-meal-subgroup li {
+  overflow-wrap: anywhere;
+}
+
 .today-meal-closed {
   margin: 0;
   font-size: 15px;

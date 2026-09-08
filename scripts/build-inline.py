@@ -518,6 +518,7 @@ def build_admin():
 
         <div class="admin-card">
           <h2>직접 입력 (요일별 메뉴)</h2>
+          <p class="image-upload-caption">각 요일 카드는 일반식·간편식 두 목록으로 나뉩니다. 엑셀에서 그 요일의 일반식·간편식 두 칸을 함께 복사해 붙여넣기 칸에 넣고 "붙여넣기 적용"을 누르면 자동으로 채워집니다(탭으로 구분된 2번째 칸이 없으면 전부 일반식으로 채워집니다). 채운 뒤에는 꼭 내용을 확인하고 "저장"을 눌러야 실제로 반영됩니다.</p>
           <div class="week-day-grid" id="weekDayGrid"></div>
         </div>
 

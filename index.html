@@ -733,6 +733,37 @@ main {
   overflow-wrap: anywhere;
 }
 
+/* ---- 일반식 / 간편식 (관리자 페이지 직접 입력 데이터) ---- */
+
+.ba-meal-group {
+  list-style: none;
+}
+
+.ba-meal-group + .ba-meal-group {
+  margin-top: 10px;
+}
+
+.ba-meal-group-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.ba-meal-subgroup {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ba-meal-subgroup li {
+  overflow-wrap: anywhere;
+}
+
 .today-meal-closed {
   margin: 0;
   font-size: 15px;
@@ -1909,7 +1940,9 @@ const BREAKFAST_INFO = {
     main: { ko: "주메뉴", en: "Main", zh: "主菜", vi: "Món chính", mn: "Гол хоол" },
     side1: { ko: "반찬1", en: "Side 1", zh: "小菜1", vi: "Món phụ 1", mn: "Дагалдах хоол 1" },
     side2: { ko: "반찬2", en: "Side 2", zh: "小菜2", vi: "Món phụ 2", mn: "Дагалдах хоол 2" },
-    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи" }
+    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи" },
+    regular: { ko: "일반식", en: "Regular Meal", zh: "普通餐", vi: "Suất thường", mn: "Энгийн хоол" },
+    simple: { ko: "간편식", en: "Simple Meal", zh: "简餐", vi: "Suất đơn giản", mn: "Хялбар хоол" }
   },
   viewOriginalButton: {
     ko: "주간 메뉴 원본 보기",
@@ -2630,10 +2663,17 @@ var WeeklyMenuSync = (function () {
   }
 
   function applyDayDoc(dateKey, data) {
-    if (!data || !data.items || !data.items.length) return;
+    if (!data) return;
+    var hasRegular = data.regular && data.regular.length;
+    var hasSimple = data.simple && data.simple.length;
+    var hasItems = data.items && data.items.length; // 예전 저장 방식(단일 목록) 하위 호환
+    if (!hasRegular && !hasSimple && !hasItems) return;
     if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
     if (!BREAKFAST_WEEKLY_MENU.days) BREAKFAST_WEEKLY_MENU.days = {};
-    BREAKFAST_WEEKLY_MENU.days[dateKey] = { items: data.items };
+    BREAKFAST_WEEKLY_MENU.days[dateKey] = {
+      regular: hasRegular ? data.regular : (hasItems ? data.items : []),
+      simple: hasSimple ? data.simple : []
+    };
   }
 
   function sync(onReady) {
@@ -2660,8 +2700,12 @@ var WeeklyMenuSync = (function () {
       if (tomorrowSnap && tomorrowSnap.exists) applyDayDoc(tomorrowKey, tomorrowSnap.data());
 
       // 직접 입력 데이터가 없는 날에 한해서만 이미지로 보완
-      var todayHasItems = !!(BREAKFAST_WEEKLY_MENU.days[todayKey] && BREAKFAST_WEEKLY_MENU.days[todayKey].items);
-      var tomorrowHasItems = !!(BREAKFAST_WEEKLY_MENU.days[tomorrowKey] && BREAKFAST_WEEKLY_MENU.days[tomorrowKey].items);
+      function hasDirectInput(dateKey) {
+        var d = BREAKFAST_WEEKLY_MENU.days[dateKey];
+        return !!(d && ((d.regular && d.regular.length) || (d.simple && d.simple.length)));
+      }
+      var todayHasItems = hasDirectInput(todayKey);
+      var tomorrowHasItems = hasDirectInput(tomorrowKey);
       if (imageSnap && imageSnap.exists && (!todayHasItems || !tomorrowHasItems)) {
         var imgData = imageSnap.data();
         if (imgData && imgData.imageUrl) {
@@ -2988,29 +3032,44 @@ var WeeklyMenuSync = (function () {
 
     var anyLine = false;
 
-    if (day.items && day.items.length) {
+    function appendItemLine(container, item) {
+      var text = typeof item === "string" ? item : (item && (item[lang] || item.ko));
+      if (!text) return;
+      anyLine = true;
+      var li = document.createElement("li");
+      li.textContent = text;
+      container.appendChild(li);
+    }
+
+    if ((day.regular && day.regular.length) || (day.simple && day.simple.length)) {
       // 관리자 페이지 "주간메뉴 관리 → 직접 입력"으로 등록된 데이터
-      // (요일별 고정 항목이 아닌 자유 목록 형태)
-      day.items.forEach(function (item) {
-        var text = typeof item === "string" ? item : (item[lang] || item.ko);
-        if (!text) return;
-        anyLine = true;
-        var li = document.createElement("li");
-        li.textContent = text;
-        listEl.appendChild(li);
+      // (일반식 / 간편식 두 갈래, 요일별 고정 항목이 아닌 자유 목록 형태)
+      ["regular", "simple"].forEach(function (typeKey) {
+        var list = day[typeKey];
+        if (!list || !list.length) return;
+
+        var groupLi = document.createElement("li");
+        groupLi.className = "ba-meal-group";
+
+        var titleEl = document.createElement("span");
+        titleEl.className = "ba-meal-group-title";
+        var labelInfo = BREAKFAST_INFO.mealFieldLabels[typeKey];
+        titleEl.textContent = labelInfo ? (labelInfo[lang] || labelInfo.ko) : typeKey;
+        groupLi.appendChild(titleEl);
+
+        var subUl = document.createElement("ul");
+        subUl.className = "ba-meal-subgroup";
+        list.forEach(function (item) { appendItemLine(subUl, item); });
+        groupLi.appendChild(subUl);
+
+        listEl.appendChild(groupLi);
       });
+    } else if (day.items && day.items.length) {
+      // 과거 저장 방식(일반식/간편식 구분 없는 단일 목록) 하위 호환
+      day.items.forEach(function (item) { appendItemLine(listEl, item); });
     } else {
       var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
-      order.forEach(function (key) {
-        var field = day[key];
-        if (!field) return;
-        var text = field[lang] || field.ko;
-        if (!text) return;
-        anyLine = true;
-        var li = document.createElement("li");
-        li.textContent = text;
-        listEl.appendChild(li);
-      });
+      order.forEach(function (key) { appendItemLine(listEl, day[key]); });
     }
 
     if (!anyLine) {
@@ -3070,11 +3129,16 @@ var WeeklyMenuSync = (function () {
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+    var firstList = day && ((day.regular && day.regular.length) ? day.regular : (day.simple && day.simple.length ? day.simple : null));
+    var hasDirectInput = !!firstList;
     var hasItems = !!(day && day.items && day.items.length);
-    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasItems || day.main || day.rice || day.soup));
+    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasDirectInput || hasItems || day.main || day.rice || day.soup));
     var menuText = "";
     if (day) {
-      if (hasItems) {
+      if (hasDirectInput) {
+        var firstDirect = firstList[0];
+        menuText = typeof firstDirect === "string" ? firstDirect : (firstDirect.ko || "");
+      } else if (hasItems) {
         var first = day.items[0];
         menuText = typeof first === "string" ? first : (first.ko || "");
       } else if (day.main) {

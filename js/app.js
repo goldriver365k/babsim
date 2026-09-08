@@ -305,29 +305,44 @@
 
     var anyLine = false;
 
-    if (day.items && day.items.length) {
+    function appendItemLine(container, item) {
+      var text = typeof item === "string" ? item : (item && (item[lang] || item.ko));
+      if (!text) return;
+      anyLine = true;
+      var li = document.createElement("li");
+      li.textContent = text;
+      container.appendChild(li);
+    }
+
+    if ((day.regular && day.regular.length) || (day.simple && day.simple.length)) {
       // 관리자 페이지 "주간메뉴 관리 → 직접 입력"으로 등록된 데이터
-      // (요일별 고정 항목이 아닌 자유 목록 형태)
-      day.items.forEach(function (item) {
-        var text = typeof item === "string" ? item : (item[lang] || item.ko);
-        if (!text) return;
-        anyLine = true;
-        var li = document.createElement("li");
-        li.textContent = text;
-        listEl.appendChild(li);
+      // (일반식 / 간편식 두 갈래, 요일별 고정 항목이 아닌 자유 목록 형태)
+      ["regular", "simple"].forEach(function (typeKey) {
+        var list = day[typeKey];
+        if (!list || !list.length) return;
+
+        var groupLi = document.createElement("li");
+        groupLi.className = "ba-meal-group";
+
+        var titleEl = document.createElement("span");
+        titleEl.className = "ba-meal-group-title";
+        var labelInfo = BREAKFAST_INFO.mealFieldLabels[typeKey];
+        titleEl.textContent = labelInfo ? (labelInfo[lang] || labelInfo.ko) : typeKey;
+        groupLi.appendChild(titleEl);
+
+        var subUl = document.createElement("ul");
+        subUl.className = "ba-meal-subgroup";
+        list.forEach(function (item) { appendItemLine(subUl, item); });
+        groupLi.appendChild(subUl);
+
+        listEl.appendChild(groupLi);
       });
+    } else if (day.items && day.items.length) {
+      // 과거 저장 방식(일반식/간편식 구분 없는 단일 목록) 하위 호환
+      day.items.forEach(function (item) { appendItemLine(listEl, item); });
     } else {
       var order = ["rice", "soup", "main", "side1", "side2", "kimchi"];
-      order.forEach(function (key) {
-        var field = day[key];
-        if (!field) return;
-        var text = field[lang] || field.ko;
-        if (!text) return;
-        anyLine = true;
-        var li = document.createElement("li");
-        li.textContent = text;
-        listEl.appendChild(li);
-      });
+      order.forEach(function (key) { appendItemLine(listEl, day[key]); });
     }
 
     if (!anyLine) {
@@ -387,11 +402,16 @@
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+    var firstList = day && ((day.regular && day.regular.length) ? day.regular : (day.simple && day.simple.length ? day.simple : null));
+    var hasDirectInput = !!firstList;
     var hasItems = !!(day && day.items && day.items.length);
-    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasItems || day.main || day.rice || day.soup));
+    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasDirectInput || hasItems || day.main || day.rice || day.soup));
     var menuText = "";
     if (day) {
-      if (hasItems) {
+      if (hasDirectInput) {
+        var firstDirect = firstList[0];
+        menuText = typeof firstDirect === "string" ? firstDirect : (firstDirect.ko || "");
+      } else if (hasItems) {
         var first = day.items[0];
         menuText = typeof first === "string" ? first : (first.ko || "");
       } else if (day.main) {

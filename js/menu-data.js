@@ -500,7 +500,9 @@ const BREAKFAST_INFO = {
     main: { ko: "주메뉴", en: "Main", zh: "主菜", vi: "Món chính", mn: "Гол хоол" },
     side1: { ko: "반찬1", en: "Side 1", zh: "小菜1", vi: "Món phụ 1", mn: "Дагалдах хоол 1" },
     side2: { ko: "반찬2", en: "Side 2", zh: "小菜2", vi: "Món phụ 2", mn: "Дагалдах хоол 2" },
-    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи" }
+    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи" },
+    regular: { ko: "일반식", en: "Regular Meal", zh: "普通餐", vi: "Suất thường", mn: "Энгийн хоол" },
+    simple: { ko: "간편식", en: "Simple Meal", zh: "简餐", vi: "Suất đơn giản", mn: "Хялбар хоол" }
   },
   viewOriginalButton: {
     ko: "주간 메뉴 원본 보기",

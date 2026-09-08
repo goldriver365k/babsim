@@ -424,6 +424,46 @@ table.results-table {
   font-size: 13px;
 }
 
+.week-paste-box {
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px dashed var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+  color: var(--text-mid);
+}
+
+.week-paste-apply-btn {
+  align-self: flex-start;
+  min-height: 30px;
+  padding: 4px 10px;
+  background: #f4f5f7;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.week-meal-section {
+  border-top: 1px solid var(--border-gray);
+  padding-top: 8px;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.week-meal-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--blue-dark);
+}
+
 .week-item-row {
   display: flex;
   gap: 6px;

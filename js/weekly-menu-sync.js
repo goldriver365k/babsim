@@ -42,10 +42,17 @@ var WeeklyMenuSync = (function () {
   }
 
   function applyDayDoc(dateKey, data) {
-    if (!data || !data.items || !data.items.length) return;
+    if (!data) return;
+    var hasRegular = data.regular && data.regular.length;
+    var hasSimple = data.simple && data.simple.length;
+    var hasItems = data.items && data.items.length; // 예전 저장 방식(단일 목록) 하위 호환
+    if (!hasRegular && !hasSimple && !hasItems) return;
     if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
     if (!BREAKFAST_WEEKLY_MENU.days) BREAKFAST_WEEKLY_MENU.days = {};
-    BREAKFAST_WEEKLY_MENU.days[dateKey] = { items: data.items };
+    BREAKFAST_WEEKLY_MENU.days[dateKey] = {
+      regular: hasRegular ? data.regular : (hasItems ? data.items : []),
+      simple: hasSimple ? data.simple : []
+    };
   }
 
   function sync(onReady) {
@@ -72,8 +79,12 @@ var WeeklyMenuSync = (function () {
       if (tomorrowSnap && tomorrowSnap.exists) applyDayDoc(tomorrowKey, tomorrowSnap.data());
 
       // 직접 입력 데이터가 없는 날에 한해서만 이미지로 보완
-      var todayHasItems = !!(BREAKFAST_WEEKLY_MENU.days[todayKey] && BREAKFAST_WEEKLY_MENU.days[todayKey].items);
-      var tomorrowHasItems = !!(BREAKFAST_WEEKLY_MENU.days[tomorrowKey] && BREAKFAST_WEEKLY_MENU.days[tomorrowKey].items);
+      function hasDirectInput(dateKey) {
+        var d = BREAKFAST_WEEKLY_MENU.days[dateKey];
+        return !!(d && ((d.regular && d.regular.length) || (d.simple && d.simple.length)));
+      }
+      var todayHasItems = hasDirectInput(todayKey);
+      var tomorrowHasItems = hasDirectInput(tomorrowKey);
       if (imageSnap && imageSnap.exists && (!todayHasItems || !tomorrowHasItems)) {
         var imgData = imageSnap.data();
         if (imgData && imgData.imageUrl) {

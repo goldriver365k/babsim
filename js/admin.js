@@ -714,6 +714,20 @@
     });
   }
 
+  var MEAL_TYPES = [
+    { key: "regular", label: "일반식" },
+    { key: "simple", label: "간편식" }
+  ];
+
+  /* 기존 데이터 호환: 예전 저장 방식은 day.items(단일 목록)만 있었습니다.
+     그 경우 "일반식" 목록으로 그대로 옮겨서 보여줍니다. */
+  function existingListFor(existing, typeKey) {
+    if (!existing) return null;
+    if (existing[typeKey] && existing[typeKey].length) return existing[typeKey].slice();
+    if (typeKey === "regular" && existing.items && existing.items.length) return existing.items.slice();
+    return null;
+  }
+
   function renderWeekDayGrid() {
     var grid = qs("weekDayGrid");
     grid.innerHTML = "";
@@ -722,11 +736,11 @@
     DAY_DEFS.forEach(function (def) {
       var dateKey = addDaysToKey(weekStartKey, def.offset);
       var existing = weeklyMenuState.dayDocs ? weeklyMenuState.dayDocs[dateKey] : null;
-      var items = (existing && existing.items && existing.items.length) ? existing.items.slice() : ["", "", "", ""];
 
       var card = document.createElement("div");
       card.className = "week-day-card";
       card.dataset.date = dateKey;
+      card.dataset.dayCode = def.code;
 
       var h3 = document.createElement("h3");
       h3.textContent = def.label;
@@ -738,17 +752,50 @@
       dateInput.value = dateKey;
       card.appendChild(dateInput);
 
-      var itemsList = document.createElement("div");
-      itemsList.className = "week-items-list";
-      items.forEach(function (text) { itemsList.appendChild(buildItemRow(text)); });
-      card.appendChild(itemsList);
+      var pasteBox = document.createElement("textarea");
+      pasteBox.className = "week-paste-box";
+      pasteBox.rows = 2;
+      pasteBox.placeholder = "엑셀에서 이 요일의 일반식·간편식 두 칸(6줄)을 복사해서 여기에 붙여넣으세요";
+      card.appendChild(pasteBox);
 
-      var addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.className = "week-add-item-btn";
-      addBtn.textContent = "+ 메뉴 추가";
-      addBtn.addEventListener("click", function () { itemsList.appendChild(buildItemRow("")); });
-      card.appendChild(addBtn);
+      var pasteBtn = document.createElement("button");
+      pasteBtn.type = "button";
+      pasteBtn.className = "week-paste-apply-btn";
+      pasteBtn.textContent = "붙여넣기 적용";
+      card.appendChild(pasteBtn);
+
+      var lists = {}; // typeKey -> itemsList 엘리먼트
+
+      MEAL_TYPES.forEach(function (type) {
+        var section = document.createElement("div");
+        section.className = "week-meal-section";
+
+        var label = document.createElement("p");
+        label.className = "week-meal-label";
+        label.textContent = type.label;
+        section.appendChild(label);
+
+        var itemsList = document.createElement("div");
+        itemsList.className = "week-items-list";
+        var savedItems = existingListFor(existing, type.key) || (type.key === "regular" ? ["", "", "", ""] : [""]);
+        savedItems.forEach(function (text) { itemsList.appendChild(buildItemRow(text)); });
+        section.appendChild(itemsList);
+        lists[type.key] = itemsList;
+
+        var addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "week-add-item-btn";
+        addBtn.textContent = "+ 메뉴 추가";
+        addBtn.addEventListener("click", function () { itemsList.appendChild(buildItemRow("")); });
+        section.appendChild(addBtn);
+
+        card.appendChild(section);
+      });
+
+      pasteBtn.addEventListener("click", function () {
+        applyPasteToLists(pasteBox.value, lists.regular, lists.simple);
+        pasteBox.value = "";
+      });
 
       var actions = document.createElement("div");
       actions.className = "week-day-actions";
@@ -773,7 +820,7 @@
       card.appendChild(msg);
 
       saveBtn.addEventListener("click", function () {
-        saveWeekDay(card, dateInput, itemsList, msg, saveBtn, deleteBtn);
+        saveWeekDay(card, dateInput, lists, msg, saveBtn, deleteBtn);
       });
       deleteBtn.addEventListener("click", function () {
         deleteWeekDay(card.dataset.date, msg, saveBtn, deleteBtn);
@@ -804,7 +851,34 @@
     return row;
   }
 
-  function saveWeekDay(card, dateInput, itemsList, msg, saveBtn, deleteBtn) {
+  function setItemsList(listEl, items) {
+    listEl.innerHTML = "";
+    items.forEach(function (text) { listEl.appendChild(buildItemRow(text)); });
+  }
+
+  /**
+   * 엑셀에서 복사한 내용을 붙여넣기 적용합니다.
+   * 한 줄 = 메뉴 한 줄. 탭으로 구분된 1번째 칸은 일반식, 2번째 칸은 간편식으로 채웁니다.
+   * (탭 없이 한 줄씩만 붙여넣으면 전부 일반식 목록으로 채워집니다.)
+   * 값이 없는 쪽은 기존 입력 내용을 그대로 둡니다.
+   */
+  function applyPasteToLists(pasted, regularList, simpleList) {
+    if (!pasted || !pasted.trim()) return;
+    var lines = pasted.split(/\r?\n/).filter(function (l) { return l.trim().length > 0; });
+    var regularItems = [];
+    var simpleItems = [];
+    lines.forEach(function (line) {
+      var cells = line.split("\t");
+      var a = (cells[0] || "").trim();
+      var b = (cells[1] || "").trim();
+      if (a) regularItems.push(a);
+      if (b) simpleItems.push(b);
+    });
+    if (regularItems.length) setItemsList(regularList, regularItems);
+    if (simpleItems.length) setItemsList(simpleList, simpleItems);
+  }
+
+  function saveWeekDay(card, dateInput, lists, msg, saveBtn, deleteBtn) {
     var user = requireAdminUser();
     if (!user) {
       msg.className = "week-day-msg error";
@@ -826,12 +900,17 @@
       return;
     }
 
-    var items = Array.prototype.map.call(itemsList.querySelectorAll("input[type=text]"), function (i) { return i.value.trim(); })
-      .filter(function (t) { return t.length > 0; });
+    function collect(listEl) {
+      return Array.prototype.map.call(listEl.querySelectorAll("input[type=text]"), function (i) { return i.value.trim(); })
+        .filter(function (t) { return t.length > 0; });
+    }
 
-    if (items.length === 0) {
+    var regular = collect(lists.regular);
+    var simple = collect(lists.simple);
+
+    if (regular.length === 0 && simple.length === 0) {
       msg.className = "week-day-msg error";
-      msg.textContent = "메뉴를 1개 이상 입력해주세요.";
+      msg.textContent = "일반식 또는 간편식 메뉴를 1개 이상 입력해주세요.";
       return;
     }
 
@@ -842,8 +921,9 @@
     db.collection("weeklyMenus").doc(dateKey).set({
       weekStart: weeklyMenuState.weekStart,
       date: dateKey,
-      day: dayCodeFor(card, weeklyMenuState.weekStart),
-      items: items,
+      day: card.dataset.dayCode,
+      regular: regular,
+      simple: simple,
       updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
         ? firebase.firestore.FieldValue.serverTimestamp()
         : new Date().toISOString()
@@ -853,19 +933,13 @@
       msg.textContent = "저장되었습니다.";
       saveBtn.textContent = "수정 저장";
       deleteBtn.hidden = false;
-      weeklyMenuState.dayDocs[dateKey] = { items: items };
+      weeklyMenuState.dayDocs[dateKey] = { regular: regular, simple: simple };
       card.dataset.date = dateKey;
     }).catch(function (err) {
       saveBtn.disabled = false;
       msg.className = "week-day-msg error";
       msg.textContent = friendlyError("저장에 실패했습니다.", err);
     });
-  }
-
-  function dayCodeFor(card, weekStartKey) {
-    var grid = qs("weekDayGrid");
-    var idx = Array.prototype.indexOf.call(grid.children, card);
-    return DAY_DEFS[idx] ? DAY_DEFS[idx].code : "";
   }
 
   function deleteWeekDay(dateKey, msg, saveBtn, deleteBtn) {
