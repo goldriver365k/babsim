@@ -333,6 +333,7 @@
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
     renderMealList(els.todayMealList, lang, 0, info.todayClosedMessage[lang] || info.todayClosedMessage.ko);
+    renderBreakfastRating(lang);
 
     els.baTomorrowMenuTitle.textContent = info.tomorrowMenuTitle[lang];
     els.baTomorrowDateValue.textContent = formatSeoulDateDisplay(lang, 1);
@@ -362,6 +363,16 @@
     if (hasImage) {
       els.baViewOriginalBtn.textContent = info.viewOriginalButton[lang];
     }
+  }
+
+  /* "오늘의 메뉴 평가" 위젯 연동 (js/breakfast-rating.js, 선택적 모듈) */
+  function renderBreakfastRating(lang) {
+    if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
+    var dateKey = getSeoulDateKey(0);
+    var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (day.main || day.rice || day.soup));
+    var menuText = day && day.main ? day.main.ko : "";
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText);
   }
 
   /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */

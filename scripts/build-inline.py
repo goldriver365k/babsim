@@ -11,8 +11,9 @@ index.html 안에 <style>/<script>로 직접 합쳐 넣는 스크립트입니다
 
 사용법:
   메뉴, 번역, 동작, 디자인을 수정할 때는
-  css/style.css, js/translations.js, js/menu-data.js, js/app.js
-  이 4개 원본 파일만 수정하고, 그 다음 아래 명령을 실행하세요.
+  css/style.css, js/translations.js, js/menu-data.js, js/app.js,
+  js/firebase-config.js, js/breakfast-rating.js
+  이 원본 파일들만 수정하고, 그 다음 아래 명령을 실행하세요.
 
       python3 scripts/build-inline.py
 
@@ -36,6 +37,8 @@ def build():
     translations = read("js/translations.js")
     menu_data = read("js/menu-data.js")
     weekly_menu = read("data/breakfast-weekly-menu.js")
+    firebase_config = read("js/firebase-config.js")
+    breakfast_rating = read("js/breakfast-rating.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -137,6 +140,12 @@ def build():
     </div>
 
     <button type="button" class="ba-view-original-btn" id="baViewOriginalBtn" hidden>주간 메뉴 원본 보기</button>
+
+    <div class="ba-rating" id="baRating" hidden>
+      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
+      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
+      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
+    </div>
   </section>
 
   <div class="group-nav" id="groupNav" hidden>
@@ -234,6 +243,18 @@ def build():
 </script>
 <script>
 """ + weekly_menu + """
+</script>
+
+<!-- "오늘의 메뉴 평가" 기능이 사용하는 Firestore(DB) SDK.
+     js/firebase-config.js에 실제 프로젝트 값을 넣기 전까지는 평가 데이터가
+     각 학생의 기기에만 저장되며, 이 화면의 다른 기능에는 영향을 주지 않습니다. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+""" + firebase_config + """
+</script>
+<script>
+""" + breakfast_rating + """
 </script>
 <script>
 """ + app + """

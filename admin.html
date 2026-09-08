@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 - 메뉴 평가 통계</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="admin-gate" id="adminGate">
+  <h1>관리자 로그인</h1>
+  <form id="adminGateForm">
+    <input type="password" id="adminGateInput" placeholder="암호를 입력하세요" autocomplete="current-password">
+    <p class="error" id="adminGateError"></p>
+    <button type="submit">확인</button>
+  </form>
+  <p class="note">천원의 아침밥 메뉴 평가 통계를 확인하는 내부 페이지입니다.</p>
+</div>
+
+<div id="adminApp" hidden>
+  <header class="admin-header">
+    <h1 class="admin-title">천원의 아침밥 — 메뉴 평가 통계</h1>
+    <p class="admin-sub">학생들이 남긴 오늘의 메뉴 평가를 날짜별로 확인합니다.</p>
+  </header>
+
+  <main class="admin-main">
+    <p class="admin-warn" id="adminFirebaseWarning" hidden>
+      ⚠ Firebase가 아직 연결되지 않았습니다. js/firebase-config.js에 실제 프로젝트 값을
+      입력하기 전까지는 통계에 표시되는 데이터가 없습니다. (학생 화면은 정상 작동합니다.)
+    </p>
+
+    <section class="admin-card">
+      <h2>오늘 평가</h2>
+      <div class="today-stats">
+        <div class="stat-box">
+          <p class="stat-label">참여자</p>
+          <p class="stat-value" id="todayParticipants">-</p>
+        </div>
+        <div class="stat-box">
+          <p class="stat-label">평균평점</p>
+          <p class="stat-value" id="todayAvg">-</p>
+        </div>
+        <div class="stat-box">
+          <p class="stat-label">긍정평가</p>
+          <p class="stat-value" id="todayPositive">-</p>
+        </div>
+      </div>
+      <div class="dist-list" id="todayDistList"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>기간 선택</h2>
+      <div class="filter-bar">
+        <button type="button" class="filter-btn active" data-filter="today">오늘</button>
+        <button type="button" class="filter-btn" data-filter="7d">최근 7일</button>
+        <button type="button" class="filter-btn" data-filter="month">이번 달</button>
+        <button type="button" class="filter-btn" data-filter="custom">날짜 직접 선택</button>
+      </div>
+      <div class="filter-range" id="customRange" hidden>
+        <input type="date" id="customStartInput">
+        <span>~</span>
+        <input type="date" id="customEndInput">
+        <button type="button" class="filter-apply-btn" id="customRangeApply">적용</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>날짜별 결과</h2>
+      <p class="loading-note" id="tableLoading">불러오는 중...</p>
+      <p class="empty-note" id="tableEmpty" hidden></p>
+      <div class="table-scroll">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>오늘의 메뉴</th>
+              <th>평가수</th>
+              <th>평균평점</th>
+              <th>5점</th>
+              <th>4점</th>
+              <th>3점</th>
+              <th>2점</th>
+              <th>1점</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>선택 날짜 (<span id="selectedDateLabel">-</span>) 평가 분포</h2>
+      <div class="dist-list" id="selectedDistList"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>최근 7일 평균평점 변화</h2>
+      <svg class="trend-chart" id="trendChart"></svg>
+      <p class="trend-caption">세로축 0~5점, 가로축 최근 7일(MM/DD)</p>
+    </section>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

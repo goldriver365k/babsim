@@ -762,6 +762,121 @@ main {
   outline: none;
 }
 
+/* ---- 오늘의 메뉴 평가 (천원의 아침밥) ---- */
+
+.ba-rating {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-gray);
+}
+
+.ba-rating[hidden] { display: none; }
+
+.ba-rating-title {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.ba-rating-title[hidden] { display: none; }
+
+.ba-rating-options {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ba-rating-options[hidden] { display: none; }
+
+.ba-rating-option {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  padding: 8px 2px;
+}
+
+.ba-rating-option:hover:not(:disabled),
+.ba-rating-option:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.ba-rating-option:active:not(:disabled) {
+  background: #eef2fa;
+}
+
+.ba-rating-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ba-rating-face {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.ba-rating-face svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ba-rating-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mid);
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ba-rating-message {
+  margin: 0;
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+
+.ba-rating-message[hidden] { display: none; }
+
+.ba-rating-message-completed {
+  color: var(--text-mid);
+  background: #f4f5f7;
+}
+
+.ba-rating-message-thanks {
+  color: var(--blue-dark);
+  background: #eef2fa;
+}
+
+.ba-rating-message-error {
+  margin-top: 10px;
+  color: var(--red);
+  background: #fdecec;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+@media (min-width: 420px) {
+  .ba-rating-face { width: 48px; height: 48px; }
+  .ba-rating-label { font-size: 12px; }
+}
+
 .weekly-image-modal {
   max-width: 92vw;
   max-height: 90vh;
@@ -1104,6 +1219,12 @@ main {
     </div>
 
     <button type="button" class="ba-view-original-btn" id="baViewOriginalBtn" hidden>주간 메뉴 원본 보기</button>
+
+    <div class="ba-rating" id="baRating" hidden>
+      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
+      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
+      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
+    </div>
   </section>
 
   <div class="group-nav" id="groupNav" hidden>
@@ -1248,6 +1369,40 @@ const UI_TEXT = {
   },
   infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл" },
   stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" }
+};
+
+/* ==========================================================================
+   천원의 아침밥 — 오늘의 메뉴 평가 문구 (학생용, 선택된 언어를 그대로 사용)
+   ========================================================================== */
+
+const BREAKFAST_RATING_TEXT = {
+  title: {
+    ko: "오늘 아침밥 어떠셨나요?",
+    en: "How was today’s breakfast?",
+    zh: "今天的早餐怎么样？",
+    vi: "Bữa sáng hôm nay thế nào?",
+    mn: "Өнөөдрийн өглөөний хоол ямар байсан бэ?"
+  },
+  score5: { ko: "아주 좋아요", en: "Loved it", zh: "非常好", vi: "Rất thích", mn: "Маш их таалагдсан" },
+  score4: { ko: "좋아요", en: "Good", zh: "好", vi: "Thích", mn: "Таалагдсан" },
+  score3: { ko: "보통이에요", en: "Okay", zh: "一般", vi: "Bình thường", mn: "Дунд зэрэг" },
+  score2: { ko: "아쉬워요", en: "Not great", zh: "有点遗憾", vi: "Chưa hài lòng", mn: "Дутагдалтай" },
+  score1: { ko: "별로예요", en: "Not good", zh: "不满意", vi: "Không thích", mn: "Таалагдаагүй" },
+  thanks: { ko: "감사합니다!", en: "Thank you!", zh: "谢谢！", vi: "Cảm ơn bạn!", mn: "Баярлалаа!" },
+  completed: {
+    ko: "오늘 평가를 완료했습니다.",
+    en: "You’ve already rated today’s breakfast.",
+    zh: "您今天已完成评价。",
+    vi: "Bạn đã đánh giá hôm nay rồi.",
+    mn: "Та өнөөдөр үнэлгээгээ өгсөн байна."
+  },
+  error: {
+    ko: "저장에 실패했습니다. 다시 시도해주세요.",
+    en: "Failed to save. Please try again.",
+    zh: "保存失败，请重试。",
+    vi: "Lưu không thành công. Vui lòng thử lại.",
+    mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу."
+  }
 };
 
 </script>
@@ -1949,6 +2104,321 @@ const BREAKFAST_WEEKLY_MENU = {
 };
 
 </script>
+
+<!-- "오늘의 메뉴 평가" 기능이 사용하는 Firestore(DB) SDK.
+     js/firebase-config.js에 실제 프로젝트 값을 넣기 전까지는 평가 데이터가
+     각 학생의 기기에만 저장되며, 이 화면의 다른 기능에는 영향을 주지 않습니다. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+/* ==========================================================================
+   Firebase 프로젝트 연결 설정
+   - "천원의 아침밥 오늘의 메뉴 평가" 기능이 사용하는 Firestore(DB) 연결 정보입니다.
+   - 아래 값은 실제 값이 아닙니다(REPLACE_ME). Firebase 콘솔에서 새 프로젝트를
+     만든 뒤, 이 6개 값만 그대로 바꿔 넣으면 평가 데이터가 저장되기 시작합니다.
+
+   설정 방법:
+   1) https://console.firebase.google.com 접속 → "프로젝트 추가"로 새 프로젝트 생성
+   2) 왼쪽 메뉴 "빌드 > Firestore Database" → "데이터베이스 만들기"
+      (프로덕션 모드로 시작, 위치는 asia-northeast3(서울) 권장)
+   3) Firestore "규칙" 탭에서 보안 규칙을 아래와 같이 설정
+      (breakfastRatings 컬렉션에만 익명 쓰기를 허용하고, 그 외에는 막습니다):
+
+      rules_version = '2';
+      service cloud.firestore {
+        match /databases/{database}/documents {
+          match /breakfastRatings/{docId} {
+            allow create: if request.resource.data.rating is int
+              && request.resource.data.rating >= 1
+              && request.resource.data.rating <= 5
+              && request.resource.data.date is string
+              && request.resource.data.keys().hasAll(['date','menuId','rating','language','deviceId']);
+            allow read: if true;   // 관리자 페이지가 통계 조회 시 사용
+            allow update, delete: if false;
+          }
+        }
+      }
+
+   4) 프로젝트 설정(톱니바퀴 아이콘) → "일반" 탭 → "내 앱" → 웹 앱 추가(</> 아이콘)
+      앱 등록 후 나오는 firebaseConfig 값을 아래 FIREBASE_CONFIG 객체에
+      그대로 옮겨 적으세요.
+   5) 저장 후 다시 배포하면 평가 데이터가 Firestore에 쌓이고,
+      admin.html에서 통계를 확인할 수 있습니다.
+
+   주의: apiKey를 REPLACE_ME 상태로 두면 평가 기능은 화면에는 정상적으로
+   보이지만, 저장은 각 학생의 기기(localStorage)에만 남고 관리자 페이지
+   통계에는 집계되지 않습니다. (학생 화면이 깨지지 않도록 하기 위한 안전장치)
+   ========================================================================== */
+
+var FIREBASE_CONFIG = {
+  apiKey: "REPLACE_ME",
+  authDomain: "REPLACE_ME.firebaseapp.com",
+  projectId: "REPLACE_ME",
+  storageBucket: "REPLACE_ME.appspot.com",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME"
+};
+
+function isFirebaseConfigured() {
+  return !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "REPLACE_ME");
+}
+
+function getFirestoreDb() {
+  if (!isFirebaseConfigured()) return null;
+  if (typeof firebase === "undefined") return null;
+  try {
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    return firebase.firestore();
+  } catch (e) {
+    console.error("Firebase 초기화 오류:", e);
+    return null;
+  }
+}
+
+</script>
+<script>
+/* ==========================================================================
+   천원의 아침밥 — 오늘의 메뉴 평가 (학생용)
+   - 캐릭터 하나를 터치하면 별도 버튼 없이 즉시 저장됩니다.
+   - 같은 기기에서는 같은 날짜(KST 기준)에 1회만 평가할 수 있습니다.
+   - 문구는 BREAKFAST_RATING_TEXT(js/translations.js)의 번역을 그대로 사용합니다.
+   - app.js의 renderBreakfastArea()에서 window.BreakfastRating.render(...)를
+     호출하는 방식으로 연결되며, 이 스크립트가 없어도 기존 화면은 그대로
+     동작합니다(선택적 연동).
+   ========================================================================== */
+
+var BreakfastRating = (function () {
+  "use strict";
+
+  var DEVICE_ID_KEY = "foodhall_device_id";
+  var RATED_KEY_PREFIX = "foodhall_breakfast_rating_"; // + dateKey(YYYY-MM-DD)
+  var SCORES = [5, 4, 3, 2, 1];
+
+  var els = null;
+  var busy = false;
+  var justRatedDateKey = null; // 이번 화면 방문 중 방금 평가를 마친 날짜(감사 문구용)
+
+  function qs(id) { return document.getElementById(id); }
+
+  function ensureEls() {
+    if (els) return els;
+    var wrap = qs("baRating");
+    if (!wrap) { els = {}; return els; }
+    els = {
+      wrap: wrap,
+      title: qs("baRatingTitle"),
+      options: qs("baRatingOptions"),
+      message: qs("baRatingMessage")
+    };
+    return els;
+  }
+
+  /* ---------------- 기기 식별 / 하루 1회 제한 (강한 인증이 아닌 단순 중복 방지용) ---------------- */
+
+  function getDeviceId() {
+    try {
+      var id = localStorage.getItem(DEVICE_ID_KEY);
+      if (id) return id;
+      id = (window.crypto && typeof crypto.randomUUID === "function")
+        ? crypto.randomUUID()
+        : ("dev-" + Date.now() + "-" + Math.random().toString(16).slice(2));
+      localStorage.setItem(DEVICE_ID_KEY, id);
+      return id;
+    } catch (e) {
+      return "dev-nostorage";
+    }
+  }
+
+  function getRatedToday(dateKey) {
+    try { return localStorage.getItem(RATED_KEY_PREFIX + dateKey); } catch (e) { return null; }
+  }
+
+  function setRatedToday(dateKey, score) {
+    try { localStorage.setItem(RATED_KEY_PREFIX + dateKey, String(score)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  }
+
+  /* ---------------- 캐릭터 얼굴 SVG (동일 캐릭터, 표정만 5단계로 변화) ---------------- */
+
+  var FACE_SPEC = {
+    5: { mouth: "M27,54 Q50,80 73,54 Q50,67 27,54 Z", fill: true, browTilt: 4, eye: "happy" },
+    4: { mouth: "M30,56 Q50,70 70,56", fill: false, browTilt: 2, eye: "normal" },
+    3: { mouth: "M33,61 L67,61", fill: false, browTilt: 0, eye: "normal" },
+    2: { mouth: "M30,68 Q50,58 70,68", fill: false, browTilt: -2, eye: "normal" },
+    1: { mouth: "M27,71 Q50,52 73,71", fill: false, browTilt: -4, eye: "sad" }
+  };
+
+  function buildFaceSvg(score) {
+    var spec = FACE_SPEC[score];
+    var browY = 34 - spec.browTilt;
+
+    var eyesSvg;
+    if (spec.eye === "happy") {
+      eyesSvg =
+        '<path d="M23,41 Q31,31 39,41" fill="none" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>' +
+        '<path d="M61,41 Q69,31 77,41" fill="none" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>';
+    } else if (spec.eye === "sad") {
+      eyesSvg =
+        '<circle cx="31" cy="40" r="4.5" fill="#1f2328"/>' +
+        '<circle cx="69" cy="40" r="4.5" fill="#1f2328"/>';
+    } else {
+      eyesSvg =
+        '<circle cx="31" cy="39" r="5" fill="#1f2328"/>' +
+        '<circle cx="69" cy="39" r="5" fill="#1f2328"/>';
+    }
+
+    var mouthSvg = spec.fill
+      ? '<path d="' + spec.mouth + '" fill="#a13a2f"/>'
+      : '<path d="' + spec.mouth + '" fill="none" stroke="#1f2328" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>';
+
+    return (
+      '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+      '<circle cx="50" cy="50" r="46" fill="#ffd166" stroke="#1f2328" stroke-width="3"/>' +
+      '<path d="M17,' + browY + ' L39,' + (browY - 3) + '" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>' +
+      '<path d="M61,' + (browY - 3) + ' L83,' + browY + '" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>' +
+      eyesSvg +
+      mouthSvg +
+      '</svg>'
+    );
+  }
+
+  /* ---------------- 저장 (Firestore 우선, 미설정 시 기기 저장만) ---------------- */
+
+  function saveRating(score, dateKey, lang, menuText) {
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!db) {
+      // Firebase 미설정 상태: 학생 화면은 정상 동작하되 관리자 통계에는 집계되지 않음
+      return Promise.resolve({ local: true });
+    }
+
+    var docData = {
+      date: dateKey,
+      menuId: "breakfast-" + dateKey.replace(/-/g, ""),
+      rating: score,
+      language: lang,
+      deviceId: getDeviceId(),
+      mainMenu: menuText || null,
+      createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
+        ? firebase.firestore.FieldValue.serverTimestamp()
+        : new Date().toISOString()
+    };
+
+    return db.collection("breakfastRatings").add(docData);
+  }
+
+  /* ---------------- 렌더링 ---------------- */
+
+  function text(key, lang) {
+    var entry = BREAKFAST_RATING_TEXT[key];
+    if (!entry) return "";
+    return entry[lang] || entry.ko || "";
+  }
+
+  function renderOptions(dateKey, lang, menuText) {
+    els.options.innerHTML = "";
+    SCORES.forEach(function (score) {
+      var label = text("score" + score, lang);
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ba-rating-option";
+      btn.setAttribute("aria-label", label);
+
+      var faceWrap = document.createElement("span");
+      faceWrap.className = "ba-rating-face";
+      faceWrap.innerHTML = buildFaceSvg(score);
+      btn.appendChild(faceWrap);
+
+      var labelEl = document.createElement("span");
+      labelEl.className = "ba-rating-label";
+      labelEl.textContent = label;
+      btn.appendChild(labelEl);
+
+      btn.addEventListener("click", function () { handlePick(score, dateKey, lang, menuText); });
+      els.options.appendChild(btn);
+    });
+  }
+
+  function showOptions(lang, dateKey, menuText) {
+    els.title.hidden = false;
+    els.title.textContent = text("title", lang);
+    els.options.hidden = false;
+    renderOptions(dateKey, lang, menuText);
+    els.message.hidden = true;
+  }
+
+  function showCompletedOrThanks(lang, dateKey) {
+    els.title.hidden = true;
+    els.options.hidden = true;
+    els.options.innerHTML = "";
+    els.message.hidden = false;
+    if (justRatedDateKey === dateKey) {
+      els.message.className = "ba-rating-message ba-rating-message-thanks";
+      els.message.textContent = text("thanks", lang);
+    } else {
+      els.message.className = "ba-rating-message ba-rating-message-completed";
+      els.message.textContent = text("completed", lang);
+    }
+  }
+
+  function showErrorKeepOptions(lang) {
+    Array.prototype.forEach.call(els.options.querySelectorAll(".ba-rating-option"), function (btn) {
+      btn.disabled = false;
+    });
+    els.message.hidden = false;
+    els.message.className = "ba-rating-message ba-rating-message-error";
+    els.message.textContent = text("error", lang);
+    busy = false;
+  }
+
+  function handlePick(score, dateKey, lang, menuText) {
+    if (busy) return;
+    busy = true;
+    els.message.hidden = true;
+    Array.prototype.forEach.call(els.options.querySelectorAll(".ba-rating-option"), function (btn) {
+      btn.disabled = true;
+    });
+
+    saveRating(score, dateKey, lang, menuText).then(function () {
+      setRatedToday(dateKey, score);
+      justRatedDateKey = dateKey;
+      busy = false;
+      showCompletedOrThanks(lang, dateKey);
+    }).catch(function (err) {
+      console.error("아침밥 평가 저장 오류:", err);
+      showErrorKeepOptions(lang);
+    });
+  }
+
+  /**
+   * @param {string} lang 현재 선택된 언어 (ko/en/zh/vi/mn)
+   * @param {boolean} hasTodayMenu 오늘 천원의 아침밥 메뉴가 존재하는지 (주말/휴무 시 false)
+   * @param {string} dateKey 오늘 날짜 (Asia/Seoul, YYYY-MM-DD)
+   * @param {string} menuText 오늘의 주메뉴(한국어) - 관리자 통계 표시용
+   */
+  function render(lang, hasTodayMenu, dateKey, menuText) {
+    ensureEls();
+    if (!els.wrap) return;
+
+    if (!hasTodayMenu || typeof BREAKFAST_RATING_TEXT === "undefined") {
+      els.wrap.hidden = true;
+      return;
+    }
+    els.wrap.hidden = false;
+
+    var already = getRatedToday(dateKey);
+    if (already) {
+      showCompletedOrThanks(lang, dateKey);
+      return;
+    }
+    showOptions(lang, dateKey, menuText);
+  }
+
+  return { render: render };
+})();
+
+</script>
 <script>
 /* ==========================================================================
    푸드홀(인제대학교) app.js
@@ -2285,6 +2755,7 @@ const BREAKFAST_WEEKLY_MENU = {
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
     renderMealList(els.todayMealList, lang, 0, info.todayClosedMessage[lang] || info.todayClosedMessage.ko);
+    renderBreakfastRating(lang);
 
     els.baTomorrowMenuTitle.textContent = info.tomorrowMenuTitle[lang];
     els.baTomorrowDateValue.textContent = formatSeoulDateDisplay(lang, 1);
@@ -2314,6 +2785,16 @@ const BREAKFAST_WEEKLY_MENU = {
     if (hasImage) {
       els.baViewOriginalBtn.textContent = info.viewOriginalButton[lang];
     }
+  }
+
+  /* "오늘의 메뉴 평가" 위젯 연동 (js/breakfast-rating.js, 선택적 모듈) */
+  function renderBreakfastRating(lang) {
+    if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
+    var dateKey = getSeoulDateKey(0);
+    var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (day.main || day.rice || day.soup));
+    var menuText = day && day.main ? day.main.ko : "";
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText);
   }
 
   /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */

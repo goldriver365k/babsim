@@ -131,6 +131,56 @@ const BREAKFAST_WEEKLY_MENU = {
 
 ---
 
+## 9. 천원의 아침밥 — 오늘의 메뉴 평가 (신규)
+
+학생이 "천원의 아침밥 → 오늘의 메뉴" 화면에서 캐릭터 하나를 터치하면
+별도 버튼 없이 즉시 만족도가 저장되는 기능입니다. 같은 기기에서는
+하루(한국시간 기준) 1회만 평가할 수 있습니다.
+
+### 9-1. Firebase 프로젝트 연결 (필수 — 아직 미연결 상태)
+
+평가 데이터를 여러 학생 기기에서 모아 관리자 페이지에서 통계로 보려면
+Firebase(Firestore)가 필요합니다. `js/firebase-config.js` 파일 맨 위 주석에
+설정 순서가 적혀 있습니다. 요약하면:
+
+1. https://console.firebase.google.com 에서 새 프로젝트 생성
+2. Firestore Database 생성 (프로덕션 모드, 서울 리전 권장)
+3. Firestore 규칙을 `js/firebase-config.js` 주석에 적힌 대로 설정
+   (breakfastRatings 컬렉션에 rating 1~5 유효성 검사가 있는 생성만 허용)
+4. 웹 앱을 추가하고 발급되는 6개 값을 `js/firebase-config.js`의
+   `FIREBASE_CONFIG` 객체에 그대로 옮겨 적기
+5. `python3 scripts/build-inline.py` 실행 후 재배포
+
+**연결 전에도 학생 화면은 정상 작동합니다.** 평가를 누르면 그 기기의
+브라우저(localStorage)에만 하루 1회 제한이 적용되고 "감사합니다!"가
+표시되지만, 관리자 페이지 통계에는 집계되지 않습니다.
+
+### 9-2. 관리자 페이지
+
+`admin.html`을 열면 통계를 확인할 수 있습니다. (기본 임시 암호:
+`foodhall2026` — `js/admin.js` 맨 위 `ADMIN_PASSPHRASE` 값을 바꿔서
+꼭 변경하세요. 이 암호는 화면 접근을 막는 최소한의 장치일 뿐,
+실제 보안은 Firestore 보안 규칙이 담당합니다.)
+
+- 오늘 평가(참여자·평균평점·긍정평가·5단계 분포)
+- 기간 선택(오늘 / 최근 7일 / 이번 달 / 날짜 직접 선택)에 따른 날짜별 결과 표
+- 표에서 날짜를 클릭하면 그 날짜의 5단계 분포 그래프로 전환
+- 최근 7일 평균평점 변화 추이 그래프
+
+식사인원 대비 평가 참여율은 이 저장소에 기존 방문자/식사인원 집계
+기능이 없어 구현하지 않았습니다. (임의로 만든 데이터를 쓰지 않기 위함
+— 필요하시면 별도로 방문자 집계 기능부터 추가해 드릴 수 있습니다.)
+
+### 9-3. 관련 파일
+
+- `js/breakfast-rating.js` : 학생용 평가 위젯(캐릭터 SVG, 저장, 하루 1회 제한)
+- `js/firebase-config.js` : Firebase 연결 설정 (이 파일의 값만 채우면 됨)
+- `admin.html`, `js/admin.js`, `css/admin.css` : 관리자 통계 페이지
+- `js/translations.js`의 `BREAKFAST_RATING_TEXT` : 평가 화면 다국어 문구
+  (한국어/영어/중국어/베트남어/몽골어)
+
+---
+
 ### 참고
 
 - `js/translations.js` : 매장명, 버튼, 안내 문구 등 공통 UI 번역

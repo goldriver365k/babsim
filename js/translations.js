@@ -53,3 +53,37 @@ const UI_TEXT = {
   infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл" },
   stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" }
 };
+
+/* ==========================================================================
+   천원의 아침밥 — 오늘의 메뉴 평가 문구 (학생용, 선택된 언어를 그대로 사용)
+   ========================================================================== */
+
+const BREAKFAST_RATING_TEXT = {
+  title: {
+    ko: "오늘 아침밥 어떠셨나요?",
+    en: "How was today’s breakfast?",
+    zh: "今天的早餐怎么样？",
+    vi: "Bữa sáng hôm nay thế nào?",
+    mn: "Өнөөдрийн өглөөний хоол ямар байсан бэ?"
+  },
+  score5: { ko: "아주 좋아요", en: "Loved it", zh: "非常好", vi: "Rất thích", mn: "Маш их таалагдсан" },
+  score4: { ko: "좋아요", en: "Good", zh: "好", vi: "Thích", mn: "Таалагдсан" },
+  score3: { ko: "보통이에요", en: "Okay", zh: "一般", vi: "Bình thường", mn: "Дунд зэрэг" },
+  score2: { ko: "아쉬워요", en: "Not great", zh: "有点遗憾", vi: "Chưa hài lòng", mn: "Дутагдалтай" },
+  score1: { ko: "별로예요", en: "Not good", zh: "不满意", vi: "Không thích", mn: "Таалагдаагүй" },
+  thanks: { ko: "감사합니다!", en: "Thank you!", zh: "谢谢！", vi: "Cảm ơn bạn!", mn: "Баярлалаа!" },
+  completed: {
+    ko: "오늘 평가를 완료했습니다.",
+    en: "You’ve already rated today’s breakfast.",
+    zh: "您今天已完成评价。",
+    vi: "Bạn đã đánh giá hôm nay rồi.",
+    mn: "Та өнөөдөр үнэлгээгээ өгсөн байна."
+  },
+  error: {
+    ko: "저장에 실패했습니다. 다시 시도해주세요.",
+    en: "Failed to save. Please try again.",
+    zh: "保存失败，请重试。",
+    vi: "Lưu không thành công. Vui lòng thử lại.",
+    mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу."
+  }
+};

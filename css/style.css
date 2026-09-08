@@ -743,6 +743,121 @@ main {
   outline: none;
 }
 
+/* ---- 오늘의 메뉴 평가 (천원의 아침밥) ---- */
+
+.ba-rating {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-gray);
+}
+
+.ba-rating[hidden] { display: none; }
+
+.ba-rating-title {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.ba-rating-title[hidden] { display: none; }
+
+.ba-rating-options {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ba-rating-options[hidden] { display: none; }
+
+.ba-rating-option {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  padding: 8px 2px;
+}
+
+.ba-rating-option:hover:not(:disabled),
+.ba-rating-option:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.ba-rating-option:active:not(:disabled) {
+  background: #eef2fa;
+}
+
+.ba-rating-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ba-rating-face {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.ba-rating-face svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ba-rating-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mid);
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ba-rating-message {
+  margin: 0;
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+
+.ba-rating-message[hidden] { display: none; }
+
+.ba-rating-message-completed {
+  color: var(--text-mid);
+  background: #f4f5f7;
+}
+
+.ba-rating-message-thanks {
+  color: var(--blue-dark);
+  background: #eef2fa;
+}
+
+.ba-rating-message-error {
+  margin-top: 10px;
+  color: var(--red);
+  background: #fdecec;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+@media (min-width: 420px) {
+  .ba-rating-face { width: 48px; height: 48px; }
+  .ba-rating-label { font-size: 12px; }
+}
+
 .weekly-image-modal {
   max-width: 92vw;
   max-height: 90vh;

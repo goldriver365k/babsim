@@ -1,0 +1,244 @@
+/* ==========================================================================
+   관리자 페이지 — 천원의 아침밥 메뉴 평가 통계
+   (css/style.css의 색상/여백 토큰을 그대로 따릅니다. 관리자 화면은 한국어 고정.)
+   ========================================================================== */
+
+:root {
+  --blue: #1957d6;
+  --blue-dark: #123f9e;
+  --border-gray: #d3d7de;
+  --text-dark: #1f2328;
+  --text-mid: #4b5563;
+  --bg-page: #f4f5f7;
+  --bg-card: #ffffff;
+  --red: #d92626;
+  --green: #1a8a4a;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+button, input { font-family: inherit; }
+
+.admin-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-gray);
+  padding: 16px 18px;
+}
+
+.admin-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--blue-dark);
+}
+
+.admin-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+.admin-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---- 로그인 게이트 ---- */
+
+.admin-gate {
+  max-width: 360px;
+  margin: 60px auto;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.admin-gate h1 { font-size: 17px; margin: 0 0 14px; }
+
+.admin-gate input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.admin-gate button {
+  width: 100%;
+  min-height: 44px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-gate p.error { color: var(--red); font-size: 13px; min-height: 18px; margin: 0 0 8px; }
+.admin-gate p.note { color: var(--text-mid); font-size: 12px; margin-top: 14px; }
+
+[hidden] { display: none !important; }
+
+/* ---- 카드 공통 ---- */
+
+.admin-card {
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  padding: 16px 16px 18px;
+}
+
+.admin-card h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.admin-warn {
+  border: 1px solid #f0c36d;
+  background: #fff8e6;
+  color: #7a5b00;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+/* ---- 오늘 평가 요약 ---- */
+
+.today-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat-box {
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.stat-box .stat-label { font-size: 12px; color: var(--text-mid); margin: 0 0 4px; }
+.stat-box .stat-value { font-size: 22px; font-weight: 800; color: var(--blue-dark); margin: 0; }
+
+.dist-list { display: flex; flex-direction: column; gap: 8px; }
+
+.dist-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.dist-row .dist-label { width: 76px; flex: 0 0 auto; color: var(--text-mid); }
+.dist-row .dist-bar-track { flex: 1 1 auto; height: 14px; background: #eef0f3; border-radius: 999px; overflow: hidden; }
+.dist-row .dist-bar-fill { height: 100%; background: var(--blue); border-radius: 999px; }
+.dist-row .dist-count { width: 40px; flex: 0 0 auto; text-align: right; font-weight: 700; }
+
+/* ---- 필터 ---- */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.filter-btn {
+  min-height: 38px;
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.filter-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.filter-apply-btn {
+  min-height: 38px;
+  padding: 6px 14px;
+  background: var(--blue);
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+.filter-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.filter-range input[type="date"] {
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+/* ---- 날짜별 결과 표 ---- */
+
+.table-scroll { overflow-x: auto; }
+
+table.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 640px;
+}
+
+.results-table th, .results-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-gray);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.results-table th {
+  color: var(--text-mid);
+  font-weight: 700;
+  background: #f8f9fb;
+}
+
+.results-table td.menu-cell { text-align: left; white-space: normal; max-width: 220px; overflow-wrap: anywhere; }
+
+.results-table tbody tr { cursor: pointer; }
+.results-table tbody tr:hover { background: #f4f7fd; }
+.results-table tbody tr.selected { background: #eaf1fc; }
+
+.empty-note { color: var(--text-mid); font-size: 13px; padding: 10px 2px; }
+
+/* ---- 최근 7일 평균평점 추이 ---- */
+
+.trend-chart { width: 100%; height: 160px; }
+
+.trend-caption { font-size: 12px; color: var(--text-mid); text-align: center; margin: 6px 0 0; }
+
+.loading-note { color: var(--text-mid); font-size: 13px; }
