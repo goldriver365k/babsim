@@ -764,6 +764,38 @@ main {
   overflow-wrap: anywhere;
 }
 
+/* ---- 요일별 글자 메뉴가 없을 때, 등록된 주간메뉴 이미지를 그 칸에 표시 ---- */
+
+.ba-meal-image-item {
+  list-style: none;
+}
+
+.ba-meal-image-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: none;
+  cursor: zoom-in;
+}
+
+.ba-meal-image-btn img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: cover;
+  object-position: top;
+}
+
+.ba-meal-image-btn:hover,
+.ba-meal-image-btn:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
 .today-meal-closed {
   margin: 0;
   font-size: 15px;
@@ -3016,17 +3048,61 @@ var WeeklyMenuSync = (function () {
 
   /* ---------------- 천원의 아침밥 전용 영역 (오늘·내일) ---------------- */
 
+  /* 그 날짜에 관리자가 등록한(또는 정적 파일의) 글자 메뉴 데이터가 있는지 */
+  function dayHasDirectData(day) {
+    if (!day) return false;
+    if (day.regular && day.regular.length) return true;
+    if (day.simple && day.simple.length) return true;
+    if (day.items && day.items.length) return true;
+    return !!(day.rice || day.soup || day.main || day.side1 || day.side2 || day.kimchi);
+  }
+
+  /* 글자 메뉴가 없는 날, 관리자가 등록한 주간메뉴 이미지를 그 날의
+     메뉴칸에 그대로 보여줍니다(누르면 원본 크기로도 볼 수 있음). */
+  function renderMealImage(listEl, imageUrl, lang) {
+    var li = document.createElement("li");
+    li.className = "ba-meal-image-item";
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ba-meal-image-btn";
+    btn.setAttribute("aria-label", BREAKFAST_INFO.viewOriginalButton[lang] || BREAKFAST_INFO.viewOriginalButton.ko);
+
+    var img = document.createElement("img");
+    img.src = imageUrl;
+    img.alt = BREAKFAST_INFO.viewOriginalButton[lang] || BREAKFAST_INFO.viewOriginalButton.ko;
+    img.loading = "lazy";
+    btn.appendChild(img);
+
+    btn.addEventListener("click", openWeeklyImage);
+    li.appendChild(btn);
+    listEl.appendChild(li);
+  }
+
   function renderMealList(listEl, lang, offsetDays, closedText) {
     var dateKey = getSeoulDateKey(offsetDays);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
 
     listEl.innerHTML = "";
 
-    if (isSeoulWeekend(offsetDays) || !day) {
+    if (isSeoulWeekend(offsetDays)) {
       var closedP = document.createElement("p");
       closedP.className = "today-meal-closed";
       closedP.textContent = closedText;
       listEl.appendChild(closedP);
+      return;
+    }
+
+    if (!dayHasDirectData(day)) {
+      var sourceImage = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage;
+      if (sourceImage) {
+        renderMealImage(listEl, sourceImage, lang);
+        return;
+      }
+      var closedP1 = document.createElement("p");
+      closedP1.className = "today-meal-closed";
+      closedP1.textContent = closedText;
+      listEl.appendChild(closedP1);
       return;
     }
 
@@ -3129,17 +3205,18 @@ var WeeklyMenuSync = (function () {
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var firstList = day && ((day.regular && day.regular.length) ? day.regular : (day.simple && day.simple.length ? day.simple : null));
-    var hasDirectInput = !!firstList;
-    var hasItems = !!(day && day.items && day.items.length);
-    var hasTodayMenu = !isSeoulWeekend(0) && !!(day && (hasDirectInput || hasItems || day.main || day.rice || day.soup));
+    var hasText = dayHasDirectData(day);
+    var hasImageOnly = !hasText && !!(BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage);
+    var hasTodayMenu = !isSeoulWeekend(0) && (hasText || hasImageOnly);
+
     var menuText = "";
-    if (day) {
-      if (hasDirectInput) {
-        var firstDirect = firstList[0];
-        menuText = typeof firstDirect === "string" ? firstDirect : (firstDirect.ko || "");
-      } else if (hasItems) {
-        var first = day.items[0];
+    if (hasText) {
+      var firstList = (day.regular && day.regular.length) ? day.regular
+        : (day.simple && day.simple.length) ? day.simple
+        : (day.items && day.items.length) ? day.items
+        : null;
+      if (firstList) {
+        var first = firstList[0];
         menuText = typeof first === "string" ? first : (first.ko || "");
       } else if (day.main) {
         menuText = day.main.ko;
