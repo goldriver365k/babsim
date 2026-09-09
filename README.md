@@ -150,7 +150,7 @@ Firebase(babsim-46284 프로젝트)와 이미 연결되어 있고, Firestore 보
 
 ## 10. 관리자 페이지
 
-`admin.html`을 열면 통계 열람용 암호(기본값 `foodhall2026`)를 입력한 뒤
+`admin.html`을 열면 통계 열람용 암호를 입력한 뒤
 4개 탭을 오갈 수 있습니다: **대시보드 / 메뉴 평가 / 언어 통계 / 주간메뉴 관리**.
 
 암호는 `js/admin.js` 맨 위 `ADMIN_PASSPHRASE` 값을 바꾼 뒤
