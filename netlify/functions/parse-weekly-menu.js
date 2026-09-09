@@ -20,7 +20,9 @@
 // Firebase Web API 키입니다(비밀키가 아닙니다). ID 토큰 검증에만 씁니다.
 const FIREBASE_API_KEY = "AIzaSyCSptfzh0RBVN1dPXLy9oIdE-Kg5vFZb3o";
 const FIREBASE_PROJECT_ID = "babsim-46284";
-const GEMINI_MODEL = "gemini-2.0-flash";
+// gemini-2.0-flash는 단종되어(404 NOT_FOUND) gemini-3.6-flash로 교체함
+// (2026-09-09, 실제 Netlify Functions 로그에서 구글이 안내한 대체 모델명).
+const GEMINI_MODEL = "gemini-3.6-flash";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
