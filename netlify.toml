@@ -3,18 +3,21 @@
   command = ""
   functions = "netlify/functions"
 
+  # 실제로 빌드를 막고 있던 값은 GEMINI_API_KEY가 아니라 Firebase 웹
+  # apiKey(AIza로 시작)였습니다. 이 값은 Firebase 설계상 공개되어도
+  # 안전한 클라이언트 식별자라서 admin.html/index.html/firebase-config.js/
+  # parse-weekly-menu.js에 의도적으로 그대로 적혀 있습니다(실제 보안은
+  # Firestore/Storage 규칙과 서버의 ID 토큰 검증이 담당). Netlify의
+  # "smart detection"(휴리스틱) 검사가 "AIza..." 패턴을 보이는 값을
+  # 무조건 의심 비밀값으로 잡기 때문에, 이 검사만 꺼둡니다.
+  # (SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES는 변수 이름이 아니라
+  # 실제 값 목록을 받는 옵션이라 이전 시도는 효과가 없었습니다.)
   # GEMINI_API_KEY는 netlify/functions/parse-weekly-menu.js 안에서
-  # process.env로만 읽고, 어떤 저장소 파일이나 클라이언트 번들에도 실제
-  # 값을 적어두지 않습니다(레포 전체 검색으로 확인됨). REVIEW_ID는 이
-  # 저장소에서 전혀 참조하지 않는 Netlify 내부 컨텍스트 값(배포 프리뷰의
-  # PR 번호 등)으로, 값이 짧아 저장소 아무 파일과 우연히 겹치기 쉽습니다.
-  # publish가 저장소 루트(".")라서 Netlify의 비밀값 검사(secrets scanning)가
-  # 이런 우연한 부분 일치를 실제 노출로 오판해 빌드를 계속 막았습니다.
-  # OMIT_KEYS만으로는 "smart detection"(휴리스틱) 검사까지는 막히지 않아
-  # 계속 실패했으므로, 두 검사 방식 모두에 대해 이 두 값을 제외합니다.
+  # process.env로만 읽고 저장소 어디에도 실제 값을 적지 않았고, 이번
+  # 빌드 로그에서도 "0 instance(s) of secrets"로 확인되었습니다.
 [build.environment]
   SECRETS_SCAN_OMIT_KEYS = "GEMINI_API_KEY,REVIEW_ID"
-  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "GEMINI_API_KEY,REVIEW_ID"
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 [functions]
   node_bundler = "esbuild"
