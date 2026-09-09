@@ -507,6 +507,11 @@ def build_admin():
       </div>
 
       <div id="weeklyMenuEditorArea" hidden>
+        <p class="autosave-notice" id="weekAutosaveNotice" hidden>
+          <span class="autosave-text"></span>
+          <button type="button" class="autosave-discard-btn" id="weekAutosaveDiscardBtn">새로 시작(복원 취소)</button>
+        </p>
+
         <div class="admin-card">
           <h2>주 선택</h2>
           <div class="week-select-bar">
@@ -518,7 +523,7 @@ def build_admin():
 
         <div class="admin-card">
           <h2>방식 1 · 이미지로 자동 인식</h2>
-          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB)</p>
+          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB) 이미지 분석이 안 되더라도 방식 2로 바로 입력해 게시할 수 있습니다.</p>
           <div class="image-upload-box">
             <div class="image-upload-row">
               <input type="file" id="weekImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
@@ -529,23 +534,32 @@ def build_admin():
             </div>
             <p class="form-error" id="weekImageError"></p>
             <p class="analyze-status" id="weekAnalyzeStatus" hidden></p>
+            <div class="analyze-fail-actions" id="weekAnalyzeFailActions" hidden>
+              <button type="button" id="weekAnalyzeRetryBtn">다시 분석</button>
+              <button type="button" id="weekSwitchToManualBtn">직접 입력으로 전환</button>
+              <button type="button" id="weekReselectImageBtn">이미지 다시 선택</button>
+            </div>
           </div>
         </div>
 
         <div class="admin-card">
           <h2>방식 2 · 직접 입력 / 인식 결과 확인</h2>
-          <p class="image-upload-caption">요일 카드는 일반식·간편식 두 목록으로 나뉩니다. 자동 인식 결과가 여기에 채워지며, 직접 입력하거나 엑셀에서 복사한 내용을 붙여넣기 칸에 넣고 "붙여넣기 적용"을 눌러 채울 수도 있습니다(1번째 칸=일반식, 탭으로 구분된 2번째 칸=간편식). <span class="uncertain-legend">빨간 배경 = 확인 필요</span>한 항목이니 원본과 대조해서 고쳐주세요.</p>
+          <p class="image-upload-caption">요일 카드는 일반식·간편식 두 목록으로 나뉩니다. 자동 인식 결과가 여기에 채워지며, 직접 입력하거나 엑셀에서 복사한 내용을 붙여넣기 칸에 넣고 "붙여넣기 적용"을 눌러 채울 수도 있습니다(1번째 칸=일반식, 탭으로 구분된 2번째 칸=간편식). <span class="uncertain-legend">빨간 배경 = 확인 필요</span>한 항목이니 원본과 대조해서 고쳐주세요. 이미지 분석 없이 여기에 바로 입력해도 됩니다.</p>
+          <p class="retranslate-note" id="weekRetranslateNote" hidden>이 주에 번역이 안 된 메뉴가 있습니다 — 아래 "저장 / 게시" 카드의 "번역 다시 실행"을 눌러주세요.</p>
           <div class="week-day-grid" id="weekDayGrid"></div>
         </div>
 
         <div class="admin-card">
           <h2>저장 / 게시</h2>
-          <p class="image-upload-caption">"임시저장"은 학생 화면에 반영되지 않고 이어서 수정할 수 있게만 저장합니다. "확인 후 게시"를 눌러야 5개 언어로 번역되어 실제 학생 화면에 표시됩니다.</p>
+          <p class="image-upload-caption">"임시저장"은 학생 화면에 반영되지 않고 이어서 수정할 수 있게만 저장합니다. "번역 확인"을 눌러 5개 언어 번역 결과(또는 번역 대기 상태)를 확인한 뒤 "게시 확정"을 누르면 학생 화면에 반영됩니다. 번역 서버에 문제가 있어도 한글 메뉴만으로 게시할 수 있습니다.</p>
           <div class="week-publish-actions">
             <button type="button" class="week-draft-btn" id="weekSaveDraftBtn">임시저장</button>
-            <button type="button" class="week-publish-btn" id="weekPublishBtn">확인 후 게시</button>
+            <button type="button" class="week-translate-btn" id="weekTranslateCheckBtn">번역 확인</button>
+            <button type="button" class="week-publish-btn" id="weekPublishConfirmBtn" disabled>게시 확정</button>
+            <button type="button" class="week-retranslate-btn" id="weekRetranslateBtn">번역 다시 실행</button>
             <button type="button" class="week-delete-all-btn" id="weekDeleteAllBtn">이 주 전체 삭제</button>
           </div>
+          <div class="translate-review" id="weekTranslateReview"></div>
           <p class="publish-status" id="weekPublishStatus" hidden></p>
         </div>
       </div>

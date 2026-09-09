@@ -35,6 +35,31 @@
 
   var els = {};
 
+  /* 예상치 못한 오류로 관리자 페이지가 흰 화면이 되는 것을 막는 안전망
+     (Gemini 장애 대비 작업지시서 3번). 어떤 스크립트 오류든 여기서
+     받아 화면 위에 작은 배너로 보여주기만 하고, 이미 그려진 화면은
+     그대로 둡니다. */
+  function showGlobalErrorBanner(message) {
+    var banner = document.getElementById("adminGlobalErrorBanner");
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "adminGlobalErrorBanner";
+      banner.className = "admin-global-error-banner";
+      document.body.insertBefore(banner, document.body.firstChild);
+    }
+    banner.textContent = message;
+    banner.hidden = false;
+  }
+
+  window.addEventListener("error", function (e) {
+    console.error("전역 오류:", e.error || e.message);
+    showGlobalErrorBanner("일시적인 오류가 발생했습니다. 화면이 이상하면 새로고침해 주세요.");
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    console.error("처리되지 않은 오류:", e.reason);
+    showGlobalErrorBanner("일시적인 오류가 발생했습니다. 화면이 이상하면 새로고침해 주세요.");
+  });
+
   function qs(id) { return document.getElementById(id); }
 
   function escapeHtml(str) {
@@ -618,15 +643,114 @@
 
   var weeklyMenuState = {
     weekStart: null,
-    dayDocs: {},          // dateKey -> Firestore weeklyMenus 문서 | null
-    imageDoc: null,        // { imageUrl, ... } | null (Firestore weeklyMenuImages 문서)
-    pendingImageFile: null // 이번 세션에 새로 고른, 아직 게시 전인 이미지 파일
+    dayDocs: {},           // dateKey -> Firestore weeklyMenus 문서 | null
+    imageDoc: null,         // { imageUrl, ... } | null (Firestore weeklyMenuImages 문서)
+    pendingImageFile: null, // 이번 세션에 새로 고른, 아직 게시 전인 이미지 파일(원본 업로드용)
+    pendingImageBase64: null, // 분석/임시저장 복원용으로 유지하는 축소 이미지(base64)
+    pendingImageMimeType: null,
+    lastTranslations: null, // "번역 확인" 결과({}면 전부 미번역=한글만) — null이면 아직 실행 안 함
+    lastFailedTerms: [],    // 마지막 번역 확인에서 번역하지 못한 항목
+    publishInFlight: false, // 중복 게시(연타) 방지
+    analyzeInFlight: false
   };
 
   function serverTimestampOrNow() {
     return (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
       ? firebase.firestore.FieldValue.serverTimestamp()
       : new Date().toISOString();
+  }
+
+  /* ================================================================
+     임시저장(자동 저장, localStorage) — Gemini 장애 대비 작업지시서 4번
+     이미지 분석을 시작하기 전에 "주 시작일/종료일, 업로드한 이미지,
+     입력 내용, 분석 진행 상태"를 브라우저에 자동 저장해 두어, 새로고침
+     해도 작성 중이던 내용이 사라지지 않게 합니다. Firestore의 "임시저장
+     (draft)"과는 별개로, 아직 저장 버튼을 누르기 전 단계를 보호합니다.
+     ================================================================ */
+
+  var AUTOSAVE_KEY = "babsim_admin_weekly_autosave_v1";
+  var AUTOSAVE_MAX_IMAGE_CHARS = 3 * 1024 * 1024; // base64 약 3MB까지만 저장(localStorage 용량 보호)
+  var autosaveTimer = null;
+
+  function getAutosave() {
+    try {
+      var raw = localStorage.getItem(AUTOSAVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearAutosave() {
+    try { localStorage.removeItem(AUTOSAVE_KEY); } catch (e) { /* 무시 */ }
+    var notice = qs("weekAutosaveNotice");
+    if (notice) notice.hidden = true;
+  }
+
+  function writeAutosaveNow() {
+    var grid = qs("weekDayGrid");
+    if (!grid || !grid.children.length || !weeklyMenuState.weekStart) return;
+    var snapshot = {
+      weekStart: weeklyMenuState.weekStart,
+      weekEnd: addDaysToKey(weeklyMenuState.weekStart, 4),
+      savedAt: new Date().toISOString(),
+      days: collectAllCards(),
+      imageBase64: (weeklyMenuState.pendingImageBase64 && weeklyMenuState.pendingImageBase64.length <= AUTOSAVE_MAX_IMAGE_CHARS)
+        ? weeklyMenuState.pendingImageBase64
+        : null,
+      imageMimeType: weeklyMenuState.pendingImageMimeType || null,
+      analyzeStatus: weeklyMenuState.analyzeInFlight ? "analyzing" : "idle"
+    };
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(snapshot));
+    } catch (e) {
+      // 용량 초과 등으로 실패하면 이미지 없이 텍스트만이라도 저장 시도
+      try {
+        snapshot.imageBase64 = null;
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(snapshot));
+      } catch (e2) { /* 그래도 실패하면 자동저장은 포기(화면 동작에는 영향 없음) */ }
+    }
+  }
+
+  function scheduleAutosave() {
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(writeAutosaveNow, 500);
+  }
+
+  /* 자동저장된 내용이 있고 지금 불러온 주와 같으면 화면에 되돌려 놓습니다. */
+  function restoreAutosaveIfMatching(weekStartKey) {
+    var saved = getAutosave();
+    var notice = qs("weekAutosaveNotice");
+    if (!saved || saved.weekStart !== weekStartKey) {
+      if (notice) notice.hidden = true;
+      return;
+    }
+    var grid = qs("weekDayGrid");
+    var cards = Array.prototype.slice.call(grid.children);
+    (saved.days || []).forEach(function (dayState) {
+      var card = cards.filter(function (c) { return c.dataset.date === dayState.dateKey; })[0];
+      if (!card) return;
+      card._openCheckbox.checked = dayState.isOpen !== false;
+      setItemsList(card._lists.regular, dayState.regular || []);
+      setItemsList(card._lists.simple, dayState.simple || []);
+    });
+    if (saved.imageBase64) {
+      weeklyMenuState.pendingImageBase64 = saved.imageBase64;
+      weeklyMenuState.pendingImageMimeType = saved.imageMimeType || "image/jpeg";
+      var wrap = qs("weekImagePreviewWrap");
+      var previewImg = qs("weekImagePreviewImg");
+      if (wrap && previewImg) {
+        previewImg.src = "data:" + weeklyMenuState.pendingImageMimeType + ";base64," + saved.imageBase64;
+        wrap.hidden = false;
+      }
+    }
+    if (notice) {
+      notice.hidden = false;
+      var savedTime = saved.savedAt ? new Date(saved.savedAt).toLocaleString("ko-KR") : "";
+      notice.querySelector(".autosave-text").textContent =
+        "이전에 작성 중이던 내용을 복원했습니다" + (savedTime ? " (" + savedTime + " 저장분)" : "") +
+        (saved.imageBase64 ? ". 이미지는 분석용으로만 복원되었으며, 원본 이미지를 게시하려면 파일을 다시 선택해주세요." : ".");
+    }
   }
 
   function initWeeklyMenuAuth() {
@@ -706,6 +830,17 @@
       return Promise.resolve();
     }
 
+    weeklyMenuState.lastTranslations = null;
+    weeklyMenuState.lastFailedTerms = [];
+    weeklyMenuState.pendingImageBase64 = null;
+    weeklyMenuState.pendingImageMimeType = null;
+    var reviewEl = qs("weekTranslateReview");
+    if (reviewEl) reviewEl.innerHTML = "";
+    var confirmBtn = qs("weekPublishConfirmBtn");
+    if (confirmBtn) confirmBtn.disabled = true;
+    var retranslateNote = qs("weekRetranslateNote");
+    if (retranslateNote) retranslateNote.hidden = true;
+
     var dateKeys = DAY_DEFS.map(function (d) { return addDaysToKey(weekStartKey, d.offset); });
     var daysPromise = Promise.all(dateKeys.map(function (dk) {
       return db.collection("weeklyMenus").doc(dk).get().catch(function () { return null; });
@@ -715,10 +850,13 @@
         weeklyMenuState.dayDocs[dateKeys[i]] = (snap && snap.exists) ? snap.data() : null;
       });
       renderWeekDayGrid();
+      restoreAutosaveIfMatching(weekStartKey);
+      updateRetranslateNoteVisibility();
     }).catch(function (err) {
       console.error(friendlyError("주간메뉴 데이터를 불러오지 못했습니다.", err));
       weeklyMenuState.dayDocs = {};
       renderWeekDayGrid();
+      restoreAutosaveIfMatching(weekStartKey);
     });
 
     db.collection("weeklyMenuImages").doc(weekStartKey).get().then(function (snap) {
@@ -843,6 +981,29 @@
     });
   }
 
+  var TRANSLATION_LANGS = ["zh", "vi", "en", "mn"];
+
+  /* 이미 게시된 문서 중 4개 언어 번역이 다 채워지지 않은 항목이 있으면
+     "번역 다시 실행" 안내를 보여줍니다(작업지시서 7번). */
+  function weekHasUntranslatedItems() {
+    var docs = weeklyMenuState.dayDocs || {};
+    return Object.keys(docs).some(function (dk) {
+      var doc = docs[dk];
+      if (!doc) return false;
+      var items = (doc.regular || []).concat(doc.simple || []);
+      return items.some(function (item) {
+        if (!item || !item.ko) return false;
+        return TRANSLATION_LANGS.some(function (lang) { return !item[lang]; });
+      });
+    });
+  }
+
+  function updateRetranslateNoteVisibility() {
+    var note = qs("weekRetranslateNote");
+    if (!note) return;
+    note.hidden = !weekHasUntranslatedItems();
+  }
+
   function buildItemRow(text, uncertain) {
     var row = document.createElement("div");
     row.className = "week-item-row" + (uncertain ? " uncertain" : "");
@@ -938,6 +1099,13 @@
 
   /* ---------------- 관리자 로그인 함수(Netlify Function) 호출 ---------------- */
 
+  // 서버(callGemini)가 최악의 경우 20초×3회+2초×2회(약 64초)까지 걸릴 수
+  // 있어(장애 대비 재시도 설계), 클라이언트 쪽은 그보다 넉넉한 75초에서
+  // 포기합니다 — 그래야 서버가 정상 응답하기 전에 화면이 먼저 "실패"로
+  // 끊기지 않습니다. 이 시간 안에도 응답이 없으면(네트워크 자체 문제 등)
+  // 관리자 페이지가 무한정 멈춰있지 않도록 여기서 확실히 실패 처리합니다.
+  var MENU_FUNCTION_TIMEOUT_MS = 75000;
+
   function callMenuFunction(action, extra) {
     var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
     var user = auth && auth.currentUser;
@@ -945,18 +1113,29 @@
 
     return user.getIdToken().then(function (idToken) {
       var body = Object.assign({ action: action, idToken: idToken }, extra || {});
+      var controller = (typeof AbortController === "function") ? new AbortController() : null;
+      var timer = controller ? setTimeout(function () { controller.abort(); }, MENU_FUNCTION_TIMEOUT_MS) : null;
       return fetch("/.netlify/functions/parse-weekly-menu", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+        body: JSON.stringify(body),
+        signal: controller ? controller.signal : undefined
+      }).finally(function () { if (timer) clearTimeout(timer); });
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (data) {
         if (!res.ok || !data || !data.ok) {
-          throw { friendly: (data && data.error) || "요청 처리에 실패했습니다. 잠시 후 다시 시도해주세요." };
+          throw {
+            friendly: (data && data.error) || "요청 처리에 실패했습니다. 잠시 후 다시 시도해주세요.",
+            code: data && data.code
+          };
         }
         return data;
       });
+    }).catch(function (err) {
+      if (err && err.name === "AbortError") {
+        throw { friendly: "서버 응답이 너무 오래 걸려 중단했습니다. 잠시 후 다시 시도해주세요.", code: "CLIENT_TIMEOUT" };
+      }
+      throw err;
     });
   }
 
@@ -990,6 +1169,16 @@
 
   /* ---------------- 방식 1: 이미지 자동 인식 ---------------- */
 
+  function resetAnalyzeFailureActions() {
+    var actionsEl = qs("weekAnalyzeFailActions");
+    if (actionsEl) actionsEl.hidden = true;
+  }
+
+  function showAnalyzeFailureActions() {
+    var actionsEl = qs("weekAnalyzeFailActions");
+    if (actionsEl) actionsEl.hidden = false;
+  }
+
   function initWeeklyImageAnalyze() {
     var fileInput = qs("weekImageInput");
     var errorEl = qs("weekImageError");
@@ -998,9 +1187,23 @@
     var statusEl = qs("weekAnalyzeStatus");
     var analyzeBtn = qs("weekAnalyzeBtn");
 
+    function resetImageSelection() {
+      fileInput.value = "";
+      weeklyMenuState.pendingImageFile = null;
+      weeklyMenuState.pendingImageBase64 = null;
+      weeklyMenuState.pendingImageMimeType = null;
+      wrap.hidden = true;
+      previewImg.removeAttribute("src");
+      errorEl.textContent = "";
+      statusEl.hidden = true;
+      resetAnalyzeFailureActions();
+      scheduleAutosave();
+    }
+
     fileInput.addEventListener("change", function () {
       errorEl.textContent = "";
       statusEl.hidden = true;
+      resetAnalyzeFailureActions();
       var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (ALLOWED_IMAGE_TYPES.indexOf(file.type) === -1) {
@@ -1016,27 +1219,42 @@
       weeklyMenuState.pendingImageFile = file;
       previewImg.src = URL.createObjectURL(file);
       wrap.hidden = false;
+      // 임시저장(4번 항목)에 쓸 수 있도록, 분석 요청과 별개로 축소본을 미리 만들어 둡니다.
+      resizeImageToBase64(file, 1600).then(function (resized) {
+        weeklyMenuState.pendingImageBase64 = resized.base64;
+        weeklyMenuState.pendingImageMimeType = resized.mimeType;
+        scheduleAutosave();
+      }).catch(function () { /* 미리보기 실패는 무시 — 분석 시도 시 다시 시도됨 */ });
     });
 
-    analyzeBtn.addEventListener("click", function () {
+    function runAnalyze() {
       var user = requireAdminUser();
       errorEl.textContent = "";
+      resetAnalyzeFailureActions();
       if (!user) {
         errorEl.textContent = "로그인이 만료되었습니다. 다시 로그인해주세요.";
         return;
       }
+      if (weeklyMenuState.analyzeInFlight) return; // 중복 클릭 방지
       var file = weeklyMenuState.pendingImageFile;
       if (!file) {
         errorEl.textContent = "분석할 이미지를 먼저 선택해주세요.";
         return;
       }
 
+      weeklyMenuState.analyzeInFlight = true;
       analyzeBtn.disabled = true;
       statusEl.hidden = false;
       statusEl.className = "analyze-status";
-      statusEl.textContent = "주간 메뉴를 분석하고 있습니다.";
+      statusEl.textContent = "주간 메뉴를 분석하고 있습니다. (최대 1분 정도 걸릴 수 있습니다)";
 
-      resizeImageToBase64(file, 1600).then(function (resized) {
+      var imagePromise = weeklyMenuState.pendingImageBase64
+        ? Promise.resolve({ base64: weeklyMenuState.pendingImageBase64, mimeType: weeklyMenuState.pendingImageMimeType })
+        : resizeImageToBase64(file, 1600);
+
+      imagePromise.then(function (resized) {
+        weeklyMenuState.pendingImageBase64 = resized.base64;
+        weeklyMenuState.pendingImageMimeType = resized.mimeType;
         return callMenuFunction("analyze", { imageBase64: resized.base64, mimeType: resized.mimeType });
       }).then(function (data) {
         var weekPromise = (data.weekStart && data.weekStart !== weeklyMenuState.weekStart)
@@ -1044,17 +1262,41 @@
           : Promise.resolve();
         return weekPromise.then(function () {
           applyAnalyzedResult(data);
+          weeklyMenuState.analyzeInFlight = false;
           analyzeBtn.disabled = false;
           statusEl.className = "analyze-status success";
           statusEl.textContent = "분석이 완료되었습니다. 메뉴와 날짜를 확인해 주세요.";
+          scheduleAutosave();
         });
       }).catch(function (err) {
         console.error("이미지 분석 오류:", err);
+        weeklyMenuState.analyzeInFlight = false;
         analyzeBtn.disabled = false;
         statusEl.className = "analyze-status error";
-        statusEl.textContent = (err && err.friendly) || "이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요.";
+        // 고정 문구(작업지시서 3번)가 기본값이지만, "키 설정 안 됨"처럼 재시도로는
+        // 해결되지 않는 관리자 조치가 필요한 경우는 서버가 준 안내를 그대로 보여줍니다.
+        // 업로드한 이미지와 입력 내용은 어느 경우든 그대로 유지됩니다.
+        statusEl.textContent = (err && err.code === "AI_API_KEY_MISSING" && err.friendly)
+          ? err.friendly
+          : "자동 메뉴 분석에 실패했습니다.\n잠시 후 다시 시도하거나 직접 입력해 주세요.";
+        showAnalyzeFailureActions();
+        scheduleAutosave();
       });
+    }
+
+    analyzeBtn.addEventListener("click", runAnalyze);
+
+    var retryBtn = qs("weekAnalyzeRetryBtn");
+    if (retryBtn) retryBtn.addEventListener("click", runAnalyze);
+
+    var switchBtn = qs("weekSwitchToManualBtn");
+    if (switchBtn) switchBtn.addEventListener("click", function () {
+      var grid = qs("weekDayGrid");
+      if (grid) grid.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+
+    var reselectBtn = qs("weekReselectImageBtn");
+    if (reselectBtn) reselectBtn.addEventListener("click", resetImageSelection);
   }
 
   function applyAnalyzedResult(data) {
@@ -1111,7 +1353,12 @@
 
   function setPublishButtonsDisabled(disabled) {
     qs("weekSaveDraftBtn").disabled = disabled;
-    qs("weekPublishBtn").disabled = disabled;
+    qs("weekTranslateCheckBtn").disabled = disabled;
+    // "게시 확정"은 번역 확인을 거쳐야 눌리므로, 진행 중(disabled=true)일 때만
+    // 강제로 잠그고, 다시 풀 때는 runTranslateCheck/게시 흐름이 각자 판단해 다시 켭니다.
+    if (disabled) qs("weekPublishConfirmBtn").disabled = true;
+    var retranslateBtn = qs("weekRetranslateBtn");
+    if (retranslateBtn) retranslateBtn.disabled = disabled;
     qs("weekDeleteAllBtn").disabled = disabled;
   }
 
@@ -1133,6 +1380,170 @@
         imageUrl: url,
         uploadedAt: serverTimestampOrNow()
       }).then(function () { return url; });
+    });
+  }
+
+  /* 번역 결과 검토 화면(작업지시서 5번: 관리자 확인 → 번역 확인 → 게시)
+     "번역 대기" 항목은 빨간색으로 표시합니다. */
+  function renderTranslateReview(cards, translations, failedTerms) {
+    var reviewEl = qs("weekTranslateReview");
+    if (!reviewEl) return;
+    reviewEl.innerHTML = "";
+    var failedSet = {};
+    (failedTerms || []).forEach(function (t) { failedSet[t] = true; });
+
+    cards.forEach(function (c) {
+      if (!c.dateKey || (!c.regular.length && !c.simple.length)) return;
+      var dayBlock = document.createElement("div");
+      dayBlock.className = "translate-review-day";
+      var title = document.createElement("h4");
+      title.textContent = c.dateKey + (c.isOpen === false ? " (휴무)" : "");
+      dayBlock.appendChild(title);
+
+      c.regular.concat(c.simple).forEach(function (term) {
+        var row = document.createElement("div");
+        row.className = "translate-review-row" + (failedSet[term] ? " pending" : "");
+        var koSpan = document.createElement("span");
+        koSpan.className = "translate-review-ko";
+        koSpan.textContent = term;
+        row.appendChild(koSpan);
+
+        var statusSpan = document.createElement("span");
+        if (failedSet[term]) {
+          statusSpan.className = "translate-review-pending-tag";
+          statusSpan.textContent = "번역 대기";
+        } else {
+          var tr = translations[term] || {};
+          statusSpan.className = "translate-review-done-tag";
+          statusSpan.textContent = "번역 완료 (EN: " + (tr.en || "-") + ")";
+        }
+        row.appendChild(statusSpan);
+        dayBlock.appendChild(row);
+      });
+      reviewEl.appendChild(dayBlock);
+    });
+  }
+
+  function buildTranslatedList(list, translations) {
+    return list.map(function (t) {
+      var obj = { ko: t };
+      var tr = translations[t];
+      if (tr) {
+        if (tr.zh) obj.zh = tr.zh;
+        if (tr.vi) obj.vi = tr.vi;
+        if (tr.en) obj.en = tr.en;
+        if (tr.mn) obj.mn = tr.mn;
+      }
+      return obj;
+    });
+  }
+
+  /* "번역 확인" — Gemini가 완전히 막혀 있어도(장애 대비 7번) 여기서
+     예외를 던지지 않고, 캐시로 찾은 번역만이라도 반영한 뒤 "게시 확정"을
+     항상 눌러볼 수 있는 상태로 만듭니다. 번역이 하나도 안 된 항목은
+     "번역 대기"로 남고, 게시하면 한글로만 표시됩니다. */
+  function runTranslateCheck() {
+    var user = requireAdminUser();
+    if (!user) { showPublishStatus("로그인이 만료되었습니다. 다시 로그인해주세요.", true); return; }
+
+    var cards = collectAllCards();
+    var terms = [];
+    cards.forEach(function (c) { terms = terms.concat(c.regular, c.simple); });
+    terms = Array.from(new Set(terms));
+
+    setPublishButtonsDisabled(true);
+    showPublishStatus(terms.length ? "번역을 확인하고 있습니다... (최대 1분 정도 걸릴 수 있습니다)" : "확인 중...", false);
+
+    var translatePromise = terms.length > 0
+      ? callMenuFunction("translate", { terms: terms })
+      : Promise.resolve({ translations: {}, failedTerms: [] });
+
+    translatePromise.catch(function (err) {
+      // 함수 호출 자체가 실패해도(네트워크 문제 등) 게시를 막지 않습니다 —
+      // 전부 "번역 대기"로 취급하고 한글만으로 게시할 수 있게 합니다.
+      console.error("번역 확인 실패(한글만으로 게시 가능):", err);
+      return { translations: {}, failedTerms: terms, failedReason: (err && err.friendly) || "번역 서버에 연결할 수 없습니다." };
+    }).then(function (data) {
+      weeklyMenuState.lastTranslations = data.translations || {};
+      weeklyMenuState.lastFailedTerms = data.failedTerms || [];
+      renderTranslateReview(cards, weeklyMenuState.lastTranslations, weeklyMenuState.lastFailedTerms);
+      setPublishButtonsDisabled(false);
+      qs("weekPublishConfirmBtn").disabled = false; // 실패해도 "게시 확정"은 항상 눌러볼 수 있음
+
+      if (weeklyMenuState.lastFailedTerms.length === 0) {
+        showPublishStatus("번역 확인이 끝났습니다. 내용을 확인한 뒤 '게시 확정'을 눌러주세요.", false, true);
+      } else if (weeklyMenuState.lastFailedTerms.length === terms.length && terms.length > 0) {
+        showPublishStatus((data.failedReason || "지금 번역 서버에 연결할 수 없습니다.") + " '게시 확정'을 누르면 한글로만 게시됩니다.", true);
+      } else {
+        showPublishStatus("일부 메뉴(" + weeklyMenuState.lastFailedTerms.length + "개)는 번역하지 못해 '번역 대기'로 표시됩니다. 그대로 게시하면 한글로만 보여집니다.", true);
+      }
+    });
+  }
+
+  /* "게시 확정" — 마지막 "번역 확인" 결과(없으면 빈 번역, 즉 한글만)로
+     그대로 게시합니다. Gemini/번역 서버 장애와 무관하게 항상 동작합니다. */
+  function runPublishConfirm() {
+    var user = requireAdminUser();
+    if (!user) { showPublishStatus("로그인이 만료되었습니다. 다시 로그인해주세요.", true); return; }
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!db) { showPublishStatus("게시 기능을 사용할 수 없습니다.", true); return; }
+    if (weeklyMenuState.publishInFlight) return; // 중복 게시(연타) 방지
+
+    var cards = collectAllCards();
+    var translations = weeklyMenuState.lastTranslations || {}; // null이면(번역 확인 안 함) 한글만으로 게시
+
+    weeklyMenuState.publishInFlight = true;
+    setPublishButtonsDisabled(true);
+    showPublishStatus("게시 중...", false);
+
+    var imageUploadPromise = weeklyMenuState.pendingImageFile
+      ? uploadWeekImage(weeklyMenuState.pendingImageFile)
+      : Promise.resolve(null);
+
+    imageUploadPromise.then(function (imageUrl) {
+      var dayWrites = cards.filter(function (c) { return c.dateKey; }).map(function (c) {
+        var docData = {
+          weekStart: weeklyMenuState.weekStart,
+          date: c.dateKey,
+          day: c.dayCode,
+          isOpen: c.isOpen,
+          regular: buildTranslatedList(c.regular, translations),
+          simple: buildTranslatedList(c.simple, translations),
+          status: "published",
+          updatedAt: serverTimestampOrNow()
+        };
+        if (imageUrl) docData.sourceImageUrl = imageUrl;
+        return db.collection("weeklyMenus").doc(c.dateKey).set(docData, { merge: true });
+      });
+
+      var dictWrites = Object.keys(translations).map(function (term) {
+        var tr = translations[term] || {};
+        var docData = { ko: term, updatedAt: serverTimestampOrNow() };
+        if (tr.zh) docData.zh = tr.zh;
+        if (tr.vi) docData.vi = tr.vi;
+        if (tr.en) docData.en = tr.en;
+        if (tr.mn) docData.mn = tr.mn;
+        return db.collection("menuTranslations").doc(term).set(docData, { merge: true });
+      });
+
+      return Promise.all(dayWrites.concat(dictWrites));
+    }).then(function () {
+      weeklyMenuState.publishInFlight = false;
+      setPublishButtonsDisabled(false);
+      var pendingCount = weeklyMenuState.lastFailedTerms ? weeklyMenuState.lastFailedTerms.length : 0;
+      showPublishStatus(
+        pendingCount > 0
+          ? "게시되었습니다. 번역 안 된 " + pendingCount + "개 메뉴는 한글로 표시됩니다(나중에 '번역 다시 실행'으로 처리할 수 있습니다)."
+          : "게시되었습니다. 학생 화면에 오늘·내일 메뉴로 반영됩니다.",
+        false, true
+      );
+      weeklyMenuState.pendingImageFile = null;
+      clearAutosave();
+      loadWeeklyMenuWeek(weeklyMenuState.weekStart);
+    }).catch(function (err) {
+      weeklyMenuState.publishInFlight = false;
+      setPublishButtonsDisabled(false);
+      showPublishStatus((err && err.friendly) || friendlyError("게시에 실패했습니다.", err), true);
     });
   }
 
@@ -1169,84 +1580,11 @@
       });
     });
 
-    qs("weekPublishBtn").addEventListener("click", function () {
-      var user = requireAdminUser();
-      if (!user) { showPublishStatus("로그인이 만료되었습니다. 다시 로그인해주세요.", true); return; }
-      var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
-      if (!db) { showPublishStatus("게시 기능을 사용할 수 없습니다.", true); return; }
+    qs("weekTranslateCheckBtn").addEventListener("click", runTranslateCheck);
+    qs("weekPublishConfirmBtn").addEventListener("click", runPublishConfirm);
 
-      var cards = collectAllCards();
-      var terms = [];
-      cards.forEach(function (c) { terms = terms.concat(c.regular, c.simple); });
-      terms = Array.from(new Set(terms));
-
-      setPublishButtonsDisabled(true);
-      showPublishStatus(terms.length ? "번역을 확인하고 있습니다..." : "게시 중...", false);
-
-      var translatePromise = terms.length > 0
-        ? callMenuFunction("translate", { terms: terms })
-        : Promise.resolve({ translations: {} });
-
-      translatePromise.then(function (data) {
-        var translations = data.translations || {};
-        showPublishStatus("게시 중...", false);
-
-        function buildTranslatedList(list) {
-          return list.map(function (t) {
-            var obj = { ko: t };
-            var tr = translations[t];
-            if (tr) {
-              if (tr.zh) obj.zh = tr.zh;
-              if (tr.vi) obj.vi = tr.vi;
-              if (tr.en) obj.en = tr.en;
-              if (tr.mn) obj.mn = tr.mn;
-            }
-            return obj;
-          });
-        }
-
-        var imageUploadPromise = weeklyMenuState.pendingImageFile
-          ? uploadWeekImage(weeklyMenuState.pendingImageFile)
-          : Promise.resolve(null);
-
-        return imageUploadPromise.then(function (imageUrl) {
-          var dayWrites = cards.filter(function (c) { return c.dateKey; }).map(function (c) {
-            var docData = {
-              weekStart: weeklyMenuState.weekStart,
-              date: c.dateKey,
-              day: c.dayCode,
-              isOpen: c.isOpen,
-              regular: buildTranslatedList(c.regular),
-              simple: buildTranslatedList(c.simple),
-              status: "published",
-              updatedAt: serverTimestampOrNow()
-            };
-            if (imageUrl) docData.sourceImageUrl = imageUrl;
-            return db.collection("weeklyMenus").doc(c.dateKey).set(docData, { merge: true });
-          });
-
-          var dictWrites = Object.keys(translations).map(function (term) {
-            var tr = translations[term] || {};
-            var docData = { ko: term, updatedAt: serverTimestampOrNow() };
-            if (tr.zh) docData.zh = tr.zh;
-            if (tr.vi) docData.vi = tr.vi;
-            if (tr.en) docData.en = tr.en;
-            if (tr.mn) docData.mn = tr.mn;
-            return db.collection("menuTranslations").doc(term).set(docData, { merge: true });
-          });
-
-          return Promise.all(dayWrites.concat(dictWrites));
-        });
-      }).then(function () {
-        setPublishButtonsDisabled(false);
-        showPublishStatus("게시되었습니다. 학생 화면에 오늘·내일 메뉴로 반영됩니다.", false, true);
-        weeklyMenuState.pendingImageFile = null;
-        loadWeeklyMenuWeek(weeklyMenuState.weekStart);
-      }).catch(function (err) {
-        setPublishButtonsDisabled(false);
-        showPublishStatus((err && err.friendly) || friendlyError("게시에 실패했습니다.", err), true);
-      });
-    });
+    var retranslateBtn = qs("weekRetranslateBtn");
+    if (retranslateBtn) retranslateBtn.addEventListener("click", runTranslateCheck);
 
     qs("weekDeleteAllBtn").addEventListener("click", function () {
       var user = requireAdminUser();
@@ -1265,12 +1603,31 @@
       Promise.all(deletes).then(function () {
         setPublishButtonsDisabled(false);
         showPublishStatus("삭제되었습니다.", false, true);
+        clearAutosave();
         loadWeeklyMenuWeek(weeklyMenuState.weekStart);
       }).catch(function (err) {
         setPublishButtonsDisabled(false);
         showPublishStatus(friendlyError("삭제에 실패했습니다.", err), true);
       });
     });
+
+    // 카드 내용을 고치면 이전 "번역 확인" 결과가 더는 정확하지 않으므로
+    // 다시 확인하도록 "게시 확정"을 잠그고 검토 화면을 비웁니다.
+    var grid = qs("weekDayGrid");
+    if (grid) {
+      grid.addEventListener("input", handleGridChanged);
+      grid.addEventListener("change", handleGridChanged);
+    }
+  }
+
+  function handleGridChanged() {
+    weeklyMenuState.lastTranslations = null;
+    weeklyMenuState.lastFailedTerms = [];
+    var confirmBtn = qs("weekPublishConfirmBtn");
+    if (confirmBtn) confirmBtn.disabled = true;
+    var reviewEl = qs("weekTranslateReview");
+    if (reviewEl) reviewEl.innerHTML = "";
+    scheduleAutosave();
   }
 
   function initWeeklyMenuPage() {
@@ -1289,6 +1646,12 @@
       var val = qs("weekStartInput").value;
       if (!val) return;
       loadWeeklyMenuWeek(mondayKeyOf(val));
+    });
+
+    var discardBtn = qs("weekAutosaveDiscardBtn");
+    if (discardBtn) discardBtn.addEventListener("click", function () {
+      clearAutosave();
+      loadWeeklyMenuWeek(weeklyMenuState.weekStart);
     });
 
     qs("weekStartInput").value = mondayKeyOf(getSeoulDateKey(0));

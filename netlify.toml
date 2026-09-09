@@ -16,7 +16,7 @@
   # process.env로만 읽고 저장소 어디에도 실제 값을 적지 않았고, 이번
   # 빌드 로그에서도 "0 instance(s) of secrets"로 확인되었습니다.
 [build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "GEMINI_API_KEY,REVIEW_ID"
+  SECRETS_SCAN_OMIT_KEYS = "GEMINI_API_KEY,OPENAI_API_KEY,AI_PROVIDER,REVIEW_ID"
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 [functions]
