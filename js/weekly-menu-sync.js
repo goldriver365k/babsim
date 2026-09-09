@@ -6,9 +6,9 @@
      정적 파일의 내용이 그대로 유지됩니다(기존 방식과 100% 호환).
    - "임시저장"(status: draft)은 관리자 화면에서만 보이고, 학생 화면에는
      반영되지 않습니다.
-   - 등록된 주간메뉴 원본 이미지가 있으면 "주간 메뉴 원본 보기" 팝업에서만
-     쓰입니다. 오늘·내일 메뉴 칸에는 이미지를 넣지 않고 글자만 표시합니다
-     (js/app.js의 renderMealList가 담당).
+   - 오늘·내일 메뉴 칸에는 이미지를 넣지 않고 글자만 표시합니다
+     (js/app.js의 renderMealList가 담당). 주간메뉴 원본 이미지 보기
+     기능은 학생 화면에서 제거되었습니다.
 
    화면은 렌더링이 끝난 뒤 비동기로 동기화하고, 데이터가 갱신되면
    콜백으로 다시 그리게 합니다(초기 표시가 늦어지지 않도록).
@@ -23,20 +23,6 @@ var WeeklyMenuSync = (function () {
     return new Intl.DateTimeFormat("en-CA", {
       timeZone: SEOUL_TZ, year: "numeric", month: "2-digit", day: "2-digit"
     }).format(new Date(Date.now() + (offsetDays || 0) * 24 * 60 * 60 * 1000));
-  }
-
-  function addDaysToKey(dateKey, days) {
-    var parts = dateKey.split("-").map(Number);
-    var d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
-
-  function mondayKeyOf(dateKey) {
-    var parts = dateKey.split("-").map(Number);
-    var d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
-    var weekday = (d.getUTCDay() + 6) % 7; // 0=월 ... 6=일
-    return addDaysToKey(dateKey, -weekday);
   }
 
   function applyDayDoc(dateKey, data) {
@@ -66,28 +52,16 @@ var WeeklyMenuSync = (function () {
 
     var todayKey = getSeoulDateKey(0);
     var tomorrowKey = getSeoulDateKey(1);
-    var weekKey = mondayKeyOf(todayKey);
 
     Promise.all([
       db.collection("weeklyMenus").doc(todayKey).get().catch(function () { return null; }),
-      db.collection("weeklyMenus").doc(tomorrowKey).get().catch(function () { return null; }),
-      db.collection("weeklyMenuImages").doc(weekKey).get().catch(function () { return null; })
+      db.collection("weeklyMenus").doc(tomorrowKey).get().catch(function () { return null; })
     ]).then(function (results) {
       var todaySnap = results[0];
       var tomorrowSnap = results[1];
-      var imageSnap = results[2];
 
       if (todaySnap && todaySnap.exists) applyDayDoc(todayKey, todaySnap.data());
       if (tomorrowSnap && tomorrowSnap.exists) applyDayDoc(tomorrowKey, tomorrowSnap.data());
-
-      // 원본 이미지는 "주간 메뉴 원본 보기" 팝업 전용 — 등록되어 있으면
-      // 오늘·내일에 글자 메뉴가 있는지 여부와 무관하게 버튼만 노출합니다.
-      if (imageSnap && imageSnap.exists) {
-        var imgData = imageSnap.data();
-        if (imgData && imgData.imageUrl) {
-          BREAKFAST_WEEKLY_MENU.sourceImage = imgData.imageUrl;
-        }
-      }
 
       if (onReady) onReady();
     }).catch(function (err) {

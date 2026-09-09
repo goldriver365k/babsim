@@ -763,34 +763,13 @@ main {
   font-style: italic;
 }
 
-.ba-view-original-btn {
-  min-height: 44px;
-  padding: 10px 20px;
-  background: #ffffff;
-  border: 1px solid var(--blue);
-  border-radius: var(--radius-sm);
-  color: var(--blue);
-  font-size: 14px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.ba-view-original-btn[hidden] { display: none; }
-
-.ba-view-original-btn:hover,
-.ba-view-original-btn:focus-visible {
-  background: var(--blue);
-  color: #ffffff;
-  outline: none;
-}
-
 /* ---- 오늘의 메뉴 평가 (천원의 아침밥) ---- */
 
 .ba-rating {
   max-width: 480px;
   margin: 0 auto 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-gray);
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-gray);
 }
 
 .ba-rating[hidden] { display: none; }
@@ -897,22 +876,6 @@ main {
 @media (min-width: 420px) {
   .ba-rating-face { width: 48px; height: 48px; }
   .ba-rating-label { font-size: 12px; }
-}
-
-.weekly-image-modal {
-  max-width: 92vw;
-  max-height: 90vh;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.weekly-image-modal img {
-  max-width: 100%;
-  max-height: 78vh;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
 }
 
 .menu-grid {
