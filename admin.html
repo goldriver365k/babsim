@@ -1161,7 +1161,8 @@ table.results-table {
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
 
-          // 주간메뉴 원본 이미지 등록 정보(주간 메뉴 원본 보기 팝업용, 문서 ID = 주 시작일)
+          // 주간메뉴 원본 이미지 등록 정보(관리자 참고/이미지 자동인식 입력용, 문서 ID = 주 시작일).
+          // 학생 화면에는 표시되지 않습니다.
           match /weeklyMenuImages/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요

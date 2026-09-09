@@ -325,7 +325,6 @@
     if (!dayHasDirectData(day)) {
       // 운영일이지만 아직 메뉴가 등록되지 않은 상태 — 주간표 스크린샷은
       // 오늘·내일 칸에 넣지 않고, "메뉴를 준비 중입니다"로만 안내합니다.
-      // (원본 이미지는 "주간 메뉴 원본 보기" 버튼을 눌렀을 때만 보여줍니다.)
       var preparingMsg = BREAKFAST_INFO.menuPreparingMessage
         ? (BREAKFAST_INFO.menuPreparingMessage[lang] || BREAKFAST_INFO.menuPreparingMessage.ko)
         : closedText;
@@ -419,12 +418,6 @@
       li.textContent = line;
       els.baStepsList.appendChild(li);
     });
-
-    var hasImage = !!(BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage);
-    els.baViewOriginalBtn.hidden = !hasImage;
-    if (hasImage) {
-      els.baViewOriginalBtn.textContent = info.viewOriginalButton[lang];
-    }
   }
 
   /* "오늘의 메뉴 평가" 위젯 연동 (js/breakfast-rating.js, 선택적 모듈) */
@@ -473,30 +466,6 @@
       lastKnownSeoulDateKey = currentKey;
       if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
     }
-  }
-
-  /* ---------------- 주간 메뉴 원본 이미지 팝업 ---------------- */
-
-  var weeklyImageLastFocusedEl = null;
-
-  function openWeeklyImage() {
-    if (!BREAKFAST_WEEKLY_MENU || !BREAKFAST_WEEKLY_MENU.sourceImage) return;
-    els.weeklyImageImg.src = BREAKFAST_WEEKLY_MENU.sourceImage;
-    els.weeklyImageImg.alt = BREAKFAST_INFO.viewOriginalButton[state.lang];
-    weeklyImageLastFocusedEl = document.activeElement;
-    els.weeklyImageOverlay.hidden = false;
-    els.weeklyImageClose.focus();
-    document.addEventListener("keydown", onWeeklyImageKeydown);
-  }
-
-  function closeWeeklyImage() {
-    els.weeklyImageOverlay.hidden = true;
-    document.removeEventListener("keydown", onWeeklyImageKeydown);
-    if (weeklyImageLastFocusedEl && typeof weeklyImageLastFocusedEl.focus === "function") weeklyImageLastFocusedEl.focus();
-  }
-
-  function onWeeklyImageKeydown(e) {
-    if (e.key === "Escape") closeWeeklyImage();
   }
 
   /* ---------------- 무료 콜라 쿠폰 배너 ---------------- */
@@ -662,11 +631,6 @@
     els.baEligList = qs("baEligList");
     els.baStepsLabel = qs("baStepsLabel");
     els.baStepsList = qs("baStepsList");
-    els.baViewOriginalBtn = qs("baViewOriginalBtn");
-
-    els.weeklyImageOverlay = qs("weeklyImageOverlay");
-    els.weeklyImageClose = qs("weeklyImageClose");
-    els.weeklyImageImg = qs("weeklyImageImg");
 
     els.colaBanner = qs("colaBanner");
     els.colaBannerTitle = qs("colaBannerTitle");
@@ -726,12 +690,6 @@
 
     els.bapsimTabMenu.addEventListener("click", function () { setBapsimView("menu"); });
     els.bapsimTabBreakfast.addEventListener("click", function () { setBapsimView("breakfast"); });
-
-    els.baViewOriginalBtn.addEventListener("click", openWeeklyImage);
-    els.weeklyImageClose.addEventListener("click", closeWeeklyImage);
-    els.weeklyImageOverlay.addEventListener("click", function (e) {
-      if (e.target === els.weeklyImageOverlay) closeWeeklyImage();
-    });
 
     els.colaBannerBtn.addEventListener("click", openColaDetail);
     els.colaDetailClose.addEventListener("click", closeColaDetail);

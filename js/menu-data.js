@@ -512,13 +512,6 @@ const BREAKFAST_INFO = {
     regular: { ko: "일반식", en: "Regular Meal", zh: "普通餐", vi: "Suất thường", mn: "Энгийн хоол" },
     simple: { ko: "간편식", en: "Simple Meal", zh: "简餐", vi: "Suất đơn giản", mn: "Хялбар хоол" }
   },
-  viewOriginalButton: {
-    ko: "주간 메뉴 원본 보기",
-    en: "View Weekly Menu",
-    zh: "查看每周菜单原图",
-    vi: "Xem ảnh thực đơn tuần",
-    mn: "Долоо хоногийн цэсийн зургийг үзэх"
-  },
   tagline: {
     ko: "단돈 1,000원으로 든든한 아침을 시작하세요.",
     en: "Start your day with a filling breakfast for only \u20A91,000.",

@@ -116,6 +116,12 @@ def build():
     <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
     <p class="ba-price" id="baPriceValue">1,000원</p>
 
+    <div class="ba-rating" id="baRating" hidden>
+      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
+      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
+      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
+    </div>
+
     <div class="ba-meal-cards">
       <div class="ba-meal-card ba-meal-card-today">
         <h4 class="ba-meal-card-title" id="baTodayMenuTitle">오늘의 아침 메뉴</h4>
@@ -143,14 +149,6 @@ def build():
       <span class="ba-label" id="baStepsLabel"></span>
       <ol class="ba-list ba-steps-list" id="baStepsList"></ol>
     </div>
-
-    <button type="button" class="ba-view-original-btn" id="baViewOriginalBtn" hidden>주간 메뉴 원본 보기</button>
-
-    <div class="ba-rating" id="baRating" hidden>
-      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
-      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
-      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
-    </div>
   </section>
 
   <div class="group-nav" id="groupNav" hidden>
@@ -176,14 +174,6 @@ def build():
   <span aria-hidden="true">\U0001F4AC</span>
   <span id="ownerChatFabLabel">사장님께 말해요</span>
 </a>
-
-<!-- 주간 메뉴 원본 이미지 팝업 -->
-<div class="modal-overlay" id="weeklyImageOverlay" hidden>
-  <div class="modal weekly-image-modal" role="dialog" aria-modal="true" aria-label="주간 메뉴 원본 이미지">
-    <button type="button" class="modal-close" id="weeklyImageClose" aria-label="닫기">×</button>
-    <img id="weeklyImageImg" src="" alt="">
-  </div>
-</div>
 
 <!-- 무료 콜라 쿠폰 상세창 -->
 <div class="modal-overlay" id="colaDetailOverlay" hidden>
