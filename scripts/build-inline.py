@@ -15,7 +15,12 @@ css/style.css, js/translations.js, js/menu-data.js, js/app.js 등의 원본
   메뉴, 번역, 동작, 디자인, 관리자 페이지를 수정할 때는
   css/style.css, js/translations.js, js/menu-data.js, js/app.js,
   js/firebase-config.js, js/breakfast-rating.js, js/hellokorean-stats.js,
-  css/admin.css, js/admin.js
+  js/pwa.js, css/admin.css, js/admin.js
+
+  service-worker.js와 manifest.webmanifest는 index.html에 합쳐지지 않고
+  저장소 루트에 그대로 배포되는 독립 파일입니다(서비스 워커는 브라우저가
+  별도 URL로 직접 받아야 하므로 inline 스크립트로 넣을 수 없습니다).
+  이 두 파일은 수정 후 바로 배포하면 됩니다(build-inline.py 실행 불필요).
   이 원본 파일들만 수정하고, 그 다음 아래 명령을 실행하세요.
 
       python3 scripts/build-inline.py
@@ -45,6 +50,7 @@ def build():
     language_stats = read("js/language-stats.js")
     weekly_menu_sync = read("js/weekly-menu-sync.js")
     hellokorean_stats = read("js/hellokorean-stats.js")
+    pwa = read("js/pwa.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -56,7 +62,7 @@ def build():
 <meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
 
 <!-- 홈 화면 추가(PWA) 아이콘 -->
-<link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="./images/icon/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="./images/icon/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./images/icon/apple-touch-icon.png">
@@ -240,6 +246,21 @@ def build():
   </div>
 </div>
 
+<!-- PWA 업데이트 알림 / 바탕화면 추가 안내 (js/pwa.js가 내용을 채우고,
+     업데이트 배너와 바탕화면 추가 안내는 동시에 뜨지 않습니다) -->
+<div class="pwa-banner" id="pwaBanner" hidden role="status" aria-live="polite">
+  <button type="button" class="pwa-banner-close" id="pwaBannerClose" aria-label="닫기">×</button>
+  <div class="pwa-banner-body" id="pwaBannerBody"></div>
+</div>
+
+<!-- 아이폰/아이패드 홈 화면 추가 방법 안내(자동 설치창이 없어 직접 안내) -->
+<div class="modal-overlay" id="iosInstallOverlay" hidden>
+  <div class="modal ios-install-modal" role="dialog" aria-modal="true" aria-label="홈 화면에 추가하는 방법">
+    <button type="button" class="modal-close" id="iosInstallClose" aria-label="닫기">×</button>
+    <ol class="ios-install-steps" id="iosInstallSteps"></ol>
+  </div>
+</div>
+
 <script>
 """ + translations + """
 </script>
@@ -269,6 +290,9 @@ def build():
 </script>
 <script>
 """ + hellokorean_stats + """
+</script>
+<script>
+""" + pwa + """
 </script>
 <script>
 """ + app + """

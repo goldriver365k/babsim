@@ -213,6 +213,9 @@
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
       window.LanguageStats.record(lang);
     }
+    if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
+      window.PwaManager.setLang(lang);
+    }
   }
 
   function changeGroup(delta) {
@@ -745,6 +748,10 @@
     /* 언어 통계 기록 (새 UI 없음, 방문 시점의 언어를 그대로 기록) */
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
       window.LanguageStats.record(state.lang);
+    }
+    // PWA 업데이트/설치 배너 문구도 처음부터 저장된 언어에 맞춰 둡니다.
+    if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
+      window.PwaManager.setLang(state.lang);
     }
 
     /* 관리자 페이지에서 등록한 주간메뉴로 동기화 (없으면 정적 데이터 유지) */

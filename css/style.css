@@ -30,6 +30,9 @@ body {
   color: var(--text-dark);
   font-size: 16px;
   line-height: 1.5;
+  /* PWA 배너가 떠 있을 때 마지막 내용을 가리지 않도록 여백을 둡니다. */
+  padding-bottom: var(--pwa-banner-height, 0px);
+  transition: padding-bottom 0.15s ease;
 }
 
 button {
@@ -506,7 +509,9 @@ button {
   display: none;
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올려 겹치지 않게 합니다. */
+  bottom: calc(16px + var(--pwa-banner-height, 0px));
+  transition: bottom 0.15s ease;
   z-index: 40;
   align-items: center;
   gap: 6px;
@@ -533,6 +538,132 @@ button {
 @media (max-width: 700px) {
   .owner-chat-fab { display: inline-flex; }
 }
+
+/* ---------------- PWA 업데이트 알림 / 바탕화면 추가 안내 ----------------
+   화면 하단 고정 카드. 업데이트 배너와 바탕화면 추가 안내는 js/pwa.js가
+   동시에 뜨지 않도록 관리합니다(한 번에 하나만 표시). */
+
+.pwa-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 60; /* .owner-chat-fab(40)보다 위, 모달 오버레이(100+)보다는 아래 */
+  max-width: 480px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  border: 1px solid #CBDDF7;
+  border-radius: 14px;
+  padding: 16px 40px 16px 16px;
+  box-shadow: 0 2px 10px rgba(18, 52, 91, 0.14);
+  box-sizing: border-box;
+}
+
+.pwa-banner[hidden] { display: none; }
+
+.pwa-banner-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.pwa-banner-close:hover,
+.pwa-banner-close:focus-visible {
+  background: #f0f4fa;
+  outline: none;
+}
+
+.pwa-banner-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #12345B;
+  overflow-wrap: anywhere;
+}
+
+.pwa-banner-msg {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #12345B;
+  overflow-wrap: anywhere;
+}
+
+.pwa-banner-msg-success { color: var(--green, #1a7f37); margin-bottom: 0; font-weight: 700; }
+
+.pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pwa-banner-btn-primary,
+.pwa-banner-btn-secondary {
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.pwa-banner-btn-primary {
+  background: #1559D6;
+  color: #FFFFFF;
+  border: 1px solid #1559D6;
+}
+
+.pwa-banner-btn-primary:hover,
+.pwa-banner-btn-primary:focus-visible {
+  background: #0D47B5;
+  border-color: #0D47B5;
+  outline: none;
+}
+
+.pwa-banner-btn-secondary {
+  background: transparent;
+  color: #64748B;
+  border: 1px solid transparent;
+}
+
+.pwa-banner-btn-secondary:hover,
+.pwa-banner-btn-secondary:focus-visible {
+  color: #12345B;
+  outline: none;
+}
+
+/* 업데이트 배너는 버튼 하나만 있어 오른쪽 정렬 대신 꽉 채웁니다. */
+.pwa-banner-body > .pwa-banner-btn-primary { display: block; width: 100%; }
+
+/* ---------------- 아이폰/아이패드 홈 화면 추가 안내 ---------------- */
+
+.ios-install-modal {
+  max-width: 340px;
+  padding: 28px 22px 22px;
+}
+
+.ios-install-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.ios-install-steps li { overflow-wrap: anywhere; }
 
 /* ---------------- 본문 ---------------- */
 
