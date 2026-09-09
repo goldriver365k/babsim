@@ -118,3 +118,69 @@ const HELLOKOREAN_INFO = {
     mn: "Үнэгүй эхлэх"
   }
 };
+
+/* ==========================================================================
+   PWA 업데이트 알림 / 바탕화면 추가 안내 문구 (js/pwa.js)
+   ========================================================================== */
+const PWA_UPDATE_INFO = {
+  message: {
+    ko: "새로운 메뉴 정보가 있습니다",
+    zh: "有新的菜单信息",
+    vi: "Có thông tin thực đơn mới",
+    en: "New menu information is available",
+    mn: "Шинэ цэсийн мэдээлэл гарлаа"
+  },
+  button: {
+    ko: "지금 업데이트",
+    zh: "立即更新",
+    vi: "Cập nhật ngay",
+    en: "Update now",
+    mn: "Одоо шинэчлэх"
+  },
+  done: {
+    ko: "업데이트가 완료되었습니다",
+    zh: "更新已完成",
+    vi: "Đã cập nhật xong",
+    en: "Update complete",
+    mn: "Шинэчлэлт дууслаа"
+  }
+};
+
+const PWA_INSTALL_INFO = {
+  title: {
+    ko: "밥심 메뉴를 바탕화면에 추가하세요",
+    zh: "将饭心菜单添加到主屏幕",
+    vi: "Thêm thực đơn Babsim vào màn hình chính",
+    en: "Add Babsim Menu to your Home Screen",
+    mn: "Babsim цэсийг нүүр дэлгэцэд нэмэх"
+  },
+  desc: {
+    ko: "다음 방문부터 메뉴를 더 빠르게 확인할 수 있습니다",
+    zh: "下次可以更快地查看菜单",
+    vi: "Xem thực đơn nhanh hơn vào lần sau",
+    en: "Check the menu faster next time",
+    mn: "Дараагийн удаа цэсийг хурдан үзээрэй"
+  },
+  button: {
+    ko: "바탕화면에 추가",
+    zh: "添加到主屏幕",
+    vi: "Thêm vào màn hình chính",
+    en: "Add to Home Screen",
+    mn: "Нүүр дэлгэцэд нэмэх"
+  },
+  later: {
+    ko: "나중에",
+    zh: "稍后",
+    vi: "Để sau",
+    en: "Later",
+    mn: "Дараа"
+  },
+  // 아이폰/아이패드는 자동 설치창이 없어 Safari 공유 메뉴로 직접 안내합니다.
+  iosSteps: {
+    ko: ["Safari의 공유 버튼을 누르세요", "‘홈 화면에 추가’를 선택하세요", "오른쪽 위 ‘추가’를 누르세요"],
+    zh: ["点击 Safari 浏览器的分享按钮", "选择“添加到主屏幕”", "点击右上角的“添加”"],
+    vi: ["Nhấn nút Chia sẻ trên Safari", "Chọn “Thêm vào màn hình chính”", "Nhấn “Thêm” ở góc trên bên phải"],
+    en: ["Tap the Share button in Safari", "Select “Add to Home Screen”", "Tap “Add” in the top-right corner"],
+    mn: ["Safari-н Хуваалцах товчийг дарна уу", "“Нүүр дэлгэцэд нэмэх”-ийг сонгоно уу", "Баруун дээд буланд байх “Нэмэх”-ийг дарна уу"]
+  }
+};

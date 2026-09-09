@@ -43,14 +43,34 @@
 [[headers]]
   for = "/css/*"
   [headers.values]
+    Content-Type = "text/css; charset=UTF-8"
     Cache-Control = "public, max-age=604800"
 
 [[headers]]
   for = "/js/*"
   [headers.values]
+    Content-Type = "application/javascript; charset=UTF-8"
     Cache-Control = "public, max-age=604800"
 
 [[headers]]
   for = "/images/*"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
+
+# 서비스 워커 파일은 절대 오래 캐시되면 안 됩니다 — 브라우저가 이 파일을
+# 매번(또는 아주 자주) 새로 받아 바이트 단위로 비교해야 새 배포를 감지해
+# "지금 업데이트" 배너를 띄울 수 있습니다. Content-Type도 위 "/*" 전역
+# 규칙(text/html)이 아니라 실제 자바스크립트로 지정해야 브라우저가
+# 서비스 워커로 등록해 줍니다.
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=UTF-8"
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=UTF-8"
+    Cache-Control = "public, max-age=3600"

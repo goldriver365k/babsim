@@ -7,7 +7,7 @@
 <meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
 
 <!-- 홈 화면 추가(PWA) 아이콘 -->
-<link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="./images/icon/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="./images/icon/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./images/icon/apple-touch-icon.png">
@@ -49,6 +49,9 @@ body {
   color: var(--text-dark);
   font-size: 16px;
   line-height: 1.5;
+  /* PWA 배너가 떠 있을 때 마지막 내용을 가리지 않도록 여백을 둡니다. */
+  padding-bottom: var(--pwa-banner-height, 0px);
+  transition: padding-bottom 0.15s ease;
 }
 
 button {
@@ -525,7 +528,9 @@ button {
   display: none;
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올려 겹치지 않게 합니다. */
+  bottom: calc(16px + var(--pwa-banner-height, 0px));
+  transition: bottom 0.15s ease;
   z-index: 40;
   align-items: center;
   gap: 6px;
@@ -552,6 +557,132 @@ button {
 @media (max-width: 700px) {
   .owner-chat-fab { display: inline-flex; }
 }
+
+/* ---------------- PWA 업데이트 알림 / 바탕화면 추가 안내 ----------------
+   화면 하단 고정 카드. 업데이트 배너와 바탕화면 추가 안내는 js/pwa.js가
+   동시에 뜨지 않도록 관리합니다(한 번에 하나만 표시). */
+
+.pwa-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 60; /* .owner-chat-fab(40)보다 위, 모달 오버레이(100+)보다는 아래 */
+  max-width: 480px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  border: 1px solid #CBDDF7;
+  border-radius: 14px;
+  padding: 16px 40px 16px 16px;
+  box-shadow: 0 2px 10px rgba(18, 52, 91, 0.14);
+  box-sizing: border-box;
+}
+
+.pwa-banner[hidden] { display: none; }
+
+.pwa-banner-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.pwa-banner-close:hover,
+.pwa-banner-close:focus-visible {
+  background: #f0f4fa;
+  outline: none;
+}
+
+.pwa-banner-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #12345B;
+  overflow-wrap: anywhere;
+}
+
+.pwa-banner-msg {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #12345B;
+  overflow-wrap: anywhere;
+}
+
+.pwa-banner-msg-success { color: var(--green, #1a7f37); margin-bottom: 0; font-weight: 700; }
+
+.pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pwa-banner-btn-primary,
+.pwa-banner-btn-secondary {
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.pwa-banner-btn-primary {
+  background: #1559D6;
+  color: #FFFFFF;
+  border: 1px solid #1559D6;
+}
+
+.pwa-banner-btn-primary:hover,
+.pwa-banner-btn-primary:focus-visible {
+  background: #0D47B5;
+  border-color: #0D47B5;
+  outline: none;
+}
+
+.pwa-banner-btn-secondary {
+  background: transparent;
+  color: #64748B;
+  border: 1px solid transparent;
+}
+
+.pwa-banner-btn-secondary:hover,
+.pwa-banner-btn-secondary:focus-visible {
+  color: #12345B;
+  outline: none;
+}
+
+/* 업데이트 배너는 버튼 하나만 있어 오른쪽 정렬 대신 꽉 채웁니다. */
+.pwa-banner-body > .pwa-banner-btn-primary { display: block; width: 100%; }
+
+/* ---------------- 아이폰/아이패드 홈 화면 추가 안내 ---------------- */
+
+.ios-install-modal {
+  max-width: 340px;
+  padding: 28px 22px 22px;
+}
+
+.ios-install-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.ios-install-steps li { overflow-wrap: anywhere; }
 
 /* ---------------- 본문 ---------------- */
 
@@ -1391,6 +1522,21 @@ main {
   </div>
 </div>
 
+<!-- PWA 업데이트 알림 / 바탕화면 추가 안내 (js/pwa.js가 내용을 채우고,
+     업데이트 배너와 바탕화면 추가 안내는 동시에 뜨지 않습니다) -->
+<div class="pwa-banner" id="pwaBanner" hidden role="status" aria-live="polite">
+  <button type="button" class="pwa-banner-close" id="pwaBannerClose" aria-label="닫기">×</button>
+  <div class="pwa-banner-body" id="pwaBannerBody"></div>
+</div>
+
+<!-- 아이폰/아이패드 홈 화면 추가 방법 안내(자동 설치창이 없어 직접 안내) -->
+<div class="modal-overlay" id="iosInstallOverlay" hidden>
+  <div class="modal ios-install-modal" role="dialog" aria-modal="true" aria-label="홈 화면에 추가하는 방법">
+    <button type="button" class="modal-close" id="iosInstallClose" aria-label="닫기">×</button>
+    <ol class="ios-install-steps" id="iosInstallSteps"></ol>
+  </div>
+</div>
+
 <script>
 /* ==========================================================================
    공통 UI 문구 번역 (매장명, 버튼, 안내문, 오류문)
@@ -1510,6 +1656,72 @@ const HELLOKOREAN_INFO = {
     vi: "Bắt đầu miễn phí",
     en: "Start for Free",
     mn: "Үнэгүй эхлэх"
+  }
+};
+
+/* ==========================================================================
+   PWA 업데이트 알림 / 바탕화면 추가 안내 문구 (js/pwa.js)
+   ========================================================================== */
+const PWA_UPDATE_INFO = {
+  message: {
+    ko: "새로운 메뉴 정보가 있습니다",
+    zh: "有新的菜单信息",
+    vi: "Có thông tin thực đơn mới",
+    en: "New menu information is available",
+    mn: "Шинэ цэсийн мэдээлэл гарлаа"
+  },
+  button: {
+    ko: "지금 업데이트",
+    zh: "立即更新",
+    vi: "Cập nhật ngay",
+    en: "Update now",
+    mn: "Одоо шинэчлэх"
+  },
+  done: {
+    ko: "업데이트가 완료되었습니다",
+    zh: "更新已完成",
+    vi: "Đã cập nhật xong",
+    en: "Update complete",
+    mn: "Шинэчлэлт дууслаа"
+  }
+};
+
+const PWA_INSTALL_INFO = {
+  title: {
+    ko: "밥심 메뉴를 바탕화면에 추가하세요",
+    zh: "将饭心菜单添加到主屏幕",
+    vi: "Thêm thực đơn Babsim vào màn hình chính",
+    en: "Add Babsim Menu to your Home Screen",
+    mn: "Babsim цэсийг нүүр дэлгэцэд нэмэх"
+  },
+  desc: {
+    ko: "다음 방문부터 메뉴를 더 빠르게 확인할 수 있습니다",
+    zh: "下次可以更快地查看菜单",
+    vi: "Xem thực đơn nhanh hơn vào lần sau",
+    en: "Check the menu faster next time",
+    mn: "Дараагийн удаа цэсийг хурдан үзээрэй"
+  },
+  button: {
+    ko: "바탕화면에 추가",
+    zh: "添加到主屏幕",
+    vi: "Thêm vào màn hình chính",
+    en: "Add to Home Screen",
+    mn: "Нүүр дэлгэцэд нэмэх"
+  },
+  later: {
+    ko: "나중에",
+    zh: "稍后",
+    vi: "Để sau",
+    en: "Later",
+    mn: "Дараа"
+  },
+  // 아이폰/아이패드는 자동 설치창이 없어 Safari 공유 메뉴로 직접 안내합니다.
+  iosSteps: {
+    ko: ["Safari의 공유 버튼을 누르세요", "‘홈 화면에 추가’를 선택하세요", "오른쪽 위 ‘추가’를 누르세요"],
+    zh: ["点击 Safari 浏览器的分享按钮", "选择“添加到主屏幕”", "点击右上角的“添加”"],
+    vi: ["Nhấn nút Chia sẻ trên Safari", "Chọn “Thêm vào màn hình chính”", "Nhấn “Thêm” ở góc trên bên phải"],
+    en: ["Tap the Share button in Safari", "Select “Add to Home Screen”", "Tap “Add” in the top-right corner"],
+    mn: ["Safari-н Хуваалцах товчийг дарна уу", "“Нүүр дэлгэцэд нэмэх”-ийг сонгоно уу", "Баруун дээд буланд байх “Нэмэх”-ийг дарна уу"]
   }
 };
 
@@ -2899,6 +3111,320 @@ var HelloKoreanStats = (function () {
 </script>
 <script>
 /* ==========================================================================
+   PWA 업데이트 알림 / 바탕화면(홈 화면) 추가 안내 (js/pwa.js)
+   - 새 배포로 서비스 워커(service-worker.js) 내용이 바뀌면 화면 하단에
+     "지금 업데이트" 배너를 띄우고, 누르면 새 버전을 즉시 적용합니다.
+   - 처음 방문한 사용자(아직 설치 안 함, standalone 아님)에게만 "바탕화면에
+     추가" 안내를 보여줍니다. 안드로이드는 실제 설치창을, 아이폰/아이패드는
+     Safari 공유 메뉴 사용법을 안내합니다.
+   - 업데이트 배너 > 업데이트 완료 > 바탕화면 추가 안내 순서로 한 번에
+     하나만 표시합니다(js/app.js, 기존 화면 요소는 건드리지 않습니다).
+   - 이 스크립트가 없거나 실행에 실패해도 기존 화면은 그대로 동작합니다
+     (선택적 연동 — 다른 js/*.js 모듈과 동일한 패턴).
+   ========================================================================== */
+
+var PwaManager = (function () {
+  "use strict";
+
+  var INSTALLED_KEY = "moingwan_pwa_installed";
+  var SNOOZE_KEY = "moingwan_install_snooze_until";
+  var JUST_UPDATED_KEY = "moingwan_just_updated";
+  var SNOOZE_MS = 7 * 24 * 60 * 60 * 1000; // 7일
+
+  var els = {};
+  var lang = "ko";
+  var currentView = "hidden"; // "update" | "updateComplete" | "install" | "hidden"
+  var waitingWorker = null;
+  var deferredInstallEvent = null;
+  var refreshing = false; // controllerchange 중복 발생 시 새로고침이 두 번 일어나지 않도록
+
+  function qs(id) { return document.getElementById(id); }
+
+  function text(dict, l) {
+    return (dict && (dict[l] || dict.ko)) || "";
+  }
+
+  function isIos() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent || "") && !window.MSStream;
+  }
+
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+      window.navigator.standalone === true;
+  }
+
+  function isMarkedInstalled() {
+    try { return localStorage.getItem(INSTALLED_KEY) === "1"; } catch (e) { return false; }
+  }
+
+  function markInstalled() {
+    try { localStorage.setItem(INSTALLED_KEY, "1"); } catch (e) { /* 무시 */ }
+  }
+
+  function isSnoozed() {
+    try {
+      var until = parseInt(localStorage.getItem(SNOOZE_KEY) || "0", 10);
+      return Date.now() < until;
+    } catch (e) { return false; }
+  }
+
+  function snoozeInstall() {
+    try { localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS)); } catch (e) { /* 무시 */ }
+  }
+
+  /* 배너 높이만큼 하단 여백을 만들어, 기존 "사장님께 말해요" 플로팅
+     버튼이나 페이지 마지막 내용을 가리지 않게 합니다. */
+  function syncBannerSpacing() {
+    if (!els.banner) return;
+    var h = els.banner.hidden ? 0 : els.banner.offsetHeight;
+    document.documentElement.style.setProperty("--pwa-banner-height", h + "px");
+  }
+
+  function hideBanner() {
+    if (!els.banner) return;
+    els.banner.hidden = true;
+    els.bannerBody.innerHTML = "";
+    currentView = "hidden";
+    syncBannerSpacing();
+  }
+
+  function renderUpdateView() {
+    currentView = "update";
+    els.bannerBody.innerHTML = "";
+    var msg = document.createElement("p");
+    msg.className = "pwa-banner-msg";
+    msg.textContent = text(PWA_UPDATE_INFO.message, lang);
+    els.bannerBody.appendChild(msg);
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pwa-banner-btn-primary";
+    btn.textContent = text(PWA_UPDATE_INFO.button, lang);
+    btn.addEventListener("click", applyUpdate);
+    els.bannerBody.appendChild(btn);
+
+    els.banner.hidden = false;
+    els.bannerClose.hidden = true; // 업데이트 배너는 닫기 버튼 없이 바로 적용을 유도
+    syncBannerSpacing();
+  }
+
+  function renderUpdateCompleteView() {
+    currentView = "updateComplete";
+    els.bannerBody.innerHTML = "";
+    var msg = document.createElement("p");
+    msg.className = "pwa-banner-msg pwa-banner-msg-success";
+    msg.textContent = text(PWA_UPDATE_INFO.done, lang);
+    els.bannerBody.appendChild(msg);
+
+    els.banner.hidden = false;
+    els.bannerClose.hidden = false;
+    syncBannerSpacing();
+
+    setTimeout(function () {
+      try { sessionStorage.removeItem(JUST_UPDATED_KEY); } catch (e) { /* 무시 */ }
+      if (currentView === "updateComplete") {
+        hideBanner();
+        evaluateAndRender();
+      }
+    }, 3000);
+  }
+
+  function renderInstallView() {
+    currentView = "install";
+    els.bannerBody.innerHTML = "";
+
+    var title = document.createElement("p");
+    title.className = "pwa-banner-title";
+    title.textContent = text(PWA_INSTALL_INFO.title, lang);
+    els.bannerBody.appendChild(title);
+
+    var desc = document.createElement("p");
+    desc.className = "pwa-banner-msg";
+    desc.textContent = text(PWA_INSTALL_INFO.desc, lang);
+    els.bannerBody.appendChild(desc);
+
+    var actions = document.createElement("div");
+    actions.className = "pwa-banner-actions";
+
+    var laterBtn = document.createElement("button");
+    laterBtn.type = "button";
+    laterBtn.className = "pwa-banner-btn-secondary";
+    laterBtn.textContent = text(PWA_INSTALL_INFO.later, lang);
+    laterBtn.addEventListener("click", function () { snoozeInstall(); hideBanner(); });
+    actions.appendChild(laterBtn);
+
+    var addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "pwa-banner-btn-primary";
+    addBtn.textContent = text(PWA_INSTALL_INFO.button, lang);
+    addBtn.addEventListener("click", handleInstallClick);
+    actions.appendChild(addBtn);
+
+    els.bannerBody.appendChild(actions);
+
+    els.banner.hidden = false;
+    els.bannerClose.hidden = false;
+    syncBannerSpacing();
+  }
+
+  /* 업데이트 배너 > 업데이트 완료 > 바탕화면 추가 안내 — 한 번에 하나만. */
+  function evaluateAndRender() {
+    if (waitingWorker) { renderUpdateView(); return; }
+
+    var justUpdated = false;
+    try { justUpdated = sessionStorage.getItem(JUST_UPDATED_KEY) === "1"; } catch (e) { /* 무시 */ }
+    if (justUpdated && currentView !== "install") { renderUpdateCompleteView(); return; }
+
+    if (canOfferInstall()) { renderInstallView(); return; }
+
+    hideBanner();
+  }
+
+  function canOfferInstall() {
+    if (isStandalone() || isMarkedInstalled()) return false;
+    if (isSnoozed()) return false;
+    // beforeinstallprompt가 뜬 안드로이드/데스크톱 크롬, 또는 아이폰/아이패드
+    // (자체 안내 화면으로 대체) 중 하나라도 실제로 설치를 진행할 수 있을
+    // 때만 보여줍니다 — 작동하지 않는 버튼을 보여주지 않기 위함입니다.
+    return !!deferredInstallEvent || isIos();
+  }
+
+  /* ---------------- 서비스 워커 업데이트 ---------------- */
+
+  function applyUpdate() {
+    if (!waitingWorker) return;
+    try { sessionStorage.setItem(JUST_UPDATED_KEY, "1"); } catch (e) { /* 무시 */ }
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    hideBanner(); // 곧 새로고침되므로 배너는 바로 치웁니다.
+  }
+
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
+    navigator.serviceWorker.register("/service-worker.js").then(function (reg) {
+      if (!reg) return; // 등록이 막혀 있는 등 정상적인 registration 객체를 못 받은 경우
+
+      // 이미 대기 중인 워커가 있는 상태로 페이지가 열린 경우
+      if (reg.waiting && navigator.serviceWorker.controller) {
+        waitingWorker = reg.waiting;
+        evaluateAndRender();
+      }
+
+      reg.addEventListener("updatefound", function () {
+        var newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener("statechange", function () {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            // controller가 이미 있다는 건 "처음 설치"가 아니라 "진짜 업데이트"라는 뜻
+            waitingWorker = reg.waiting || newWorker;
+            evaluateAndRender();
+          }
+        });
+      });
+    }).catch(function (err) {
+      console.error("서비스 워커 등록 오류:", err);
+    });
+  }
+
+  /* ---------------- 바탕화면(홈 화면) 추가 ---------------- */
+
+  function handleInstallClick() {
+    if (isIos()) {
+      showIosInstructions();
+      return;
+    }
+    if (!deferredInstallEvent) return;
+    var evt = deferredInstallEvent;
+    deferredInstallEvent = null;
+    evt.prompt();
+    evt.userChoice.then(function (choice) {
+      if (choice && choice.outcome === "accepted") {
+        markInstalled();
+        hideBanner();
+      } else {
+        // 거부해도 다시 물어보지 않고, "나중에"와 같은 기간만큼 조용히 둡니다.
+        snoozeInstall();
+        hideBanner();
+      }
+    }).catch(function () { /* 무시 */ });
+  }
+
+  function showIosInstructions() {
+    if (!els.iosOverlay) return;
+    els.iosSteps.innerHTML = "";
+    var steps = PWA_INSTALL_INFO.iosSteps[lang] || PWA_INSTALL_INFO.iosSteps.ko || [];
+    steps.forEach(function (step) {
+      var li = document.createElement("li");
+      li.textContent = step;
+      els.iosSteps.appendChild(li);
+    });
+    els.iosOverlay.hidden = false;
+  }
+
+  function hideIosInstructions() {
+    if (els.iosOverlay) els.iosOverlay.hidden = true;
+  }
+
+  /* ---------------- 초기화 ---------------- */
+
+  function setLang(newLang) {
+    lang = newLang || "ko";
+    if (currentView !== "hidden") evaluateAndRender(); // 언어를 바꿔도 배너 문구가 즉시 갱신되도록
+  }
+
+  function init() {
+    els.banner = qs("pwaBanner");
+    els.bannerBody = qs("pwaBannerBody");
+    els.bannerClose = qs("pwaBannerClose");
+    els.iosOverlay = qs("iosInstallOverlay");
+    els.iosSteps = qs("iosInstallSteps");
+    els.iosClose = qs("iosInstallClose");
+    if (!els.banner) return;
+
+    els.bannerClose.addEventListener("click", function () {
+      if (currentView === "install") snoozeInstall();
+      hideBanner();
+    });
+
+    if (els.iosClose) els.iosClose.addEventListener("click", hideIosInstructions);
+    if (els.iosOverlay) {
+      els.iosOverlay.addEventListener("click", function (e) {
+        if (e.target === els.iosOverlay) hideIosInstructions();
+      });
+    }
+
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      deferredInstallEvent = e;
+      evaluateAndRender();
+    });
+
+    window.addEventListener("appinstalled", function () {
+      markInstalled();
+      deferredInstallEvent = null;
+      hideBanner();
+    });
+
+    window.addEventListener("resize", function () { syncBannerSpacing(); });
+
+    registerServiceWorker();
+    evaluateAndRender(); // 최초 로드: 아이폰/아이패드는 여기서 바로 설치 안내 후보가 됨
+  }
+
+  return { init: init, setLang: setLang };
+})();
+
+document.addEventListener("DOMContentLoaded", PwaManager.init);
+
+</script>
+<script>
+/* ==========================================================================
    모인관(인제대학교) app.js
    - 매장 선택 / 언어 선택 / 메뉴 그룹 이전·다음 / 천원의 아침밥 모달
    - 외부 라이브러리 없이 순수 JavaScript로 동작합니다.
@@ -3112,6 +3638,9 @@ var HelloKoreanStats = (function () {
     if (!els.staffShowOverlay.hidden) renderStaffShow();
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
       window.LanguageStats.record(lang);
+    }
+    if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
+      window.PwaManager.setLang(lang);
     }
   }
 
@@ -3645,6 +4174,10 @@ var HelloKoreanStats = (function () {
     /* 언어 통계 기록 (새 UI 없음, 방문 시점의 언어를 그대로 기록) */
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
       window.LanguageStats.record(state.lang);
+    }
+    // PWA 업데이트/설치 배너 문구도 처음부터 저장된 언어에 맞춰 둡니다.
+    if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
+      window.PwaManager.setLang(state.lang);
     }
 
     /* 관리자 페이지에서 등록한 주간메뉴로 동기화 (없으면 정적 데이터 유지) */
