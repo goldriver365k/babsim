@@ -51,8 +51,8 @@ def build():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>푸드홀(인제대학교)</title>
-<meta name="description" content="인제대학교 푸드홀 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
+<title>모인관(인제대학교)</title>
+<meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
 
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="./manifest.json">
@@ -63,7 +63,7 @@ def build():
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="푸드홀">
+<meta name="apple-mobile-web-app-title" content="모인관">
 <style>
 """ + css + """
 </style>
@@ -72,7 +72,7 @@ def build():
 
 <header class="site-header">
   <div class="header-top">
-    <h1 class="site-title" id="siteTitle">푸드홀(인제대학교)</h1>
+    <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
     <div class="lang-select" role="group" aria-label="언어 선택" id="langSelect">
       <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
       <span class="lang-sep" aria-hidden="true">|</span>
@@ -304,7 +304,7 @@ def build_admin():
 
 <div id="adminApp" hidden>
   <header class="admin-header">
-    <h1 class="admin-title">푸드홀 관리자 페이지</h1>
+    <h1 class="admin-title">모인관 관리자 페이지</h1>
     <p class="admin-sub">평가 통계, 언어 통계, 주간메뉴를 관리합니다.</p>
     <nav class="admin-nav" id="adminNav">
       <button type="button" class="admin-nav-btn active" data-page="dashboard">대시보드</button>

@@ -1,6 +1,6 @@
 {
-  "name": "푸드홀(인제대학교)",
-  "short_name": "푸드홀",
+  "name": "모인관(인제대학교)",
+  "short_name": "모인관",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f5f7",

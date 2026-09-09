@@ -4,11 +4,11 @@
 
 const UI_TEXT = {
   siteTitle: {
-    ko: "푸드홀(인제대학교)",
-    en: "Food Hall (Inje University)",
-    zh: "美食广场(仁济大学)",
-    vi: "Food Hall (Đại học Inje)",
-    mn: "Хүнсний танхим (Inje их сургууль)"
+    ko: "모인관(인제대학교)",
+    en: "Moin-gwan (Inje University)",
+    zh: "摩茵馆(仁济大学)",
+    vi: "Moin-gwan (Đại học Inje)",
+    mn: "Моин-гван (Inje их сургууль)"
   },
   storeNames: {
     bapsim: {
