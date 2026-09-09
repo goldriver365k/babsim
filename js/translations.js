@@ -87,3 +87,34 @@ const BREAKFAST_RATING_TEXT = {
     mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу."
   }
 };
+
+/* ==========================================================================
+   한국어 학습 사이트(hellokorean.site) 연결 카드 문구
+   - 홈 화면 언어 선택에 따라 자동으로 바뀝니다(js/app.js의 renderHelloKorean).
+   - 주소 표시는 5개 언어 모두 동일하게 "hellokorean.site"만 씁니다.
+   ========================================================================== */
+const HELLOKOREAN_INFO = {
+  url: "https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning",
+  urlDisplay: "hellokorean.site",
+  title: {
+    ko: "무료 한국어 공부",
+    zh: "免费学习韩语",
+    vi: "Học tiếng Hàn miễn phí",
+    en: "Learn Korean for Free",
+    mn: "Солонгос хэл үнэгүй сурах"
+  },
+  desc: {
+    ko: "한국어를 쉽고 재미있게 배워보세요",
+    zh: "轻松有趣地学习韩语",
+    vi: "Học tiếng Hàn dễ dàng và thú vị",
+    en: "Learn Korean easily and enjoyably",
+    mn: "Солонгос хэлийг хялбар, сонирхолтой сураарай"
+  },
+  button: {
+    ko: "무료로 시작하기",
+    zh: "免费开始",
+    vi: "Bắt đầu miễn phí",
+    en: "Start for Free",
+    mn: "Үнэгүй эхлэх"
+  }
+};

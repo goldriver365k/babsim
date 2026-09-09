@@ -339,6 +339,8 @@ API 키를 아직 등록하지 않았어도 사이트는 정상 동작합니다.
   함께 기록해서, 관리자 페이지에서 어떤 날 어떤 메뉴에 대한 평가인지
   확인할 수 있습니다.
 - `js/language-stats.js` : 언어 선택/방문 기록 (새 UI 없이 기존 언어 버튼과 연동)
+- `js/hellokorean-stats.js` : 한국어 학습 사이트(hellokorean.site) 연결
+  카드 클릭 통계 기록(30분 중복 방지, 개인정보 미수집)
 - `js/weekly-menu-sync.js` : 관리자가 "게시 확정"한 주간메뉴(published 상태만)를
   학생 화면에 반영. 임시저장(draft)은 반영하지 않습니다.
 - `js/firebase-config.js` : Firebase 연결 설정(Firestore/Auth/Storage 헬퍼 포함)
@@ -347,9 +349,57 @@ API 키를 아직 등록하지 않았어도 사이트는 정상 동작합니다.
   이 함수 안(서버)에서만 쓰이고 브라우저에는 전달되지 않습니다. 관리자
   로그인(ID 토큰) 검증도 이 함수가 서버에서 다시 확인합니다.
 - `admin.html`, `js/admin.js`, `css/admin.css` : 관리자 페이지
-  (대시보드/메뉴 평가/언어 통계/주간메뉴 관리)
+  (대시보드/메뉴 평가/언어 통계/한국어 학습/주간메뉴 관리)
 - `js/translations.js`의 `BREAKFAST_RATING_TEXT` : 평가 화면 다국어 문구
   (한국어/영어/중국어/베트남어/몽골어)
+
+### 10-7. 한국어 학습 사이트(hellokorean.site) 연결
+
+홈 화면 맨 아래(‘사장님께 말해요’ 바로 위)에 무료 한국어 학습 사이트로
+이동하는 카드가 있습니다. 제목/안내 문구/버튼은 선택한 언어에 따라
+자동으로 바뀌고, 주소 표시는 5개 언어 모두 `hellokorean.site`로 동일합니다.
+카드 전체(제목·안내 문구·버튼·주소)가 하나의 링크이며, 새 창(`target="_blank"`,
+`rel="noopener noreferrer"`)으로 아래 UTM 주소를 엽니다.
+
+```
+https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning
+```
+
+**클릭 통계**: 클릭 시 이름·전화번호·이메일·IP 원문을 전혀 수집하지 않고
+`hellokoreanClicks` 컬렉션에 `날짜/시간/선택 언어/기기 종류(모바일·PC)/
+클릭 위치("home")/대상 주소("hellokorean.site")`만 기록합니다
+(`js/hellokorean-stats.js`). 같은 브라우저에서 30분 이내에 다시 클릭하면
+통계에는 집계되지 않지만, 링크는 매번 정상적으로 새 창에서 열립니다.
+
+**관리자 확인 방법**: `admin.html` → **"한국어 학습"** 탭에서 오늘/어제/
+이번 주/이번 달/전체/모바일/PC 클릭 수를 한눈에 보고, 기간(오늘/최근
+7일/최근 30일/전체)을 선택해 언어별 클릭 통계와 날짜별 클릭 수 막대
+그래프를 볼 수 있습니다.
+
+문구를 바꾸려면 `js/translations.js`의 `HELLOKOREAN_INFO`를 수정한 뒤
+`python3 scripts/build-inline.py`를 다시 실행하세요.
+
+### 10-8. hellokorean.site 쪽에서 실제 방문자 확인하기(GA4)
+
+babsim.store의 클릭 수(위 관리자 통계)와 hellokorean.site에 실제로
+도착한 방문자 수는 서로 다른 시스템이라 따로 확인해야 합니다.
+이 저장소(babsim)는 babsim.store 쪽 코드만 다루므로, 아래는
+**hellokorean.site 쪽에서 직접 해야 하는 작업**입니다.
+
+1. hellokorean.site에 Google Analytics 4(GA4)가 아직 설치되어 있지
+   않다면 먼저 설치합니다(GA4 속성 생성 → 측정 ID(G-XXXXXXX) 발급 →
+   hellokorean.site의 모든 페이지에 GA4 태그 삽입).
+2. GA4 콘솔 접속 → **보고서 → 획득 → 트래픽 획득**으로 이동합니다.
+3. "세션 소스/매체" 또는 "세션 캠페인" 기준으로 다음 값을 찾으면
+   babsim.store에서 넘어온 방문을 확인할 수 있습니다.
+   - 소스(source): `babsim.store`
+   - 매체(medium): `website`
+   - 캠페인(campaign): `korean_learning`
+4. 이 값으로 필터링하면 "babsim.store의 카드 클릭 수"(관리자 통계)와
+   "hellokorean.site에 실제로 도착한 방문자 수"(GA4)를 나란히 비교할 수
+   있습니다. 두 수치가 다를 수 있는 것은 정상입니다(네트워크 지연,
+   광고 차단 확장, 봇 트래픽 등으로 클릭 수 ≥ 실제 도착 수인 경우가
+   흔합니다).
 
 ---
 
