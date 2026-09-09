@@ -1,4 +1,4 @@
-# 푸드홀(인제대학교) 온라인 메뉴판
+# 모인관(인제대학교) 온라인 메뉴판
 
 밥심 · 만권화밥 · 후루룩찹찹 3개 매장의 메뉴를 소개하는 정적 홈페이지입니다.
 HTML / CSS / 순수 JavaScript만 사용했으며, 별도의 빌드 과정 없이 그대로 Netlify에 올리면 됩니다.
@@ -25,7 +25,7 @@ python3 -m http.server 8000
 cd 프로젝트폴더
 git init
 git add .
-git commit -m "init: 푸드홀 메뉴판"
+git commit -m "init: 모인관 메뉴판"
 git branch -M main
 git remote add origin <본인의 GitHub 저장소 주소>
 git push -u origin main
