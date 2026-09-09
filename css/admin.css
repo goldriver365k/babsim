@@ -585,8 +585,87 @@ table.results-table {
   margin: 0;
 }
 
-.analyze-status.error { color: var(--red); }
+.analyze-status.error { color: var(--red); white-space: pre-line; }
 .analyze-status.success { color: var(--green); }
+
+/* ---- 이미지 분석 실패 시 복구 버튼(다시 분석/직접 입력/이미지 재선택) ---- */
+
+.analyze-fail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.analyze-fail-actions button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-gray);
+  background: #fff;
+  color: var(--text-dark);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---- 임시저장(자동 저장) 복원 안내 배너 ---- */
+
+.autosave-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: #fff7e6;
+  border: 1px solid #f0c36d;
+  color: #7a5200;
+  font-size: 13px;
+}
+
+.autosave-discard-btn {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #f0c36d;
+  background: #fff;
+  color: #7a5200;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---- 번역 다시 실행 안내 ---- */
+
+.retranslate-note {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: #fdecec;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---- 전역 오류 배너(관리자 페이지 흰 화면 방지) ---- */
+
+.admin-global-error-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 8px 14px;
+  background: #fdecec;
+  border-bottom: 1px solid var(--red);
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
 
 /* ---- 저장/게시 공용 액션 ---- */
 
@@ -597,7 +676,9 @@ table.results-table {
 }
 
 .week-draft-btn,
+.week-translate-btn,
 .week-publish-btn,
+.week-retranslate-btn,
 .week-delete-all-btn {
   min-height: 42px;
   padding: 0 16px;
@@ -607,10 +688,17 @@ table.results-table {
   cursor: pointer;
 }
 
-.week-draft-btn {
+.week-draft-btn,
+.week-retranslate-btn {
   background: #fff;
   border: 1px solid var(--border-gray);
   color: var(--text-dark);
+}
+
+.week-translate-btn {
+  background: #fff;
+  border: 1px solid var(--blue);
+  color: var(--blue);
 }
 
 .week-publish-btn {
@@ -627,7 +715,9 @@ table.results-table {
 }
 
 .week-draft-btn:disabled,
+.week-translate-btn:disabled,
 .week-publish-btn:disabled,
+.week-retranslate-btn:disabled,
 .week-delete-all-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -637,10 +727,56 @@ table.results-table {
   font-size: 13px;
   font-weight: 700;
   margin: 10px 0 0;
+  white-space: pre-line;
 }
 
 .publish-status.error { color: var(--red); }
 .publish-status.success { color: var(--green); }
+
+/* ---- 번역 확인 결과 검토 화면 ---- */
+
+.translate-review {
+  margin-top: 12px;
+}
+
+.translate-review-day {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+}
+
+.translate-review-day h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+.translate-review-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.translate-review-row.pending { background: #fdecec; }
+
+.translate-review-ko { font-weight: 700; }
+
+.translate-review-done-tag { color: var(--green); font-size: 12px; }
+
+.translate-review-pending-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+  background: #fff;
+  border: 1px solid var(--red);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
 
 /* ---- 주간메뉴 관리: 이미지 업로드 ---- */
 

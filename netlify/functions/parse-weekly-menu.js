@@ -14,6 +14,27 @@
        -> 한글 메뉴명 목록을 5개 언어로 번역해서 돌려줍니다.
           (menuTranslations 컬렉션에 이미 있는 건 그대로 재사용하고,
            없는 것만 새로 번역합니다. 저장은 클라이언트가 합니다.)
+
+   ⚠ Gemini 장애 대비 설계(2026-09-09 작업지시서 반영):
+   - 이미지 분석(analyze)이 실패해도 관리자는 "직접 입력"(방식 2)으로
+     100% 독립적으로 메뉴를 등록·게시할 수 있습니다(이 함수를 전혀
+     호출하지 않는 경로).
+   - 번역(translate)은 캐시(menuTranslations)를 먼저 조회하고, 새로
+     번역해야 하는 항목만 Gemini를 호출합니다. Gemini가 완전히
+     막혀 있어도 캐시로 찾은 번역은 그대로 돌려주고, 새로 번역하지
+     못한 항목만 결과에서 빠집니다(요청 전체를 실패시키지 않음 —
+     handleTranslate 참고). 그래야 관리자가 한글만이라도 게시할 수
+     있습니다.
+   - Gemini 호출 1회는 최대 20초까지 기다리고, 실패하면 2초 간격으로
+     최대 2회까지만 재시도합니다(callGemini 참고). 원인 불명의 무한
+     대기를 막기 위한 상한이며, Netlify 함수 자체의 실행 제한
+     시간(계정/플랜마다 다름)을 넘길 수도 있다는 점을 감안해 넉넉하게
+     기다리기보다는 "빨리 실패하고 관리자가 다시 시도하거나 직접
+     입력으로 전환"하는 쪽을 기본값으로 삼았습니다.
+   - AI_PROVIDER(현재는 "gemini" 고정)로 호출부를 감싸 둬서, 나중에
+     예비 API를 추가하고 싶을 때 이 함수의 구조만 바꾸면 되도록
+     분리해 뒀습니다(9번 항목 — 지금은 유료 API를 추가로 붙이지
+     않습니다).
    ========================================================================== */
 
 // 클라이언트(js/firebase-config.js)와 동일한 값 — 공개되어도 안전한
@@ -61,7 +82,37 @@ async function verifyAdmin(idToken) {
   }
 }
 
-/* ---------------- Gemini 호출 ---------------- */
+/* ---------------- Gemini 호출 (장애 대비: 20초 제한 + 최대 2회 재시도) ---------------- */
+
+const GEMINI_TIMEOUT_MS = 20000; // 최대 대기시간 20초
+const GEMINI_MAX_RETRIES = 2;    // 자동 재시도 최대 2회 (총 3회 시도)
+const GEMINI_RETRY_DELAY_MS = 2000; // 재시도 간격 2초
+const RETRYABLE_STATUS = [429, 503]; // 과부하/한도초과 — 재시도할 가치가 있음
+
+function sleep(ms) {
+  return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+  try {
+    return await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// 예비 AI API를 나중에 추가할 때는 이 객체에 provider를 하나 더 넣고
+// AI_PROVIDER 값을 바꾸면 됩니다(지금은 gemini 고정, 9번 항목).
+const AI_PROVIDER = "gemini";
+
+async function callAiProvider(parts, wantJson) {
+  if (AI_PROVIDER === "gemini") return callGemini(parts, wantJson);
+  const err = new Error("UNKNOWN_AI_PROVIDER");
+  err.code = "UNKNOWN_AI_PROVIDER";
+  throw err;
+}
 
 async function callGemini(parts, wantJson) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -76,35 +127,42 @@ async function callGemini(parts, wantJson) {
     generationConfig: wantJson ? { responseMimeType: "application/json" } : {}
   };
 
-  // 재시도를 넣지 않습니다: 실제 로그 기준 Gemini 응답이 30~40초씩
-  // 걸리는 경우가 있어, 재시도를 하면 Netlify 함수 자체의 실행 제한
-  // 시간을 넘겨 애매한 타임아웃(강제 종료)으로 실패할 위험이 재시도로
-  // 얻는 이득보다 큽니다. 실패 시 관리자가 "이미지 분석하기"/"확인 후
-  // 게시"를 다시 눌러 재시도하도록 안내합니다(아래 handleAnalyze/
-  // handleTranslate의 에러 메시지 참고).
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json().catch(function () { return null; });
-  if (!res.ok || !data) {
-    console.error("Gemini 응답 오류:", res.status, data);
-    const err = new Error("GEMINI_REQUEST_FAILED");
-    err.code = "GEMINI_REQUEST_FAILED";
-    err.status = res.status;
-    throw err;
+  let lastErr = null;
+  for (let attempt = 0; attempt <= GEMINI_MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }, GEMINI_TIMEOUT_MS);
+      const data = await res.json().catch(function () { return null; });
+      if (res.ok && data) {
+        const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
+          data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
+          data.candidates[0].content.parts[0].text;
+        if (text) return text;
+        console.error("Gemini 응답에 텍스트 없음(시도 " + (attempt + 1) + "):", JSON.stringify(data).slice(0, 500));
+        lastErr = makeGeminiError("GEMINI_EMPTY_RESPONSE", res.status);
+      } else {
+        console.error("Gemini 응답 오류(시도 " + (attempt + 1) + "/" + (GEMINI_MAX_RETRIES + 1) + "):", res.status, data);
+        lastErr = makeGeminiError("GEMINI_REQUEST_FAILED", res.status);
+        if (RETRYABLE_STATUS.indexOf(res.status) === -1) break; // 재시도해도 소용없는 오류(예: 400/404)
+      }
+    } catch (e) {
+      const timedOut = e && e.name === "AbortError";
+      console.error("Gemini 호출 실패(시도 " + (attempt + 1) + "/" + (GEMINI_MAX_RETRIES + 1) + "):", timedOut ? "20초 초과(타임아웃)" : e);
+      lastErr = makeGeminiError(timedOut ? "GEMINI_TIMEOUT" : "GEMINI_NETWORK_ERROR", null);
+    }
+    if (attempt < GEMINI_MAX_RETRIES) await sleep(GEMINI_RETRY_DELAY_MS);
   }
-  const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
-    data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-    data.candidates[0].content.parts[0].text;
-  if (!text) {
-    console.error("Gemini 응답에 텍스트 없음:", JSON.stringify(data).slice(0, 500));
-    const err = new Error("GEMINI_EMPTY_RESPONSE");
-    err.code = "GEMINI_EMPTY_RESPONSE";
-    throw err;
-  }
-  return text;
+  throw lastErr || makeGeminiError("GEMINI_REQUEST_FAILED", null);
+}
+
+function makeGeminiError(code, status) {
+  const err = new Error(code);
+  err.code = code;
+  if (status) err.status = status;
+  return err;
 }
 
 function safeParseJson(text) {
@@ -178,23 +236,34 @@ async function handleAnalyze(payload) {
 
   let text;
   try {
-    text = await callGemini(
+    text = await callAiProvider(
       [{ text: prompt }, { inline_data: { mime_type: mimeType, data: imageBase64 } }],
       true
     );
   } catch (e) {
     if (e.code === "GEMINI_API_KEY_MISSING") {
-      return json(500, { ok: false, error: "이미지 분석 기능이 아직 설정되지 않았습니다. 관리자에게 문의하세요." });
+      return json(500, {
+        ok: false,
+        error: "이미지 분석 기능이 아직 설정되지 않았습니다. 관리자에게 문의하세요.",
+        code: "GEMINI_API_KEY_MISSING"
+      });
     }
-    if (e.status === 503 || e.status === 429) {
-      return json(502, { ok: false, error: "지금 구글 서버가 혼잡합니다. 잠시(1~2분) 후 다시 시도해주세요." });
-    }
-    return json(502, { ok: false, error: "이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요." });
+    // 작업지시서 3번 항목의 고정 문구 — 원인과 무관하게 관리자에게는
+    // "다시 시도하거나 직접 입력하라"는 같은 안내를 보여줍니다.
+    return json(502, {
+      ok: false,
+      error: "자동 메뉴 분석에 실패했습니다.\n잠시 후 다시 시도하거나 직접 입력해 주세요.",
+      code: e.code || "GEMINI_REQUEST_FAILED"
+    });
   }
 
   const parsed = safeParseJson(text);
   if (!parsed || !parsed.days) {
-    return json(502, { ok: false, error: "이미지 분석 결과를 읽지 못했습니다. 다시 시도해주세요." });
+    return json(502, {
+      ok: false,
+      error: "자동 메뉴 분석에 실패했습니다.\n잠시 후 다시 시도하거나 직접 입력해 주세요.",
+      code: "GEMINI_BAD_JSON"
+    });
   }
 
   // 최소한의 형태 정리(요일 코드가 이상하면 보정, 값이 없으면 빈 배열로)
@@ -252,11 +321,16 @@ async function translateWithGemini(terms) {
     "}"
   ].join("\n");
 
-  const text = await callGemini([{ text: prompt }], true);
+  const text = await callAiProvider([{ text: prompt }], true);
   const parsed = safeParseJson(text);
   return parsed || {};
 }
 
+/* 작업지시서 7번 항목: Gemini가 완전히 막혀 있어도 게시를 막지 않습니다.
+   캐시(cached)로 찾은 번역은 항상 돌려주고, 새로 번역이 필요한 항목이
+   실패하면 그 항목만 translations에서 빠지고 failedTerms에 담깁니다.
+   요청 전체를 실패(ok:false)로 만드는 건 "번역 결과를 아예 요청할 수
+   없는" 극히 예외적인 경우(잘못된 입력 등)로만 한정합니다. */
 async function handleTranslate(payload) {
   const terms = Array.isArray(payload.terms)
     ? payload.terms.map(function (t) { return String(t).trim(); }).filter(function (t) { return t.length > 0; })
@@ -264,7 +338,7 @@ async function handleTranslate(payload) {
   const uniqueTerms = Array.from(new Set(terms));
 
   if (uniqueTerms.length === 0) {
-    return json(200, { ok: true, translations: {} });
+    return json(200, { ok: true, translations: {}, failedTerms: [] });
   }
   if (uniqueTerms.length > 60) {
     return json(400, { ok: false, error: "한 번에 번역할 수 있는 메뉴 수를 초과했습니다." });
@@ -274,22 +348,29 @@ async function handleTranslate(payload) {
   const missing = uniqueTerms.filter(function (t) { return !cached[t]; });
 
   let fresh = {};
+  let translateError = null;
   if (missing.length > 0) {
     try {
       fresh = await translateWithGemini(missing);
     } catch (e) {
-      if (e.code === "GEMINI_API_KEY_MISSING") {
-        return json(500, { ok: false, error: "번역 기능이 아직 설정되지 않았습니다. 관리자에게 문의하세요." });
-      }
-      if (e.status === 503 || e.status === 429) {
-        return json(502, { ok: false, error: "지금 구글 서버가 혼잡합니다. 잠시(1~2분) 후 다시 게시를 시도해주세요." });
-      }
-      return json(502, { ok: false, error: "번역에 실패했습니다. 잠시 후 다시 시도해주세요." });
+      // 여기서 응답을 실패시키지 않습니다 — cached에 있던 번역은 그대로
+      // 돌려주고, missing 항목만 "번역 대기"로 남깁니다(클라이언트가
+      // failedReason으로 안내 문구를 보여줌).
+      translateError = e.code || "GEMINI_REQUEST_FAILED";
+      console.error("번역 일부 실패(캐시된 항목은 정상 반환):", translateError, e);
     }
   }
 
   const translations = Object.assign({}, cached, fresh);
-  return json(200, { ok: true, translations: translations });
+  const failedTerms = uniqueTerms.filter(function (t) { return !translations[t]; });
+
+  const result = { ok: true, translations: translations, failedTerms: failedTerms };
+  if (translateError) {
+    result.failedReason = translateError === "GEMINI_API_KEY_MISSING"
+      ? "번역 기능이 아직 설정되지 않았습니다."
+      : "지금 번역 서버에 연결할 수 없어 일부 메뉴는 한글로만 게시됩니다.";
+  }
+  return json(200, result);
 }
 
 /* ---------------- 진입점 ---------------- */
