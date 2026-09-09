@@ -1276,7 +1276,7 @@
         // 고정 문구(작업지시서 3번)가 기본값이지만, "키 설정 안 됨"처럼 재시도로는
         // 해결되지 않는 관리자 조치가 필요한 경우는 서버가 준 안내를 그대로 보여줍니다.
         // 업로드한 이미지와 입력 내용은 어느 경우든 그대로 유지됩니다.
-        statusEl.textContent = (err && err.code === "GEMINI_API_KEY_MISSING" && err.friendly)
+        statusEl.textContent = (err && err.code === "AI_API_KEY_MISSING" && err.friendly)
           ? err.friendly
           : "자동 메뉴 분석에 실패했습니다.\n잠시 후 다시 시도하거나 직접 입력해 주세요.";
         showAnalyzeFailureActions();

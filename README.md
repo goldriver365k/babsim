@@ -247,34 +247,47 @@ Authentication 로그인이 한 번 더 필요합니다** (아래 10-5 참고 �
   (100% 하위 호환 — 이 파일과 매주 스크린샷을 Claude에게 보내 갱신하던
   기존 8번 방식도 계속 그대로 쓰실 수 있습니다).
 
-### 10-4-1. 이미지 자동 인식(OCR) 서버 설정 — `GEMINI_API_KEY`
+### 10-4-1. 이미지 자동 인식(OCR) 서버 설정 — `OPENAI_API_KEY`
 
 방식 1(이미지 자동 인식)은 브라우저가 아니라 서버(Netlify Function,
 `netlify/functions/parse-weekly-menu.js`)에서만 AI를 호출합니다.
-Google Gemini API 키가 브라우저 코드에 절대 들어가지 않도록 하기 위한
-구조이며, 관리자 로그인 여부(Firebase ID 토큰)도 이 함수 안에서 다시
-한번 서버 측에서 확인합니다 — 로그인하지 않은 일반 방문자는 이 함수를
+API 키가 브라우저 코드에 절대 들어가지 않도록 하기 위한 구조이며,
+관리자 로그인 여부(Firebase ID 토큰)도 이 함수 안에서 다시 한번
+서버 측에서 확인합니다 — 로그인하지 않은 일반 방문자는 이 함수를
 호출할 수 없습니다.
 
-1. https://aistudio.google.com 에서 Gemini API 키를 발급받습니다.
-2. Netlify 대시보드 → 해당 사이트 → **Site configuration → Environment
-   variables** → "Add a variable" → Key: `GEMINI_API_KEY`, Value: 발급받은 키.
-3. 값을 저장하면 다음 배포부터 바로 적용됩니다(코드 변경 불필요).
+기본 AI 공급자는 **OpenAI(GPT-4o)**입니다(2026-09-09, Gemini가 느리고
+자주 실패해서 변경). 필요하면 코드 수정 없이 Netlify 환경변수만으로
+Gemini로 되돌릴 수 있습니다 — 아래 표 참고.
 
-`GEMINI_API_KEY`를 아직 등록하지 않았어도 사이트는 정상 동작합니다.
+| 공급자 | 필요한 환경변수 | 발급처 |
+|---|---|---|
+| **OpenAI (기본값)** | `OPENAI_API_KEY` | https://platform.openai.com |
+| Gemini (예비) | `AI_PROVIDER=gemini` + `GEMINI_API_KEY` | https://aistudio.google.com |
+
+1. 위 표에서 쓸 공급자의 키를 발급받습니다.
+2. Netlify 대시보드 → 해당 사이트 → **Site configuration → Environment
+   variables** → "Add a variable" → Key/Value를 등록합니다
+   (OpenAI는 `OPENAI_API_KEY`만 등록하면 되고, Gemini로 쓰려면
+   `AI_PROVIDER`=`gemini`도 함께 등록).
+3. 값을 저장하고 **"Trigger deploy → Deploy site"**로 한 번 재배포하면
+   적용됩니다(환경변수만 바꿨을 때는 자동으로 재배포되지 않는 경우가
+   있어 수동 재배포를 권장합니다).
+
+API 키를 아직 등록하지 않았어도 사이트는 정상 동작합니다.
 "이미지 분석하기"를 누르면 "아직 설정되지 않았습니다"라는 안내만 뜨고,
 방식 2(직접 입력)는 이 설정과 무관하게 그대로 사용할 수 있습니다.
 
-### 10-4-2. Google AI Studio / Gemini 장애 대비
+### 10-4-2. AI API 장애 대비
 
-주간메뉴 등록 기능 전체가 Gemini 장애 때문에 멈추지 않도록 아래처럼
-설계되어 있습니다.
+주간메뉴 등록 기능 전체가 AI API(OpenAI/Gemini) 장애 때문에 멈추지
+않도록 아래처럼 설계되어 있습니다.
 
-- **홈페이지는 Gemini를 절대 호출하지 않습니다.** 오늘·내일 메뉴는
-  Firestore에 이미 저장된 내용을 읽기만 하므로, Gemini가 완전히
+- **홈페이지는 AI API를 절대 호출하지 않습니다.** 오늘·내일 메뉴는
+  Firestore에 이미 저장된 내용을 읽기만 하므로, AI API가 완전히
   다운되어도 학생 화면과 기존 기능(평가, 방문자·언어 통계, 무료 콜라
   쿠폰, 카카오톡 연결 등)은 전혀 영향받지 않습니다.
-- Gemini 호출은 **관리자가 게시할 때만** 일어나고(이미지 분석 1번,
+- AI 호출은 **관리자가 게시할 때만** 일어나고(이미지 분석 1번,
   번역 1번), 한 번 호출은 최대 20초까지 기다린 뒤 2초 간격으로 최대
   2번까지만 자동 재시도합니다. 그래도 실패하면 관리자 화면에
   "자동 메뉴 분석에 실패했습니다. 잠시 후 다시 시도하거나 직접 입력해
@@ -287,7 +300,7 @@ Google Gemini API 키가 브라우저 코드에 절대 들어가지 않도록 �
   학생 화면에 한국어로만 보입니다(빈 칸이나 "undefined"는 절대
   뜨지 않음). 나중에 "번역 다시 실행"으로 처리하면 됩니다. 이미
   번역된 적 있는 메뉴명은 `menuTranslations` 사전을 먼저 확인하므로,
-  Gemini가 막혀 있어도 예전에 번역해 둔 메뉴는 정상적으로 표시됩니다.
+  AI API가 막혀 있어도 예전에 번역해 둔 메뉴는 정상적으로 표시됩니다.
 - **이미지 분석을 시작하기 전 입력 중이던 내용은 브라우저에 자동
   저장됩니다.** 새로고침하거나 실수로 페이지를 닫아도 "이전에 작성
   중이던 내용을 복원했습니다" 안내와 함께 그대로 돌아옵니다(다시
@@ -325,9 +338,9 @@ Google Gemini API 키가 브라우저 코드에 절대 들어가지 않도록 �
   학생 화면에 반영. 임시저장(draft)은 반영하지 않습니다.
 - `js/firebase-config.js` : Firebase 연결 설정(Firestore/Auth/Storage 헬퍼 포함)
 - `netlify/functions/parse-weekly-menu.js` : 주간메뉴 이미지 인식(OCR)·번역을
-  처리하는 서버 함수. `GEMINI_API_KEY`는 이 함수 안(서버)에서만 쓰이고
-  브라우저에는 전달되지 않습니다. 관리자 로그인(ID 토큰) 검증도 이 함수가
-  서버에서 다시 확인합니다.
+  처리하는 서버 함수. `OPENAI_API_KEY`(기본값) 또는 `GEMINI_API_KEY`는
+  이 함수 안(서버)에서만 쓰이고 브라우저에는 전달되지 않습니다. 관리자
+  로그인(ID 토큰) 검증도 이 함수가 서버에서 다시 확인합니다.
 - `admin.html`, `js/admin.js`, `css/admin.css` : 관리자 페이지
   (대시보드/메뉴 평가/언어 통계/주간메뉴 관리)
 - `js/translations.js`의 `BREAKFAST_RATING_TEXT` : 평가 화면 다국어 문구
