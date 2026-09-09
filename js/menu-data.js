@@ -494,6 +494,14 @@ const BREAKFAST_INFO = {
     vi: "Ngày mai không phục vụ bữa sáng 1.000 won.",
     mn: "Маргааш 1,000 воны өглөөний хоол үйлчлэхгүй."
   },
+  /* 운영일이지만 아직 메뉴가 등록되지 않았을 때 (휴무 문구와는 다름) */
+  menuPreparingMessage: {
+    ko: "메뉴를 준비 중입니다.",
+    en: "The menu is being prepared.",
+    zh: "菜单准备中。",
+    vi: "Thực đơn đang được chuẩn bị.",
+    mn: "Цэсийг бэлтгэж байна."
+  },
   mealFieldLabels: {
     rice: { ko: "밥", en: "Rice", zh: "米饭", vi: "Cơm", mn: "Будаа" },
     soup: { ko: "국", en: "Soup", zh: "汤", vi: "Canh", mn: "Шөл" },

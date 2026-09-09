@@ -517,26 +517,36 @@ def build_admin():
         </div>
 
         <div class="admin-card">
-          <h2>직접 입력 (요일별 메뉴)</h2>
-          <p class="image-upload-caption">각 요일 카드는 일반식·간편식 두 목록으로 나뉩니다. 엑셀에서 그 요일의 일반식·간편식 두 칸을 함께 복사해 붙여넣기 칸에 넣고 "붙여넣기 적용"을 누르면 자동으로 채워집니다(탭으로 구분된 2번째 칸이 없으면 전부 일반식으로 채워집니다). 채운 뒤에는 꼭 내용을 확인하고 "저장"을 눌러야 실제로 반영됩니다.</p>
-          <div class="week-day-grid" id="weekDayGrid"></div>
-        </div>
-
-        <div class="admin-card">
-          <h2>스크린샷 / 이미지 업로드</h2>
+          <h2>방식 1 · 이미지로 자동 인식</h2>
+          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB)</p>
           <div class="image-upload-box">
-            <p class="image-upload-caption">이번 주(월~금) 메뉴표 이미지를 등록하면, 직접 입력이 없는 날짜에 학생 화면에서 이미지로 대신 보여줍니다. (jpg, jpeg, png, webp / 최대 10MB)</p>
             <div class="image-upload-row">
               <input type="file" id="weekImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
-              <button type="button" class="image-upload-btn" id="weekImageSaveBtn">저장</button>
-              <button type="button" class="image-delete-btn" id="weekImageDeleteBtn" hidden>이미지 삭제</button>
+              <button type="button" class="image-upload-btn" id="weekAnalyzeBtn">이미지 분석하기</button>
             </div>
             <div class="image-preview-wrap" id="weekImagePreviewWrap" hidden>
               <img id="weekImagePreviewImg" alt="주간메뉴 이미지 미리보기">
             </div>
             <p class="form-error" id="weekImageError"></p>
-            <p class="form-success" id="weekImageSuccess"></p>
+            <p class="analyze-status" id="weekAnalyzeStatus" hidden></p>
           </div>
+        </div>
+
+        <div class="admin-card">
+          <h2>방식 2 · 직접 입력 / 인식 결과 확인</h2>
+          <p class="image-upload-caption">요일 카드는 일반식·간편식 두 목록으로 나뉩니다. 자동 인식 결과가 여기에 채워지며, 직접 입력하거나 엑셀에서 복사한 내용을 붙여넣기 칸에 넣고 "붙여넣기 적용"을 눌러 채울 수도 있습니다(1번째 칸=일반식, 탭으로 구분된 2번째 칸=간편식). <span class="uncertain-legend">빨간 배경 = 확인 필요</span>한 항목이니 원본과 대조해서 고쳐주세요.</p>
+          <div class="week-day-grid" id="weekDayGrid"></div>
+        </div>
+
+        <div class="admin-card">
+          <h2>저장 / 게시</h2>
+          <p class="image-upload-caption">"임시저장"은 학생 화면에 반영되지 않고 이어서 수정할 수 있게만 저장합니다. "확인 후 게시"를 눌러야 5개 언어로 번역되어 실제 학생 화면에 표시됩니다.</p>
+          <div class="week-publish-actions">
+            <button type="button" class="week-draft-btn" id="weekSaveDraftBtn">임시저장</button>
+            <button type="button" class="week-publish-btn" id="weekPublishBtn">확인 후 게시</button>
+            <button type="button" class="week-delete-all-btn" id="weekDeleteAllBtn">이 주 전체 삭제</button>
+          </div>
+          <p class="publish-status" id="weekPublishStatus" hidden></p>
         </div>
       </div>
     </section>

@@ -38,14 +38,25 @@
             allow delete: if false;
           }
 
-          // 주간메뉴 직접 입력 (관리자만 쓰기, 학생 화면은 읽기만)
+          // 주간메뉴(요일별 문서, 문서 ID = 날짜 YYYY-MM-DD). 이미지 자동인식
+          // 결과 확인 후 게시하거나 직접 입력할 때 저장됩니다.
+          // status가 "published"인 문서만 학생 화면(js/weekly-menu-sync.js)에
+          // 반영되고, "draft"(임시저장)는 관리자 화면에서만 보입니다.
           match /weeklyMenus/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
 
-          // 주간메뉴 이미지 등록 정보 (관리자만 쓰기, 학생 화면은 읽기만)
+          // 주간메뉴 원본 이미지 등록 정보(주간 메뉴 원본 보기 팝업용, 문서 ID = 주 시작일)
           match /weeklyMenuImages/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
+          // 메뉴 번역 사전(문서 ID = 한글 메뉴명). 같은 메뉴를 매주 다시
+          // 번역하지 않기 위한 캐시입니다. parse-weekly-menu 함수가 읽고,
+          // 관리자 게시 시 클라이언트가 새로 번역된 항목만 씁니다.
+          match /menuTranslations/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
@@ -75,6 +86,15 @@
    주간메뉴를 등록·수정·삭제하고 이미지를 업로드할 수 있습니다.
    (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
    별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
+
+   ⚠ Netlify 환경변수 GEMINI_API_KEY — 주간메뉴 이미지 자동인식/번역에
+   필요합니다(netlify/functions/parse-weekly-menu.js). Netlify 대시보드
+   → 해당 사이트 → Site configuration → Environment variables에서
+   Key: GEMINI_API_KEY, Value: (Google AI Studio에서 발급받은 키)로
+   등록하세요. 이 키는 서버 함수에서만 쓰이며 브라우저에는 절대
+   전달되지 않습니다. 값을 등록하기 전까지는 "이미지 분석하기"를
+   눌러도 안내 메시지만 뜨고, 직접 입력(방식 2)은 그대로 사용할 수
+   있습니다.
 
    다른 Firebase 프로젝트로 바꾸고 싶다면 프로젝트 설정(톱니바퀴 아이콘)
    → "일반" 탭 → "내 앱" → 웹 앱의 firebaseConfig 값을 아래 6개 값에

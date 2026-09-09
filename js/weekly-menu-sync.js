@@ -1,16 +1,14 @@
 /* ==========================================================================
    주간메뉴 Firestore 동기화 (js/weekly-menu-sync.js)
-   - 관리자 페이지("주간메뉴 관리")에서 등록한 데이터를 읽어와
+   - 관리자 페이지("주간메뉴 관리")에서 "확인 후 게시"한 데이터를 읽어와
      data/breakfast-weekly-menu.js의 정적 BREAKFAST_WEEKLY_MENU 객체에
-     덮어씁니다. Firestore에 해당 날짜 데이터가 없으면 정적 파일의
-     내용이 그대로 유지됩니다(기존 방식과 100% 호환되는 안전한 대체 동작).
-
-   우선순위 (관리자 페이지 안내와 동일):
-     1) weeklyMenus에 그 날짜의 직접 입력 데이터가 있으면 그것을 사용
-     2) 없고 그 주의 weeklyMenuImages 이미지가 있으면 이미지를 사용
-        (기존 "주간 메뉴 원본 보기" 팝업을 그대로 재사용 —
-        BREAKFAST_WEEKLY_MENU.sourceImage 값만 바꿔주면 됩니다)
-     3) 둘 다 없으면 정적 파일 내용(대개 비어있음 → "운영하지 않습니다")
+     덮어씁니다. Firestore에 해당 날짜의 게시된(published) 데이터가 없으면
+     정적 파일의 내용이 그대로 유지됩니다(기존 방식과 100% 호환).
+   - "임시저장"(status: draft)은 관리자 화면에서만 보이고, 학생 화면에는
+     반영되지 않습니다.
+   - 등록된 주간메뉴 원본 이미지가 있으면 "주간 메뉴 원본 보기" 팝업에서만
+     쓰입니다. 오늘·내일 메뉴 칸에는 이미지를 넣지 않고 글자만 표시합니다
+     (js/app.js의 renderMealList가 담당).
 
    화면은 렌더링이 끝난 뒤 비동기로 동기화하고, 데이터가 갱신되면
    콜백으로 다시 그리게 합니다(초기 표시가 늦어지지 않도록).
@@ -43,13 +41,17 @@ var WeeklyMenuSync = (function () {
 
   function applyDayDoc(dateKey, data) {
     if (!data) return;
+    if (data.status !== "published") return; // 임시저장(draft)은 학생 화면에 반영하지 않음
+    if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
+
     var hasRegular = data.regular && data.regular.length;
     var hasSimple = data.simple && data.simple.length;
     var hasItems = data.items && data.items.length; // 예전 저장 방식(단일 목록) 하위 호환
-    if (!hasRegular && !hasSimple && !hasItems) return;
-    if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
+    var isOpen = data.isOpen !== false;
+
     if (!BREAKFAST_WEEKLY_MENU.days) BREAKFAST_WEEKLY_MENU.days = {};
     BREAKFAST_WEEKLY_MENU.days[dateKey] = {
+      isOpen: isOpen,
       regular: hasRegular ? data.regular : (hasItems ? data.items : []),
       simple: hasSimple ? data.simple : []
     };
@@ -78,14 +80,9 @@ var WeeklyMenuSync = (function () {
       if (todaySnap && todaySnap.exists) applyDayDoc(todayKey, todaySnap.data());
       if (tomorrowSnap && tomorrowSnap.exists) applyDayDoc(tomorrowKey, tomorrowSnap.data());
 
-      // 직접 입력 데이터가 없는 날에 한해서만 이미지로 보완
-      function hasDirectInput(dateKey) {
-        var d = BREAKFAST_WEEKLY_MENU.days[dateKey];
-        return !!(d && ((d.regular && d.regular.length) || (d.simple && d.simple.length)));
-      }
-      var todayHasItems = hasDirectInput(todayKey);
-      var tomorrowHasItems = hasDirectInput(tomorrowKey);
-      if (imageSnap && imageSnap.exists && (!todayHasItems || !tomorrowHasItems)) {
+      // 원본 이미지는 "주간 메뉴 원본 보기" 팝업 전용 — 등록되어 있으면
+      // 오늘·내일에 글자 메뉴가 있는지 여부와 무관하게 버튼만 노출합니다.
+      if (imageSnap && imageSnap.exists) {
         var imgData = imageSnap.data();
         if (imgData && imgData.imageUrl) {
           BREAKFAST_WEEKLY_MENU.sourceImage = imgData.imageUrl;
