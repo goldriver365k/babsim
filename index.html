@@ -764,44 +764,22 @@ main {
   overflow-wrap: anywhere;
 }
 
-/* ---- 요일별 글자 메뉴가 없을 때, 등록된 주간메뉴 이미지를 그 칸에 표시 ---- */
-
-.ba-meal-image-item {
-  list-style: none;
-}
-
-.ba-meal-image-btn {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 1px solid var(--border-gray);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: none;
-  cursor: zoom-in;
-}
-
-.ba-meal-image-btn img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 220px;
-  object-fit: cover;
-  object-position: top;
-}
-
-.ba-meal-image-btn:hover,
-.ba-meal-image-btn:focus-visible {
-  border-color: var(--blue);
-  outline: none;
-}
-
 .today-meal-closed {
   margin: 0;
   font-size: 15px;
   color: var(--text-mid);
   text-align: center;
   list-style: none;
+}
+
+/* 운영일이지만 아직 메뉴가 등록되지 않은 상태(휴무 문구와는 다름) */
+.today-meal-preparing {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-mid);
+  text-align: center;
+  list-style: none;
+  font-style: italic;
 }
 
 .ba-view-original-btn {
@@ -1966,6 +1944,14 @@ const BREAKFAST_INFO = {
     vi: "Ngày mai không phục vụ bữa sáng 1.000 won.",
     mn: "Маргааш 1,000 воны өглөөний хоол үйлчлэхгүй."
   },
+  /* 운영일이지만 아직 메뉴가 등록되지 않았을 때 (휴무 문구와는 다름) */
+  menuPreparingMessage: {
+    ko: "메뉴를 준비 중입니다.",
+    en: "The menu is being prepared.",
+    zh: "菜单准备中。",
+    vi: "Thực đơn đang được chuẩn bị.",
+    mn: "Цэсийг бэлтгэж байна."
+  },
   mealFieldLabels: {
     rice: { ko: "밥", en: "Rice", zh: "米饭", vi: "Cơm", mn: "Будаа" },
     soup: { ko: "국", en: "Soup", zh: "汤", vi: "Canh", mn: "Шөл" },
@@ -2216,14 +2202,25 @@ const BREAKFAST_WEEKLY_MENU = {
             allow delete: if false;
           }
 
-          // 주간메뉴 직접 입력 (관리자만 쓰기, 학생 화면은 읽기만)
+          // 주간메뉴(요일별 문서, 문서 ID = 날짜 YYYY-MM-DD). 이미지 자동인식
+          // 결과 확인 후 게시하거나 직접 입력할 때 저장됩니다.
+          // status가 "published"인 문서만 학생 화면(js/weekly-menu-sync.js)에
+          // 반영되고, "draft"(임시저장)는 관리자 화면에서만 보입니다.
           match /weeklyMenus/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
 
-          // 주간메뉴 이미지 등록 정보 (관리자만 쓰기, 학생 화면은 읽기만)
+          // 주간메뉴 원본 이미지 등록 정보(주간 메뉴 원본 보기 팝업용, 문서 ID = 주 시작일)
           match /weeklyMenuImages/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
+          // 메뉴 번역 사전(문서 ID = 한글 메뉴명). 같은 메뉴를 매주 다시
+          // 번역하지 않기 위한 캐시입니다. parse-weekly-menu 함수가 읽고,
+          // 관리자 게시 시 클라이언트가 새로 번역된 항목만 씁니다.
+          match /menuTranslations/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
@@ -2253,6 +2250,15 @@ const BREAKFAST_WEEKLY_MENU = {
    주간메뉴를 등록·수정·삭제하고 이미지를 업로드할 수 있습니다.
    (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
    별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
+
+   ⚠ Netlify 환경변수 GEMINI_API_KEY — 주간메뉴 이미지 자동인식/번역에
+   필요합니다(netlify/functions/parse-weekly-menu.js). Netlify 대시보드
+   → 해당 사이트 → Site configuration → Environment variables에서
+   Key: GEMINI_API_KEY, Value: (Google AI Studio에서 발급받은 키)로
+   등록하세요. 이 키는 서버 함수에서만 쓰이며 브라우저에는 절대
+   전달되지 않습니다. 값을 등록하기 전까지는 "이미지 분석하기"를
+   눌러도 안내 메시지만 뜨고, 직접 입력(방식 2)은 그대로 사용할 수
+   있습니다.
 
    다른 Firebase 프로젝트로 바꾸고 싶다면 프로젝트 설정(톱니바퀴 아이콘)
    → "일반" 탭 → "내 앱" → 웹 앱의 firebaseConfig 값을 아래 6개 값에
@@ -2433,7 +2439,7 @@ var BreakfastRating = (function () {
 
   /* ---------------- 저장 (Firestore 우선, 미설정 시 기기 저장만) ---------------- */
 
-  function saveRating(score, dateKey, lang, menuText) {
+  function saveRating(score, dateKey, lang, menuText, menuNames, mealType) {
     var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
     if (!db) {
       // Firebase 미설정 상태: 학생 화면은 정상 동작하되 관리자 통계에는 집계되지 않음
@@ -2442,11 +2448,14 @@ var BreakfastRating = (function () {
 
     var docData = {
       date: dateKey,
+      menuDate: dateKey,
       menuId: "breakfast-" + dateKey.replace(/-/g, ""),
+      mealType: mealType || "regular",
       rating: score,
       language: lang,
       deviceId: getDeviceId(),
       mainMenu: menuText || null,
+      menuNames: Array.isArray(menuNames) && menuNames.length ? menuNames : null,
       createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
         ? firebase.firestore.FieldValue.serverTimestamp()
         : new Date().toISOString()
@@ -2463,7 +2472,7 @@ var BreakfastRating = (function () {
     return entry[lang] || entry.ko || "";
   }
 
-  function renderOptions(dateKey, lang, menuText) {
+  function renderOptions(dateKey, lang, menuText, menuNames, mealType) {
     els.options.innerHTML = "";
     SCORES.forEach(function (score) {
       var label = text("score" + score, lang);
@@ -2483,16 +2492,16 @@ var BreakfastRating = (function () {
       labelEl.textContent = label;
       btn.appendChild(labelEl);
 
-      btn.addEventListener("click", function () { handlePick(score, dateKey, lang, menuText); });
+      btn.addEventListener("click", function () { handlePick(score, dateKey, lang, menuText, menuNames, mealType); });
       els.options.appendChild(btn);
     });
   }
 
-  function showOptions(lang, dateKey, menuText) {
+  function showOptions(lang, dateKey, menuText, menuNames, mealType) {
     els.title.hidden = false;
     els.title.textContent = text("title", lang);
     els.options.hidden = false;
-    renderOptions(dateKey, lang, menuText);
+    renderOptions(dateKey, lang, menuText, menuNames, mealType);
     els.message.hidden = true;
   }
 
@@ -2520,7 +2529,7 @@ var BreakfastRating = (function () {
     busy = false;
   }
 
-  function handlePick(score, dateKey, lang, menuText) {
+  function handlePick(score, dateKey, lang, menuText, menuNames, mealType) {
     if (busy) return;
     busy = true;
     els.message.hidden = true;
@@ -2528,7 +2537,7 @@ var BreakfastRating = (function () {
       btn.disabled = true;
     });
 
-    saveRating(score, dateKey, lang, menuText).then(function () {
+    saveRating(score, dateKey, lang, menuText, menuNames, mealType).then(function () {
       setRatedToday(dateKey, score);
       justRatedDateKey = dateKey;
       busy = false;
@@ -2541,11 +2550,13 @@ var BreakfastRating = (function () {
 
   /**
    * @param {string} lang 현재 선택된 언어 (ko/en/zh/vi/mn)
-   * @param {boolean} hasTodayMenu 오늘 천원의 아침밥 메뉴가 존재하는지 (주말/휴무 시 false)
+   * @param {boolean} hasTodayMenu 오늘 천원의 아침밥 메뉴가 존재하는지 (주말/휴무/미등록 시 false)
    * @param {string} dateKey 오늘 날짜 (Asia/Seoul, YYYY-MM-DD)
-   * @param {string} menuText 오늘의 주메뉴(한국어) - 관리자 통계 표시용
+   * @param {string} menuText 오늘의 대표 메뉴(한국어) - 관리자 통계 표시용
+   * @param {string[]} [menuNames] 오늘 제공된 메뉴 전체 목록(한국어) - 평가 데이터에 함께 저장
+   * @param {string} [mealType] "regular" | "simple" - menuNames가 어느 쪽 메뉴인지
    */
-  function render(lang, hasTodayMenu, dateKey, menuText) {
+  function render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType) {
     ensureEls();
     if (!els.wrap) return;
 
@@ -2560,7 +2571,7 @@ var BreakfastRating = (function () {
       showCompletedOrThanks(lang, dateKey);
       return;
     }
-    showOptions(lang, dateKey, menuText);
+    showOptions(lang, dateKey, menuText, menuNames, mealType);
   }
 
   return { render: render };
@@ -2653,17 +2664,15 @@ var LanguageStats = (function () {
 <script>
 /* ==========================================================================
    주간메뉴 Firestore 동기화 (js/weekly-menu-sync.js)
-   - 관리자 페이지("주간메뉴 관리")에서 등록한 데이터를 읽어와
+   - 관리자 페이지("주간메뉴 관리")에서 "확인 후 게시"한 데이터를 읽어와
      data/breakfast-weekly-menu.js의 정적 BREAKFAST_WEEKLY_MENU 객체에
-     덮어씁니다. Firestore에 해당 날짜 데이터가 없으면 정적 파일의
-     내용이 그대로 유지됩니다(기존 방식과 100% 호환되는 안전한 대체 동작).
-
-   우선순위 (관리자 페이지 안내와 동일):
-     1) weeklyMenus에 그 날짜의 직접 입력 데이터가 있으면 그것을 사용
-     2) 없고 그 주의 weeklyMenuImages 이미지가 있으면 이미지를 사용
-        (기존 "주간 메뉴 원본 보기" 팝업을 그대로 재사용 —
-        BREAKFAST_WEEKLY_MENU.sourceImage 값만 바꿔주면 됩니다)
-     3) 둘 다 없으면 정적 파일 내용(대개 비어있음 → "운영하지 않습니다")
+     덮어씁니다. Firestore에 해당 날짜의 게시된(published) 데이터가 없으면
+     정적 파일의 내용이 그대로 유지됩니다(기존 방식과 100% 호환).
+   - "임시저장"(status: draft)은 관리자 화면에서만 보이고, 학생 화면에는
+     반영되지 않습니다.
+   - 등록된 주간메뉴 원본 이미지가 있으면 "주간 메뉴 원본 보기" 팝업에서만
+     쓰입니다. 오늘·내일 메뉴 칸에는 이미지를 넣지 않고 글자만 표시합니다
+     (js/app.js의 renderMealList가 담당).
 
    화면은 렌더링이 끝난 뒤 비동기로 동기화하고, 데이터가 갱신되면
    콜백으로 다시 그리게 합니다(초기 표시가 늦어지지 않도록).
@@ -2696,13 +2705,17 @@ var WeeklyMenuSync = (function () {
 
   function applyDayDoc(dateKey, data) {
     if (!data) return;
+    if (data.status !== "published") return; // 임시저장(draft)은 학생 화면에 반영하지 않음
+    if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
+
     var hasRegular = data.regular && data.regular.length;
     var hasSimple = data.simple && data.simple.length;
     var hasItems = data.items && data.items.length; // 예전 저장 방식(단일 목록) 하위 호환
-    if (!hasRegular && !hasSimple && !hasItems) return;
-    if (typeof BREAKFAST_WEEKLY_MENU === "undefined") return;
+    var isOpen = data.isOpen !== false;
+
     if (!BREAKFAST_WEEKLY_MENU.days) BREAKFAST_WEEKLY_MENU.days = {};
     BREAKFAST_WEEKLY_MENU.days[dateKey] = {
+      isOpen: isOpen,
       regular: hasRegular ? data.regular : (hasItems ? data.items : []),
       simple: hasSimple ? data.simple : []
     };
@@ -2731,14 +2744,9 @@ var WeeklyMenuSync = (function () {
       if (todaySnap && todaySnap.exists) applyDayDoc(todayKey, todaySnap.data());
       if (tomorrowSnap && tomorrowSnap.exists) applyDayDoc(tomorrowKey, tomorrowSnap.data());
 
-      // 직접 입력 데이터가 없는 날에 한해서만 이미지로 보완
-      function hasDirectInput(dateKey) {
-        var d = BREAKFAST_WEEKLY_MENU.days[dateKey];
-        return !!(d && ((d.regular && d.regular.length) || (d.simple && d.simple.length)));
-      }
-      var todayHasItems = hasDirectInput(todayKey);
-      var tomorrowHasItems = hasDirectInput(tomorrowKey);
-      if (imageSnap && imageSnap.exists && (!todayHasItems || !tomorrowHasItems)) {
+      // 원본 이미지는 "주간 메뉴 원본 보기" 팝업 전용 — 등록되어 있으면
+      // 오늘·내일에 글자 메뉴가 있는지 여부와 무관하게 버튼만 노출합니다.
+      if (imageSnap && imageSnap.exists) {
         var imgData = imageSnap.data();
         if (imgData && imgData.imageUrl) {
           BREAKFAST_WEEKLY_MENU.sourceImage = imgData.imageUrl;
@@ -3057,52 +3065,38 @@ var WeeklyMenuSync = (function () {
     return !!(day.rice || day.soup || day.main || day.side1 || day.side2 || day.kimchi);
   }
 
-  /* 글자 메뉴가 없는 날, 관리자가 등록한 주간메뉴 이미지를 그 날의
-     메뉴칸에 그대로 보여줍니다(누르면 원본 크기로도 볼 수 있음). */
-  function renderMealImage(listEl, imageUrl, lang) {
-    var li = document.createElement("li");
-    li.className = "ba-meal-image-item";
-
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ba-meal-image-btn";
-    btn.setAttribute("aria-label", BREAKFAST_INFO.viewOriginalButton[lang] || BREAKFAST_INFO.viewOriginalButton.ko);
-
-    var img = document.createElement("img");
-    img.src = imageUrl;
-    img.alt = BREAKFAST_INFO.viewOriginalButton[lang] || BREAKFAST_INFO.viewOriginalButton.ko;
-    img.loading = "lazy";
-    btn.appendChild(img);
-
-    btn.addEventListener("click", openWeeklyImage);
-    li.appendChild(btn);
-    listEl.appendChild(li);
-  }
-
   function renderMealList(listEl, lang, offsetDays, closedText) {
     var dateKey = getSeoulDateKey(offsetDays);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
 
     listEl.innerHTML = "";
 
+    function showMessage(className, text) {
+      var p = document.createElement("p");
+      p.className = className;
+      p.textContent = text;
+      listEl.appendChild(p);
+    }
+
     if (isSeoulWeekend(offsetDays)) {
-      var closedP = document.createElement("p");
-      closedP.className = "today-meal-closed";
-      closedP.textContent = closedText;
-      listEl.appendChild(closedP);
+      showMessage("today-meal-closed", closedText);
+      return;
+    }
+
+    // 관리자가 명시적으로 휴무로 등록한 날(isOpen: false)
+    if (day && day.isOpen === false) {
+      showMessage("today-meal-closed", closedText);
       return;
     }
 
     if (!dayHasDirectData(day)) {
-      var sourceImage = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage;
-      if (sourceImage) {
-        renderMealImage(listEl, sourceImage, lang);
-        return;
-      }
-      var closedP1 = document.createElement("p");
-      closedP1.className = "today-meal-closed";
-      closedP1.textContent = closedText;
-      listEl.appendChild(closedP1);
+      // 운영일이지만 아직 메뉴가 등록되지 않은 상태 — 주간표 스크린샷은
+      // 오늘·내일 칸에 넣지 않고, "메뉴를 준비 중입니다"로만 안내합니다.
+      // (원본 이미지는 "주간 메뉴 원본 보기" 버튼을 눌렀을 때만 보여줍니다.)
+      var preparingMsg = BREAKFAST_INFO.menuPreparingMessage
+        ? (BREAKFAST_INFO.menuPreparingMessage[lang] || BREAKFAST_INFO.menuPreparingMessage.ko)
+        : closedText;
+      showMessage("today-meal-preparing", preparingMsg);
       return;
     }
 
@@ -3205,24 +3199,33 @@ var WeeklyMenuSync = (function () {
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var hasText = dayHasDirectData(day);
-    var hasImageOnly = !hasText && !!(BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage);
-    var hasTodayMenu = !isSeoulWeekend(0) && (hasText || hasImageOnly);
+    var isExplicitlyClosed = !!(day && day.isOpen === false);
+    var hasText = !isExplicitlyClosed && dayHasDirectData(day);
+    var hasTodayMenu = !isSeoulWeekend(0) && hasText;
 
     var menuText = "";
-    if (hasText) {
-      var firstList = (day.regular && day.regular.length) ? day.regular
-        : (day.simple && day.simple.length) ? day.simple
-        : (day.items && day.items.length) ? day.items
-        : null;
+    var menuNames = [];
+    var mealType = "regular";
+    if (hasTodayMenu) {
+      var firstList = null;
+      if (day.regular && day.regular.length) {
+        firstList = day.regular;
+        mealType = "regular";
+      } else if (day.simple && day.simple.length) {
+        firstList = day.simple;
+        mealType = "simple";
+      } else if (day.items && day.items.length) {
+        firstList = day.items;
+      }
       if (firstList) {
-        var first = firstList[0];
-        menuText = typeof first === "string" ? first : (first.ko || "");
+        menuNames = firstList.map(function (item) { return typeof item === "string" ? item : (item && item.ko) || ""; }).filter(Boolean);
+        menuText = menuNames[0] || "";
       } else if (day.main) {
         menuText = day.main.ko;
+        menuNames = [menuText];
       }
     }
-    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText);
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType);
   }
 
   /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */

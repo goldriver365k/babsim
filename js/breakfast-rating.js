@@ -104,7 +104,7 @@ var BreakfastRating = (function () {
 
   /* ---------------- 저장 (Firestore 우선, 미설정 시 기기 저장만) ---------------- */
 
-  function saveRating(score, dateKey, lang, menuText) {
+  function saveRating(score, dateKey, lang, menuText, menuNames, mealType) {
     var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
     if (!db) {
       // Firebase 미설정 상태: 학생 화면은 정상 동작하되 관리자 통계에는 집계되지 않음
@@ -113,11 +113,14 @@ var BreakfastRating = (function () {
 
     var docData = {
       date: dateKey,
+      menuDate: dateKey,
       menuId: "breakfast-" + dateKey.replace(/-/g, ""),
+      mealType: mealType || "regular",
       rating: score,
       language: lang,
       deviceId: getDeviceId(),
       mainMenu: menuText || null,
+      menuNames: Array.isArray(menuNames) && menuNames.length ? menuNames : null,
       createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
         ? firebase.firestore.FieldValue.serverTimestamp()
         : new Date().toISOString()
@@ -134,7 +137,7 @@ var BreakfastRating = (function () {
     return entry[lang] || entry.ko || "";
   }
 
-  function renderOptions(dateKey, lang, menuText) {
+  function renderOptions(dateKey, lang, menuText, menuNames, mealType) {
     els.options.innerHTML = "";
     SCORES.forEach(function (score) {
       var label = text("score" + score, lang);
@@ -154,16 +157,16 @@ var BreakfastRating = (function () {
       labelEl.textContent = label;
       btn.appendChild(labelEl);
 
-      btn.addEventListener("click", function () { handlePick(score, dateKey, lang, menuText); });
+      btn.addEventListener("click", function () { handlePick(score, dateKey, lang, menuText, menuNames, mealType); });
       els.options.appendChild(btn);
     });
   }
 
-  function showOptions(lang, dateKey, menuText) {
+  function showOptions(lang, dateKey, menuText, menuNames, mealType) {
     els.title.hidden = false;
     els.title.textContent = text("title", lang);
     els.options.hidden = false;
-    renderOptions(dateKey, lang, menuText);
+    renderOptions(dateKey, lang, menuText, menuNames, mealType);
     els.message.hidden = true;
   }
 
@@ -191,7 +194,7 @@ var BreakfastRating = (function () {
     busy = false;
   }
 
-  function handlePick(score, dateKey, lang, menuText) {
+  function handlePick(score, dateKey, lang, menuText, menuNames, mealType) {
     if (busy) return;
     busy = true;
     els.message.hidden = true;
@@ -199,7 +202,7 @@ var BreakfastRating = (function () {
       btn.disabled = true;
     });
 
-    saveRating(score, dateKey, lang, menuText).then(function () {
+    saveRating(score, dateKey, lang, menuText, menuNames, mealType).then(function () {
       setRatedToday(dateKey, score);
       justRatedDateKey = dateKey;
       busy = false;
@@ -212,11 +215,13 @@ var BreakfastRating = (function () {
 
   /**
    * @param {string} lang 현재 선택된 언어 (ko/en/zh/vi/mn)
-   * @param {boolean} hasTodayMenu 오늘 천원의 아침밥 메뉴가 존재하는지 (주말/휴무 시 false)
+   * @param {boolean} hasTodayMenu 오늘 천원의 아침밥 메뉴가 존재하는지 (주말/휴무/미등록 시 false)
    * @param {string} dateKey 오늘 날짜 (Asia/Seoul, YYYY-MM-DD)
-   * @param {string} menuText 오늘의 주메뉴(한국어) - 관리자 통계 표시용
+   * @param {string} menuText 오늘의 대표 메뉴(한국어) - 관리자 통계 표시용
+   * @param {string[]} [menuNames] 오늘 제공된 메뉴 전체 목록(한국어) - 평가 데이터에 함께 저장
+   * @param {string} [mealType] "regular" | "simple" - menuNames가 어느 쪽 메뉴인지
    */
-  function render(lang, hasTodayMenu, dateKey, menuText) {
+  function render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType) {
     ensureEls();
     if (!els.wrap) return;
 
@@ -231,7 +236,7 @@ var BreakfastRating = (function () {
       showCompletedOrThanks(lang, dateKey);
       return;
     }
-    showOptions(lang, dateKey, menuText);
+    showOptions(lang, dateKey, menuText, menuNames, mealType);
   }
 
   return { render: render };

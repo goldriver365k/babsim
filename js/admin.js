@@ -618,9 +618,16 @@
 
   var weeklyMenuState = {
     weekStart: null,
-    dayDocs: {},     // dateKey -> { items, updatedAt } | null
-    imageDoc: null    // { imageUrl, ... } | null
+    dayDocs: {},          // dateKey -> Firestore weeklyMenus 문서 | null
+    imageDoc: null,        // { imageUrl, ... } | null (Firestore weeklyMenuImages 문서)
+    pendingImageFile: null // 이번 세션에 새로 고른, 아직 게시 전인 이미지 파일
   };
+
+  function serverTimestampOrNow() {
+    return (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
+      ? firebase.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString();
+  }
 
   function initWeeklyMenuAuth() {
     var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
@@ -679,19 +686,28 @@
     return auth && auth.currentUser ? auth.currentUser : null;
   }
 
+  /* 카드를 새로 그리는 시점까지 기다려야 하는 호출(예: 이미지 분석 결과 반영)을
+     위해 Promise를 반환합니다. */
   function loadWeeklyMenuWeek(weekStartKey) {
     weeklyMenuState.weekStart = weekStartKey;
+    weeklyMenuState.pendingImageFile = null;
     qs("weekStartInput").value = weekStartKey;
+    var imgInput = qs("weekImageInput");
+    if (imgInput) imgInput.value = "";
+    var statusEl = qs("weekAnalyzeStatus");
+    if (statusEl) statusEl.hidden = true;
+    var publishStatusEl = qs("weekPublishStatus");
+    if (publishStatusEl) publishStatusEl.hidden = true;
 
     var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
     if (!db) {
       renderWeekDayGrid();
       renderWeekImage();
-      return;
+      return Promise.resolve();
     }
 
     var dateKeys = DAY_DEFS.map(function (d) { return addDaysToKey(weekStartKey, d.offset); });
-    Promise.all(dateKeys.map(function (dk) {
+    var daysPromise = Promise.all(dateKeys.map(function (dk) {
       return db.collection("weeklyMenus").doc(dk).get().catch(function () { return null; });
     })).then(function (snaps) {
       weeklyMenuState.dayDocs = {};
@@ -701,6 +717,7 @@
       renderWeekDayGrid();
     }).catch(function (err) {
       console.error(friendlyError("주간메뉴 데이터를 불러오지 못했습니다.", err));
+      weeklyMenuState.dayDocs = {};
       renderWeekDayGrid();
     });
 
@@ -712,6 +729,8 @@
       weeklyMenuState.imageDoc = null;
       renderWeekImage();
     });
+
+    return daysPromise;
   }
 
   var MEAL_TYPES = [
@@ -719,13 +738,19 @@
     { key: "simple", label: "간편식" }
   ];
 
-  /* 기존 데이터 호환: 예전 저장 방식은 day.items(단일 목록)만 있었습니다.
-     그 경우 "일반식" 목록으로 그대로 옮겨서 보여줍니다. */
+  /* 기존 데이터를 { text, uncertain } 형태로 통일해서 돌려줍니다.
+     - 새 저장 방식: { ko, zh, vi, en, mn } 또는 임시저장 { ko, uncertain }
+     - 아주 예전 저장 방식(day.items 단일 목록)도 계속 지원 */
   function existingListFor(existing, typeKey) {
     if (!existing) return null;
-    if (existing[typeKey] && existing[typeKey].length) return existing[typeKey].slice();
-    if (typeKey === "regular" && existing.items && existing.items.length) return existing.items.slice();
-    return null;
+    var raw = null;
+    if (existing[typeKey] && existing[typeKey].length) raw = existing[typeKey];
+    else if (typeKey === "regular" && existing.items && existing.items.length) raw = existing.items;
+    if (!raw) return null;
+    return raw.map(function (item) {
+      if (typeof item === "string") return { text: item, uncertain: false };
+      return { text: (item && item.ko) || "", uncertain: !!(item && item.uncertain) };
+    });
   }
 
   function renderWeekDayGrid() {
@@ -752,10 +777,19 @@
       dateInput.value = dateKey;
       card.appendChild(dateInput);
 
+      var openLabel = document.createElement("label");
+      openLabel.className = "week-open-toggle";
+      var openCheckbox = document.createElement("input");
+      openCheckbox.type = "checkbox";
+      openCheckbox.checked = existing ? existing.isOpen !== false : true;
+      openLabel.appendChild(openCheckbox);
+      openLabel.appendChild(document.createTextNode(" 운영 (해제 시 휴무)"));
+      card.appendChild(openLabel);
+
       var pasteBox = document.createElement("textarea");
       pasteBox.className = "week-paste-box";
       pasteBox.rows = 2;
-      pasteBox.placeholder = "엑셀에서 이 요일의 일반식·간편식 두 칸(6줄)을 복사해서 여기에 붙여넣으세요";
+      pasteBox.placeholder = "엑셀에서 이 요일의 일반식·간편식 두 칸(여러 줄)을 복사해서 여기에 붙여넣으세요";
       card.appendChild(pasteBox);
 
       var pasteBtn = document.createElement("button");
@@ -777,8 +811,12 @@
 
         var itemsList = document.createElement("div");
         itemsList.className = "week-items-list";
-        var savedItems = existingListFor(existing, type.key) || (type.key === "regular" ? ["", "", "", ""] : [""]);
-        savedItems.forEach(function (text) { itemsList.appendChild(buildItemRow(text)); });
+        var savedItems = existingListFor(existing, type.key);
+        if (savedItems && savedItems.length) {
+          savedItems.forEach(function (norm) { itemsList.appendChild(buildItemRow(norm.text, norm.uncertain)); });
+        } else {
+          itemsList.appendChild(buildItemRow("", false));
+        }
         section.appendChild(itemsList);
         lists[type.key] = itemsList;
 
@@ -786,7 +824,7 @@
         addBtn.type = "button";
         addBtn.className = "week-add-item-btn";
         addBtn.textContent = "+ 메뉴 추가";
-        addBtn.addEventListener("click", function () { itemsList.appendChild(buildItemRow("")); });
+        addBtn.addEventListener("click", function () { itemsList.appendChild(buildItemRow("", false)); });
         section.appendChild(addBtn);
 
         card.appendChild(section);
@@ -797,48 +835,39 @@
         pasteBox.value = "";
       });
 
-      var actions = document.createElement("div");
-      actions.className = "week-day-actions";
-
-      var saveBtn = document.createElement("button");
-      saveBtn.type = "button";
-      saveBtn.className = "week-save-btn";
-      saveBtn.textContent = existing ? "수정 저장" : "저장";
-      actions.appendChild(saveBtn);
-
-      var deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "week-delete-btn";
-      deleteBtn.textContent = "삭제";
-      deleteBtn.hidden = !existing;
-      actions.appendChild(deleteBtn);
-
-      card.appendChild(actions);
-
-      var msg = document.createElement("p");
-      msg.className = "week-day-msg";
-      card.appendChild(msg);
-
-      saveBtn.addEventListener("click", function () {
-        saveWeekDay(card, dateInput, lists, msg, saveBtn, deleteBtn);
-      });
-      deleteBtn.addEventListener("click", function () {
-        deleteWeekDay(card.dataset.date, msg, saveBtn, deleteBtn);
-      });
+      card._dateInput = dateInput;
+      card._openCheckbox = openCheckbox;
+      card._lists = lists;
 
       grid.appendChild(card);
     });
   }
 
-  function buildItemRow(text) {
+  function buildItemRow(text, uncertain) {
     var row = document.createElement("div");
-    row.className = "week-item-row";
+    row.className = "week-item-row" + (uncertain ? " uncertain" : "");
+    row.dataset.uncertain = uncertain ? "1" : "0";
 
     var input = document.createElement("input");
     input.type = "text";
     input.value = text || "";
     input.placeholder = "메뉴명";
+    input.addEventListener("input", function () {
+      // 관리자가 확인 필요 항목을 직접 수정하면 표시를 지웁니다.
+      if (row.dataset.uncertain !== "1") return;
+      row.dataset.uncertain = "0";
+      row.classList.remove("uncertain");
+      var tag = row.querySelector(".week-item-uncertain-tag");
+      if (tag) tag.remove();
+    });
     row.appendChild(input);
+
+    if (uncertain) {
+      var tag = document.createElement("span");
+      tag.className = "week-item-uncertain-tag";
+      tag.textContent = "확인 필요";
+      row.appendChild(tag);
+    }
 
     var removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -853,7 +882,18 @@
 
   function setItemsList(listEl, items) {
     listEl.innerHTML = "";
-    items.forEach(function (text) { listEl.appendChild(buildItemRow(text)); });
+    items.forEach(function (text) { listEl.appendChild(buildItemRow(text, false)); });
+  }
+
+  function setItemsListWithUncertain(listEl, items) {
+    listEl.innerHTML = "";
+    if (!items || !items.length) {
+      listEl.appendChild(buildItemRow("", false));
+      return;
+    }
+    items.forEach(function (item) {
+      listEl.appendChild(buildItemRow((item && item.ko) || "", !!(item && item.uncertain)));
+    });
   }
 
   /**
@@ -878,131 +918,89 @@
     if (simpleItems.length) setItemsList(simpleList, simpleItems);
   }
 
-  function saveWeekDay(card, dateInput, lists, msg, saveBtn, deleteBtn) {
-    var user = requireAdminUser();
-    if (!user) {
-      msg.className = "week-day-msg error";
-      msg.textContent = "로그인이 만료되었습니다. 다시 로그인해주세요.";
-      return;
-    }
-
-    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
-    if (!db) {
-      msg.className = "week-day-msg error";
-      msg.textContent = "저장 기능을 사용할 수 없습니다.";
-      return;
-    }
-
-    var dateKey = dateInput.value;
-    if (!dateKey) {
-      msg.className = "week-day-msg error";
-      msg.textContent = "날짜를 입력해주세요.";
-      return;
-    }
-
-    function collect(listEl) {
-      return Array.prototype.map.call(listEl.querySelectorAll("input[type=text]"), function (i) { return i.value.trim(); })
-        .filter(function (t) { return t.length > 0; });
-    }
-
-    var regular = collect(lists.regular);
-    var simple = collect(lists.simple);
-
-    if (regular.length === 0 && simple.length === 0) {
-      msg.className = "week-day-msg error";
-      msg.textContent = "일반식 또는 간편식 메뉴를 1개 이상 입력해주세요.";
-      return;
-    }
-
-    saveBtn.disabled = true;
-    msg.className = "week-day-msg";
-    msg.textContent = "저장 중...";
-
-    db.collection("weeklyMenus").doc(dateKey).set({
-      weekStart: weeklyMenuState.weekStart,
-      date: dateKey,
-      day: card.dataset.dayCode,
-      regular: regular,
-      simple: simple,
-      updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
-        ? firebase.firestore.FieldValue.serverTimestamp()
-        : new Date().toISOString()
-    }).then(function () {
-      saveBtn.disabled = false;
-      msg.className = "week-day-msg success";
-      msg.textContent = "저장되었습니다.";
-      saveBtn.textContent = "수정 저장";
-      deleteBtn.hidden = false;
-      weeklyMenuState.dayDocs[dateKey] = { regular: regular, simple: simple };
-      card.dataset.date = dateKey;
-    }).catch(function (err) {
-      saveBtn.disabled = false;
-      msg.className = "week-day-msg error";
-      msg.textContent = friendlyError("저장에 실패했습니다.", err);
-    });
-  }
-
-  function deleteWeekDay(dateKey, msg, saveBtn, deleteBtn) {
-    var user = requireAdminUser();
-    if (!user) {
-      msg.className = "week-day-msg error";
-      msg.textContent = "로그인이 만료되었습니다. 다시 로그인해주세요.";
-      return;
-    }
-    if (!window.confirm(dateKey + " 메뉴를 삭제할까요?")) return;
-
-    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
-    if (!db) return;
-
-    deleteBtn.disabled = true;
-    db.collection("weeklyMenus").doc(dateKey).delete().then(function () {
-      deleteBtn.disabled = false;
-      deleteBtn.hidden = true;
-      saveBtn.textContent = "저장";
-      msg.className = "week-day-msg success";
-      msg.textContent = "삭제되었습니다.";
-      weeklyMenuState.dayDocs[dateKey] = null;
-    }).catch(function (err) {
-      deleteBtn.disabled = false;
-      msg.className = "week-day-msg error";
-      msg.textContent = friendlyError("삭제에 실패했습니다.", err);
-    });
-  }
-
-  /* ---- 이미지 업로드 ---- */
-
   var ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
   var MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+  /* 이번 세션에 새로 고른 이미지가 있으면 그 미리보기를 유지하고,
+     없으면 이미 등록된(Firestore) 이미지를 보여줍니다. */
   function renderWeekImage() {
+    if (weeklyMenuState.pendingImageFile) return;
     var wrap = qs("weekImagePreviewWrap");
     var img = qs("weekImagePreviewImg");
-    var deleteBtn = qs("weekImageDeleteBtn");
     if (weeklyMenuState.imageDoc && weeklyMenuState.imageDoc.imageUrl) {
       img.src = weeklyMenuState.imageDoc.imageUrl;
       wrap.hidden = false;
-      deleteBtn.hidden = false;
     } else {
       wrap.hidden = true;
       img.removeAttribute("src");
-      deleteBtn.hidden = true;
     }
-    qs("weekImageError").textContent = "";
-    qs("weekImageSuccess").textContent = "";
   }
 
-  function initWeeklyImageUpload() {
+  /* ---------------- 관리자 로그인 함수(Netlify Function) 호출 ---------------- */
+
+  function callMenuFunction(action, extra) {
+    var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
+    var user = auth && auth.currentUser;
+    if (!user) return Promise.reject({ friendly: "로그인이 만료되었습니다. 다시 로그인해주세요." });
+
+    return user.getIdToken().then(function (idToken) {
+      var body = Object.assign({ action: action, idToken: idToken }, extra || {});
+      return fetch("/.netlify/functions/parse-weekly-menu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok || !data || !data.ok) {
+          throw { friendly: (data && data.error) || "요청 처리에 실패했습니다. 잠시 후 다시 시도해주세요." };
+        }
+        return data;
+      });
+    });
+  }
+
+  /* 이미지를 서버로 보내기 전에 크기를 줄여 전송량을 낮춥니다(JPEG로 통일). */
+  function resizeImageToBase64(file, maxDim) {
+    return new Promise(function (resolve, reject) {
+      var objectUrl = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(objectUrl);
+        var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+        var scale = Math.min(1, maxDim / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        var dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        var base64 = dataUrl.split(",")[1] || "";
+        resolve({ base64: base64, mimeType: "image/jpeg" });
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("이미지를 불러오지 못했습니다."));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  /* ---------------- 방식 1: 이미지 자동 인식 ---------------- */
+
+  function initWeeklyImageAnalyze() {
     var fileInput = qs("weekImageInput");
-    var saveBtn = qs("weekImageSaveBtn");
-    var deleteBtn = qs("weekImageDeleteBtn");
     var errorEl = qs("weekImageError");
-    var successEl = qs("weekImageSuccess");
     var wrap = qs("weekImagePreviewWrap");
     var previewImg = qs("weekImagePreviewImg");
+    var statusEl = qs("weekAnalyzeStatus");
+    var analyzeBtn = qs("weekAnalyzeBtn");
 
     fileInput.addEventListener("change", function () {
       errorEl.textContent = "";
-      successEl.textContent = "";
+      statusEl.hidden = true;
       var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (ALLOWED_IMAGE_TYPES.indexOf(file.type) === -1) {
@@ -1015,79 +1013,262 @@
         fileInput.value = "";
         return;
       }
+      weeklyMenuState.pendingImageFile = file;
       previewImg.src = URL.createObjectURL(file);
       wrap.hidden = false;
     });
 
-    saveBtn.addEventListener("click", function () {
+    analyzeBtn.addEventListener("click", function () {
       var user = requireAdminUser();
+      errorEl.textContent = "";
       if (!user) {
         errorEl.textContent = "로그인이 만료되었습니다. 다시 로그인해주세요.";
         return;
       }
-      var file = fileInput.files && fileInput.files[0];
+      var file = weeklyMenuState.pendingImageFile;
       if (!file) {
-        errorEl.textContent = "업로드할 이미지를 먼저 선택해주세요.";
-        return;
-      }
-      var storage = (typeof getFirebaseStorage === "function") ? getFirebaseStorage() : null;
-      var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
-      if (!storage || !db) {
-        errorEl.textContent = "이미지 업로드 기능을 사용할 수 없습니다.";
+        errorEl.textContent = "분석할 이미지를 먼저 선택해주세요.";
         return;
       }
 
-      errorEl.textContent = "";
-      successEl.textContent = "업로드 중...";
-      saveBtn.disabled = true;
+      analyzeBtn.disabled = true;
+      statusEl.hidden = false;
+      statusEl.className = "analyze-status";
+      statusEl.textContent = "주간 메뉴를 분석하고 있습니다.";
 
-      var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      var weekStartKey = weeklyMenuState.weekStart;
-      var path = "weeklyMenuImages/" + weekStartKey + "." + ext;
-      var ref = storage.ref().child(path);
-
-      ref.put(file).then(function () {
-        return ref.getDownloadURL();
-      }).then(function (url) {
-        return db.collection("weeklyMenuImages").doc(weekStartKey).set({
-          weekStart: weekStartKey,
-          imageUrl: url,
-          uploadedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
-            ? firebase.firestore.FieldValue.serverTimestamp()
-            : new Date().toISOString()
+      resizeImageToBase64(file, 1600).then(function (resized) {
+        return callMenuFunction("analyze", { imageBase64: resized.base64, mimeType: resized.mimeType });
+      }).then(function (data) {
+        var weekPromise = (data.weekStart && data.weekStart !== weeklyMenuState.weekStart)
+          ? loadWeeklyMenuWeek(data.weekStart)
+          : Promise.resolve();
+        return weekPromise.then(function () {
+          applyAnalyzedResult(data);
+          analyzeBtn.disabled = false;
+          statusEl.className = "analyze-status success";
+          statusEl.textContent = "분석이 완료되었습니다. 메뉴와 날짜를 확인해 주세요.";
         });
-      }).then(function () {
-        saveBtn.disabled = false;
-        successEl.textContent = "이미지가 저장되었습니다.";
-        weeklyMenuState.imageDoc = { imageUrl: previewImg.src };
-        deleteBtn.hidden = false;
       }).catch(function (err) {
-        saveBtn.disabled = false;
-        errorEl.textContent = friendlyError("이미지 업로드에 실패했습니다.", err);
+        console.error("이미지 분석 오류:", err);
+        analyzeBtn.disabled = false;
+        statusEl.className = "analyze-status error";
+        statusEl.textContent = (err && err.friendly) || "이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요.";
+      });
+    });
+  }
+
+  function applyAnalyzedResult(data) {
+    var grid = qs("weekDayGrid");
+    var cards = Array.prototype.slice.call(grid.children);
+    var days = data.days || {};
+
+    Object.keys(days).forEach(function (dateKey) {
+      var dayData = days[dateKey] || {};
+      var card = cards.filter(function (c) { return c.dataset.dayCode === dayData.day; })[0];
+      if (!card) card = cards.filter(function (c) { return c.dataset.date === dateKey; })[0];
+      if (!card) {
+        console.warn("분석 결과의 날짜/요일과 일치하는 카드를 찾지 못했습니다:", dateKey, dayData.day);
+        return;
+      }
+
+      if (dateKey) {
+        card._dateInput.value = dateKey;
+        card.dataset.date = dateKey;
+      }
+      card._openCheckbox.checked = dayData.isOpen !== false;
+      setItemsListWithUncertain(card._lists.regular, dayData.regular);
+      setItemsListWithUncertain(card._lists.simple, dayData.simple);
+    });
+  }
+
+  /* ---------------- 저장/게시(방식 1·2 공통) ---------------- */
+
+  function collectCardState(card) {
+    function collect(listEl) {
+      return Array.prototype.map.call(listEl.querySelectorAll("input[type=text]"), function (i) { return i.value.trim(); })
+        .filter(function (t) { return t.length > 0; });
+    }
+    return {
+      dateKey: card._dateInput.value,
+      dayCode: card.dataset.dayCode,
+      isOpen: card._openCheckbox.checked,
+      regular: collect(card._lists.regular),
+      simple: collect(card._lists.simple)
+    };
+  }
+
+  function collectAllCards() {
+    var grid = qs("weekDayGrid");
+    return Array.prototype.map.call(grid.children, collectCardState);
+  }
+
+  function showPublishStatus(text, isError, isSuccess) {
+    var el = qs("weekPublishStatus");
+    el.hidden = false;
+    el.className = "publish-status" + (isError ? " error" : (isSuccess ? " success" : ""));
+    el.textContent = text;
+  }
+
+  function setPublishButtonsDisabled(disabled) {
+    qs("weekSaveDraftBtn").disabled = disabled;
+    qs("weekPublishBtn").disabled = disabled;
+    qs("weekDeleteAllBtn").disabled = disabled;
+  }
+
+  function uploadWeekImage(file) {
+    var storage = (typeof getFirebaseStorage === "function") ? getFirebaseStorage() : null;
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!storage || !db) return Promise.resolve(null);
+
+    var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    var weekStartKey = weeklyMenuState.weekStart;
+    var path = "weeklyMenuImages/" + weekStartKey + "." + ext;
+    var ref = storage.ref().child(path);
+
+    return ref.put(file).then(function () {
+      return ref.getDownloadURL();
+    }).then(function (url) {
+      return db.collection("weeklyMenuImages").doc(weekStartKey).set({
+        weekStart: weekStartKey,
+        imageUrl: url,
+        uploadedAt: serverTimestampOrNow()
+      }).then(function () { return url; });
+    });
+  }
+
+  function initWeeklyPublishActions() {
+    qs("weekSaveDraftBtn").addEventListener("click", function () {
+      var user = requireAdminUser();
+      if (!user) { showPublishStatus("로그인이 만료되었습니다. 다시 로그인해주세요.", true); return; }
+      var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+      if (!db) { showPublishStatus("저장 기능을 사용할 수 없습니다.", true); return; }
+
+      var cards = collectAllCards();
+      setPublishButtonsDisabled(true);
+      showPublishStatus("임시저장 중...", false);
+
+      var writes = cards.filter(function (c) { return c.dateKey; }).map(function (c) {
+        return db.collection("weeklyMenus").doc(c.dateKey).set({
+          weekStart: weeklyMenuState.weekStart,
+          date: c.dateKey,
+          day: c.dayCode,
+          isOpen: c.isOpen,
+          regular: c.regular.map(function (t) { return { ko: t }; }),
+          simple: c.simple.map(function (t) { return { ko: t }; }),
+          status: "draft",
+          updatedAt: serverTimestampOrNow()
+        }, { merge: true });
+      });
+
+      Promise.all(writes).then(function () {
+        setPublishButtonsDisabled(false);
+        showPublishStatus("임시저장되었습니다. (학생 화면에는 아직 반영되지 않습니다)", false, true);
+      }).catch(function (err) {
+        setPublishButtonsDisabled(false);
+        showPublishStatus(friendlyError("임시저장에 실패했습니다.", err), true);
       });
     });
 
-    deleteBtn.addEventListener("click", function () {
+    qs("weekPublishBtn").addEventListener("click", function () {
       var user = requireAdminUser();
-      if (!user) {
-        errorEl.textContent = "로그인이 만료되었습니다. 다시 로그인해주세요.";
-        return;
-      }
-      if (!window.confirm("등록된 주간메뉴 이미지를 삭제할까요?")) return;
+      if (!user) { showPublishStatus("로그인이 만료되었습니다. 다시 로그인해주세요.", true); return; }
+      var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+      if (!db) { showPublishStatus("게시 기능을 사용할 수 없습니다.", true); return; }
 
+      var cards = collectAllCards();
+      var terms = [];
+      cards.forEach(function (c) { terms = terms.concat(c.regular, c.simple); });
+      terms = Array.from(new Set(terms));
+
+      setPublishButtonsDisabled(true);
+      showPublishStatus(terms.length ? "번역을 확인하고 있습니다..." : "게시 중...", false);
+
+      var translatePromise = terms.length > 0
+        ? callMenuFunction("translate", { terms: terms })
+        : Promise.resolve({ translations: {} });
+
+      translatePromise.then(function (data) {
+        var translations = data.translations || {};
+        showPublishStatus("게시 중...", false);
+
+        function buildTranslatedList(list) {
+          return list.map(function (t) {
+            var obj = { ko: t };
+            var tr = translations[t];
+            if (tr) {
+              if (tr.zh) obj.zh = tr.zh;
+              if (tr.vi) obj.vi = tr.vi;
+              if (tr.en) obj.en = tr.en;
+              if (tr.mn) obj.mn = tr.mn;
+            }
+            return obj;
+          });
+        }
+
+        var imageUploadPromise = weeklyMenuState.pendingImageFile
+          ? uploadWeekImage(weeklyMenuState.pendingImageFile)
+          : Promise.resolve(null);
+
+        return imageUploadPromise.then(function (imageUrl) {
+          var dayWrites = cards.filter(function (c) { return c.dateKey; }).map(function (c) {
+            var docData = {
+              weekStart: weeklyMenuState.weekStart,
+              date: c.dateKey,
+              day: c.dayCode,
+              isOpen: c.isOpen,
+              regular: buildTranslatedList(c.regular),
+              simple: buildTranslatedList(c.simple),
+              status: "published",
+              updatedAt: serverTimestampOrNow()
+            };
+            if (imageUrl) docData.sourceImageUrl = imageUrl;
+            return db.collection("weeklyMenus").doc(c.dateKey).set(docData, { merge: true });
+          });
+
+          var dictWrites = Object.keys(translations).map(function (term) {
+            var tr = translations[term] || {};
+            var docData = { ko: term, updatedAt: serverTimestampOrNow() };
+            if (tr.zh) docData.zh = tr.zh;
+            if (tr.vi) docData.vi = tr.vi;
+            if (tr.en) docData.en = tr.en;
+            if (tr.mn) docData.mn = tr.mn;
+            return db.collection("menuTranslations").doc(term).set(docData, { merge: true });
+          });
+
+          return Promise.all(dayWrites.concat(dictWrites));
+        });
+      }).then(function () {
+        setPublishButtonsDisabled(false);
+        showPublishStatus("게시되었습니다. 학생 화면에 오늘·내일 메뉴로 반영됩니다.", false, true);
+        weeklyMenuState.pendingImageFile = null;
+        loadWeeklyMenuWeek(weeklyMenuState.weekStart);
+      }).catch(function (err) {
+        setPublishButtonsDisabled(false);
+        showPublishStatus((err && err.friendly) || friendlyError("게시에 실패했습니다.", err), true);
+      });
+    });
+
+    qs("weekDeleteAllBtn").addEventListener("click", function () {
+      var user = requireAdminUser();
+      if (!user) { showPublishStatus("로그인이 만료되었습니다. 다시 로그인해주세요.", true); return; }
       var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
       if (!db) return;
+      if (!window.confirm(weeklyMenuState.weekStart + " 주간 전체 메뉴를 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) return;
 
-      deleteBtn.disabled = true;
-      db.collection("weeklyMenuImages").doc(weeklyMenuState.weekStart).delete().then(function () {
-        deleteBtn.disabled = false;
-        weeklyMenuState.imageDoc = null;
-        fileInput.value = "";
-        renderWeekImage();
-        successEl.textContent = "이미지가 삭제되었습니다.";
+      setPublishButtonsDisabled(true);
+      showPublishStatus("삭제 중...", false);
+
+      var dateKeys = DAY_DEFS.map(function (d) { return addDaysToKey(weeklyMenuState.weekStart, d.offset); });
+      var deletes = dateKeys.map(function (dk) { return db.collection("weeklyMenus").doc(dk).delete(); });
+      deletes.push(db.collection("weeklyMenuImages").doc(weeklyMenuState.weekStart).delete());
+
+      Promise.all(deletes).then(function () {
+        setPublishButtonsDisabled(false);
+        showPublishStatus("삭제되었습니다.", false, true);
+        loadWeeklyMenuWeek(weeklyMenuState.weekStart);
       }).catch(function (err) {
-        deleteBtn.disabled = false;
-        errorEl.textContent = friendlyError("이미지 삭제에 실패했습니다.", err);
+        setPublishButtonsDisabled(false);
+        showPublishStatus(friendlyError("삭제에 실패했습니다.", err), true);
       });
     });
   }
@@ -1101,7 +1282,8 @@
     }
 
     initWeeklyMenuAuth();
-    initWeeklyImageUpload();
+    initWeeklyImageAnalyze();
+    initWeeklyPublishActions();
 
     qs("weekLoadBtn").addEventListener("click", function () {
       var val = qs("weekStartInput").value;

@@ -298,52 +298,38 @@
     return !!(day.rice || day.soup || day.main || day.side1 || day.side2 || day.kimchi);
   }
 
-  /* 글자 메뉴가 없는 날, 관리자가 등록한 주간메뉴 이미지를 그 날의
-     메뉴칸에 그대로 보여줍니다(누르면 원본 크기로도 볼 수 있음). */
-  function renderMealImage(listEl, imageUrl, lang) {
-    var li = document.createElement("li");
-    li.className = "ba-meal-image-item";
-
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ba-meal-image-btn";
-    btn.setAttribute("aria-label", BREAKFAST_INFO.viewOriginalButton[lang] || BREAKFAST_INFO.viewOriginalButton.ko);
-
-    var img = document.createElement("img");
-    img.src = imageUrl;
-    img.alt = BREAKFAST_INFO.viewOriginalButton[lang] || BREAKFAST_INFO.viewOriginalButton.ko;
-    img.loading = "lazy";
-    btn.appendChild(img);
-
-    btn.addEventListener("click", openWeeklyImage);
-    li.appendChild(btn);
-    listEl.appendChild(li);
-  }
-
   function renderMealList(listEl, lang, offsetDays, closedText) {
     var dateKey = getSeoulDateKey(offsetDays);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
 
     listEl.innerHTML = "";
 
+    function showMessage(className, text) {
+      var p = document.createElement("p");
+      p.className = className;
+      p.textContent = text;
+      listEl.appendChild(p);
+    }
+
     if (isSeoulWeekend(offsetDays)) {
-      var closedP = document.createElement("p");
-      closedP.className = "today-meal-closed";
-      closedP.textContent = closedText;
-      listEl.appendChild(closedP);
+      showMessage("today-meal-closed", closedText);
+      return;
+    }
+
+    // 관리자가 명시적으로 휴무로 등록한 날(isOpen: false)
+    if (day && day.isOpen === false) {
+      showMessage("today-meal-closed", closedText);
       return;
     }
 
     if (!dayHasDirectData(day)) {
-      var sourceImage = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage;
-      if (sourceImage) {
-        renderMealImage(listEl, sourceImage, lang);
-        return;
-      }
-      var closedP1 = document.createElement("p");
-      closedP1.className = "today-meal-closed";
-      closedP1.textContent = closedText;
-      listEl.appendChild(closedP1);
+      // 운영일이지만 아직 메뉴가 등록되지 않은 상태 — 주간표 스크린샷은
+      // 오늘·내일 칸에 넣지 않고, "메뉴를 준비 중입니다"로만 안내합니다.
+      // (원본 이미지는 "주간 메뉴 원본 보기" 버튼을 눌렀을 때만 보여줍니다.)
+      var preparingMsg = BREAKFAST_INFO.menuPreparingMessage
+        ? (BREAKFAST_INFO.menuPreparingMessage[lang] || BREAKFAST_INFO.menuPreparingMessage.ko)
+        : closedText;
+      showMessage("today-meal-preparing", preparingMsg);
       return;
     }
 
@@ -446,24 +432,33 @@
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
     var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var hasText = dayHasDirectData(day);
-    var hasImageOnly = !hasText && !!(BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.sourceImage);
-    var hasTodayMenu = !isSeoulWeekend(0) && (hasText || hasImageOnly);
+    var isExplicitlyClosed = !!(day && day.isOpen === false);
+    var hasText = !isExplicitlyClosed && dayHasDirectData(day);
+    var hasTodayMenu = !isSeoulWeekend(0) && hasText;
 
     var menuText = "";
-    if (hasText) {
-      var firstList = (day.regular && day.regular.length) ? day.regular
-        : (day.simple && day.simple.length) ? day.simple
-        : (day.items && day.items.length) ? day.items
-        : null;
+    var menuNames = [];
+    var mealType = "regular";
+    if (hasTodayMenu) {
+      var firstList = null;
+      if (day.regular && day.regular.length) {
+        firstList = day.regular;
+        mealType = "regular";
+      } else if (day.simple && day.simple.length) {
+        firstList = day.simple;
+        mealType = "simple";
+      } else if (day.items && day.items.length) {
+        firstList = day.items;
+      }
       if (firstList) {
-        var first = firstList[0];
-        menuText = typeof first === "string" ? first : (first.ko || "");
+        menuNames = firstList.map(function (item) { return typeof item === "string" ? item : (item && item.ko) || ""; }).filter(Boolean);
+        menuText = menuNames[0] || "";
       } else if (day.main) {
         menuText = day.main.ko;
+        menuNames = [menuText];
       }
     }
-    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText);
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType);
   }
 
   /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */
