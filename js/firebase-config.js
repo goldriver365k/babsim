@@ -61,6 +61,20 @@
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
+
+          // 한국어 학습 사이트(hellokorean.site) 연결 카드 클릭 통계.
+          // 이름·전화번호·이메일·IP는 절대 받지 않습니다(필드 목록으로 강제).
+          match /hellokoreanClicks/{docId} {
+            allow create: if request.resource.data.date is string
+              && request.resource.data.time is string
+              && request.resource.data.language is string
+              && request.resource.data.device in ['mobile', 'pc']
+              && request.resource.data.location == 'home'
+              && request.resource.data.target == 'hellokorean.site'
+              && request.resource.data.keys().hasOnly(['date','time','language','device','location','target','createdAt']);
+            allow read: if true;   // 관리자 페이지 통계 조회용
+            allow update, delete: if false;
+          }
         }
       }
 

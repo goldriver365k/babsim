@@ -395,6 +395,80 @@ button {
   color: var(--red);
 }
 
+/* ---------------- 한국어 학습 사이트(hellokorean.site) 연결 카드 ----------------
+   기존 --blue 등 전역 변수와는 별도로, 작업지시서에 명시된 정확한 색상값을
+   그대로 씁니다(전역 팔레트에 영향 주지 않도록 이 카드 안에서만 정의). */
+
+.hellokorean-card {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 0 18px;
+}
+
+.hellokorean-link {
+  display: block;
+  background: #FFFFFF;
+  border: 1px solid #CBDDF7;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(18, 52, 91, 0.06);
+  transition: box-shadow 0.15s ease;
+}
+
+.hellokorean-link:hover,
+.hellokorean-link:focus-visible {
+  box-shadow: 0 2px 6px rgba(18, 52, 91, 0.12);
+  outline: none;
+}
+
+.hellokorean-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #12345B;
+  overflow-wrap: anywhere;
+}
+
+.hellokorean-desc {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #64748B;
+  overflow-wrap: anywhere;
+}
+
+.hellokorean-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 28px;
+  background: #1559D6;
+  color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.hellokorean-link:hover .hellokorean-btn,
+.hellokorean-link:focus-visible .hellokorean-btn {
+  background: #0D47B5;
+}
+
+.hellokorean-url {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #64748B;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .hellokorean-btn { width: 100%; }
+}
+
 /* ---------------- 사장님께 말해요 ---------------- */
 
 .owner-chat-banner {
@@ -1238,6 +1312,15 @@ main {
   <p class="fallback-msg" id="fallbackMsg" hidden></p>
 </main>
 
+<section class="hellokorean-card">
+  <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
+    <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
+    <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
+    <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
+    <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
+  </a>
+</section>
+
 <footer class="owner-chat-banner" id="ownerChatBanner">
   <h3 class="owner-chat-title" id="ownerChatTitle">사장님께 말해요</h3>
   <p class="owner-chat-desc" id="ownerChatDescLine1">메뉴 제안, 칭찬, 불편사항을 편하게 알려주세요.</p>
@@ -1396,6 +1479,37 @@ const BREAKFAST_RATING_TEXT = {
     zh: "保存失败，请重试。",
     vi: "Lưu không thành công. Vui lòng thử lại.",
     mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу."
+  }
+};
+
+/* ==========================================================================
+   한국어 학습 사이트(hellokorean.site) 연결 카드 문구
+   - 홈 화면 언어 선택에 따라 자동으로 바뀝니다(js/app.js의 renderHelloKorean).
+   - 주소 표시는 5개 언어 모두 동일하게 "hellokorean.site"만 씁니다.
+   ========================================================================== */
+const HELLOKOREAN_INFO = {
+  url: "https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning",
+  urlDisplay: "hellokorean.site",
+  title: {
+    ko: "무료 한국어 공부",
+    zh: "免费学习韩语",
+    vi: "Học tiếng Hàn miễn phí",
+    en: "Learn Korean for Free",
+    mn: "Солонгос хэл үнэгүй сурах"
+  },
+  desc: {
+    ko: "한국어를 쉽고 재미있게 배워보세요",
+    zh: "轻松有趣地学习韩语",
+    vi: "Học tiếng Hàn dễ dàng và thú vị",
+    en: "Learn Korean easily and enjoyably",
+    mn: "Солонгос хэлийг хялбар, сонирхолтой сураарай"
+  },
+  button: {
+    ko: "무료로 시작하기",
+    zh: "免费开始",
+    vi: "Bắt đầu miễn phí",
+    en: "Start for Free",
+    mn: "Үнэгүй эхлэх"
   }
 };
 
@@ -2171,6 +2285,20 @@ const BREAKFAST_WEEKLY_MENU = {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
+
+          // 한국어 학습 사이트(hellokorean.site) 연결 카드 클릭 통계.
+          // 이름·전화번호·이메일·IP는 절대 받지 않습니다(필드 목록으로 강제).
+          match /hellokoreanClicks/{docId} {
+            allow create: if request.resource.data.date is string
+              && request.resource.data.time is string
+              && request.resource.data.language is string
+              && request.resource.data.device in ['mobile', 'pc']
+              && request.resource.data.location == 'home'
+              && request.resource.data.target == 'hellokorean.site'
+              && request.resource.data.keys().hasOnly(['date','time','language','device','location','target','createdAt']);
+            allow read: if true;   // 관리자 페이지 통계 조회용
+            allow update, delete: if false;
+          }
         }
       }
 
@@ -2688,6 +2816,89 @@ var WeeklyMenuSync = (function () {
 </script>
 <script>
 /* ==========================================================================
+   한국어 학습 사이트(hellokorean.site) 연결 클릭 통계 (학생용)
+   - 홈 화면 하단 카드를 클릭했을 때 Firestore에 클릭 이벤트를 기록합니다.
+   - 이름·전화번호·이메일·IP 원문 등 개인정보는 전혀 수집하지 않습니다
+     (날짜/시간/선택 언어/기기 종류/클릭 위치/대상 주소만 기록).
+   - 같은 브라우저에서 30분 이내에 반복 클릭하면 통계에는 1회로만
+     집계하지만, 링크 자체는 매번 정상적으로 새 창에서 열립니다
+     (기록 여부와 무관하게 <a target="_blank">가 그대로 동작).
+   - js/app.js의 renderHelloKorean()에서 카드 클릭 시 호출합니다.
+     이 스크립트가 없어도 카드/링크는 그대로 동작합니다(선택적 연동).
+   ========================================================================== */
+
+var HelloKoreanStats = (function () {
+  "use strict";
+
+  var SEOUL_TZ = "Asia/Seoul";
+  var LAST_LOGGED_KEY = "hellokorean_last_logged_at";
+  var COOLDOWN_MS = 30 * 60 * 1000; // 30분
+
+  function getSeoulDateKey() {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: SEOUL_TZ, year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(new Date());
+  }
+
+  function getSeoulTimeString() {
+    return new Intl.DateTimeFormat("en-GB", {
+      timeZone: SEOUL_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+    }).format(new Date());
+  }
+
+  function detectDevice() {
+    var ua = (navigator && navigator.userAgent) || "";
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ? "mobile" : "pc";
+  }
+
+  function withinCooldown() {
+    try {
+      var last = localStorage.getItem(LAST_LOGGED_KEY);
+      if (!last) return false;
+      return (Date.now() - parseInt(last, 10)) < COOLDOWN_MS;
+    } catch (e) {
+      return false; // localStorage 미지원 시에는 매번 기록(중복 방지보다 동작 우선)
+    }
+  }
+
+  function markLogged() {
+    try { localStorage.setItem(LAST_LOGGED_KEY, String(Date.now())); } catch (e) { /* 무시 */ }
+  }
+
+  /**
+   * @param {string} lang 클릭 시점에 선택되어 있던 언어(ko/zh/vi/en/mn)
+   * @returns {Promise} 통계 기록 결과(항상 resolve — 실패해도 화면 동작에 영향 없음)
+   */
+  function logClick(lang) {
+    if (withinCooldown()) return Promise.resolve({ skipped: true });
+    markLogged(); // 응답을 기다리지 않고 먼저 기록해, 짧은 시간 내 중복 호출을 막습니다.
+
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!db) return Promise.resolve({ local: true });
+
+    var docData = {
+      date: getSeoulDateKey(),
+      time: getSeoulTimeString(),
+      language: lang || "ko",
+      device: detectDevice(),
+      location: "home",
+      target: "hellokorean.site",
+      createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue)
+        ? firebase.firestore.FieldValue.serverTimestamp()
+        : new Date().toISOString()
+    };
+
+    return db.collection("hellokoreanClicks").add(docData).catch(function (err) {
+      console.error("한국어 학습 사이트 클릭 통계 저장 오류:", err);
+    });
+  }
+
+  return { logClick: logClick };
+})();
+
+</script>
+<script>
+/* ==========================================================================
    모인관(인제대학교) app.js
    - 매장 선택 / 언어 선택 / 메뉴 그룹 이전·다음 / 천원의 아침밥 모달
    - 외부 라이브러리 없이 순수 JavaScript로 동작합니다.
@@ -2871,6 +3082,7 @@ var WeeklyMenuSync = (function () {
       renderBapsimSubtabs();
       renderColaBanner();
       renderOwnerChat();
+      renderHelloKorean();
       renderGrid();
       renderGroupNav();
       updateBapsimViewVisibility();
@@ -3280,6 +3492,17 @@ var WeeklyMenuSync = (function () {
     els.ownerChatFabLabel.textContent = OWNER_CHAT.title[lang];
   }
 
+  /* ---------------- 한국어 학습 사이트(hellokorean.site) 연결 카드 ---------------- */
+
+  function renderHelloKorean() {
+    if (typeof HELLOKOREAN_INFO === "undefined" || !els.helloKoreanLink) return;
+    var lang = state.lang;
+    els.helloKoreanTitle.textContent = HELLOKOREAN_INFO.title[lang] || HELLOKOREAN_INFO.title.ko;
+    els.helloKoreanDesc.textContent = HELLOKOREAN_INFO.desc[lang] || HELLOKOREAN_INFO.desc.ko;
+    els.helloKoreanBtn.textContent = (HELLOKOREAN_INFO.button[lang] || HELLOKOREAN_INFO.button.ko) + " ↗";
+    els.helloKoreanUrl.textContent = HELLOKOREAN_INFO.urlDisplay;
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function loadSavedLang() {
@@ -3360,6 +3583,12 @@ var WeeklyMenuSync = (function () {
     els.ownerChatBtnLabel = qs("ownerChatBtnLabel");
     els.ownerChatFabLabel = qs("ownerChatFabLabel");
 
+    els.helloKoreanLink = qs("helloKoreanLink");
+    els.helloKoreanTitle = qs("helloKoreanTitle");
+    els.helloKoreanDesc = qs("helloKoreanDesc");
+    els.helloKoreanBtn = qs("helloKoreanBtn");
+    els.helloKoreanUrl = qs("helloKoreanUrl");
+
     els.storeTabButtons = {};
     Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab"), function (btn) {
       var store = btn.getAttribute("data-store");
@@ -3379,6 +3608,16 @@ var WeeklyMenuSync = (function () {
 
     els.bapsimTabMenu.addEventListener("click", function () { setBapsimView("menu"); });
     els.bapsimTabBreakfast.addEventListener("click", function () { setBapsimView("breakfast"); });
+
+    if (els.helloKoreanLink) {
+      els.helloKoreanLink.addEventListener("click", function () {
+        // 링크 자체는 이 리스너와 무관하게 항상 정상적으로 새 창에서 열립니다.
+        // 통계 기록이 실패하거나 늦어도 이동을 막지 않습니다(비동기, 결과 무시).
+        if (window.HelloKoreanStats && typeof HelloKoreanStats.logClick === "function") {
+          HelloKoreanStats.logClick(state.lang);
+        }
+      });
+    }
 
     els.colaBannerBtn.addEventListener("click", openColaDetail);
     els.colaDetailClose.addEventListener("click", closeColaDetail);

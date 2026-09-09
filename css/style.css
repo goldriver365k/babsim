@@ -376,6 +376,80 @@ button {
   color: var(--red);
 }
 
+/* ---------------- 한국어 학습 사이트(hellokorean.site) 연결 카드 ----------------
+   기존 --blue 등 전역 변수와는 별도로, 작업지시서에 명시된 정확한 색상값을
+   그대로 씁니다(전역 팔레트에 영향 주지 않도록 이 카드 안에서만 정의). */
+
+.hellokorean-card {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 0 18px;
+}
+
+.hellokorean-link {
+  display: block;
+  background: #FFFFFF;
+  border: 1px solid #CBDDF7;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(18, 52, 91, 0.06);
+  transition: box-shadow 0.15s ease;
+}
+
+.hellokorean-link:hover,
+.hellokorean-link:focus-visible {
+  box-shadow: 0 2px 6px rgba(18, 52, 91, 0.12);
+  outline: none;
+}
+
+.hellokorean-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #12345B;
+  overflow-wrap: anywhere;
+}
+
+.hellokorean-desc {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #64748B;
+  overflow-wrap: anywhere;
+}
+
+.hellokorean-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 28px;
+  background: #1559D6;
+  color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.hellokorean-link:hover .hellokorean-btn,
+.hellokorean-link:focus-visible .hellokorean-btn {
+  background: #0D47B5;
+}
+
+.hellokorean-url {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #64748B;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .hellokorean-btn { width: 100%; }
+}
+
 /* ---------------- 사장님께 말해요 ---------------- */
 
 .owner-chat-banner {

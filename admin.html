@@ -860,6 +860,7 @@ table.results-table {
       <button type="button" class="admin-nav-btn active" data-page="dashboard">대시보드</button>
       <button type="button" class="admin-nav-btn" data-page="ratings">메뉴 평가</button>
       <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
+      <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
     </nav>
   </header>
@@ -1021,6 +1022,68 @@ table.results-table {
       </div>
     </section>
 
+    <!-- ================= 한국어 학습 사이트(hellokorean.site) 연결 통계 ================= -->
+    <section class="admin-page" id="pageHelloKorean" hidden>
+      <div class="admin-card">
+        <h2>한국어 학습 사이트 연결 통계</h2>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <p class="stat-label">오늘 클릭 수</p>
+            <p class="stat-value" id="hkTodayClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">어제 클릭 수</p>
+            <p class="stat-value" id="hkYesterdayClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">이번 주 클릭 수</p>
+            <p class="stat-value" id="hkWeekClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">이번 달 클릭 수</p>
+            <p class="stat-value" id="hkMonthClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">전체 클릭 수</p>
+            <p class="stat-value" id="hkTotalClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">모바일 클릭 수</p>
+            <p class="stat-value" id="hkMobileClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">PC 클릭 수</p>
+            <p class="stat-value" id="hkPcClicks">-</p>
+          </div>
+        </div>
+        <p class="loading-note" id="hkSummaryLoading">불러오는 중...</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>기간 선택</h2>
+        <div class="filter-bar">
+          <button type="button" class="filter-btn active" data-hk-filter="today">오늘</button>
+          <button type="button" class="filter-btn" data-hk-filter="7d">최근 7일</button>
+          <button type="button" class="filter-btn" data-hk-filter="30d">최근 30일</button>
+          <button type="button" class="filter-btn" data-hk-filter="all">전체</button>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2>언어별 클릭 통계</h2>
+        <p class="loading-note" id="hkLangLoading">불러오는 중...</p>
+        <p class="empty-note" id="hkLangEmpty" hidden></p>
+        <div class="dist-list" id="hkLangDistList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>날짜별 클릭 수</h2>
+        <p class="empty-note" id="hkTrendEmpty" hidden></p>
+        <svg class="trend-chart" id="hkTrendChart"></svg>
+        <p class="trend-caption" id="hkTrendCaption"></p>
+      </div>
+    </section>
+
     <!-- ================= 주간메뉴 관리 ================= -->
     <section class="admin-page" id="pageWeeklyMenu" hidden>
       <div class="admin-card">
@@ -1174,6 +1237,20 @@ table.results-table {
           match /menuTranslations/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
+          // 한국어 학습 사이트(hellokorean.site) 연결 카드 클릭 통계.
+          // 이름·전화번호·이메일·IP는 절대 받지 않습니다(필드 목록으로 강제).
+          match /hellokoreanClicks/{docId} {
+            allow create: if request.resource.data.date is string
+              && request.resource.data.time is string
+              && request.resource.data.language is string
+              && request.resource.data.device in ['mobile', 'pc']
+              && request.resource.data.location == 'home'
+              && request.resource.data.target == 'hellokorean.site'
+              && request.resource.data.keys().hasOnly(['date','time','language','device','location','target','createdAt']);
+            allow read: if true;   // 관리자 페이지 통계 조회용
+            allow update, delete: if false;
           }
         }
       }
@@ -1455,6 +1532,19 @@ function getFirebaseStorage() {
   function fetchRatingsRange(startKey, endKey) { return fetchCollectionRange("breakfastRatings", startKey, endKey); }
   function fetchLanguageRange(startKey, endKey) { return fetchCollectionRange("languageStats", startKey, endKey); }
 
+  function fetchCollectionAll(collectionName) {
+    var db = (typeof getFirestoreDb === "function") ? getFirestoreDb() : null;
+    if (!db) return Promise.resolve([]);
+    return db.collection(collectionName).get().then(function (snap) {
+      var out = [];
+      snap.forEach(function (doc) { out.push(doc.data()); });
+      return out;
+    });
+  }
+
+  function fetchHelloKoreanRange(startKey, endKey) { return fetchCollectionRange("hellokoreanClicks", startKey, endKey); }
+  function fetchHelloKoreanAll() { return fetchCollectionAll("hellokoreanClicks"); }
+
   /* ---------------- 공용 집계/차트 ---------------- */
 
   function emptyCounts(keys) {
@@ -1617,11 +1707,72 @@ function getFirebaseStorage() {
     svg.innerHTML = parts.join("");
   }
 
+  /**
+   * 막대(바) 차트를 그립니다. "날짜별 클릭 수"처럼 요일마다 값이 항상
+   * 존재하는(0 포함) 데이터에 적합합니다.
+   * @param {SVGElement} svg
+   * @param {string[]} days 날짜 키 배열(과거→오늘 순)
+   * @param {Object} valueByDate {dateKey: number}
+   */
+  function drawBarChart(svg, days, valueByDate) {
+    var w = 320, h = 140, padL = 24, padR = 10, padT = 14, padB = 22;
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+
+    var maxVal = 0;
+    days.forEach(function (d) { maxVal = Math.max(maxVal, valueByDate[d] || 0); });
+    var maxY = Math.max(1, maxVal);
+
+    var slot = innerW / days.length;
+    var barWidth = Math.max(2, slot * 0.6);
+
+    var parts = [];
+    parts.push('<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid meet">');
+
+    var gridLines = 5;
+    for (var g = 0; g <= gridLines; g++) {
+      var gy = padT + innerH - (g / gridLines) * innerH;
+      parts.push('<line x1="' + padL + '" y1="' + gy + '" x2="' + (w - padR) + '" y2="' + gy + '" stroke="#e5e8ee" stroke-width="1"/>');
+    }
+
+    var labelEvery = days.length > 15 ? Math.ceil(days.length / 10) : 1;
+    days.forEach(function (dateKey, i) {
+      var v = valueByDate[dateKey] || 0;
+      var barH = (v / maxY) * innerH;
+      var x = padL + slot * i + (slot - barWidth) / 2;
+      var y = padT + innerH - barH;
+      parts.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barWidth.toFixed(1) + '" height="' + barH.toFixed(1) + '" rx="2" fill="#1957d6"/>');
+      if (i % labelEvery === 0 || i === days.length - 1) {
+        var lx = padL + slot * i + slot / 2;
+        parts.push('<text x="' + lx.toFixed(1) + '" y="' + (h - 6) + '" font-size="9" fill="#4b5563" text-anchor="middle">' + formatMonthDay(dateKey) + '</text>');
+      }
+    });
+
+    parts.push('</svg>');
+    svg.innerHTML = parts.join("");
+  }
+
+  /* 하루 1클릭당 1문서(hellokoreanClicks)이므로 문서 수를 그대로
+     클릭 수로 취급합니다. */
+  function statsFromHelloKoreanDocs(docs) {
+    var counts = emptyCounts(LANGS);
+    var byDevice = { mobile: 0, pc: 0 };
+    var count = 0;
+    docs.forEach(function (d) {
+      count += 1;
+      if (d.language) {
+        if (!(d.language in counts)) counts[d.language] = 0;
+        counts[d.language] += 1;
+      }
+      if (d.device === "mobile" || d.device === "pc") byDevice[d.device] += 1;
+    });
+    return { count: count, counts: counts, byDevice: byDevice };
+  }
+
   /* ================================================================
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", weeklymenu: "pageWeeklyMenu" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -1641,6 +1792,7 @@ function getFirebaseStorage() {
     if (page === "dashboard") loadDashboard();
     else if (page === "ratings") initRatingsPage();
     else if (page === "language") initLanguagePage();
+    else if (page === "hellokorean") initHelloKoreanPage();
     else if (page === "weeklymenu") initWeeklyMenuPage();
   }
 
@@ -1922,6 +2074,135 @@ function getFirebaseStorage() {
       reloadLanguagePage();
     });
     reloadLanguagePage();
+  }
+
+  /* ================================================================
+     한국어 학습 사이트(hellokorean.site) 연결 통계 탭
+     ================================================================ */
+
+  var helloKoreanState = { filter: "today" };
+
+  /* 오늘/어제/이번 주/이번 달/전체/모바일/PC — 항상 동시에 보이는
+     고정 요약 지표입니다(기간 선택 필터와는 별개). 문서 수가 아직
+     크지 않은 신규 기능이라 전체를 한 번에 불러와 클라이언트에서
+     계산합니다(범위별로 5번 따로 조회하는 대신 1번만 조회). */
+  function loadHelloKoreanSummary() {
+    var loading = qs("hkSummaryLoading");
+    loading.hidden = false;
+
+    fetchHelloKoreanAll().then(function (docs) {
+      loading.hidden = true;
+      var todayKey = getSeoulDateKey(0);
+      var yesterdayKey = getSeoulDateKey(-1);
+      var weekStartKey = mondayKeyOf(todayKey);
+      var monthKey = monthStartKey(todayKey);
+
+      var todayCount = 0, yesterdayCount = 0, weekCount = 0, monthCount = 0;
+      var mobileCount = 0, pcCount = 0;
+      docs.forEach(function (d) {
+        if (!d.date) return;
+        if (d.date === todayKey) todayCount++;
+        if (d.date === yesterdayKey) yesterdayCount++;
+        if (d.date >= weekStartKey && d.date <= todayKey) weekCount++;
+        if (d.date >= monthKey && d.date <= todayKey) monthCount++;
+        if (d.device === "mobile") mobileCount++;
+        else if (d.device === "pc") pcCount++;
+      });
+
+      qs("hkTodayClicks").textContent = todayCount.toLocaleString("ko-KR") + "회";
+      qs("hkYesterdayClicks").textContent = yesterdayCount.toLocaleString("ko-KR") + "회";
+      qs("hkWeekClicks").textContent = weekCount.toLocaleString("ko-KR") + "회";
+      qs("hkMonthClicks").textContent = monthCount.toLocaleString("ko-KR") + "회";
+      qs("hkTotalClicks").textContent = docs.length.toLocaleString("ko-KR") + "회";
+      qs("hkMobileClicks").textContent = mobileCount.toLocaleString("ko-KR") + "회";
+      qs("hkPcClicks").textContent = pcCount.toLocaleString("ko-KR") + "회";
+    }).catch(function (err) {
+      loading.hidden = true;
+      console.error(friendlyError("한국어 학습 사이트 통계를 불러오지 못했습니다.", err));
+    });
+  }
+
+  function helloKoreanCurrentRangeKeys() {
+    var todayKey = getSeoulDateKey(0);
+    if (helloKoreanState.filter === "today") return [todayKey, todayKey];
+    if (helloKoreanState.filter === "7d") return [getSeoulDateKey(-6), todayKey];
+    if (helloKoreanState.filter === "30d") return [getSeoulDateKey(-29), todayKey];
+    return null; // "all" — 날짜 범위 없이 전체 조회
+  }
+
+  /* 기간 선택(오늘/최근 7일/최근 30일/전체)에 따라 언어별 통계와
+     날짜별 막대그래프를 갱신합니다. */
+  function reloadHelloKoreanPeriod() {
+    var range = helloKoreanCurrentRangeKeys();
+    var langLoading = qs("hkLangLoading");
+    var langEmpty = qs("hkLangEmpty");
+    var trendEmpty = qs("hkTrendEmpty");
+    langLoading.hidden = false;
+    langEmpty.hidden = true;
+    trendEmpty.hidden = true;
+    qs("hkLangDistList").innerHTML = "";
+    qs("hkTrendChart").innerHTML = "";
+
+    var fetchPromise = range ? fetchHelloKoreanRange(range[0], range[1]) : fetchHelloKoreanAll();
+
+    fetchPromise.then(function (docs) {
+      langLoading.hidden = true;
+      var s = statsFromHelloKoreanDocs(docs);
+      if (s.count === 0) {
+        langEmpty.hidden = false;
+        langEmpty.textContent = "선택한 기간에 클릭 데이터가 없습니다.";
+      } else {
+        renderLanguageDistList(qs("hkLangDistList"), s.counts, s.count);
+      }
+
+      var byDate = groupByDate(docs);
+      var days = [];
+      var valueByDate = {};
+      var captionText;
+
+      if (helloKoreanState.filter === "all") {
+        // 전체 기간은 실제 데이터가 있는 날짜만 오래된 순으로 나열합니다.
+        days = Object.keys(byDate).sort();
+        if (days.length === 0) days = [getSeoulDateKey(0)];
+        days.forEach(function (k) { valueByDate[k] = byDate[k].length; });
+        captionText = "가로축: 클릭이 있었던 날짜(전체 기간)";
+      } else {
+        var offsetStart = helloKoreanState.filter === "7d" ? -6 : (helloKoreanState.filter === "30d" ? -29 : 0);
+        for (var i = offsetStart; i <= 0; i++) {
+          var k2 = getSeoulDateKey(i);
+          days.push(k2);
+          valueByDate[k2] = byDate[k2] ? byDate[k2].length : 0;
+        }
+        captionText = helloKoreanState.filter === "today" ? "가로축: 오늘" : "가로축: " + (-offsetStart + 1) + "일간(MM/DD)";
+      }
+
+      if (days.length <= 1 && helloKoreanState.filter !== "all") {
+        trendEmpty.hidden = false;
+        trendEmpty.textContent = "";
+      }
+      drawBarChart(qs("hkTrendChart"), days, valueByDate);
+      qs("hkTrendCaption").textContent = captionText;
+    }).catch(function (err) {
+      langLoading.hidden = true;
+      langEmpty.hidden = false;
+      langEmpty.textContent = friendlyError("한국어 학습 사이트 통계를 불러오지 못했습니다.", err);
+    });
+  }
+
+  function setHelloKoreanFilter(filter) {
+    helloKoreanState.filter = filter;
+    Array.prototype.forEach.call(document.querySelectorAll("#pageHelloKorean .filter-btn[data-hk-filter]"), function (btn) {
+      btn.classList.toggle("active", btn.dataset.hkFilter === filter);
+    });
+    reloadHelloKoreanPeriod();
+  }
+
+  function initHelloKoreanPage() {
+    Array.prototype.forEach.call(document.querySelectorAll("#pageHelloKorean .filter-btn[data-hk-filter]"), function (btn) {
+      btn.addEventListener("click", function () { setHelloKoreanFilter(btn.dataset.hkFilter); });
+    });
+    loadHelloKoreanSummary();
+    reloadHelloKoreanPeriod();
   }
 
   /* ================================================================

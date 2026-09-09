@@ -14,7 +14,7 @@ css/style.css, js/translations.js, js/menu-data.js, js/app.js 등의 원본
 사용법:
   메뉴, 번역, 동작, 디자인, 관리자 페이지를 수정할 때는
   css/style.css, js/translations.js, js/menu-data.js, js/app.js,
-  js/firebase-config.js, js/breakfast-rating.js,
+  js/firebase-config.js, js/breakfast-rating.js, js/hellokorean-stats.js,
   css/admin.css, js/admin.js
   이 원본 파일들만 수정하고, 그 다음 아래 명령을 실행하세요.
 
@@ -44,6 +44,7 @@ def build():
     breakfast_rating = read("js/breakfast-rating.js")
     language_stats = read("js/language-stats.js")
     weekly_menu_sync = read("js/weekly-menu-sync.js")
+    hellokorean_stats = read("js/hellokorean-stats.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -160,6 +161,15 @@ def build():
   <p class="fallback-msg" id="fallbackMsg" hidden></p>
 </main>
 
+<section class="hellokorean-card">
+  <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
+    <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
+    <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
+    <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
+    <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
+  </a>
+</section>
+
 <footer class="owner-chat-banner" id="ownerChatBanner">
   <h3 class="owner-chat-title" id="ownerChatTitle">사장님께 말해요</h3>
   <p class="owner-chat-desc" id="ownerChatDescLine1">메뉴 제안, 칭찬, 불편사항을 편하게 알려주세요.</p>
@@ -258,6 +268,9 @@ def build():
 """ + weekly_menu_sync + """
 </script>
 <script>
+""" + hellokorean_stats + """
+</script>
+<script>
 """ + app + """
 </script>
 </body>
@@ -310,6 +323,7 @@ def build_admin():
       <button type="button" class="admin-nav-btn active" data-page="dashboard">대시보드</button>
       <button type="button" class="admin-nav-btn" data-page="ratings">메뉴 평가</button>
       <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
+      <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
     </nav>
   </header>
@@ -468,6 +482,68 @@ def build_admin():
         <p class="loading-note" id="langLoading">불러오는 중...</p>
         <p class="empty-note" id="langEmpty" hidden></p>
         <div class="dist-list" id="langDistList"></div>
+      </div>
+    </section>
+
+    <!-- ================= 한국어 학습 사이트(hellokorean.site) 연결 통계 ================= -->
+    <section class="admin-page" id="pageHelloKorean" hidden>
+      <div class="admin-card">
+        <h2>한국어 학습 사이트 연결 통계</h2>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <p class="stat-label">오늘 클릭 수</p>
+            <p class="stat-value" id="hkTodayClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">어제 클릭 수</p>
+            <p class="stat-value" id="hkYesterdayClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">이번 주 클릭 수</p>
+            <p class="stat-value" id="hkWeekClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">이번 달 클릭 수</p>
+            <p class="stat-value" id="hkMonthClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">전체 클릭 수</p>
+            <p class="stat-value" id="hkTotalClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">모바일 클릭 수</p>
+            <p class="stat-value" id="hkMobileClicks">-</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">PC 클릭 수</p>
+            <p class="stat-value" id="hkPcClicks">-</p>
+          </div>
+        </div>
+        <p class="loading-note" id="hkSummaryLoading">불러오는 중...</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>기간 선택</h2>
+        <div class="filter-bar">
+          <button type="button" class="filter-btn active" data-hk-filter="today">오늘</button>
+          <button type="button" class="filter-btn" data-hk-filter="7d">최근 7일</button>
+          <button type="button" class="filter-btn" data-hk-filter="30d">최근 30일</button>
+          <button type="button" class="filter-btn" data-hk-filter="all">전체</button>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2>언어별 클릭 통계</h2>
+        <p class="loading-note" id="hkLangLoading">불러오는 중...</p>
+        <p class="empty-note" id="hkLangEmpty" hidden></p>
+        <div class="dist-list" id="hkLangDistList"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>날짜별 클릭 수</h2>
+        <p class="empty-note" id="hkTrendEmpty" hidden></p>
+        <svg class="trend-chart" id="hkTrendChart"></svg>
+        <p class="trend-caption" id="hkTrendCaption"></p>
       </div>
     </section>
 

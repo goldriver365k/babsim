@@ -182,6 +182,7 @@
       renderBapsimSubtabs();
       renderColaBanner();
       renderOwnerChat();
+      renderHelloKorean();
       renderGrid();
       renderGroupNav();
       updateBapsimViewVisibility();
@@ -591,6 +592,17 @@
     els.ownerChatFabLabel.textContent = OWNER_CHAT.title[lang];
   }
 
+  /* ---------------- 한국어 학습 사이트(hellokorean.site) 연결 카드 ---------------- */
+
+  function renderHelloKorean() {
+    if (typeof HELLOKOREAN_INFO === "undefined" || !els.helloKoreanLink) return;
+    var lang = state.lang;
+    els.helloKoreanTitle.textContent = HELLOKOREAN_INFO.title[lang] || HELLOKOREAN_INFO.title.ko;
+    els.helloKoreanDesc.textContent = HELLOKOREAN_INFO.desc[lang] || HELLOKOREAN_INFO.desc.ko;
+    els.helloKoreanBtn.textContent = (HELLOKOREAN_INFO.button[lang] || HELLOKOREAN_INFO.button.ko) + " ↗";
+    els.helloKoreanUrl.textContent = HELLOKOREAN_INFO.urlDisplay;
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function loadSavedLang() {
@@ -671,6 +683,12 @@
     els.ownerChatBtnLabel = qs("ownerChatBtnLabel");
     els.ownerChatFabLabel = qs("ownerChatFabLabel");
 
+    els.helloKoreanLink = qs("helloKoreanLink");
+    els.helloKoreanTitle = qs("helloKoreanTitle");
+    els.helloKoreanDesc = qs("helloKoreanDesc");
+    els.helloKoreanBtn = qs("helloKoreanBtn");
+    els.helloKoreanUrl = qs("helloKoreanUrl");
+
     els.storeTabButtons = {};
     Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab"), function (btn) {
       var store = btn.getAttribute("data-store");
@@ -690,6 +708,16 @@
 
     els.bapsimTabMenu.addEventListener("click", function () { setBapsimView("menu"); });
     els.bapsimTabBreakfast.addEventListener("click", function () { setBapsimView("breakfast"); });
+
+    if (els.helloKoreanLink) {
+      els.helloKoreanLink.addEventListener("click", function () {
+        // 링크 자체는 이 리스너와 무관하게 항상 정상적으로 새 창에서 열립니다.
+        // 통계 기록이 실패하거나 늦어도 이동을 막지 않습니다(비동기, 결과 무시).
+        if (window.HelloKoreanStats && typeof HelloKoreanStats.logClick === "function") {
+          HelloKoreanStats.logClick(state.lang);
+        }
+      });
+    }
 
     els.colaBannerBtn.addEventListener("click", openColaDetail);
     els.colaDetailClose.addEventListener("click", closeColaDetail);
