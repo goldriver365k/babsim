@@ -63,14 +63,6 @@ async function verifyAdmin(idToken) {
 
 /* ---------------- Gemini 호출 ---------------- */
 
-function sleep(ms) {
-  return new Promise(function (resolve) { setTimeout(resolve, ms); });
-}
-
-// 503(UNAVAILABLE)·429(RESOURCE_EXHAUSTED)는 구글 쪽 일시적 과부하로,
-// 잠깐 기다렸다 한 번 더 시도하면 성공하는 경우가 많아 자동 재시도합니다.
-const RETRYABLE_STATUS = [429, 503];
-
 async function callGemini(parts, wantJson) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -84,26 +76,24 @@ async function callGemini(parts, wantJson) {
     generationConfig: wantJson ? { responseMimeType: "application/json" } : {}
   };
 
-  let res, data;
-  // Gemini 응답(에러 포함)만 10초 넘게 걸리는 경우가 있어(로그로 확인됨),
-  // Netlify 함수 실행 제한 시간을 넘기지 않도록 재시도는 1번만 합니다.
-  const maxAttempts = 2;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    data = await res.json().catch(function () { return null; });
-    if (res.ok && data) break;
-    console.error("Gemini 응답 오류(시도 " + attempt + "/" + maxAttempts + "):", res.status, data);
-    const retryable = RETRYABLE_STATUS.indexOf(res.status) !== -1;
-    if (!retryable || attempt === maxAttempts) {
-      const err = new Error("GEMINI_REQUEST_FAILED");
-      err.code = "GEMINI_REQUEST_FAILED";
-      throw err;
-    }
-    await sleep(800);
+  // 재시도를 넣지 않습니다: 실제 로그 기준 Gemini 응답이 30~40초씩
+  // 걸리는 경우가 있어, 재시도를 하면 Netlify 함수 자체의 실행 제한
+  // 시간을 넘겨 애매한 타임아웃(강제 종료)으로 실패할 위험이 재시도로
+  // 얻는 이득보다 큽니다. 실패 시 관리자가 "이미지 분석하기"/"확인 후
+  // 게시"를 다시 눌러 재시도하도록 안내합니다(아래 handleAnalyze/
+  // handleTranslate의 에러 메시지 참고).
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(function () { return null; });
+  if (!res.ok || !data) {
+    console.error("Gemini 응답 오류:", res.status, data);
+    const err = new Error("GEMINI_REQUEST_FAILED");
+    err.code = "GEMINI_REQUEST_FAILED";
+    err.status = res.status;
+    throw err;
   }
   const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
     data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
@@ -196,6 +186,9 @@ async function handleAnalyze(payload) {
     if (e.code === "GEMINI_API_KEY_MISSING") {
       return json(500, { ok: false, error: "이미지 분석 기능이 아직 설정되지 않았습니다. 관리자에게 문의하세요." });
     }
+    if (e.status === 503 || e.status === 429) {
+      return json(502, { ok: false, error: "지금 구글 서버가 혼잡합니다. 잠시(1~2분) 후 다시 시도해주세요." });
+    }
     return json(502, { ok: false, error: "이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요." });
   }
 
@@ -287,6 +280,9 @@ async function handleTranslate(payload) {
     } catch (e) {
       if (e.code === "GEMINI_API_KEY_MISSING") {
         return json(500, { ok: false, error: "번역 기능이 아직 설정되지 않았습니다. 관리자에게 문의하세요." });
+      }
+      if (e.status === 503 || e.status === 429) {
+        return json(502, { ok: false, error: "지금 구글 서버가 혼잡합니다. 잠시(1~2분) 후 다시 게시를 시도해주세요." });
       }
       return json(502, { ok: false, error: "번역에 실패했습니다. 잠시 후 다시 시도해주세요." });
     }
