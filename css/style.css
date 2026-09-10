@@ -94,6 +94,10 @@ button {
 .lang-toggle-wrap {
   position: relative;
   flex: 0 0 auto;
+  /* 모바일 UI 개선 9단계: 긴 언어명(예: Tiếng Việt) 때문에 header-top이
+     줄바꿈될 때도 언어 버튼이 항상 그 줄의 오른쪽 끝에 붙도록 고정 —
+     .lang-select의 right:0 기준점이 화면 밖으로 밀려나지 않게 함 */
+  margin-left: auto;
 }
 
 .lang-toggle-btn {
@@ -786,6 +790,16 @@ button {
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 28px;
+}
+
+/* 모바일 UI 개선 9단계: 태블릿/PC에서 카드가 지나치게 넓어지지 않도록
+   기존 .menu-grid와 동일한 640px/1000px 기준을 재사용(모바일 2열은 그대로 유지) */
+@media (min-width: 640px) {
+  .home-service-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1000px) {
+  .home-service-grid { grid-template-columns: repeat(5, 1fr); }
 }
 
 .home-service-card {
