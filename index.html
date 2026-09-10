@@ -2956,8 +2956,12 @@ const BREAKFAST_WEEKLY_MENU = {
             allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
             // role은 반드시 'user'로만 가입할 수 있습니다(가입 시 스스로
             // 'admin'을 적어 넣는 권한 상승을 막기 위함) — 관리자 지정은
-            // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다.
-            allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
+            // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다. 이름·국적은
+            // Google 로그인으로 가입하더라도(이메일/비밀번호 없이도) 반드시
+            // 채워야만 문서가 만들어지도록 서버(규칙)에서도 검사합니다.
+            allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user'
+              && request.resource.data.name is string && request.resource.data.name.size() > 0
+              && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0;
             allow update: if (isSignedIn() && request.auth.uid == uid
                 && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
               || isAdmin();
@@ -4497,9 +4501,12 @@ var Community = (function () {
     }
     if (btn) btn.disabled = true;
     var provider = new firebase.auth.GoogleAuthProvider();
-    a.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
-      return a.signInWithPopup(provider);
-    }).then(function (result) {
+    // signInWithPopup은 클릭 이벤트 처리 중 곧바로(비동기 대기 없이)
+    // 호출해야 합니다 — 한 박자라도 늦게(예: setPersistence를 먼저
+    // await) 호출하면 일부 브라우저(특히 사파리/아이폰)가 "사용자가
+    // 직접 누른 동작"으로 인식하지 못해 팝업을 조용히 막아버립니다.
+    // (기본 지속성이 이미 LOCAL이라 별도 setPersistence 호출도 불필요.)
+    a.signInWithPopup(provider).then(function (result) {
       return db().collection("communityUsers").doc(result.user.uid).get();
     }).then(function (doc) {
       if (doc.exists) {
