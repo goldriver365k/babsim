@@ -47,8 +47,12 @@ var COMMUNITY_AUTH = {
   resetSent: { ko: "비밀번호 재설정 메일을 보냈습니다.", zh: "已发送密码重置邮件。", vi: "Đã gửi email đặt lại mật khẩu.", en: "Password reset email sent.", mn: "Нууц үг сэргээх и-мэйл илгээгдлээ." },
   verificationSent: { ko: "인증메일을 다시 보냈습니다.", zh: "已重新发送验证邮件。", vi: "Đã gửi lại email xác nhận.", en: "Verification email resent.", mn: "Баталгаажуулах имэйлийг дахин илгээлээ." },
   loginRequiredTitle: { ko: "로그인이 필요합니다", zh: "需要登录", vi: "Cần đăng nhập", en: "Login Required", mn: "Нэвтрэх шаардлагатай" },
-  loginRequiredDesc: { ko: "유학생 커뮤니티는 회원가입과 이메일 인증을 완료한 회원만 이용할 수 있습니다.", zh: "留学生社区仅限完成注册及邮箱验证的会员使用。", vi: "Cộng đồng du học sinh chỉ dành cho thành viên đã đăng ký và xác nhận email.", en: "The community is available only to members who have signed up and verified their email.", mn: "Олон улсын оюутнуудын нийгэмлэг нь бүртгэл болон и-мэйл баталгаажуулалтыг дуусгасан гишүүдэд л нээлттэй." },
-  suspendedNotice: { ko: "이용이 정지된 계정입니다.", zh: "该账号已被停用。", vi: "Tài khoản đã bị đình chỉ.", en: "This account has been suspended.", mn: "Энэ бүртгэл түдгэлзүүлэгдсэн байна." }
+  loginRequiredDesc: { ko: "유학생 커뮤니티는 회원가입을 완료한 회원만 이용할 수 있습니다.", zh: "留学生社区仅限完成注册的会员使用。", vi: "Cộng đồng du học sinh chỉ dành cho thành viên đã đăng ký.", en: "The community is available only to registered members.", mn: "Олон улсын оюутнуудын нийгэмлэг нь бүртгэлтэй гишүүдэд л нээлттэй." },
+  suspendedNotice: { ko: "이용이 정지된 계정입니다.", zh: "该账号已被停用。", vi: "Tài khoản đã bị đình chỉ.", en: "This account has been suspended.", mn: "Энэ бүртгэл түдгэлзүүлэгдсэн байна." },
+  googleContinue: { ko: "Google로 계속하기", zh: "使用Google继续", vi: "Tiếp tục với Google", en: "Continue with Google", mn: "Google-ээр үргэлжлүүлэх" },
+  orDivider: { ko: "또는", zh: "或", vi: "Hoặc", en: "or", mn: "эсвэл" },
+  completeProfileTitle: { ko: "추가 정보 입력", zh: "填写更多信息", vi: "Hoàn tất thông tin", en: "Complete Your Profile", mn: "Мэдээллээ бөглөнө үү" },
+  completeProfileDesc: { ko: "커뮤니티 이용을 위해 몇 가지 정보가 더 필요합니다.", zh: "使用社区还需要填写一些信息。", vi: "Cần thêm một vài thông tin để sử dụng cộng đồng.", en: "A few more details are needed to use the community.", mn: "Нийгэмлэгийг ашиглахын тулд зарим нэмэлт мэдээлэл шаардлагатай." }
 };
 
 /* 회원 메뉴/내 정보 */
