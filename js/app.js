@@ -15,7 +15,8 @@
     store: "bapsim",
     bapsimView: "breakfast",
     groupByStore: { bapsim: 1, mangwon: 1, hururuk: 1 },
-    lang: "ko"
+    lang: "ko",
+    view: "home" // "home"(모바일 UI 개선 4단계: 새 홈 화면) | "store"(기존 매장 화면)
   };
 
   var els = {};
@@ -206,11 +207,103 @@
     renderAll();
   }
 
+  /* ---------------- 모바일 UI 개선 4단계: 홈 화면 ---------------- */
+
+  // 홈 화면(#homeView) ↔ 매장 화면(main) 중 지금 state.view에 맞는 쪽만
+  // 보여줍니다. 커뮤니티 화면(js/community.js)은 이 둘과 서로 배타적이며,
+  // 커뮤니티에서 빠져나올 때 community.js가 이 함수를 호출해 무엇을
+  // 다시 보여줄지 물어봅니다(window.AppHome.applyView).
+  function applyViewVisibility() {
+    var showHomeView = state.view === "home";
+    if (els.homeView) els.homeView.hidden = !showHomeView;
+    // 하단 내비게이션은 이번 단계 범위(홈 화면)상 홈 화면에서만 보입니다.
+    if (els.bottomNav) els.bottomNav.hidden = !showHomeView;
+    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", true);
+    if (els.bottomNavCommunityBtn) els.bottomNavCommunityBtn.classList.toggle("active", false);
+    var main = document.querySelector("main");
+    if (main) main.hidden = showHomeView;
+  }
+
+  function goHome() {
+    state.view = "home";
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) {
+      window.Community.navigate("/"); // 커뮤니티 안에 있었다면 빠져나옵니다(빠져나오며 applyViewVisibility 재호출됨)
+    } else {
+      applyViewVisibility();
+    }
+    renderHome();
+  }
+
+  function goToStore(store) {
+    state.view = "store";
+    if (state.store !== store) setStore(store); else renderAll();
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) {
+      window.Community.navigate("/");
+    } else {
+      applyViewVisibility();
+    }
+  }
+
+  function renderHomeLatestPosts() {
+    if (!els.homeCommunityLatest) return;
+    if (!(window.Community && typeof window.Community.fetchLatestPosts === "function")) return;
+    var container = els.homeCommunityLatest;
+    var requestLang = state.lang;
+    window.Community.fetchLatestPosts(3).then(function (posts) {
+      if (state.lang !== requestLang) return; // 응답 오는 사이 언어가 바뀌었으면 버립니다
+      container.innerHTML = "";
+      if (!posts.length) {
+        var empty = document.createElement("p");
+        empty.className = "home-community-empty";
+        empty.textContent = UI_TEXT.homeCommunityLatestEmpty[state.lang];
+        container.appendChild(empty);
+        return;
+      }
+      posts.forEach(function (post) {
+        var card = document.createElement("button");
+        card.type = "button";
+        card.className = "home-community-post-card";
+        card.addEventListener("click", function () {
+          if (window.Community && typeof window.Community.navigate === "function") {
+            window.Community.navigate(window.Community.routePrefix + "/post/" + post.id);
+          }
+        });
+        var title = document.createElement("p");
+        title.className = "home-community-post-title";
+        title.textContent = post.title;
+        card.appendChild(title);
+        var meta = document.createElement("p");
+        meta.className = "home-community-post-meta";
+        meta.textContent = [post.authorMasked, post.nationality, post.dateText].filter(Boolean).join(" · ");
+        card.appendChild(meta);
+        container.appendChild(card);
+      });
+    }).catch(function () { /* 홈 화면 미리보기는 실패해도 조용히 무시(핵심 기능 아님) */ });
+  }
+
+  function renderHome() {
+    if (!els.homeView) return;
+    if (els.homeHeroTagline) els.homeHeroTagline.textContent = UI_TEXT.homeHeroTagline[state.lang];
+    if (els.homeServicesTitle) els.homeServicesTitle.textContent = UI_TEXT.homeServicesTitle[state.lang];
+    if (els.homeCommunityLatestTitle) els.homeCommunityLatestTitle.textContent = UI_TEXT.homeCommunityLatestTitle[state.lang];
+    if (els.homeCardCommunityName && window.COMMUNITY_HOME) {
+      els.homeCardCommunityName.textContent = window.COMMUNITY_HOME.title[state.lang];
+    }
+    var moinPrefix = { ko: "모인관 ", en: "Moin-gwan ", zh: "摩茵馆 ", vi: "Moin-gwan ", mn: "Моин-гван ", bn: "মোইন-গোয়ান ", my: "မိုအင်ဂွမ် " };
+    if (els.homeCardBapsimLoc) els.homeCardBapsimLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
+    if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
+    if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
+    if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
+    if (els.bottomNavCommunityLabel) els.bottomNavCommunityLabel.textContent = UI_TEXT.bottomNavCommunity[state.lang];
+    renderHomeLatestPosts();
+  }
+
   function setLang(lang) {
     if (SUPPORTED_LANGS.indexOf(lang) === -1 || state.lang === lang) return;
     state.lang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* localStorage 미지원 시 무시 */ }
     renderAll();
+    renderHome();
     if (!els.colaDetailOverlay.hidden) renderColaDetail();
     if (!els.staffShowOverlay.hidden) renderStaffShow();
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
@@ -640,6 +733,24 @@
     els.langToggleBtn = qs("langToggleBtn");
     els.langToggleLabel = qs("langToggleLabel");
     els.langSelect = qs("langSelect");
+
+    els.homeView = qs("homeView");
+    els.homeHeroImg = qs("homeHeroImg");
+    els.homeHeroTagline = qs("homeHeroTagline");
+    els.homeServicesTitle = qs("homeServicesTitle");
+    els.homeCardCommunity = qs("homeCardCommunity");
+    els.homeCardCommunityName = qs("homeCardCommunityName");
+    els.homeCardBapsimLoc = qs("homeCardBapsimLoc");
+    els.homeCardMangwonLoc = qs("homeCardMangwonLoc");
+    els.homeCardHururukLoc = qs("homeCardHururukLoc");
+    els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
+    els.homeCommunityLatest = qs("homeCommunityLatest");
+    els.bottomNav = qs("bottomNav");
+    els.bottomNavHomeBtn = qs("bottomNavHomeBtn");
+    els.bottomNavHomeLabel = qs("bottomNavHomeLabel");
+    els.bottomNavCommunityBtn = qs("bottomNavCommunityBtn");
+    els.bottomNavCommunityLabel = qs("bottomNavCommunityLabel");
+
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
     els.menuGrid = qs("menuGrid");
@@ -719,8 +830,47 @@
     Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab[data-store]"), function (btn) {
       var store = btn.getAttribute("data-store");
       els.storeTabButtons[store] = btn;
-      btn.addEventListener("click", function () { setStore(store); });
+      // goToStore()는 setStore()에 더해 홈/커뮤니티 화면에서 매장 화면으로
+      // 전환하는 것까지 함께 처리합니다(모바일 UI 개선 4단계).
+      btn.addEventListener("click", function () { goToStore(store); });
     });
+
+    // 홈 화면의 핵심 서비스 카드 4개(유학생 커뮤니티 + 매장 3개) — 기존
+    // 헤더 탭과 같은 동작을 재사용합니다(새 라우팅 로직을 따로 만들지 않음).
+    if (els.homeCardCommunity && els.storeTabs) {
+      els.homeCardCommunity.addEventListener("click", function () {
+        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
+        if (communityTabBtn) communityTabBtn.click();
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".home-service-card[data-store]"), function (card) {
+      var store = card.getAttribute("data-store");
+      card.addEventListener("click", function () { goToStore(store); });
+    });
+
+    // 하단 내비게이션(홈 · 커뮤니티)
+    if (els.bottomNavHomeBtn) {
+      els.bottomNavHomeBtn.addEventListener("click", goHome);
+    }
+    if (els.bottomNavCommunityBtn && els.storeTabs) {
+      els.bottomNavCommunityBtn.addEventListener("click", function () {
+        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
+        if (communityTabBtn) communityTabBtn.click();
+      });
+    }
+
+    // 히어로 이미지도 로고와 같은 방식으로, 파일이 없으면 자동으로 숨깁니다.
+    if (els.homeHeroImg) {
+      var hideBrokenHero = function () {
+        if (els.homeHeroImg.complete && els.homeHeroImg.naturalWidth === 0) els.homeHeroImg.hidden = true;
+      };
+      els.homeHeroImg.addEventListener("error", hideBrokenHero, { once: true });
+      hideBrokenHero();
+    }
+
+    // js/community.js가 커뮤니티 화면에서 빠져나올 때 홈/매장 중 무엇을
+    // 다시 보여줄지 이 함수를 통해 물어봅니다.
+    window.AppHome = { applyView: applyViewVisibility };
 
     els.langButtons = {};
     Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
@@ -793,6 +943,12 @@
     state.lang = loadSavedLang();
 
     renderAll();
+    renderHome();
+    // 커뮤니티 경로로 바로 들어온 경우(딥링크)에는 community.js가 이미
+    // 화면 전환을 처리했으므로, 여기서 홈/매장 보이기를 덮어쓰지 않습니다.
+    if (!(window.Community && window.Community.isCommunityPath(location.pathname))) {
+      applyViewVisibility();
+    }
 
     lastKnownSeoulDateKey = getSeoulDateKey(0);
     setInterval(checkMidnightRollover, 60000);

@@ -758,6 +758,173 @@ button {
 
 .ios-install-steps li { overflow-wrap: anywhere; }
 
+/* ---------------- 홈 화면(모바일 UI 개선 4단계) ---------------- */
+
+.home-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px calc(76px + 20px); /* 하단 내비게이션(약 76px)에 가려지지 않도록 */
+}
+
+.home-view[hidden] { display: none; }
+
+.home-hero {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  margin-bottom: 24px;
+}
+
+/* 히어로 이미지 placeholder — 파일이 없으면 js/app.js가 자동으로 숨김
+   처리하고, 문구만 남습니다(임의 이미지 제작 없음). */
+.home-hero-img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.home-hero-img[hidden] { display: none; }
+
+.home-hero-tagline {
+  margin: 0;
+  padding: 18px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.home-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 12px;
+}
+
+.home-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.home-service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 108px;
+  padding: 16px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.home-service-card:hover,
+.home-service-card:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.home-service-icon { font-size: 28px; line-height: 1; }
+
+.home-service-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.home-service-loc {
+  font-size: 12px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.home-community-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-community-post-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.home-community-post-card:hover,
+.home-community-post-card:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.home-community-post-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.home-community-post-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.home-community-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-mid);
+}
+
+/* ---------------- 하단 내비게이션(홈 화면 전용) ---------------- */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  background: #ffffff;
+  border-top: 1px solid var(--border-gray);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav[hidden] { display: none; }
+
+.bottom-nav-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+}
+
+.bottom-nav-btn.active { color: var(--blue); font-weight: 700; }
+
+.bottom-nav-icon { font-size: 20px; line-height: 1; }
+
+.bottom-nav-label { font-size: 12px; }
+
 /* ---------------- 본문 ---------------- */
 
 main {
@@ -1955,6 +2122,58 @@ main {
   </nav>
 </header>
 
+<!-- 홈 화면(js/app.js의 renderHome()이 내용을 채웁니다). 기본으로
+     보이는 화면이며, 매장(밥심 등)을 고르거나 커뮤니티로 이동하면
+     숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
+<section class="home-view" id="homeView">
+  <div class="home-hero">
+    <!-- 히어로 이미지 placeholder — images/icon/home-hero.jpg 파일을
+         나중에 올리기만 하면 코드 수정 없이 적용됩니다. 파일이 없는
+         동안은 js/app.js가 자동으로 숨깁니다(임의 이미지 제작 없음). -->
+    <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
+    <p class="home-hero-tagline" id="homeHeroTagline"></p>
+  </div>
+
+  <h2 class="home-section-title" id="homeServicesTitle"></h2>
+  <div class="home-service-grid" id="homeServiceGrid">
+    <button type="button" class="home-service-card" id="homeCardCommunity">
+      <span class="home-service-icon" aria-hidden="true">💬</span>
+      <span class="home-service-name" id="homeCardCommunityName"></span>
+    </button>
+    <button type="button" class="home-service-card" data-store="bapsim">
+      <span class="home-service-icon" aria-hidden="true">🍚</span>
+      <span class="home-service-name">밥심</span>
+      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
+    </button>
+    <button type="button" class="home-service-card" data-store="mangwon">
+      <span class="home-service-icon" aria-hidden="true">🍲</span>
+      <span class="home-service-name">만권화밥</span>
+      <span class="home-service-loc" id="homeCardMangwonLoc"></span>
+    </button>
+    <button type="button" class="home-service-card" data-store="hururuk">
+      <span class="home-service-icon" aria-hidden="true">🍜</span>
+      <span class="home-service-name">후루룩찹찹</span>
+      <span class="home-service-loc" id="homeCardHururukLoc"></span>
+    </button>
+  </div>
+
+  <h2 class="home-section-title" id="homeCommunityLatestTitle"></h2>
+  <div class="home-community-latest" id="homeCommunityLatest"></div>
+</section>
+
+<!-- 하단 내비게이션 — 홈/커뮤니티 두 화면만 빠르게 오갈 수 있게 합니다
+     (이번 단계는 홈 화면 관련 범위라, 우선 홈 화면에서만 보입니다). -->
+<nav class="bottom-nav" id="bottomNav" aria-label="하단 내비게이션">
+  <button type="button" class="bottom-nav-btn" id="bottomNavHomeBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🏠</span>
+    <span class="bottom-nav-label" id="bottomNavHomeLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavCommunityBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">💬</span>
+    <span class="bottom-nav-label" id="bottomNavCommunityLabel"></span>
+  </button>
+</nav>
+
 <!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
      때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->
 <div class="community-root" id="communityRoot" hidden></div>
@@ -1968,7 +2187,7 @@ main {
   <button type="button" class="cola-banner-btn" id="colaBannerBtn">쿠폰 보기</button>
 </div>
 
-<main>
+<main hidden>
   <h2 class="store-heading" id="storeHeading">밥심1층</h2>
 
   <div class="bapsim-subtabs" id="bapsimSubtabs" hidden role="group" aria-label="밥심 화면 전환">
@@ -2179,7 +2398,23 @@ const UI_TEXT = {
     my: "မီနူးဖွင့်ရာတွင် ပြဿနာရှိပါသည်။ အနည်းငယ်စောင့်ပြီး ထပ်မံကြိုးစားပါ။"
   },
   infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл", bn: "তথ্য", my: "အချက်အလက်" },
-  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" }
+  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" },
+
+  /* ---------------- 모바일 UI 개선 4단계: 홈 화면 ---------------- */
+  homeHeroTagline: {
+    ko: "다양한 사람들이 함께하는 캠퍼스",
+    en: "A campus where diverse people come together",
+    zh: "汇聚多元人群的校园",
+    vi: "Ngôi trường nơi mọi người cùng hòa nhập",
+    mn: "Олон төрлийн хүмүүс хамтдаа байдаг кампус",
+    bn: "বিভিন্ন মানুষ একসাথে থাকা ক্যাম্পাস",
+    my: "မတူညီသောလူများ အတူတကွနေထိုင်ကြသော ကျောင်းဝင်း"
+  },
+  homeServicesTitle: { ko: "핵심 서비스", en: "Core Services", zh: "核心服务", vi: "Dịch vụ chính", mn: "Үндсэн үйлчилгээ", bn: "মূল পরিষেবা", my: "အဓိကဝန်ဆောင်မှုများ" },
+  homeCommunityLatestTitle: { ko: "커뮤니티 최신 글", en: "Latest Community Posts", zh: "社区最新帖子", vi: "Bài viết cộng đồng mới nhất", mn: "Нийгэмлэгийн сүүлийн үеийн нийтлэл", bn: "কমিউনিটির সাম্প্রতিক পোস্ট", my: "အသိုင်းအဝိုင်း နောက်ဆုံးပို့စ်များ" },
+  homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
+  bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
+  bottomNavCommunity: { ko: "커뮤니티", en: "Community", zh: "社区", vi: "Cộng đồng", mn: "Нийгэмлэг", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
 };
 
 /* ==========================================================================
@@ -4733,14 +4968,28 @@ var Community = (function () {
       var node = qs(id);
       if (node) node.hidden = !show || node.hidden && !show ? node.hidden : node.hidden;
     });
-    var main = document.querySelector("main");
-    if (main) main.hidden = !show;
     var cola = qs("colaBanner");
     if (cola && !show) cola.hidden = true;
     var hello = document.querySelector(".hellokorean-card");
     if (hello) hello.hidden = !show;
     var ownerBanner = document.querySelector(".owner-chat-banner");
     if (ownerBanner) ownerBanner.hidden = !show;
+    var home = qs("homeView");
+    var bottomNav = qs("bottomNav");
+    if (!show) {
+      // 커뮤니티로 들어갈 때는 홈 화면(있다면)과 매장 화면을 함께 숨깁니다.
+      if (home) home.hidden = true;
+      if (bottomNav) bottomNav.hidden = true;
+      var mainIn = document.querySelector("main");
+      if (mainIn) mainIn.hidden = true;
+    } else if (window.AppHome && typeof window.AppHome.applyView === "function") {
+      // 커뮤니티에서 나갈 때는 홈/매장 중 무엇을 보여줄지 app.js(모바일 UI
+      // 개선 4단계에서 추가된 홈 화면)가 결정합니다.
+      window.AppHome.applyView();
+    } else {
+      var mainOut = document.querySelector("main");
+      if (mainOut) mainOut.hidden = false;
+    }
     if (els.root) els.root.hidden = show;
   }
 
@@ -5560,6 +5809,53 @@ var Community = (function () {
     if (post.originalLanguage === lang) return post.originalTitle;
     var tr = post.translations && post.translations[lang];
     return (tr && tr.title) || post.originalTitle;
+  }
+
+  function toMillisSafe(ts) {
+    if (!ts) return 0;
+    if (typeof ts.toMillis === "function") return ts.toMillis();
+    if (typeof ts.toDate === "function") return ts.toDate().getTime();
+    if (ts instanceof Date) return ts.getTime();
+    if (typeof ts === "string") { var t = new Date(ts).getTime(); return isNaN(t) ? 0 : t; }
+    return 0;
+  }
+
+  /* 홈 화면의 "커뮤니티 최신 글" 미리보기용. 전체 카테고리를 한 번에
+     최신순으로 가져오려면 별도의 복합 색인(status+createdAt)이 더
+     필요해지므로, 이미 만들어져 있는 카테고리별 색인
+     (category+status+createdAt)을 그대로 재사용해 카테고리마다 최근
+     글을 조금씩 가져온 뒤 합쳐서 최신순으로 정렬합니다(Firebase 콘솔에
+     새 색인을 추가로 만들 필요가 없습니다). */
+  function fetchLatestPostsForHome(count) {
+    var d = db();
+    if (!d) return Promise.resolve([]);
+    var perCategory = Math.min(count, 3);
+    var queries = COMMUNITY_CATEGORY_ORDER.map(function (cat) {
+      return d.collection("communityPosts")
+        .where("category", "==", cat)
+        .where("status", "==", "visible")
+        .orderBy("createdAt", "desc")
+        .limit(perCategory)
+        .get()
+        .then(function (snap) {
+          return snap.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+        })
+        .catch(function () { return []; });
+    });
+    return Promise.all(queries).then(function (lists) {
+      var all = [].concat.apply([], lists);
+      all.sort(function (a, b) { return toMillisSafe(b.createdAt) - toMillisSafe(a.createdAt); });
+      return all.slice(0, count).map(function (post) {
+        return {
+          id: post.id,
+          title: localizedTitle(post),
+          authorMasked: post.authorNameMasked || "",
+          nationality: post.authorNationality || "",
+          dateText: formatDate(post.createdAt),
+          category: post.category
+        };
+      });
+    });
   }
 
   function localizedContent(post) {
@@ -6845,7 +7141,14 @@ var Community = (function () {
     route();
   }
 
-  return { init: init, setLang: setLang, isCommunityPath: isCommunityPath };
+  return {
+    init: init,
+    setLang: setLang,
+    isCommunityPath: isCommunityPath,
+    navigate: navigate,
+    routePrefix: ROUTE_PREFIX,
+    fetchLatestPosts: fetchLatestPostsForHome
+  };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -6871,7 +7174,8 @@ document.addEventListener("DOMContentLoaded", function () {
     store: "bapsim",
     bapsimView: "breakfast",
     groupByStore: { bapsim: 1, mangwon: 1, hururuk: 1 },
-    lang: "ko"
+    lang: "ko",
+    view: "home" // "home"(모바일 UI 개선 4단계: 새 홈 화면) | "store"(기존 매장 화면)
   };
 
   var els = {};
@@ -7062,11 +7366,103 @@ document.addEventListener("DOMContentLoaded", function () {
     renderAll();
   }
 
+  /* ---------------- 모바일 UI 개선 4단계: 홈 화면 ---------------- */
+
+  // 홈 화면(#homeView) ↔ 매장 화면(main) 중 지금 state.view에 맞는 쪽만
+  // 보여줍니다. 커뮤니티 화면(js/community.js)은 이 둘과 서로 배타적이며,
+  // 커뮤니티에서 빠져나올 때 community.js가 이 함수를 호출해 무엇을
+  // 다시 보여줄지 물어봅니다(window.AppHome.applyView).
+  function applyViewVisibility() {
+    var showHomeView = state.view === "home";
+    if (els.homeView) els.homeView.hidden = !showHomeView;
+    // 하단 내비게이션은 이번 단계 범위(홈 화면)상 홈 화면에서만 보입니다.
+    if (els.bottomNav) els.bottomNav.hidden = !showHomeView;
+    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", true);
+    if (els.bottomNavCommunityBtn) els.bottomNavCommunityBtn.classList.toggle("active", false);
+    var main = document.querySelector("main");
+    if (main) main.hidden = showHomeView;
+  }
+
+  function goHome() {
+    state.view = "home";
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) {
+      window.Community.navigate("/"); // 커뮤니티 안에 있었다면 빠져나옵니다(빠져나오며 applyViewVisibility 재호출됨)
+    } else {
+      applyViewVisibility();
+    }
+    renderHome();
+  }
+
+  function goToStore(store) {
+    state.view = "store";
+    if (state.store !== store) setStore(store); else renderAll();
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) {
+      window.Community.navigate("/");
+    } else {
+      applyViewVisibility();
+    }
+  }
+
+  function renderHomeLatestPosts() {
+    if (!els.homeCommunityLatest) return;
+    if (!(window.Community && typeof window.Community.fetchLatestPosts === "function")) return;
+    var container = els.homeCommunityLatest;
+    var requestLang = state.lang;
+    window.Community.fetchLatestPosts(3).then(function (posts) {
+      if (state.lang !== requestLang) return; // 응답 오는 사이 언어가 바뀌었으면 버립니다
+      container.innerHTML = "";
+      if (!posts.length) {
+        var empty = document.createElement("p");
+        empty.className = "home-community-empty";
+        empty.textContent = UI_TEXT.homeCommunityLatestEmpty[state.lang];
+        container.appendChild(empty);
+        return;
+      }
+      posts.forEach(function (post) {
+        var card = document.createElement("button");
+        card.type = "button";
+        card.className = "home-community-post-card";
+        card.addEventListener("click", function () {
+          if (window.Community && typeof window.Community.navigate === "function") {
+            window.Community.navigate(window.Community.routePrefix + "/post/" + post.id);
+          }
+        });
+        var title = document.createElement("p");
+        title.className = "home-community-post-title";
+        title.textContent = post.title;
+        card.appendChild(title);
+        var meta = document.createElement("p");
+        meta.className = "home-community-post-meta";
+        meta.textContent = [post.authorMasked, post.nationality, post.dateText].filter(Boolean).join(" · ");
+        card.appendChild(meta);
+        container.appendChild(card);
+      });
+    }).catch(function () { /* 홈 화면 미리보기는 실패해도 조용히 무시(핵심 기능 아님) */ });
+  }
+
+  function renderHome() {
+    if (!els.homeView) return;
+    if (els.homeHeroTagline) els.homeHeroTagline.textContent = UI_TEXT.homeHeroTagline[state.lang];
+    if (els.homeServicesTitle) els.homeServicesTitle.textContent = UI_TEXT.homeServicesTitle[state.lang];
+    if (els.homeCommunityLatestTitle) els.homeCommunityLatestTitle.textContent = UI_TEXT.homeCommunityLatestTitle[state.lang];
+    if (els.homeCardCommunityName && window.COMMUNITY_HOME) {
+      els.homeCardCommunityName.textContent = window.COMMUNITY_HOME.title[state.lang];
+    }
+    var moinPrefix = { ko: "모인관 ", en: "Moin-gwan ", zh: "摩茵馆 ", vi: "Moin-gwan ", mn: "Моин-гван ", bn: "মোইন-গোয়ান ", my: "မိုအင်ဂွမ် " };
+    if (els.homeCardBapsimLoc) els.homeCardBapsimLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
+    if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
+    if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
+    if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
+    if (els.bottomNavCommunityLabel) els.bottomNavCommunityLabel.textContent = UI_TEXT.bottomNavCommunity[state.lang];
+    renderHomeLatestPosts();
+  }
+
   function setLang(lang) {
     if (SUPPORTED_LANGS.indexOf(lang) === -1 || state.lang === lang) return;
     state.lang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* localStorage 미지원 시 무시 */ }
     renderAll();
+    renderHome();
     if (!els.colaDetailOverlay.hidden) renderColaDetail();
     if (!els.staffShowOverlay.hidden) renderStaffShow();
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
@@ -7496,6 +7892,24 @@ document.addEventListener("DOMContentLoaded", function () {
     els.langToggleBtn = qs("langToggleBtn");
     els.langToggleLabel = qs("langToggleLabel");
     els.langSelect = qs("langSelect");
+
+    els.homeView = qs("homeView");
+    els.homeHeroImg = qs("homeHeroImg");
+    els.homeHeroTagline = qs("homeHeroTagline");
+    els.homeServicesTitle = qs("homeServicesTitle");
+    els.homeCardCommunity = qs("homeCardCommunity");
+    els.homeCardCommunityName = qs("homeCardCommunityName");
+    els.homeCardBapsimLoc = qs("homeCardBapsimLoc");
+    els.homeCardMangwonLoc = qs("homeCardMangwonLoc");
+    els.homeCardHururukLoc = qs("homeCardHururukLoc");
+    els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
+    els.homeCommunityLatest = qs("homeCommunityLatest");
+    els.bottomNav = qs("bottomNav");
+    els.bottomNavHomeBtn = qs("bottomNavHomeBtn");
+    els.bottomNavHomeLabel = qs("bottomNavHomeLabel");
+    els.bottomNavCommunityBtn = qs("bottomNavCommunityBtn");
+    els.bottomNavCommunityLabel = qs("bottomNavCommunityLabel");
+
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
     els.menuGrid = qs("menuGrid");
@@ -7575,8 +7989,47 @@ document.addEventListener("DOMContentLoaded", function () {
     Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab[data-store]"), function (btn) {
       var store = btn.getAttribute("data-store");
       els.storeTabButtons[store] = btn;
-      btn.addEventListener("click", function () { setStore(store); });
+      // goToStore()는 setStore()에 더해 홈/커뮤니티 화면에서 매장 화면으로
+      // 전환하는 것까지 함께 처리합니다(모바일 UI 개선 4단계).
+      btn.addEventListener("click", function () { goToStore(store); });
     });
+
+    // 홈 화면의 핵심 서비스 카드 4개(유학생 커뮤니티 + 매장 3개) — 기존
+    // 헤더 탭과 같은 동작을 재사용합니다(새 라우팅 로직을 따로 만들지 않음).
+    if (els.homeCardCommunity && els.storeTabs) {
+      els.homeCardCommunity.addEventListener("click", function () {
+        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
+        if (communityTabBtn) communityTabBtn.click();
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".home-service-card[data-store]"), function (card) {
+      var store = card.getAttribute("data-store");
+      card.addEventListener("click", function () { goToStore(store); });
+    });
+
+    // 하단 내비게이션(홈 · 커뮤니티)
+    if (els.bottomNavHomeBtn) {
+      els.bottomNavHomeBtn.addEventListener("click", goHome);
+    }
+    if (els.bottomNavCommunityBtn && els.storeTabs) {
+      els.bottomNavCommunityBtn.addEventListener("click", function () {
+        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
+        if (communityTabBtn) communityTabBtn.click();
+      });
+    }
+
+    // 히어로 이미지도 로고와 같은 방식으로, 파일이 없으면 자동으로 숨깁니다.
+    if (els.homeHeroImg) {
+      var hideBrokenHero = function () {
+        if (els.homeHeroImg.complete && els.homeHeroImg.naturalWidth === 0) els.homeHeroImg.hidden = true;
+      };
+      els.homeHeroImg.addEventListener("error", hideBrokenHero, { once: true });
+      hideBrokenHero();
+    }
+
+    // js/community.js가 커뮤니티 화면에서 빠져나올 때 홈/매장 중 무엇을
+    // 다시 보여줄지 이 함수를 통해 물어봅니다.
+    window.AppHome = { applyView: applyViewVisibility };
 
     els.langButtons = {};
     Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
@@ -7649,6 +8102,12 @@ document.addEventListener("DOMContentLoaded", function () {
     state.lang = loadSavedLang();
 
     renderAll();
+    renderHome();
+    // 커뮤니티 경로로 바로 들어온 경우(딥링크)에는 community.js가 이미
+    // 화면 전환을 처리했으므로, 여기서 홈/매장 보이기를 덮어쓰지 않습니다.
+    if (!(window.Community && window.Community.isCommunityPath(location.pathname))) {
+      applyViewVisibility();
+    }
 
     lastKnownSeoulDateKey = getSeoulDateKey(0);
     setInterval(checkMidnightRollover, 60000);

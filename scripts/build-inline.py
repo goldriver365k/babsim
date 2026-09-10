@@ -130,6 +130,58 @@ def build():
   </nav>
 </header>
 
+<!-- 홈 화면(js/app.js의 renderHome()이 내용을 채웁니다). 기본으로
+     보이는 화면이며, 매장(밥심 등)을 고르거나 커뮤니티로 이동하면
+     숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
+<section class="home-view" id="homeView">
+  <div class="home-hero">
+    <!-- 히어로 이미지 placeholder — images/icon/home-hero.jpg 파일을
+         나중에 올리기만 하면 코드 수정 없이 적용됩니다. 파일이 없는
+         동안은 js/app.js가 자동으로 숨깁니다(임의 이미지 제작 없음). -->
+    <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
+    <p class="home-hero-tagline" id="homeHeroTagline"></p>
+  </div>
+
+  <h2 class="home-section-title" id="homeServicesTitle"></h2>
+  <div class="home-service-grid" id="homeServiceGrid">
+    <button type="button" class="home-service-card" id="homeCardCommunity">
+      <span class="home-service-icon" aria-hidden="true">💬</span>
+      <span class="home-service-name" id="homeCardCommunityName"></span>
+    </button>
+    <button type="button" class="home-service-card" data-store="bapsim">
+      <span class="home-service-icon" aria-hidden="true">🍚</span>
+      <span class="home-service-name">밥심</span>
+      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
+    </button>
+    <button type="button" class="home-service-card" data-store="mangwon">
+      <span class="home-service-icon" aria-hidden="true">🍲</span>
+      <span class="home-service-name">만권화밥</span>
+      <span class="home-service-loc" id="homeCardMangwonLoc"></span>
+    </button>
+    <button type="button" class="home-service-card" data-store="hururuk">
+      <span class="home-service-icon" aria-hidden="true">🍜</span>
+      <span class="home-service-name">후루룩찹찹</span>
+      <span class="home-service-loc" id="homeCardHururukLoc"></span>
+    </button>
+  </div>
+
+  <h2 class="home-section-title" id="homeCommunityLatestTitle"></h2>
+  <div class="home-community-latest" id="homeCommunityLatest"></div>
+</section>
+
+<!-- 하단 내비게이션 — 홈/커뮤니티 두 화면만 빠르게 오갈 수 있게 합니다
+     (이번 단계는 홈 화면 관련 범위라, 우선 홈 화면에서만 보입니다). -->
+<nav class="bottom-nav" id="bottomNav" aria-label="하단 내비게이션">
+  <button type="button" class="bottom-nav-btn" id="bottomNavHomeBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🏠</span>
+    <span class="bottom-nav-label" id="bottomNavHomeLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavCommunityBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">💬</span>
+    <span class="bottom-nav-label" id="bottomNavCommunityLabel"></span>
+  </button>
+</nav>
+
 <!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
      때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->
 <div class="community-root" id="communityRoot" hidden></div>
@@ -143,7 +195,7 @@ def build():
   <button type="button" class="cola-banner-btn" id="colaBannerBtn">쿠폰 보기</button>
 </div>
 
-<main>
+<main hidden>
   <h2 class="store-heading" id="storeHeading">밥심1층</h2>
 
   <div class="bapsim-subtabs" id="bapsimSubtabs" hidden role="group" aria-label="밥심 화면 전환">

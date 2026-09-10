@@ -55,7 +55,23 @@ const UI_TEXT = {
     my: "မီနူးဖွင့်ရာတွင် ပြဿနာရှိပါသည်။ အနည်းငယ်စောင့်ပြီး ထပ်မံကြိုးစားပါ။"
   },
   infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл", bn: "তথ্য", my: "အချက်အလက်" },
-  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" }
+  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" },
+
+  /* ---------------- 모바일 UI 개선 4단계: 홈 화면 ---------------- */
+  homeHeroTagline: {
+    ko: "다양한 사람들이 함께하는 캠퍼스",
+    en: "A campus where diverse people come together",
+    zh: "汇聚多元人群的校园",
+    vi: "Ngôi trường nơi mọi người cùng hòa nhập",
+    mn: "Олон төрлийн хүмүүс хамтдаа байдаг кампус",
+    bn: "বিভিন্ন মানুষ একসাথে থাকা ক্যাম্পাস",
+    my: "မတူညီသောလူများ အတူတကွနေထိုင်ကြသော ကျောင်းဝင်း"
+  },
+  homeServicesTitle: { ko: "핵심 서비스", en: "Core Services", zh: "核心服务", vi: "Dịch vụ chính", mn: "Үндсэн үйлчилгээ", bn: "মূল পরিষেবা", my: "အဓိကဝန်ဆောင်မှုများ" },
+  homeCommunityLatestTitle: { ko: "커뮤니티 최신 글", en: "Latest Community Posts", zh: "社区最新帖子", vi: "Bài viết cộng đồng mới nhất", mn: "Нийгэмлэгийн сүүлийн үеийн нийтлэл", bn: "কমিউনিটির সাম্প্রতিক পোস্ট", my: "အသိုင်းအဝိုင်း နောက်ဆုံးပို့စ်များ" },
+  homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
+  bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
+  bottomNavCommunity: { ko: "커뮤니티", en: "Community", zh: "社区", vi: "Cộng đồng", mn: "Нийгэмлэг", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
 };
 
 /* ==========================================================================

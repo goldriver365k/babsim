@@ -733,6 +733,173 @@ button {
 
 .ios-install-steps li { overflow-wrap: anywhere; }
 
+/* ---------------- 홈 화면(모바일 UI 개선 4단계) ---------------- */
+
+.home-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px calc(76px + 20px); /* 하단 내비게이션(약 76px)에 가려지지 않도록 */
+}
+
+.home-view[hidden] { display: none; }
+
+.home-hero {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  margin-bottom: 24px;
+}
+
+/* 히어로 이미지 placeholder — 파일이 없으면 js/app.js가 자동으로 숨김
+   처리하고, 문구만 남습니다(임의 이미지 제작 없음). */
+.home-hero-img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.home-hero-img[hidden] { display: none; }
+
+.home-hero-tagline {
+  margin: 0;
+  padding: 18px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.home-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 12px;
+}
+
+.home-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.home-service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 108px;
+  padding: 16px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.home-service-card:hover,
+.home-service-card:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.home-service-icon { font-size: 28px; line-height: 1; }
+
+.home-service-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.home-service-loc {
+  font-size: 12px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.home-community-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-community-post-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.home-community-post-card:hover,
+.home-community-post-card:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.home-community-post-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.home-community-post-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.home-community-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-mid);
+}
+
+/* ---------------- 하단 내비게이션(홈 화면 전용) ---------------- */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  background: #ffffff;
+  border-top: 1px solid var(--border-gray);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav[hidden] { display: none; }
+
+.bottom-nav-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+}
+
+.bottom-nav-btn.active { color: var(--blue); font-weight: 700; }
+
+.bottom-nav-icon { font-size: 20px; line-height: 1; }
+
+.bottom-nav-label { font-size: 12px; }
+
 /* ---------------- 본문 ---------------- */
 
 main {

@@ -173,14 +173,28 @@ var Community = (function () {
       var node = qs(id);
       if (node) node.hidden = !show || node.hidden && !show ? node.hidden : node.hidden;
     });
-    var main = document.querySelector("main");
-    if (main) main.hidden = !show;
     var cola = qs("colaBanner");
     if (cola && !show) cola.hidden = true;
     var hello = document.querySelector(".hellokorean-card");
     if (hello) hello.hidden = !show;
     var ownerBanner = document.querySelector(".owner-chat-banner");
     if (ownerBanner) ownerBanner.hidden = !show;
+    var home = qs("homeView");
+    var bottomNav = qs("bottomNav");
+    if (!show) {
+      // 커뮤니티로 들어갈 때는 홈 화면(있다면)과 매장 화면을 함께 숨깁니다.
+      if (home) home.hidden = true;
+      if (bottomNav) bottomNav.hidden = true;
+      var mainIn = document.querySelector("main");
+      if (mainIn) mainIn.hidden = true;
+    } else if (window.AppHome && typeof window.AppHome.applyView === "function") {
+      // 커뮤니티에서 나갈 때는 홈/매장 중 무엇을 보여줄지 app.js(모바일 UI
+      // 개선 4단계에서 추가된 홈 화면)가 결정합니다.
+      window.AppHome.applyView();
+    } else {
+      var mainOut = document.querySelector("main");
+      if (mainOut) mainOut.hidden = false;
+    }
     if (els.root) els.root.hidden = show;
   }
 
@@ -1000,6 +1014,53 @@ var Community = (function () {
     if (post.originalLanguage === lang) return post.originalTitle;
     var tr = post.translations && post.translations[lang];
     return (tr && tr.title) || post.originalTitle;
+  }
+
+  function toMillisSafe(ts) {
+    if (!ts) return 0;
+    if (typeof ts.toMillis === "function") return ts.toMillis();
+    if (typeof ts.toDate === "function") return ts.toDate().getTime();
+    if (ts instanceof Date) return ts.getTime();
+    if (typeof ts === "string") { var t = new Date(ts).getTime(); return isNaN(t) ? 0 : t; }
+    return 0;
+  }
+
+  /* 홈 화면의 "커뮤니티 최신 글" 미리보기용. 전체 카테고리를 한 번에
+     최신순으로 가져오려면 별도의 복합 색인(status+createdAt)이 더
+     필요해지므로, 이미 만들어져 있는 카테고리별 색인
+     (category+status+createdAt)을 그대로 재사용해 카테고리마다 최근
+     글을 조금씩 가져온 뒤 합쳐서 최신순으로 정렬합니다(Firebase 콘솔에
+     새 색인을 추가로 만들 필요가 없습니다). */
+  function fetchLatestPostsForHome(count) {
+    var d = db();
+    if (!d) return Promise.resolve([]);
+    var perCategory = Math.min(count, 3);
+    var queries = COMMUNITY_CATEGORY_ORDER.map(function (cat) {
+      return d.collection("communityPosts")
+        .where("category", "==", cat)
+        .where("status", "==", "visible")
+        .orderBy("createdAt", "desc")
+        .limit(perCategory)
+        .get()
+        .then(function (snap) {
+          return snap.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+        })
+        .catch(function () { return []; });
+    });
+    return Promise.all(queries).then(function (lists) {
+      var all = [].concat.apply([], lists);
+      all.sort(function (a, b) { return toMillisSafe(b.createdAt) - toMillisSafe(a.createdAt); });
+      return all.slice(0, count).map(function (post) {
+        return {
+          id: post.id,
+          title: localizedTitle(post),
+          authorMasked: post.authorNameMasked || "",
+          nationality: post.authorNationality || "",
+          dateText: formatDate(post.createdAt),
+          category: post.category
+        };
+      });
+    });
   }
 
   function localizedContent(post) {
@@ -2285,7 +2346,14 @@ var Community = (function () {
     route();
   }
 
-  return { init: init, setLang: setLang, isCommunityPath: isCommunityPath };
+  return {
+    init: init,
+    setLang: setLang,
+    isCommunityPath: isCommunityPath,
+    navigate: navigate,
+    routePrefix: ROUTE_PREFIX,
+    fetchLatestPosts: fetchLatestPostsForHome
+  };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
