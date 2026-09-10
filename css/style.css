@@ -1395,6 +1395,35 @@ main {
   overflow-wrap: anywhere;
 }
 
+/* 커뮤니티 첫 화면 상단(비회원도 보임) — 제목·짧은 소개·작은 로그인/가입
+   버튼. 버튼이 화면을 가리지 않도록 제목 줄 오른쪽에 작게 배치하고,
+   좁은 화면에서는 아래로 자연스럽게 줄바꿈됩니다. */
+.community-home-header { margin-bottom: 4px; }
+.community-home-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.community-home-title-row .community-page-title { margin: 4px 0; }
+.community-home-auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.community-home-auth-actions .community-btn-secondary {
+  min-height: 40px;
+  padding: 6px 14px;
+}
+.community-home-tagline {
+  font-size: 14px;
+  color: var(--comm-text);
+  margin: 0 0 16px;
+  overflow-wrap: anywhere;
+}
+
 .community-loading,
 .community-empty {
   color: var(--comm-text);
@@ -1613,6 +1642,34 @@ main {
 }
 
 .community-post-card-meta { font-size: 12px; color: #64748B; overflow-wrap: anywhere; }
+
+.community-post-card-photo {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.community-post-card-summary {
+  font-size: 14px;
+  color: var(--comm-text);
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.community-post-card-detail-btn { margin-top: 4px; padding-left: 0; }
+
+/* 비회원/회원 공통 로그인 필요 안내창(.modal-overlay/.modal 재사용) 안의
+   버튼 줄 — 좁은 화면에서는 세로로 쌓입니다. */
+.community-auth-gate-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.community-auth-gate-actions .community-btn-primary,
+.community-auth-gate-actions .community-btn-secondary { flex: 1 1 auto; }
 
 .community-badge {
   display: inline-block;
