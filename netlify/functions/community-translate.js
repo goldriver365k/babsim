@@ -50,6 +50,11 @@ const LANG_NAMES = {
   ko: "Korean", zh: "Simplified Chinese", vi: "Vietnamese", en: "English", mn: "Mongolian"
 };
 
+// 하루 번역 한도 기본값 — communityConfig/limits 문서가 있으면 그 값을
+// 우선 사용합니다(관리자가 Firestore 콘솔에서 직접 고칠 수 있음).
+const DEFAULT_TRANSLATIONS_PER_DAY_USER = 20;
+const DEFAULT_TRANSLATIONS_PER_DAY_SITE = 300;
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -107,6 +112,98 @@ async function isSuspended(uid, idToken) {
     console.error("회원 상태 확인 오류:", e);
     return false;
   }
+}
+
+/* ---------------- 하루 번역 한도 확인/증가 (Firestore REST) ----------------
+   - Firebase Admin SDK 없이, 호출자 본인의 idToken을 Bearer 토큰으로 사용해
+     communityRateLimits(회원별)·communitySiteRateLimits(사이트 전체) 문서를
+     읽고/늘립니다 — 보안 규칙이 한도를 다시 검증하므로 서버 코드가 규칙을
+     우회하지 않습니다.
+   - 원자적 증가(transform)가 아니라 "읽고 +1 해서 PATCH"하는 방식이라
+     아주 드물게 동시 요청이 겹치면 한도가 1~2회 정도 느슨해질 수 있습니다.
+     이 한도는 비용 관리용 소프트 한도이므로 이 정도 오차는 허용합니다
+     (엄격한 보안 경계는 이미 보안 규칙의 상한선이 최종 방어선입니다). */
+
+function seoulDateKey() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const map = {};
+  parts.forEach(function (p) { map[p.type] = p.value; });
+  return map.year + "-" + map.month + "-" + map.day;
+}
+
+function numField(doc, name, fallback) {
+  const f = doc && doc.fields && doc.fields[name];
+  if (!f) return fallback;
+  const raw = f.integerValue !== undefined ? f.integerValue : f.doubleValue;
+  const n = Number(raw);
+  return isNaN(n) ? fallback : n;
+}
+
+async function firestoreGetDoc(path, idToken) {
+  try {
+    const url = "https://firestore.googleapis.com/v1/projects/" + FIREBASE_PROJECT_ID +
+      "/databases/(default)/documents/" + path;
+    const res = await fetch(url, { headers: { Authorization: "Bearer " + idToken } });
+    if (!res.ok) return null; // 404(문서 없음) 등은 "아직 없음"으로 취급
+    return await res.json();
+  } catch (e) {
+    console.error("Firestore 조회 오류(" + path + "):", e && e.message);
+    return null;
+  }
+}
+
+async function firestorePatchCount(path, fieldName, nextValue, idToken) {
+  try {
+    const url = "https://firestore.googleapis.com/v1/projects/" + FIREBASE_PROJECT_ID +
+      "/databases/(default)/documents/" + path +
+      "?updateMask.fieldPaths=" + encodeURIComponent(fieldName);
+    await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + idToken },
+      body: JSON.stringify({ fields: { [fieldName]: { integerValue: String(nextValue) } } })
+    });
+  } catch (e) {
+    console.error("Firestore 카운터 갱신 오류(" + path + "):", e && e.message);
+  }
+}
+
+async function getConfigLimits(idToken) {
+  const doc = await firestoreGetDoc("communityConfig/limits", idToken);
+  return {
+    perUser: numField(doc, "translationsPerDayUser", DEFAULT_TRANSLATIONS_PER_DAY_USER),
+    perSite: numField(doc, "translationsPerDaySite", DEFAULT_TRANSLATIONS_PER_DAY_SITE)
+  };
+}
+
+/* 한도 확인 후, 실제로 번역이 성공했을 때만 호출할 수 있도록 commit()
+   함수를 돌려줍니다(호출 실패/입력 오류 시에는 한도를 쓰지 않기 위함). */
+async function checkTranslationQuota(uid, idToken) {
+  const dateKey = seoulDateKey();
+  const userPath = "communityRateLimits/" + uid + "_" + dateKey;
+  const sitePath = "communitySiteRateLimits/" + dateKey;
+
+  const limits = await getConfigLimits(idToken);
+  const [userDoc, siteDoc] = await Promise.all([
+    firestoreGetDoc(userPath, idToken),
+    firestoreGetDoc(sitePath, idToken)
+  ]);
+  const userCount = numField(userDoc, "translationCount", 0);
+  const siteCount = numField(siteDoc, "translationCount", 0);
+
+  if (userCount >= limits.perUser || siteCount >= limits.perSite) {
+    return { allowed: false };
+  }
+  return {
+    allowed: true,
+    commit: function () {
+      return Promise.all([
+        firestorePatchCount(userPath, "translationCount", userCount + 1, idToken),
+        firestorePatchCount(sitePath, "translationCount", siteCount + 1, idToken)
+      ]);
+    }
+  };
 }
 
 /* ---------------- AI 호출 공통 (20초 제한 + 최대 1회 재시도) ---------------- */
@@ -265,12 +362,37 @@ exports.handler = async function (event) {
     return json(400, { error: "INVALID_JSON" });
   }
 
+  // 이메일 인증은 요구하지 않습니다(가입 시 인증메일을 보내지 않기로
+  // 결정했으므로, 여기서 emailVerified를 확인하면 모든 이메일 가입
+  // 회원의 번역 요청이 항상 막히게 됩니다). 로그인 여부와 정지 여부만
+  // 확인합니다.
+  if (payload.action !== "translatePost" && payload.action !== "translateComment") {
+    return json(400, { error: "UNKNOWN_ACTION" });
+  }
+
   const user = await verifyUser(payload.idToken);
   if (!user) return json(401, { error: "LOGIN_REQUIRED" });
-  if (!user.emailVerified) return json(403, { error: "EMAIL_NOT_VERIFIED" });
   if (await isSuspended(user.localId, payload.idToken)) return json(403, { error: "ACCOUNT_SUSPENDED" });
 
-  if (payload.action === "translatePost") return handleTranslatePost(payload);
-  if (payload.action === "translateComment") return handleTranslateComment(payload);
-  return json(400, { error: "UNKNOWN_ACTION" });
+  // 하루 번역 한도(회원 개인 + 사이트 전체) 확인 — 한도를 넘으면 AI를
+  // 호출하지 않고 바로 429를 돌려줍니다(비용 절감의 핵심).
+  const quota = await checkTranslationQuota(user.localId, payload.idToken);
+  if (!quota.allowed) return json(429, { error: "TRANSLATION_QUOTA_EXCEEDED" });
+
+  const result = payload.action === "translatePost"
+    ? await handleTranslatePost(payload)
+    : await handleTranslateComment(payload);
+
+  // 실제로 번역 결과를 돌려준 경우에만 한도를 소모합니다(입력 오류 등으로
+  // AI를 부르지 못한 경우는 한도에서 빼지 않습니다).
+  if (result.statusCode === 200) {
+    let body = null;
+    try { body = JSON.parse(result.body); } catch (e) { /* ignore */ }
+    const succeeded = payload.action === "translatePost"
+      ? !!(body && body.translations && Object.keys(body.translations).length)
+      : !!(body && typeof body.content === "string");
+    if (succeeded) await quota.commit();
+  }
+
+  return result;
 };

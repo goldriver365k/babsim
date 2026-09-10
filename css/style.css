@@ -1435,6 +1435,12 @@ main {
 .community-btn-primary:disabled,
 .community-btn-secondary:disabled { opacity: 0.6; cursor: default; }
 
+.community-load-more {
+  display: block;
+  width: 100%;
+  margin: 12px 0 4px;
+}
+
 .community-link-btn,
 .community-link-btn-inline {
   background: none;

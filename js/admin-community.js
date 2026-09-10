@@ -43,6 +43,17 @@ var AdminCommunity = (function () {
     return null;
   }
 
+  // communitySiteRateLimits/{날짜} 문서 하나만 읽는 저비용 통계(전체 글/회원
+  // 컬렉션을 다시 훑지 않고, 번역 요청 때 이미 쌓인 카운터를 그대로
+  // 재사용합니다 — 비용 최소화 지시서: 가능하면 원자적 카운터 사용).
+  function seoulDateKey(offsetDays) {
+    var d = new Date(Date.now() - (offsetDays || 0) * 24 * 60 * 60 * 1000);
+    var parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d);
+    var map = {};
+    parts.forEach(function (p) { map[p.type] = p.value; });
+    return map.year + "-" + map.month + "-" + map.day;
+  }
+
   /* ---------------- 탭 전환 ---------------- */
 
   function showTab(tab) {
@@ -69,12 +80,15 @@ var AdminCommunity = (function () {
 
     Promise.all([
       d.collection("communityUsers").get(),
-      d.collection("communityPosts").get()
+      d.collection("communityPosts").get(),
+      d.collection("communitySiteRateLimits").doc(seoulDateKey()).get().catch(function () { return null; })
     ]).then(function (results) {
       var users = [];
       results[0].forEach(function (doc) { users.push(doc.data()); });
       var posts = [];
       results[1].forEach(function (doc) { posts.push(doc.data()); });
+      var siteToday = results[2] && results[2].exists ? results[2].data() : null;
+      var translationsToday = (siteToday && siteToday.translationCount) || 0;
 
       var start = periodStartDate(currentPeriod);
       function inPeriod(ts) {
@@ -92,7 +106,7 @@ var AdminCommunity = (function () {
       });
       var reportedCount = posts.filter(function (p) { return (p.reportCount || 0) > 0; }).length;
       var hiddenCount = posts.filter(function (p) { return p.status === "hidden"; }).length;
-      var failedTranslations = posts.filter(function (p) { return p.translationStatus === "failed"; }).length;
+      var failedTranslations = posts.filter(function (p) { return postHasFailedTranslation(p); }).length;
       var marketDone = posts.filter(function (p) { return p.category === "market" && p.dealStatus === "done"; }).length;
       var helpResolved = posts.filter(function (p) { return p.category === "help" && p.helpStatus === "resolved"; }).length;
       var jobPosts = posts.filter(function (p) { return p.category === "job"; });
@@ -117,6 +131,7 @@ var AdminCommunity = (function () {
       var tiles = [
         ["신규 가입자", newUsers], ["전체 회원", users.length], ["신규 게시글", newPosts],
         ["신고된 게시글", reportedCount], ["숨김 처리됨", hiddenCount], ["번역 실패", failedTranslations],
+        ["오늘 번역 횟수(사이트 전체)", translationsToday],
         ["중고거래 완료", marketDone], ["도움요청 해결", helpResolved],
         ["구인 게시글 수", hiringPosts], ["구직 게시글 수", seekingPosts],
         ["모집 중 게시글 수", hiringOpen], ["모집 마감 게시글 수", hiringClosed],
@@ -365,18 +380,31 @@ var AdminCommunity = (function () {
 
   /* ---------------- 번역 관리 ---------------- */
 
+  // 게시글은 이제 등록 시점에 미리 번역하지 않고 방문자가 요청할 때만
+  // 번역하므로(비용 최소화), "번역 실패"는 언어별 translations 맵 안에
+  // status:"failed"로 남습니다. 전용 색인 필드가 없어 최근 글을 훑어
+  // 찾습니다(관리자 화면이라 다른 통계와 동일하게 스캔 방식 사용).
+  function postHasFailedTranslation(p) {
+    var tr = p.translations;
+    if (!tr) return false;
+    return Object.keys(tr).some(function (l) { return tr[l] && tr[l].status === "failed"; });
+  }
+
   function loadTranslations() {
     var d = db();
     var body = els.translationsBody;
     if (!d || !body) return;
     body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
 
-    d.collection("communityPosts").where("translationStatus", "==", "failed").limit(100).get().then(function (snap) {
+    d.collection("communityPosts").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
       body.innerHTML = "";
-      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">번역 실패한 게시글이 없습니다.</p>"; return; }
-
+      var found = false;
       snap.forEach(function (doc) {
         var p = doc.data();
+        if (!postHasFailedTranslation(p)) return;
+        found = true;
+        var failedLangs = Object.keys(p.translations).filter(function (l) { return p.translations[l] && p.translations[l].status === "failed"; });
+
         var card = document.createElement("div");
         card.className = "admin-card";
         var title = document.createElement("h3");
@@ -384,47 +412,50 @@ var AdminCommunity = (function () {
         card.appendChild(title);
         var meta = document.createElement("p");
         meta.className = "empty-note";
-        meta.textContent = "원문 언어: " + p.originalLanguage + " · 번역 상태: 번역 실패";
+        meta.textContent = "원문 언어: " + p.originalLanguage + " · 번역 실패한 언어: " + failedLangs.join(", ");
         card.appendChild(meta);
 
         var retryBtn = document.createElement("button");
         retryBtn.type = "button";
         retryBtn.className = "filter-apply-btn";
-        retryBtn.textContent = "이 게시글 다시 번역";
-        retryBtn.addEventListener("click", function () { retryTranslation(doc.id, p, retryBtn); });
+        retryBtn.textContent = "실패한 언어 다시 번역";
+        retryBtn.addEventListener("click", function () { retryTranslation(doc.id, p, failedLangs, retryBtn); });
         card.appendChild(retryBtn);
 
         body.appendChild(card);
       });
+      if (!found) body.innerHTML = "<p class=\"empty-note\">번역 실패한 게시글이 없습니다.</p>";
     }).catch(function (err) {
       body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
     });
   }
 
-  function retryTranslation(postId, post, btn) {
+  function retryTranslation(postId, post, targetLangs, btn) {
     var user = currentAdminUser();
     if (!user) { window.alert("먼저 관리자 계정으로 로그인해주세요."); return; }
     btn.disabled = true;
     btn.textContent = "번역 중...";
-    var targets = ["ko", "zh", "vi", "en", "mn"].filter(function (l) { return l !== post.originalLanguage; });
     user.getIdToken().then(function (idToken) {
       return fetch("/.netlify/functions/community-translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
-          title: post.originalTitle, content: post.originalContent, targetLanguages: targets
+          title: post.originalTitle, content: post.originalContent, targetLanguages: targetLangs
         })
       });
     }).then(function (res) { return res.json(); }).then(function (data) {
-      var update = { translations: data.translations || {} };
-      update.translationStatus = (data.failedLanguages && data.failedLanguages.length) ? "failed" : "done";
+      var update = {};
+      targetLangs.forEach(function (l) {
+        var tr = data && data.translations && data.translations[l];
+        update["translations." + l] = tr ? { status: "done", title: tr.title, content: tr.content } : { status: "failed" };
+      });
       return db().collection("communityPosts").doc(postId).update(update);
     }).then(function () {
       loadTranslations();
     }).catch(function () {
       btn.disabled = false;
-      btn.textContent = "이 게시글 다시 번역";
+      btn.textContent = "실패한 언어 다시 번역";
       window.alert("재번역에 실패했습니다. 잠시 후 다시 시도해주세요.");
     });
   }
