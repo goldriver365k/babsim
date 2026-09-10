@@ -1630,9 +1630,27 @@ var COMMUNITY_CATEGORIES = {
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
   together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох", bn: "একসঙ্গে করি", my: "အတူတူလုပ်ကြမယ်" },
   job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
-  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" }
+  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
+  free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
-var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job"];
+var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job", "free"];
+
+/* 모바일 UI 개선 5단계: 게시판 목록 탭(전체/구인·구직/학교생활/생활정보/
+   자유게시판) — 글쓰기 때 고르는 세부 카테고리(COMMUNITY_CATEGORIES)보다
+   적은 5개로 묶어서 보여줍니다. 기존 글의 category 값은 그대로 두고
+   목록에서만 묶어서 필터링합니다(데이터 구조 변경 없음). */
+var COMMUNITY_TABS = {
+  all: { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд", bn: "সব", my: "အားလုံး" },
+  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
+  schoolLife: { ko: "학교생활", zh: "校园生活", vi: "Đời sống học đường", en: "School Life", mn: "Сургуулийн амьдрал", bn: "স্কুল জীবন", my: "ကျောင်းဘဝ" },
+  lifeInfo: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
+  free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
+};
+var COMMUNITY_TAB_ORDER = ["all", "job", "schoolLife", "lifeInfo", "free"];
+// 목록 탭 → 실제 글 category 값(들). "all"은 필터 없음(null).
+var COMMUNITY_TAB_CATEGORIES = { all: null, job: ["job"], schoolLife: ["friends", "together"], lifeInfo: ["market", "help"], free: ["free"] };
+// 카드에 보일 카테고리 배지용: 글의 category 값 → 소속 탭.
+var COMMUNITY_CATEGORY_TO_TAB = { job: "job", friends: "schoolLife", together: "schoolLife", market: "lifeInfo", help: "lifeInfo", free: "free" };
 
 /* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
 var COMMUNITY_AUTH = {

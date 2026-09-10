@@ -209,7 +209,10 @@ var Community = (function () {
   }
 
   function formatDate(ts) {
-    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : (ts instanceof Date ? ts : null);
+    var d = null;
+    if (ts && typeof ts.toDate === "function") d = ts.toDate();
+    else if (ts instanceof Date) d = ts;
+    else if (typeof ts === "string") { var parsed = new Date(ts); if (!isNaN(parsed.getTime())) d = parsed; }
     if (!d) return "";
     var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
     return y + "." + m + "." + day;
@@ -804,10 +807,10 @@ var Community = (function () {
     wrap.appendChild(homeHeader);
 
     var catTabs = el("div", "community-category-tabs");
-    COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
-      var b = el("button", "community-category-tab" + (state_category === cat ? " active" : ""), t(COMMUNITY_CATEGORIES[cat]));
+    COMMUNITY_TAB_ORDER.forEach(function (tabKey) {
+      var b = el("button", "community-category-tab" + (state_category === tabKey ? " active" : ""), t(COMMUNITY_TABS[tabKey]));
       b.type = "button";
-      b.addEventListener("click", function () { state_category = cat; render(); });
+      b.addEventListener("click", function () { state_category = tabKey; render(); });
       catTabs.appendChild(b);
     });
     wrap.appendChild(catTabs);
@@ -825,7 +828,7 @@ var Community = (function () {
     toolbar.appendChild(sortSelect);
     wrap.appendChild(toolbar);
 
-    if (state_category === "market") {
+    if (state_category === "lifeInfo") {
       var hideDoneRow = el("label", "community-checkbox-row");
       var hideDoneInput = el("input"); hideDoneInput.type = "checkbox"; hideDoneInput.checked = state_hideDone;
       hideDoneRow.appendChild(hideDoneInput);
@@ -885,7 +888,7 @@ var Community = (function () {
     renderPostList(listArea);
   }
 
-  var state_category = "friends";
+  var state_category = "all"; // 모바일 UI 개선 5단계: 목록 탭 키("all"/"job"/"schoolLife"/"lifeInfo"/"free")
   var state_search = "";
   var state_sort = "latest";
   var state_hideDone = false;
@@ -919,9 +922,15 @@ var Community = (function () {
     var d = db();
     if (!d || !container || state_postListLoading || !state_hasMorePosts) return;
     state_postListLoading = true;
-    var q = d.collection("communityPosts")
-      .where("category", "==", state_category)
-      .where("status", "==", "visible")
+    // 모바일 UI 개선 5단계: "전체" 탭은 category 필터 없이 status+createdAt
+    // 색인만 쓰고(별도 복합 색인 필요), 그 외 탭은 실제 글 category 값
+    // 1개 이상을 in 연산자로 묶어 기존 category+status+createdAt 복합
+    // 색인을 그대로 재사용합니다(Firestore in 연산자는 == 와 같은 색인을
+    // 씁니다 — 새 색인 불필요).
+    var tabCategories = COMMUNITY_TAB_CATEGORIES[state_category];
+    var q = d.collection("communityPosts");
+    if (tabCategories) q = q.where("category", "in", tabCategories);
+    q = q.where("status", "==", "visible")
       .orderBy("createdAt", "desc")
       .limit(POST_PAGE_SIZE);
     if (state_lastPostDoc) q = q.startAfter(state_lastPostDoc);
@@ -968,7 +977,7 @@ var Community = (function () {
         return title.indexOf(q) !== -1 || content.indexOf(q) !== -1;
       });
     }
-    if (state_category === "market" && state_hideDone) {
+    if (state_category === "lifeInfo" && state_hideDone) {
       posts = posts.filter(function (p) { return p.dealStatus !== "done"; });
     }
     if (state_category === "job") {
@@ -1093,11 +1102,15 @@ var Community = (function () {
     return text.slice(0, SUMMARY_MAX_LEN) + "…";
   }
 
+  /* 모바일 UI 개선 5단계: 목록 카드에는 최소한의 정보만 표시합니다.
+     표시 우선순위 1.카테고리 2.제목 3.핵심 정보(1줄) 4.선택적 썸네일 —
+     긴 본문 미리보기·작성자/국적/댓글 수 같은 부가정보는 목록에서
+     뺐습니다(상세 화면에서는 그대로 볼 수 있습니다). */
   function buildPostListItem(post) {
     var card = el("div", "community-post-card");
     card.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + post.id); });
 
-    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category]));
+    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_TABS[COMMUNITY_CATEGORY_TO_TAB[post.category]] || COMMUNITY_TABS.free));
     card.appendChild(catLine);
 
     if (post.category === "market" && post.dealStatus) {
@@ -1119,6 +1132,13 @@ var Community = (function () {
       if (jEffectiveStatus) card.appendChild(el("span", "community-badge community-badge-jobstatus-" + jEffectiveStatus, t(jStatusMap[jEffectiveStatus])));
     }
 
+    card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+
+    // 핵심 정보 1줄 — 구인·구직은 위치, 그 외에는 작성일만(부가정보 남발 금지).
+    var keyInfo = post.category === "job" ? (post.workLocation || post.desiredLocation || "") : "";
+    if (!keyInfo) keyInfo = formatDate(post.createdAt);
+    if (keyInfo) card.appendChild(el("p", "community-post-card-meta", keyInfo));
+
     if (post.photos && post.photos.length) {
       var thumb = document.createElement("img");
       thumb.className = "community-post-card-photo";
@@ -1127,14 +1147,6 @@ var Community = (function () {
       thumb.loading = "lazy";
       card.appendChild(thumb);
     }
-
-    card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
-    var summaryText = summarize(post);
-    if (summaryText) card.appendChild(el("p", "community-post-card-summary", summaryText));
-    var meta = el("p", "community-post-card-meta",
-      maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
-      (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
-    card.appendChild(meta);
 
     var detailBtn = el("button", "community-link-btn community-post-card-detail-btn", t(COMMUNITY_POST.detailBtn));
     detailBtn.type = "button";

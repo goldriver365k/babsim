@@ -1867,7 +1867,7 @@ main {
   overflow-wrap: anywhere;
 }
 
-.community-post-card-meta { font-size: 12px; color: #64748B; overflow-wrap: anywhere; }
+.community-post-card-meta { font-size: 12px; color: #64748B; overflow-wrap: anywhere; margin: 0 0 8px; }
 
 .community-post-card-photo {
   display: block;
@@ -1876,13 +1876,6 @@ main {
   object-fit: cover;
   border-radius: 10px;
   margin-bottom: 8px;
-}
-
-.community-post-card-summary {
-  font-size: 14px;
-  color: var(--comm-text);
-  margin: 0 0 8px;
-  overflow-wrap: anywhere;
 }
 
 .community-post-card-detail-btn { margin-top: 4px; padding-left: 0; }
