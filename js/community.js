@@ -28,6 +28,8 @@ var Community = (function () {
   var CONTENT_MAX_LEN = 2000;
   var JOB_INTRO_MAX_LEN = 1000; // 구직 자기소개(본문 필드 재사용)
   var COMMENT_MAX_LEN = 500;
+  var SUMMARY_MAX_LEN = 100; // 비회원(및 목록 카드)에게 보이는 본문 요약 길이
+  var REDIRECT_KEY = "communityRedirectAfterAuth"; // 로그인/가입 완료 후 돌아갈 경로(세션 동안만)
 
   var lang = "ko";
   var els = {};
@@ -79,6 +81,74 @@ var Community = (function () {
   }
 
   window.addEventListener("popstate", function () { route(); });
+
+  /* ---------------- 로그인/가입 후 원래 화면으로 돌아가기 ----------------
+     비회원이 게시글·글쓰기·댓글 등을 누르면 로그인/가입 안내창을 띄우고,
+     누르려던 경로를 sessionStorage에 잠깐만 저장해 둡니다(탭을 닫으면
+     사라짐). 가입/로그인이 끝나면 이 경로로 돌아가고, 없으면 커뮤니티
+     첫 화면으로 갑니다. babsim.store 내부 커뮤니티 경로("/community"로
+     시작)만 허용해 외부 주소로 임의 이동하는 것을 막습니다. */
+  function saveRedirectTarget(path) {
+    if (typeof path !== "string" || path.indexOf(ROUTE_PREFIX) !== 0) return;
+    try { sessionStorage.setItem(REDIRECT_KEY, path); } catch (e) { /* 저장 실패해도 가입은 계속 진행 */ }
+  }
+
+  function consumeRedirectTarget() {
+    var target = null;
+    try {
+      target = sessionStorage.getItem(REDIRECT_KEY);
+      sessionStorage.removeItem(REDIRECT_KEY);
+    } catch (e) { /* 무시 */ }
+    var isSafeInternalPath = typeof target === "string" && target.indexOf(ROUTE_PREFIX) === 0 && target.indexOf("//") !== 0;
+    return isSafeInternalPath ? target : ROUTE_PREFIX;
+  }
+
+  function navigateAfterAuth() {
+    navigate(consumeRedirectTarget());
+  }
+
+  /* ---------------- 로그인/가입 안내창(안내 모달) ----------------
+     비회원이 로그인이 필요한 행동을 하면 화면 전체를 가리지 않고
+     이 작은 안내창만 띄웁니다(기존 .modal-overlay/.modal 스타일 재사용). */
+  function closeAuthGateModal() {
+    var existing = qs("communityAuthGateOverlay");
+    if (existing) existing.remove();
+  }
+
+  function showAuthGateModal(redirectPath) {
+    closeAuthGateModal();
+    var overlay = el("div", "modal-overlay");
+    overlay.id = "communityAuthGateOverlay";
+    var modal = el("div", "modal");
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_AUTH.authGateDesc)));
+
+    var actions = el("div", "community-auth-gate-actions");
+    var loginBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.loginTitle));
+    loginBtn.type = "button";
+    loginBtn.addEventListener("click", function () {
+      saveRedirectTarget(redirectPath);
+      closeAuthGateModal();
+      navigate(ROUTE_PREFIX + "/login");
+    });
+    var signupBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.signupTitle));
+    signupBtn.type = "button";
+    signupBtn.addEventListener("click", function () {
+      saveRedirectTarget(redirectPath);
+      closeAuthGateModal();
+      navigate(ROUTE_PREFIX + "/signup");
+    });
+    var cancelBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.authGateCancel));
+    cancelBtn.type = "button";
+    cancelBtn.addEventListener("click", function () { closeAuthGateModal(); });
+
+    actions.appendChild(loginBtn);
+    actions.appendChild(signupBtn);
+    actions.appendChild(cancelBtn);
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeAuthGateModal(); });
+    document.body.appendChild(overlay);
+  }
 
   function route() {
     var path = location.pathname;
@@ -135,6 +205,7 @@ var Community = (function () {
 
   function render() {
     if (!els.root) return;
+    closeAuthGateModal();
     els.root.innerHTML = "";
     els.root.hidden = false;
 
@@ -146,14 +217,23 @@ var Community = (function () {
     if (currentRoute.name === "login") { renderLogin(); return; }
     if (currentRoute.name === "signup") { renderSignup(); return; }
 
-    if (!user) {
-      renderLoginGate();
+    if (user) {
+      // 소셜 로그인(Google) 첫 가입이거나, 어떤 이유로든 회원 정보 문서가
+      // 아직 없는 계정은 국적·언어·약관 동의를 받는 화면부터 보여줍니다.
+      if (pendingProfileUser) { renderCompleteProfile(); return; }
+      if (profile && profile.status === "suspended") { renderSuspended(); return; }
+    }
+
+    // 로그인이 필요한 라우트("내 정보"/"글쓰기")를 비회원이 직접 주소로
+    // 열거나 버튼을 눌렀을 때는 화면 전체를 로그인창으로 덮지 않고,
+    // 작은 안내창만 띄운 뒤 뒤에는 누구나 볼 수 있는 커뮤니티 첫 화면을
+    // 그대로 보여줍니다(2026-09-10 "회원가입 노출 방식 변경" 지시서).
+    var AUTH_REQUIRED_ROUTES = ["my", "write"];
+    if (!user && AUTH_REQUIRED_ROUTES.indexOf(currentRoute.name) !== -1) {
+      renderList();
+      showAuthGateModal(location.pathname);
       return;
     }
-    // 소셜 로그인(Google) 첫 가입이거나, 어떤 이유로든 회원 정보 문서가
-    // 아직 없는 계정은 국적·언어·약관 동의를 받는 화면부터 보여줍니다.
-    if (pendingProfileUser) { renderCompleteProfile(); return; }
-    if (profile && profile.status === "suspended") { renderSuspended(); return; }
 
     if (currentRoute.name === "my") { renderMyPage(); return; }
     if (currentRoute.name === "write") { renderWrite(); return; }
@@ -187,26 +267,7 @@ var Community = (function () {
     return "<p>" + lines.map(function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }).join("</p><p>") + "</p>";
   }
 
-  /* ---------------- 로그인 필요 / 정지 안내 ---------------- */
-
-  function renderLoginGate() {
-    var wrap = el("div", "community-page community-gate");
-    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginRequiredTitle)));
-    wrap.appendChild(el("p", "community-gate-desc", t(COMMUNITY_AUTH.loginRequiredDesc)));
-
-    var actions = el("div", "community-gate-actions");
-    var loginBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.loginTitle));
-    loginBtn.type = "button";
-    loginBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
-    var signupBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
-    signupBtn.type = "button";
-    signupBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
-    actions.appendChild(loginBtn);
-    actions.appendChild(signupBtn);
-    wrap.appendChild(actions);
-
-    els.root.appendChild(wrap);
-  }
+  /* ---------------- 정지 안내 ---------------- */
 
   function renderSuspended() {
     var wrap = el("div", "community-page community-gate");
@@ -267,7 +328,7 @@ var Community = (function () {
         return a.signInWithEmailAndPassword(emailInput.value.trim(), pwInput.value);
       }).then(function () {
         pendingProfileUser = null;
-        navigate(ROUTE_PREFIX);
+        navigateAfterAuth();
       }).catch(function () {
         errorP.textContent = t(COMMUNITY_MSG.errLogin);
       }).finally(function () { submitBtn.disabled = false; });
@@ -326,8 +387,10 @@ var Community = (function () {
     }).then(function (doc) {
       if (doc.exists) {
         pendingProfileUser = null;
-        navigate(ROUTE_PREFIX);
+        navigateAfterAuth();
       } else {
+        // 국적/언어/약관 동의를 마저 받아야 하므로 아직 리다이렉트를
+        // 소비하지 않습니다(완료 후 renderCompleteProfile 쪽에서 처리).
         pendingProfileUser = a.currentUser;
         navigate(ROUTE_PREFIX);
       }
@@ -410,7 +473,7 @@ var Community = (function () {
       }).then(function () {
         pendingProfileUser = null;
         setLang(langSelect.value);
-        navigate(ROUTE_PREFIX);
+        navigateAfterAuth();
       }).catch(function () {
         errorP.textContent = t(COMMUNITY_MSG.errGeneric);
         submitBtn.disabled = false;
@@ -517,7 +580,7 @@ var Community = (function () {
       }).then(function () {
         pendingProfileUser = null;
         setLang(langSelect.value);
-        navigate(ROUTE_PREFIX);
+        navigateAfterAuth();
       }).catch(function (err) {
         errorP.textContent = (err && err.code === "auth/email-already-in-use")
           ? t(COMMUNITY_MSG.errEmailInUse) : t(COMMUNITY_MSG.errGeneric);
@@ -704,6 +767,28 @@ var Community = (function () {
   function renderList() {
     var wrap = el("div", "community-page community-list-page");
 
+    // 첫 화면: 1.제목 2.짧은 소개 3.카테고리 4.최신 게시글 5.로그인·가입
+    // 작은 버튼(비회원일 때만) — 화면 전체를 로그인창으로 덮지 않습니다
+    // (2026-09-10 "회원가입 노출 방식 변경" 지시서).
+    var homeHeader = el("div", "community-home-header");
+    var titleRow = el("div", "community-home-title-row");
+    titleRow.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
+    if (!authUser) {
+      var authActions = el("div", "community-home-auth-actions");
+      var loginSmallBtn = el("button", "community-link-btn", t(COMMUNITY_AUTH.loginTitle));
+      loginSmallBtn.type = "button";
+      loginSmallBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
+      var signupSmallBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
+      signupSmallBtn.type = "button";
+      signupSmallBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
+      authActions.appendChild(loginSmallBtn);
+      authActions.appendChild(signupSmallBtn);
+      titleRow.appendChild(authActions);
+    }
+    homeHeader.appendChild(titleRow);
+    homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
+    wrap.appendChild(homeHeader);
+
     var catTabs = el("div", "community-category-tabs");
     COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
       var b = el("button", "community-category-tab" + (state_category === cat ? " active" : ""), t(COMMUNITY_CATEGORIES[cat]));
@@ -766,7 +851,10 @@ var Community = (function () {
 
     var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
     writeBtn.type = "button";
-    writeBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write"); });
+    writeBtn.addEventListener("click", function () {
+      if (!authUser) { showAuthGateModal(ROUTE_PREFIX + "/write"); return; }
+      navigate(ROUTE_PREFIX + "/write");
+    });
     wrap.appendChild(writeBtn);
 
     var listArea = el("div", "community-post-list");
@@ -914,6 +1002,36 @@ var Community = (function () {
     return (tr && tr.title) || post.originalTitle;
   }
 
+  function localizedContent(post) {
+    if (post.originalLanguage === lang) return post.originalContent || "";
+    var tr = post.translations && post.translations[lang];
+    return (tr && tr.content) || post.originalContent || "";
+  }
+
+  // 목록 카드·비회원 미리보기에 쓰는 본문 요약 — 최대 100자, 넘으면
+  // 말줄임표 표시. 전화번호/이메일/계좌번호처럼 보이는 문자열은 미리
+  // "***"로 가려서 요약에 개인정보가 그대로 노출되지 않게 합니다
+  // (2026-09-10 "회원가입 노출 방식 변경" 지시서 5·6번).
+  var PERSONAL_INFO_REDACT_PATTERNS = [
+    /01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/g,
+    /\b\d{2,4}[-.\s]\d{3,4}[-.\s]\d{4}\b/g,
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    /\b\d{6}[-\s]?[1-4]\d{6}\b/g,
+    /\b\d{10,16}\b/g
+  ];
+
+  function redactPersonalInfo(text) {
+    var out = String(text || "");
+    PERSONAL_INFO_REDACT_PATTERNS.forEach(function (re) { out = out.replace(re, "***"); });
+    return out;
+  }
+
+  function summarize(post) {
+    var text = redactPersonalInfo(localizedContent(post)).trim();
+    if (text.length <= SUMMARY_MAX_LEN) return text;
+    return text.slice(0, SUMMARY_MAX_LEN) + "…";
+  }
+
   function buildPostListItem(post) {
     var card = el("div", "community-post-card");
     card.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + post.id); });
@@ -940,11 +1058,31 @@ var Community = (function () {
       if (jEffectiveStatus) card.appendChild(el("span", "community-badge community-badge-jobstatus-" + jEffectiveStatus, t(jStatusMap[jEffectiveStatus])));
     }
 
+    if (post.photos && post.photos.length) {
+      var thumb = document.createElement("img");
+      thumb.className = "community-post-card-photo";
+      thumb.src = post.photos[0];
+      thumb.alt = "";
+      thumb.loading = "lazy";
+      card.appendChild(thumb);
+    }
+
     card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+    var summaryText = summarize(post);
+    if (summaryText) card.appendChild(el("p", "community-post-card-summary", summaryText));
     var meta = el("p", "community-post-card-meta",
       maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
       (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
     card.appendChild(meta);
+
+    var detailBtn = el("button", "community-link-btn community-post-card-detail-btn", t(COMMUNITY_POST.detailBtn));
+    detailBtn.type = "button";
+    detailBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      navigate(ROUTE_PREFIX + "/post/" + post.id);
+    });
+    card.appendChild(detailBtn);
+
     return card;
   }
 
@@ -963,7 +1101,21 @@ var Community = (function () {
         wrap.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts)));
         return;
       }
+      if (doc.data().status === "hidden") {
+        // 신고 누적으로 자동 숨김된 게시글은 회원·비회원 모두 더 이상
+        // 열람할 수 없습니다(작성자 본인도 예외 없음).
+        wrap.innerHTML = "";
+        wrap.appendChild(el("p", "community-empty", t(COMMUNITY_REPORT.hiddenNotice)));
+        return;
+      }
       var post = Object.assign({ id: doc.id }, doc.data());
+      if (!authUser) {
+        // 비회원은 요약만 보고, 전체 본문·댓글·연락처·번역은 로그인해야
+        // 볼 수 있습니다(2026-09-10 "회원가입 노출 방식 변경" 지시서 2번).
+        renderGuestPostPreview(wrap, post);
+        showAuthGateModal(ROUTE_PREFIX + "/post/" + postId);
+        return;
+      }
       postCache[postId] = post;
       renderPostDetailBody(wrap, post);
     }).catch(function (err) {
@@ -971,6 +1123,32 @@ var Community = (function () {
       wrap.innerHTML = "";
       wrap.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
     });
+  }
+
+  /* 비회원용 게시글 미리보기 — 제목·요약(100자)·가려진 작성자·국적·
+     작성일·사진 1장·댓글 개수만 보여주고, 전체 본문·댓글 내용·연락처는
+     보여주지 않습니다. "자세히 보기"를 누르면(이미 열려 있는 안내창을
+     다시 띄워) 로그인/가입을 안내합니다. */
+  function renderGuestPostPreview(wrap, post) {
+    wrap.innerHTML = "";
+    wrap.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
+    wrap.appendChild(el("h2", "community-detail-title", localizedTitle(post)));
+    var meta = el("p", "community-post-card-meta",
+      maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
+      (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
+    wrap.appendChild(meta);
+    if (post.photos && post.photos.length) {
+      var img = document.createElement("img");
+      img.className = "community-post-card-photo";
+      img.src = post.photos[0]; img.alt = ""; img.loading = "lazy";
+      wrap.appendChild(img);
+    }
+    var summaryText = summarize(post);
+    if (summaryText) wrap.appendChild(el("p", "community-post-card-summary", summaryText));
+    var detailBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.detailBtn));
+    detailBtn.type = "button";
+    detailBtn.addEventListener("click", function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
+    wrap.appendChild(detailBtn);
   }
 
   var detailShowOriginal = false;
