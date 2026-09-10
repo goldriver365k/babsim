@@ -71,7 +71,19 @@ const UI_TEXT = {
   homeCommunityLatestTitle: { ko: "커뮤니티 최신 글", en: "Latest Community Posts", zh: "社区最新帖子", vi: "Bài viết cộng đồng mới nhất", mn: "Нийгэмлэгийн сүүлийн үеийн нийтлэл", bn: "কমিউনিটির সাম্প্রতিক পোস্ট", my: "အသိုင်းအဝိုင်း နောက်ဆုံးပို့စ်များ" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
-  bottomNavCommunity: { ko: "커뮤니티", en: "Community", zh: "社区", vi: "Cộng đồng", mn: "Нийгэмлэг", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
+  /* 모바일 UI 개선 8단계: 하단 내비게이션 5개(홈/검색/글쓰기/알림/MY) —
+     글쓰기는 기존 COMMUNITY_POST.writeTitle을 그대로 재사용합니다. */
+  bottomNavSearch: { ko: "검색", en: "Search", zh: "搜索", vi: "Tìm kiếm", mn: "Хайх", bn: "অনুসন্ধান", my: "ရှာဖွေရန်" },
+  bottomNavNotify: { ko: "알림", en: "Alerts", zh: "通知", vi: "Thông báo", mn: "Мэдэгдэл", bn: "বিজ্ঞপ্তি", my: "အကြောင်းကြားချက်" },
+  bottomNavNotifyComingSoon: {
+    ko: "알림 기능은 준비 중입니다.",
+    en: "Notifications are coming soon.",
+    zh: "通知功能正在准备中。",
+    vi: "Tính năng thông báo đang được chuẩn bị.",
+    mn: "Мэдэгдэл функц бэлтгэгдэж байна.",
+    bn: "বিজ্ঞপ্তি বৈশিষ্ট্যটি প্রস্তুত করা হচ্ছে।",
+    my: "အကြောင်းကြားချက်လုပ်ဆောင်ချက်ကို ပြင်ဆင်နေပါသည်။"
+  }
 };
 
 /* ==========================================================================

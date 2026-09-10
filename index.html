@@ -602,8 +602,10 @@ button {
   display: none;
   position: fixed;
   right: 16px;
-  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올려 겹치지 않게 합니다. */
-  bottom: calc(16px + var(--pwa-banner-height, 0px));
+  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로, 그리고 모바일 UI
+     개선 8단계부터 항상 고정 표시되는 하단 내비게이션(약 76px) 위로
+     겹치지 않게 밀어 올립니다. */
+  bottom: calc(76px + 16px + var(--pwa-banner-height, 0px));
   transition: bottom 0.15s ease;
   z-index: 40;
   align-items: center;
@@ -763,7 +765,7 @@ button {
 .home-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px calc(76px + 20px); /* 하단 내비게이션(약 76px)에 가려지지 않도록 */
+  padding: 20px 16px calc(76px + 16px + 64px + 20px); /* 하단 내비게이션(약 76px) + "사장님께 말해요" FAB(약 64px, 16px 간격)에 가려지지 않도록 */
 }
 
 .home-view[hidden] { display: none; }
@@ -919,11 +921,24 @@ button {
   color: var(--text-mid);
 }
 
-.bottom-nav-btn.active { color: var(--blue); font-weight: 700; }
+/* 모바일 UI 개선 8단계: 선택된 메뉴는 지정된 블루(#1465E8) */
+.bottom-nav-btn.active { color: #1465E8; font-weight: 700; }
 
 .bottom-nav-icon { font-size: 20px; line-height: 1; }
 
-.bottom-nav-label { font-size: 12px; }
+.bottom-nav-label {
+  font-size: 12px;
+  /* 언어별 글자 길이가 달라도(베트남어·벵골어·미얀마어·몽골어 등) 잘리지
+     않도록 줄바꿈을 허용합니다(8단계: 모바일 가독성). */
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* 글쓰기 버튼만 살짝 강조(큰 원형 버튼·과도한 그림자는 쓰지 않음) */
+.bottom-nav-btn-write .bottom-nav-icon { font-size: 22px; }
+.bottom-nav-btn-write .bottom-nav-label { font-weight: 700; }
 
 /* 천원의 아침밥 카드 — 다른 서비스 카드보다 살짝만 강조(큰 배너 아님) */
 .home-service-card-featured .home-service-icon { font-size: 34px; }
@@ -994,7 +1009,9 @@ button {
 main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px 60px;
+  /* 모바일 UI 개선 8단계: 하단 내비게이션 + "사장님께 말해요" FAB이 항상
+     고정 표시되어 가리지 않도록 */
+  padding: 20px 16px calc(76px + 16px + 64px + 20px);
 }
 
 .store-heading {
@@ -1695,7 +1712,9 @@ main {
 .community-root {
   max-width: 760px;
   margin: 0 auto;
-  padding: 16px 16px 48px;
+  /* 모바일 UI 개선 8단계: 하단 내비게이션 + "사장님께 말해요" FAB이 항상
+     고정 표시되어 가리지 않도록 */
+  padding: 16px 16px calc(76px + 16px + 64px + 20px);
   font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", "Noto Sans Bengali", "Noto Sans Myanmar", inherit;
   color: var(--comm-text);
 }
@@ -2229,14 +2248,30 @@ main {
 
 <!-- 하단 내비게이션 — 홈/커뮤니티 두 화면만 빠르게 오갈 수 있게 합니다
      (이번 단계는 홈 화면 관련 범위라, 우선 홈 화면에서만 보입니다). -->
+<!-- 모바일 UI 개선 8단계: 하단 내비게이션을 홈/검색/글쓰기/알림/MY
+     5개로 정리(천원의 아침밥·유학생 커뮤니티 등 핵심 서비스 5개는
+     메인 홈 카드에서만 접근 — 여기에 넣지 않음). 화면(홈/매장/커뮤니티)
+     과 무관하게 항상 고정 표시됩니다. -->
 <nav class="bottom-nav" id="bottomNav" aria-label="하단 내비게이션">
   <button type="button" class="bottom-nav-btn" id="bottomNavHomeBtn">
     <span class="bottom-nav-icon" aria-hidden="true">🏠</span>
     <span class="bottom-nav-label" id="bottomNavHomeLabel"></span>
   </button>
-  <button type="button" class="bottom-nav-btn" id="bottomNavCommunityBtn">
-    <span class="bottom-nav-icon" aria-hidden="true">💬</span>
-    <span class="bottom-nav-label" id="bottomNavCommunityLabel"></span>
+  <button type="button" class="bottom-nav-btn" id="bottomNavSearchBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🔍</span>
+    <span class="bottom-nav-label" id="bottomNavSearchLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn bottom-nav-btn-write" id="bottomNavWriteBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">✏️</span>
+    <span class="bottom-nav-label" id="bottomNavWriteLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavNotifyBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🔔</span>
+    <span class="bottom-nav-label" id="bottomNavNotifyLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavMyBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">👤</span>
+    <span class="bottom-nav-label">MY</span>
   </button>
 </nav>
 
@@ -2493,7 +2528,19 @@ const UI_TEXT = {
   homeCommunityLatestTitle: { ko: "커뮤니티 최신 글", en: "Latest Community Posts", zh: "社区最新帖子", vi: "Bài viết cộng đồng mới nhất", mn: "Нийгэмлэгийн сүүлийн үеийн нийтлэл", bn: "কমিউনিটির সাম্প্রতিক পোস্ট", my: "အသိုင်းအဝိုင်း နောက်ဆုံးပို့စ်များ" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
-  bottomNavCommunity: { ko: "커뮤니티", en: "Community", zh: "社区", vi: "Cộng đồng", mn: "Нийгэмлэг", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
+  /* 모바일 UI 개선 8단계: 하단 내비게이션 5개(홈/검색/글쓰기/알림/MY) —
+     글쓰기는 기존 COMMUNITY_POST.writeTitle을 그대로 재사용합니다. */
+  bottomNavSearch: { ko: "검색", en: "Search", zh: "搜索", vi: "Tìm kiếm", mn: "Хайх", bn: "অনুসন্ধান", my: "ရှာဖွေရန်" },
+  bottomNavNotify: { ko: "알림", en: "Alerts", zh: "通知", vi: "Thông báo", mn: "Мэдэгдэл", bn: "বিজ্ঞপ্তি", my: "အကြောင်းကြားချက်" },
+  bottomNavNotifyComingSoon: {
+    ko: "알림 기능은 준비 중입니다.",
+    en: "Notifications are coming soon.",
+    zh: "通知功能正在准备中。",
+    vi: "Tính năng thông báo đang được chuẩn bị.",
+    mn: "Мэдэгдэл функц бэлтгэгдэж байна.",
+    bn: "বিজ্ঞপ্তি বৈশিষ্ট্যটি প্রস্তুত করা হচ্ছে।",
+    my: "အကြောင်းကြားချက်လုပ်ဆောင်ချက်ကို ပြင်ဆင်နေပါသည်။"
+  }
 };
 
 /* ==========================================================================
@@ -5080,11 +5127,12 @@ var Community = (function () {
     var ownerBanner = document.querySelector(".owner-chat-banner");
     if (ownerBanner) ownerBanner.hidden = !show;
     var home = qs("homeView");
-    var bottomNav = qs("bottomNav");
     if (!show) {
       // 커뮤니티로 들어갈 때는 홈 화면(있다면)과 매장 화면을 함께 숨깁니다.
+      // 하단 내비게이션(모바일 UI 개선 8단계부터 항상 고정 표시)은
+      // 그대로 두고, "홈" 활성 표시만 꺼 둡니다.
       if (home) home.hidden = true;
-      if (bottomNav) bottomNav.hidden = true;
+      if (window.AppHome && typeof window.AppHome.setHomeActive === "function") window.AppHome.setHomeActive(false);
       var mainIn = document.querySelector("main");
       if (mainIn) mainIn.hidden = true;
     } else if (window.AppHome && typeof window.AppHome.applyView === "function") {
@@ -7250,7 +7298,8 @@ var Community = (function () {
     isCommunityPath: isCommunityPath,
     navigate: navigate,
     routePrefix: ROUTE_PREFIX,
-    fetchLatestPosts: fetchLatestPostsForHome
+    fetchLatestPosts: fetchLatestPostsForHome,
+    showToast: showToast
   };
 })();
 
@@ -7478,10 +7527,9 @@ document.addEventListener("DOMContentLoaded", function () {
   function applyViewVisibility() {
     var showHomeView = state.view === "home";
     if (els.homeView) els.homeView.hidden = !showHomeView;
-    // 하단 내비게이션은 이번 단계 범위(홈 화면)상 홈 화면에서만 보입니다.
-    if (els.bottomNav) els.bottomNav.hidden = !showHomeView;
-    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", true);
-    if (els.bottomNavCommunityBtn) els.bottomNavCommunityBtn.classList.toggle("active", false);
+    // 모바일 UI 개선 8단계: 하단 내비게이션은 화면과 무관하게 항상
+    // 고정 표시됩니다(홈에서만 보이던 이전 동작을 폐지).
+    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", showHomeView);
     var main = document.querySelector("main");
     if (main) main.hidden = showHomeView;
   }
@@ -7561,7 +7609,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
     if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
-    if (els.bottomNavCommunityLabel) els.bottomNavCommunityLabel.textContent = UI_TEXT.bottomNavCommunity[state.lang];
+    if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
+    // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
+    if (els.bottomNavWriteLabel && window.COMMUNITY_POST) els.bottomNavWriteLabel.textContent = window.COMMUNITY_POST.writeTitle[state.lang];
+    if (els.bottomNavNotifyLabel) els.bottomNavNotifyLabel.textContent = UI_TEXT.bottomNavNotify[state.lang];
     renderHomeLatestPosts();
   }
 
@@ -8070,8 +8121,13 @@ document.addEventListener("DOMContentLoaded", function () {
     els.bottomNav = qs("bottomNav");
     els.bottomNavHomeBtn = qs("bottomNavHomeBtn");
     els.bottomNavHomeLabel = qs("bottomNavHomeLabel");
-    els.bottomNavCommunityBtn = qs("bottomNavCommunityBtn");
-    els.bottomNavCommunityLabel = qs("bottomNavCommunityLabel");
+    els.bottomNavSearchBtn = qs("bottomNavSearchBtn");
+    els.bottomNavSearchLabel = qs("bottomNavSearchLabel");
+    els.bottomNavWriteBtn = qs("bottomNavWriteBtn");
+    els.bottomNavWriteLabel = qs("bottomNavWriteLabel");
+    els.bottomNavNotifyBtn = qs("bottomNavNotifyBtn");
+    els.bottomNavNotifyLabel = qs("bottomNavNotifyLabel");
+    els.bottomNavMyBtn = qs("bottomNavMyBtn");
 
     els.breakfastPopupOverlay = qs("breakfastPopupOverlay");
     els.breakfastPopupTitle = qs("breakfastPopupTitle");
@@ -8186,14 +8242,48 @@ document.addEventListener("DOMContentLoaded", function () {
       card.addEventListener("click", function () { goToStore(store); });
     });
 
-    // 하단 내비게이션(홈 · 커뮤니티)
+    // 하단 내비게이션(홈/검색/글쓰기/알림/MY, 모바일 UI 개선 8단계) —
+    // 전부 기존 커뮤니티 라우팅·안내창 로직을 그대로 재사용합니다.
     if (els.bottomNavHomeBtn) {
       els.bottomNavHomeBtn.addEventListener("click", goHome);
     }
-    if (els.bottomNavCommunityBtn && els.storeTabs) {
-      els.bottomNavCommunityBtn.addEventListener("click", function () {
-        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
-        if (communityTabBtn) communityTabBtn.click();
+    if (els.bottomNavSearchBtn) {
+      els.bottomNavSearchBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix);
+        }
+        // 게시판/콘텐츠 검색은 새로 만들지 않고, 커뮤니티 목록에 이미 있는
+        // 검색창(제목·본문 검색)으로 포커스만 이동합니다.
+        setTimeout(function () {
+          var input = document.querySelector(".community-search-input");
+          if (input) input.focus();
+        }, 150);
+      });
+    }
+    if (els.bottomNavWriteBtn) {
+      els.bottomNavWriteBtn.addEventListener("click", function () {
+        // 비회원이면 기존 로그인 안내창이, 회원이면 글쓰기 화면이 뜹니다
+        // (js/community.js의 AUTH_REQUIRED_ROUTES를 그대로 재사용).
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix + "/write");
+        }
+      });
+    }
+    if (els.bottomNavNotifyBtn) {
+      els.bottomNavNotifyBtn.addEventListener("click", function () {
+        // 기존 알림 기능이 없어, 새 알림 시스템을 만드는 대신 있는
+        // 토스트(community.js showToast)로 안내만 합니다.
+        if (window.Community && typeof window.Community.showToast === "function") {
+          window.Community.showToast(UI_TEXT.bottomNavNotifyComingSoon[state.lang]);
+        }
+      });
+    }
+    if (els.bottomNavMyBtn) {
+      els.bottomNavMyBtn.addEventListener("click", function () {
+        // 비회원이면 로그인 안내, 회원이면 기존 마이페이지(동일 로직 재사용).
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix + "/my");
+        }
       });
     }
 
@@ -8208,7 +8298,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // js/community.js가 커뮤니티 화면에서 빠져나올 때 홈/매장 중 무엇을
     // 다시 보여줄지 이 함수를 통해 물어봅니다.
-    window.AppHome = { applyView: applyViewVisibility };
+    window.AppHome = {
+      applyView: applyViewVisibility,
+      // 커뮤니티 화면으로 들어갈 때 하단 내비게이션의 "홈" 활성 표시만
+      // 꺼달라고 community.js가 호출합니다(하단 내비게이션 자체는 8단계부터
+      // 항상 고정 표시).
+      setHomeActive: function (active) {
+        if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", active);
+      }
+    };
 
     // 당일 첫 방문 평가 팝업(모바일 UI 개선 6단계)
     if (els.breakfastPopupRateBtn) {

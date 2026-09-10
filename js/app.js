@@ -216,10 +216,9 @@
   function applyViewVisibility() {
     var showHomeView = state.view === "home";
     if (els.homeView) els.homeView.hidden = !showHomeView;
-    // 하단 내비게이션은 이번 단계 범위(홈 화면)상 홈 화면에서만 보입니다.
-    if (els.bottomNav) els.bottomNav.hidden = !showHomeView;
-    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", true);
-    if (els.bottomNavCommunityBtn) els.bottomNavCommunityBtn.classList.toggle("active", false);
+    // 모바일 UI 개선 8단계: 하단 내비게이션은 화면과 무관하게 항상
+    // 고정 표시됩니다(홈에서만 보이던 이전 동작을 폐지).
+    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", showHomeView);
     var main = document.querySelector("main");
     if (main) main.hidden = showHomeView;
   }
@@ -299,7 +298,10 @@
     if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
     if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
-    if (els.bottomNavCommunityLabel) els.bottomNavCommunityLabel.textContent = UI_TEXT.bottomNavCommunity[state.lang];
+    if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
+    // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
+    if (els.bottomNavWriteLabel && window.COMMUNITY_POST) els.bottomNavWriteLabel.textContent = window.COMMUNITY_POST.writeTitle[state.lang];
+    if (els.bottomNavNotifyLabel) els.bottomNavNotifyLabel.textContent = UI_TEXT.bottomNavNotify[state.lang];
     renderHomeLatestPosts();
   }
 
@@ -808,8 +810,13 @@
     els.bottomNav = qs("bottomNav");
     els.bottomNavHomeBtn = qs("bottomNavHomeBtn");
     els.bottomNavHomeLabel = qs("bottomNavHomeLabel");
-    els.bottomNavCommunityBtn = qs("bottomNavCommunityBtn");
-    els.bottomNavCommunityLabel = qs("bottomNavCommunityLabel");
+    els.bottomNavSearchBtn = qs("bottomNavSearchBtn");
+    els.bottomNavSearchLabel = qs("bottomNavSearchLabel");
+    els.bottomNavWriteBtn = qs("bottomNavWriteBtn");
+    els.bottomNavWriteLabel = qs("bottomNavWriteLabel");
+    els.bottomNavNotifyBtn = qs("bottomNavNotifyBtn");
+    els.bottomNavNotifyLabel = qs("bottomNavNotifyLabel");
+    els.bottomNavMyBtn = qs("bottomNavMyBtn");
 
     els.breakfastPopupOverlay = qs("breakfastPopupOverlay");
     els.breakfastPopupTitle = qs("breakfastPopupTitle");
@@ -924,14 +931,48 @@
       card.addEventListener("click", function () { goToStore(store); });
     });
 
-    // 하단 내비게이션(홈 · 커뮤니티)
+    // 하단 내비게이션(홈/검색/글쓰기/알림/MY, 모바일 UI 개선 8단계) —
+    // 전부 기존 커뮤니티 라우팅·안내창 로직을 그대로 재사용합니다.
     if (els.bottomNavHomeBtn) {
       els.bottomNavHomeBtn.addEventListener("click", goHome);
     }
-    if (els.bottomNavCommunityBtn && els.storeTabs) {
-      els.bottomNavCommunityBtn.addEventListener("click", function () {
-        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
-        if (communityTabBtn) communityTabBtn.click();
+    if (els.bottomNavSearchBtn) {
+      els.bottomNavSearchBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix);
+        }
+        // 게시판/콘텐츠 검색은 새로 만들지 않고, 커뮤니티 목록에 이미 있는
+        // 검색창(제목·본문 검색)으로 포커스만 이동합니다.
+        setTimeout(function () {
+          var input = document.querySelector(".community-search-input");
+          if (input) input.focus();
+        }, 150);
+      });
+    }
+    if (els.bottomNavWriteBtn) {
+      els.bottomNavWriteBtn.addEventListener("click", function () {
+        // 비회원이면 기존 로그인 안내창이, 회원이면 글쓰기 화면이 뜹니다
+        // (js/community.js의 AUTH_REQUIRED_ROUTES를 그대로 재사용).
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix + "/write");
+        }
+      });
+    }
+    if (els.bottomNavNotifyBtn) {
+      els.bottomNavNotifyBtn.addEventListener("click", function () {
+        // 기존 알림 기능이 없어, 새 알림 시스템을 만드는 대신 있는
+        // 토스트(community.js showToast)로 안내만 합니다.
+        if (window.Community && typeof window.Community.showToast === "function") {
+          window.Community.showToast(UI_TEXT.bottomNavNotifyComingSoon[state.lang]);
+        }
+      });
+    }
+    if (els.bottomNavMyBtn) {
+      els.bottomNavMyBtn.addEventListener("click", function () {
+        // 비회원이면 로그인 안내, 회원이면 기존 마이페이지(동일 로직 재사용).
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix + "/my");
+        }
       });
     }
 
@@ -946,7 +987,15 @@
 
     // js/community.js가 커뮤니티 화면에서 빠져나올 때 홈/매장 중 무엇을
     // 다시 보여줄지 이 함수를 통해 물어봅니다.
-    window.AppHome = { applyView: applyViewVisibility };
+    window.AppHome = {
+      applyView: applyViewVisibility,
+      // 커뮤니티 화면으로 들어갈 때 하단 내비게이션의 "홈" 활성 표시만
+      // 꺼달라고 community.js가 호출합니다(하단 내비게이션 자체는 8단계부터
+      // 항상 고정 표시).
+      setHomeActive: function (active) {
+        if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", active);
+      }
+    };
 
     // 당일 첫 방문 평가 팝업(모바일 UI 개선 6단계)
     if (els.breakfastPopupRateBtn) {

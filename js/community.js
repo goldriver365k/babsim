@@ -180,11 +180,12 @@ var Community = (function () {
     var ownerBanner = document.querySelector(".owner-chat-banner");
     if (ownerBanner) ownerBanner.hidden = !show;
     var home = qs("homeView");
-    var bottomNav = qs("bottomNav");
     if (!show) {
       // 커뮤니티로 들어갈 때는 홈 화면(있다면)과 매장 화면을 함께 숨깁니다.
+      // 하단 내비게이션(모바일 UI 개선 8단계부터 항상 고정 표시)은
+      // 그대로 두고, "홈" 활성 표시만 꺼 둡니다.
       if (home) home.hidden = true;
-      if (bottomNav) bottomNav.hidden = true;
+      if (window.AppHome && typeof window.AppHome.setHomeActive === "function") window.AppHome.setHomeActive(false);
       var mainIn = document.querySelector("main");
       if (mainIn) mainIn.hidden = true;
     } else if (window.AppHome && typeof window.AppHome.applyView === "function") {
@@ -2350,7 +2351,8 @@ var Community = (function () {
     isCommunityPath: isCommunityPath,
     navigate: navigate,
     routePrefix: ROUTE_PREFIX,
-    fetchLatestPosts: fetchLatestPostsForHome
+    fetchLatestPosts: fetchLatestPostsForHome,
+    showToast: showToast
   };
 })();
 

@@ -577,8 +577,10 @@ button {
   display: none;
   position: fixed;
   right: 16px;
-  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올려 겹치지 않게 합니다. */
-  bottom: calc(16px + var(--pwa-banner-height, 0px));
+  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로, 그리고 모바일 UI
+     개선 8단계부터 항상 고정 표시되는 하단 내비게이션(약 76px) 위로
+     겹치지 않게 밀어 올립니다. */
+  bottom: calc(76px + 16px + var(--pwa-banner-height, 0px));
   transition: bottom 0.15s ease;
   z-index: 40;
   align-items: center;
@@ -738,7 +740,7 @@ button {
 .home-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px calc(76px + 20px); /* 하단 내비게이션(약 76px)에 가려지지 않도록 */
+  padding: 20px 16px calc(76px + 16px + 64px + 20px); /* 하단 내비게이션(약 76px) + "사장님께 말해요" FAB(약 64px, 16px 간격)에 가려지지 않도록 */
 }
 
 .home-view[hidden] { display: none; }
@@ -894,11 +896,24 @@ button {
   color: var(--text-mid);
 }
 
-.bottom-nav-btn.active { color: var(--blue); font-weight: 700; }
+/* 모바일 UI 개선 8단계: 선택된 메뉴는 지정된 블루(#1465E8) */
+.bottom-nav-btn.active { color: #1465E8; font-weight: 700; }
 
 .bottom-nav-icon { font-size: 20px; line-height: 1; }
 
-.bottom-nav-label { font-size: 12px; }
+.bottom-nav-label {
+  font-size: 12px;
+  /* 언어별 글자 길이가 달라도(베트남어·벵골어·미얀마어·몽골어 등) 잘리지
+     않도록 줄바꿈을 허용합니다(8단계: 모바일 가독성). */
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* 글쓰기 버튼만 살짝 강조(큰 원형 버튼·과도한 그림자는 쓰지 않음) */
+.bottom-nav-btn-write .bottom-nav-icon { font-size: 22px; }
+.bottom-nav-btn-write .bottom-nav-label { font-weight: 700; }
 
 /* 천원의 아침밥 카드 — 다른 서비스 카드보다 살짝만 강조(큰 배너 아님) */
 .home-service-card-featured .home-service-icon { font-size: 34px; }
@@ -969,7 +984,9 @@ button {
 main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px 60px;
+  /* 모바일 UI 개선 8단계: 하단 내비게이션 + "사장님께 말해요" FAB이 항상
+     고정 표시되어 가리지 않도록 */
+  padding: 20px 16px calc(76px + 16px + 64px + 20px);
 }
 
 .store-heading {
@@ -1670,7 +1687,9 @@ main {
 .community-root {
   max-width: 760px;
   margin: 0 auto;
-  padding: 16px 16px 48px;
+  /* 모바일 UI 개선 8단계: 하단 내비게이션 + "사장님께 말해요" FAB이 항상
+     고정 표시되어 가리지 않도록 */
+  padding: 16px 16px calc(76px + 16px + 64px + 20px);
   font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", "Noto Sans Bengali", "Noto Sans Myanmar", inherit;
   color: var(--comm-text);
 }

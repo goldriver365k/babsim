@@ -180,14 +180,30 @@ def build():
 
 <!-- 하단 내비게이션 — 홈/커뮤니티 두 화면만 빠르게 오갈 수 있게 합니다
      (이번 단계는 홈 화면 관련 범위라, 우선 홈 화면에서만 보입니다). -->
+<!-- 모바일 UI 개선 8단계: 하단 내비게이션을 홈/검색/글쓰기/알림/MY
+     5개로 정리(천원의 아침밥·유학생 커뮤니티 등 핵심 서비스 5개는
+     메인 홈 카드에서만 접근 — 여기에 넣지 않음). 화면(홈/매장/커뮤니티)
+     과 무관하게 항상 고정 표시됩니다. -->
 <nav class="bottom-nav" id="bottomNav" aria-label="하단 내비게이션">
   <button type="button" class="bottom-nav-btn" id="bottomNavHomeBtn">
     <span class="bottom-nav-icon" aria-hidden="true">🏠</span>
     <span class="bottom-nav-label" id="bottomNavHomeLabel"></span>
   </button>
-  <button type="button" class="bottom-nav-btn" id="bottomNavCommunityBtn">
-    <span class="bottom-nav-icon" aria-hidden="true">💬</span>
-    <span class="bottom-nav-label" id="bottomNavCommunityLabel"></span>
+  <button type="button" class="bottom-nav-btn" id="bottomNavSearchBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🔍</span>
+    <span class="bottom-nav-label" id="bottomNavSearchLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn bottom-nav-btn-write" id="bottomNavWriteBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">✏️</span>
+    <span class="bottom-nav-label" id="bottomNavWriteLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavNotifyBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🔔</span>
+    <span class="bottom-nav-label" id="bottomNavNotifyLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavMyBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">👤</span>
+    <span class="bottom-nav-label">MY</span>
   </button>
 </nav>
 
