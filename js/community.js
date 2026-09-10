@@ -15,7 +15,7 @@ var Community = (function () {
   "use strict";
 
   var ROUTE_PREFIX = "/community";
-  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
   var MAX_PHOTOS = 1; // 게시글당 사진 1장(2026-09-11 비용 최소화 지시서)
   var MAX_PHOTO_DIMENSION = 800;
   var PHOTO_QUALITY_INITIAL = 0.65;
@@ -356,7 +356,7 @@ var Community = (function () {
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code;
       if (code === lang) opt.selected = true;
       langSelect.appendChild(opt);
@@ -440,7 +440,7 @@ var Community = (function () {
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code;
       if (code === lang) opt.selected = true;
       langSelect.appendChild(opt);
@@ -556,7 +556,7 @@ var Community = (function () {
     COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code;
       if (code === ((profile && profile.preferredLanguage) || lang)) opt.selected = true;
       langSelect.appendChild(opt);
@@ -681,7 +681,7 @@ var Community = (function () {
     var d = db();
     if (!d || !authUser) return;
     var uid = authUser.uid;
-    var withdrawnLabel = { ko: "탈퇴회원", zh: "已注销会员", vi: "Thành viên đã xóa", en: "Withdrawn member", mn: "Гарсан гишүүн" }[lang] || "탈퇴회원";
+    var withdrawnLabel = { ko: "탈퇴회원", zh: "已注销会员", vi: "Thành viên đã xóa", en: "Withdrawn member", mn: "Гарсан гишүүн", bn: "প্রত্যাহারকৃত সদস্য", my: "ရပ်ဆိုင်းထားသောအဖွဲ့ဝင်" }[lang] || "탈퇴회원";
 
     function anonymizeCollection(collectionName, field) {
       return d.collection(collectionName).where(field, "==", uid).get().then(function (snap) {
@@ -1689,7 +1689,7 @@ var Community = (function () {
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code; if (code === lang) opt.selected = true;
       langSelect.appendChild(opt);
     });
@@ -1796,7 +1796,7 @@ var Community = (function () {
     toggleJobTypeFields();
 
     var kakaoInput = el("input"); kakaoInput.type = "url"; kakaoInput.placeholder = "https://open.kakao.com/...";
-    form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)" }, kakaoInput));
+    form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)", bn: "কাকাওটক ওপেন চ্যাট লিংক (ঐচ্ছিক)", my: "KakaoTalk Open Chat လင့်ခ် (ရွေးချယ်ခွင့်)" }, kakaoInput));
 
     var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
     form.appendChild(photoLabel);

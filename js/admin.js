@@ -22,8 +22,8 @@
   var SCORE_LABEL_KO = { 5: "아주 좋아요", 4: "좋아요", 3: "보통이에요", 2: "아쉬워요", 1: "별로예요" };
 
   /* 지원 언어 — 사이트에서 실제 지원 중인 언어(js/app.js의 SUPPORTED_LANGS)와 동일하게 유지 */
-  var LANGS = ["ko", "zh", "vi", "en", "mn"];
-  var LANG_LABEL_KO = { ko: "한국어", zh: "중국어", vi: "베트남어", en: "영어", mn: "몽골어" };
+  var LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
+  var LANG_LABEL_KO = { ko: "한국어", zh: "중국어", vi: "베트남어", en: "영어", mn: "몽골어", bn: "벵골어", my: "미얀마어" };
 
   var DAY_DEFS = [
     { code: "mon", label: "월요일", offset: 0 },
@@ -1186,7 +1186,7 @@
     });
   }
 
-  var TRANSLATION_LANGS = ["zh", "vi", "en", "mn"];
+  var TRANSLATION_LANGS = ["zh", "vi", "en", "mn", "bn", "my"];
 
   /* 이미 게시된 문서 중 4개 언어 번역이 다 채워지지 않은 항목이 있으면
      "번역 다시 실행" 안내를 보여줍니다(작업지시서 7번). */
@@ -1638,6 +1638,8 @@
         if (tr.vi) obj.vi = tr.vi;
         if (tr.en) obj.en = tr.en;
         if (tr.mn) obj.mn = tr.mn;
+        if (tr.bn) obj.bn = tr.bn;
+        if (tr.my) obj.my = tr.my;
       }
       return obj;
     });
@@ -1728,6 +1730,8 @@
         if (tr.vi) docData.vi = tr.vi;
         if (tr.en) docData.en = tr.en;
         if (tr.mn) docData.mn = tr.mn;
+        if (tr.bn) docData.bn = tr.bn;
+        if (tr.my) docData.my = tr.my;
         return db.collection("menuTranslations").doc(term).set(docData, { merge: true });
       });
 

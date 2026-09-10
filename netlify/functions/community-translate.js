@@ -45,9 +45,10 @@ const RETRYABLE_STATUS = [429, 503];
 const MAX_TITLE_CHARS = 200;
 const MAX_CONTENT_CHARS = 4000;
 
-const SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+const SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
 const LANG_NAMES = {
-  ko: "Korean", zh: "Simplified Chinese", vi: "Vietnamese", en: "English", mn: "Mongolian"
+  ko: "Korean", zh: "Simplified Chinese", vi: "Vietnamese", en: "English", mn: "Mongolian",
+  bn: "Bengali", my: "Burmese (Myanmar)"
 };
 
 // 하루 번역 한도 기본값 — communityConfig/limits 문서가 있으면 그 값을
