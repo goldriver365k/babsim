@@ -1453,8 +1453,14 @@ table.results-table {
           }
 
           // 저장한 글(내 정보 > 저장한 글) — 본인 것만 읽고 쓸 수 있습니다.
+          // "아직 저장 안 한 글인지" 확인하려고 존재하지 않는 문서를 get()
+          // 할 때도 있는데(js/community.js의 "저장" 버튼), 그런 경우
+          // resource가 null이라 resource.data.uid 접근이 규칙 자체에서
+          // 오류가 나 permission-denied가 됩니다. resource == null(문서
+          // 없음)이면 그냥 허용해서(어차피 exists:false만 돌려줌) 이 버그를
+          // 막습니다.
           match /communitySaves/{saveId} {
-            allow read, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
+            allow read, delete: if isSignedIn() && (resource == null || request.auth.uid == resource.data.uid);
             allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
             allow update: if false;
           }
