@@ -351,7 +351,9 @@ async function fetchExistingTranslations(terms) {
         zh: data.fields.zh && data.fields.zh.stringValue,
         vi: data.fields.vi && data.fields.vi.stringValue,
         en: data.fields.en && data.fields.en.stringValue,
-        mn: data.fields.mn && data.fields.mn.stringValue
+        mn: data.fields.mn && data.fields.mn.stringValue,
+        bn: data.fields.bn && data.fields.bn.stringValue,
+        my: data.fields.my && data.fields.my.stringValue
       };
     } catch (e) {
       // 캐시 조회 실패는 무시하고 새로 번역하도록 둡니다.
@@ -360,10 +362,14 @@ async function fetchExistingTranslations(terms) {
   return results;
 }
 
+function hasBaseFour(entry) {
+  return !!(entry && entry.zh && entry.vi && entry.en && entry.mn);
+}
+
 async function translateWithAi(terms) {
   const prompt = [
     "다음은 한국 대학교 구내식당 메뉴명 목록입니다.",
-    "각 메뉴명을 중국어(zh), 베트남어(vi), 영어(en), 몽골어(mn)로 번역하세요.",
+    "각 메뉴명을 중국어(zh), 베트남어(vi), 영어(en), 몽골어(mn), 벵골어(bn), 미얀마어(my)로 번역하세요.",
     "음식 이름의 의미가 정확히 전달되도록 자연스럽게 번역하고,",
     "원문을 왜곡하거나 임의로 다른 음식으로 바꾸지 마세요.",
     "",
@@ -371,7 +377,30 @@ async function translateWithAi(terms) {
     "",
     "아래 JSON 형식으로만 응답하세요 (키는 반드시 원래 한글 메뉴명 그대로):",
     "{",
-    "  \"메뉴명1\": { \"zh\": \"...\", \"vi\": \"...\", \"en\": \"...\", \"mn\": \"...\" }",
+    "  \"메뉴명1\": { \"zh\": \"...\", \"vi\": \"...\", \"en\": \"...\", \"mn\": \"...\", \"bn\": \"...\", \"my\": \"...\" }",
+    "}"
+  ].join("\n");
+
+  const text = await callAiProvider({ promptText: prompt, wantJson: true });
+  const parsed = safeParseJson(text);
+  return parsed || {};
+}
+
+/* 기존 4개 언어(zh/vi/en/mn)는 이미 번역되어 있지만 벵골어·미얀마어만
+   빠진 메뉴명을 위한 전용 호출 — 작업지시서("기존 4개 언어는 다시
+   생성하지 않는다")를 지키면서 새 언어 2개만 채워 넣습니다. */
+async function translateBnMyOnly(terms) {
+  const prompt = [
+    "다음은 한국 대학교 구내식당 메뉴명 목록입니다.",
+    "각 메뉴명을 벵골어(bn), 미얀마어(my)로만 번역하세요.",
+    "음식 이름의 의미가 정확히 전달되도록 자연스럽게 번역하고,",
+    "원문을 왜곡하거나 임의로 다른 음식으로 바꾸지 마세요.",
+    "",
+    "메뉴명 목록: " + JSON.stringify(terms),
+    "",
+    "아래 JSON 형식으로만 응답하세요 (키는 반드시 원래 한글 메뉴명 그대로):",
+    "{",
+    "  \"메뉴명1\": { \"bn\": \"...\", \"my\": \"...\" }",
     "}"
   ].join("\n");
 
@@ -399,24 +428,39 @@ async function handleTranslate(payload) {
   }
 
   const cached = await fetchExistingTranslations(uniqueTerms);
-  const missing = uniqueTerms.filter(function (t) { return !cached[t]; });
+  // 4개 기존 언어(zh/vi/en/mn)가 아예 없는 메뉴명만 "완전히 새로 번역"하고,
+  // 4개는 이미 있는데 벵골어·미얀마어만 없는 메뉴명은 그 둘만 채웁니다
+  // (작업지시서 9번 — 기존 4개 언어는 다시 생성하지 않음).
+  const missing = uniqueTerms.filter(function (t) { return !hasBaseFour(cached[t]); });
+  const needsBnMy = uniqueTerms.filter(function (t) {
+    return hasBaseFour(cached[t]) && (!cached[t].bn || !cached[t].my);
+  });
 
   let fresh = {};
+  let bnMyFresh = {};
   let translateError = null;
-  if (missing.length > 0) {
-    try {
-      fresh = await translateWithAi(missing);
-    } catch (e) {
-      // 여기서 응답을 실패시키지 않습니다 — cached에 있던 번역은 그대로
-      // 돌려주고, missing 항목만 "번역 대기"로 남깁니다(클라이언트가
-      // failedReason으로 안내 문구를 보여줌).
-      translateError = e.code || "AI_REQUEST_FAILED";
-      console.error("번역 일부 실패(캐시된 항목은 정상 반환):", translateError, e);
-    }
+  try {
+    if (missing.length > 0) fresh = await translateWithAi(missing);
+  } catch (e) {
+    // 여기서 응답을 실패시키지 않습니다 — cached에 있던 번역은 그대로
+    // 돌려주고, missing 항목만 "번역 대기"로 남깁니다(클라이언트가
+    // failedReason으로 안내 문구를 보여줌).
+    translateError = e.code || "AI_REQUEST_FAILED";
+    console.error("번역 일부 실패(캐시된 항목은 정상 반환):", translateError, e);
+  }
+  try {
+    if (needsBnMy.length > 0) bnMyFresh = await translateBnMyOnly(needsBnMy);
+  } catch (e) {
+    translateError = translateError || e.code || "AI_REQUEST_FAILED";
+    console.error("벵골어·미얀마어 번역 일부 실패:", e.code || "AI_REQUEST_FAILED", e);
   }
 
   const translations = Object.assign({}, cached, fresh);
-  const failedTerms = uniqueTerms.filter(function (t) { return !translations[t]; });
+  // 벵골어·미얀마어만 새로 채운 항목은 기존 4개 언어 값을 그대로 두고 병합합니다.
+  Object.keys(bnMyFresh).forEach(function (t) {
+    translations[t] = Object.assign({}, translations[t] || cached[t], bnMyFresh[t]);
+  });
+  const failedTerms = uniqueTerms.filter(function (t) { return !hasBaseFour(translations[t]); });
 
   const result = { ok: true, translations: translations, failedTerms: failedTerms };
   if (translateError) {

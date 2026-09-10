@@ -9,7 +9,7 @@
 
   var STORE_ORDER = ["bapsim", "mangwon", "hururuk"];
   var LANG_KEY = "foodhall_lang";
-  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
 
   var state = {
     store: "bapsim",
@@ -235,7 +235,7 @@
   /* ---------------- 날짜 계산 (Asia/Seoul 기준) ---------------- */
 
   var SEOUL_TZ = "Asia/Seoul";
-  var DATE_LOCALE_MAP = { ko: "ko-KR", en: "en-US", zh: "zh-CN", vi: "vi-VN", mn: "mn-MN" };
+  var DATE_LOCALE_MAP = { ko: "ko-KR", en: "en-US", zh: "zh-CN", vi: "vi-VN", mn: "mn-MN", bn: "bn-BD", my: "my-MM" };
 
   function seoulInstant(offsetDays) {
     return new Date(Date.now() + (offsetDays || 0) * 24 * 60 * 60 * 1000);

@@ -16,6 +16,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="모인관">
+<!-- 벵골어·미얀마어 표시용 웹폰트 — 필요한 굵기(400/700)만 불러오고,
+     Google Fonts CSS2가 실제 쓰인 글자에 맞춰 자동으로 서브셋을 나눠
+     보내주므로 브라우저는 화면에 쓰인 문자 범위만 내려받습니다. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&family=Noto+Sans+Myanmar:wght@400;700&display=swap">
 <style>
 /* ==========================================================================
    모인관(인제대학교) — 키오스크 스타일 정적 메뉴판
@@ -44,7 +50,7 @@ html, body {
 }
 
 body {
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", sans-serif;
   background: var(--bg-page);
   color: var(--text-dark);
   font-size: 16px;
@@ -92,7 +98,16 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.lang-btn,
+.lang-sep {
+  flex: 0 0 auto;
 }
 
 .lang-btn {
@@ -1391,7 +1406,7 @@ main {
   max-width: 760px;
   margin: 0 auto;
   padding: 16px 16px 48px;
-  font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", inherit;
+  font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", "Noto Sans Bengali", "Noto Sans Myanmar", inherit;
   color: var(--comm-text);
 }
 
@@ -1801,6 +1816,10 @@ main {
       <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
       <span class="lang-sep" aria-hidden="true">|</span>
       <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
@@ -1990,50 +2009,54 @@ const UI_TEXT = {
     en: "Moin-gwan (Inje University)",
     zh: "摩茵馆(仁济大学)",
     vi: "Moin-gwan (Đại học Inje)",
-    mn: "Моин-гван (Inje их сургууль)"
+    mn: "Моин-гван (Inje их сургууль)",
+    bn: "মোইন-গোয়ান (ইনজে বিশ্ববিদ্যালয়)",
+    my: "မိုအင်ဂွမ် (အင်ဂျေတက္ကသိုလ်)"
   },
   storeNames: {
     bapsim: {
       brand: "밥심",
-      floor: { ko: "1층", en: "1st Floor", zh: "1楼", vi: "Tầng 1", mn: "1-р давхар" },
-      pronunciation: { en: "Bap-sim", zh: "巴普心", vi: "Báp-sim", mn: "Бап-сим" }
+      floor: { ko: "1층", en: "1st Floor", zh: "1楼", vi: "Tầng 1", mn: "1-р давхар", bn: "১ম তলা", my: "ပထမထပ်" },
+      pronunciation: { en: "Bap-sim", zh: "巴普心", vi: "Báp-sim", mn: "Бап-сим", bn: "বাপ-সিম", my: "ဘတ်ပ်-ဆင်မ်" }
     },
     mangwon: {
       brand: "만권화밥",
-      floor: { ko: "1층", en: "1st Floor", zh: "1楼", vi: "Tầng 1", mn: "1-р давхар" },
-      pronunciation: { en: "Man-gwon-hwa-bap", zh: "曼关花巴普", vi: "Man-guôn-hoa-báp", mn: "Ман-гвон-хва-бап" }
+      floor: { ko: "1층", en: "1st Floor", zh: "1楼", vi: "Tầng 1", mn: "1-р давхар", bn: "১ম তলা", my: "ပထမထပ်" },
+      pronunciation: { en: "Man-gwon-hwa-bap", zh: "曼关花巴普", vi: "Man-guôn-hoa-báp", mn: "Ман-гвон-хва-бап", bn: "মান-গোয়ান-হোয়া-বাপ", my: "မန်-ဂွမ်-ဟွာ-ဘတ်ပ်" }
     },
     hururuk: {
       brand: "후루룩찹찹",
-      floor: { ko: "2층", en: "2nd Floor", zh: "2楼", vi: "Tầng 2", mn: "2-р давхар" },
-      pronunciation: { en: "Hu-ru-ruk-chap-chap", zh: "呼噜噜恰普恰普", vi: "Hu-ru-rúc-cháp-cháp", mn: "Ху-ру-рук-чап-чап" }
+      floor: { ko: "2층", en: "2nd Floor", zh: "2楼", vi: "Tầng 2", mn: "2-р давхар", bn: "২য় তলা", my: "ဒုတိယထပ်" },
+      pronunciation: { en: "Hu-ru-ruk-chap-chap", zh: "呼噜噜恰普恰普", vi: "Hu-ru-rúc-cháp-cháp", mn: "Ху-ру-рук-чап-чап", bn: "হু-রু-রুক-চাপ-চাপ", my: "ဟူ-ရူ-ရွတ်-ချပ်-ချပ်" }
     }
   },
   storeHeading: {
-    bapsim: { ko: "밥심1층", en: "밥심 1F", zh: "밥심 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар" },
-    mangwon: { ko: "만권화밥1층", en: "만권화밥 1F", zh: "만권화밥 1楼", vi: "만권화밥, tầng 1", mn: "만권화밥, 1-р давхар" },
-    hururuk: { ko: "후루룩찹찹 2층", en: "후루룩찹찹 2F", zh: "후루룩찹찹 2楼", vi: "후루룩찹찹, tầng 2", mn: "후루룩찹찹, 2-р давхар" }
+    bapsim: { ko: "밥심1층", en: "밥심 1F", zh: "밥심 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар", bn: "밥심, ১ম তলা", my: "밥심, ပထမထပ်" },
+    mangwon: { ko: "만권화밥1층", en: "만권화밥 1F", zh: "만권화밥 1楼", vi: "만권화밥, tầng 1", mn: "만권화밥, 1-р давхар", bn: "만권화밥, ১ম তলা", my: "만권화밥, ပထမထပ်" },
+    hururuk: { ko: "후루룩찹찹 2층", en: "후루룩찹찹 2F", zh: "후루룩찹찹 2楼", vi: "후루룩찹찹, tầng 2", mn: "후루룩찹찹, 2-р давхар", bn: "후루룩찹찹, ২য় তলা", my: "후루룩찹찹, ဒုတိယထပ်" }
   },
-  langLabel: { ko: "언어 선택", en: "Language", zh: "语言", vi: "Ngôn ngữ", mn: "Хэл сонгох" },
+  langLabel: { ko: "언어 선택", en: "Language", zh: "语言", vi: "Ngôn ngữ", mn: "Хэл сонгох", bn: "ভাষা নির্বাচন", my: "ဘာသာစကားရွေးချယ်ရန်" },
   langNames: {
-    ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", mn: "Монгол"
+    ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ"
   },
-  prevButton: { ko: "이전", en: "Previous", zh: "上一页", vi: "Trước", mn: "Өмнөх" },
-  nextButton: { ko: "다음", en: "Next", zh: "下一页", vi: "Tiếp theo", mn: "Дараах" },
-  soldOut: { ko: "품절", en: "SOLD OUT", zh: "已售罄", vi: "Hết hàng", mn: "Дууссан" },
-  closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах" },
-  imagePending: { ko: "이미지 준비 중", en: "Image coming soon", zh: "图片准备中", vi: "Hình ảnh đang chuẩn bị", mn: "Зураг бэлтгэж байна" },
-  priceTBD: { ko: "가격 확인 필요", en: "Price to be confirmed", zh: "价格待确认", vi: "Giá đang xác nhận", mn: "Үнийг баталгаажуулах шаардлагатай" },
-  won: { ko: "원", en: "won", zh: "韩元", vi: "won", mn: " вон" },
+  prevButton: { ko: "이전", en: "Previous", zh: "上一页", vi: "Trước", mn: "Өмнөх", bn: "পূর্ববর্তী", my: "နောက်သို့" },
+  nextButton: { ko: "다음", en: "Next", zh: "下一页", vi: "Tiếp theo", mn: "Дараах", bn: "পরবর্তী", my: "ရှေ့သို့" },
+  soldOut: { ko: "품절", en: "SOLD OUT", zh: "已售罄", vi: "Hết hàng", mn: "Дууссан", bn: "শেষ হয়ে গেছে", my: "ကုန်သွားပါပြီ" },
+  closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" },
+  imagePending: { ko: "이미지 준비 중", en: "Image coming soon", zh: "图片准备中", vi: "Hình ảnh đang chuẩn bị", mn: "Зураг бэлтгэж байна", bn: "ছবি প্রস্তুত করা হচ্ছে", my: "ပုံပြင်ဆင်နေပါသည်" },
+  priceTBD: { ko: "가격 확인 필요", en: "Price to be confirmed", zh: "价格待确认", vi: "Giá đang xác nhận", mn: "Үнийг баталгаажуулах шаардлагатай", bn: "মূল্য নিশ্চিত করা প্রয়োজন", my: "ဈေးနှုန်းအတည်ပြုရန်လိုအပ်သည်" },
+  won: { ko: "원", en: "won", zh: "韩元", vi: "won", mn: " вон", bn: " ওন", my: " ဝမ်" },
   loadError: {
     ko: "메뉴를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
     en: "There was a problem loading the menu. Please try again shortly.",
     zh: "加载菜单时出现问题，请稍后重试。",
     vi: "Đã xảy ra sự cố khi tải menu. Vui lòng thử lại sau.",
-    mn: "Цэсийг ачаалахад алдаа гарлаа. Түр хүлээгээд дахин оролдоно уу."
+    mn: "Цэсийг ачаалахад алдаа гарлаа. Түр хүлээгээд дахин оролдоно уу.",
+    bn: "মেনু লোড করার সময় সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
+    my: "မီနူးဖွင့်ရာတွင် ပြဿနာရှိပါသည်။ အနည်းငယ်စောင့်ပြီး ထပ်မံကြိုးစားပါ။"
   },
-  infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл" },
-  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" }
+  infoTitle: { ko: "이용 안내", en: "Information", zh: "使用指南", vi: "Thông tin", mn: "Мэдээлэл", bn: "তথ্য", my: "အချက်အလက်" },
+  stepsTitle: { ko: "이용방법", en: "How to Order", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" }
 };
 
 /* ==========================================================================
@@ -2046,27 +2069,33 @@ const BREAKFAST_RATING_TEXT = {
     en: "How was today’s breakfast?",
     zh: "今天的早餐怎么样？",
     vi: "Bữa sáng hôm nay thế nào?",
-    mn: "Өнөөдрийн өглөөний хоол ямар байсан бэ?"
+    mn: "Өнөөдрийн өглөөний хоол ямар байсан бэ?",
+    bn: "আজকের সকালের খাবার কেমন ছিল?",
+    my: "ယနေ့ နံနက်စာ ဘယ်လိုနေလဲ?"
   },
-  score5: { ko: "아주 좋아요", en: "Loved it", zh: "非常好", vi: "Rất thích", mn: "Маш их таалагдсан" },
-  score4: { ko: "좋아요", en: "Good", zh: "好", vi: "Thích", mn: "Таалагдсан" },
-  score3: { ko: "보통이에요", en: "Okay", zh: "一般", vi: "Bình thường", mn: "Дунд зэрэг" },
-  score2: { ko: "아쉬워요", en: "Not great", zh: "有点遗憾", vi: "Chưa hài lòng", mn: "Дутагдалтай" },
-  score1: { ko: "별로예요", en: "Not good", zh: "不满意", vi: "Không thích", mn: "Таалагдаагүй" },
-  thanks: { ko: "감사합니다!", en: "Thank you!", zh: "谢谢！", vi: "Cảm ơn bạn!", mn: "Баярлалаа!" },
+  score5: { ko: "아주 좋아요", en: "Loved it", zh: "非常好", vi: "Rất thích", mn: "Маш их таалагдсан", bn: "খুব ভালো লেগেছে", my: "အရမ်းကြိုက်တယ်" },
+  score4: { ko: "좋아요", en: "Good", zh: "好", vi: "Thích", mn: "Таалагдсан", bn: "ভালো লেগেছে", my: "ကြိုက်တယ်" },
+  score3: { ko: "보통이에요", en: "Okay", zh: "一般", vi: "Bình thường", mn: "Дунд зэрэг", bn: "মোটামুটি", my: "ရိုးရိုး" },
+  score2: { ko: "아쉬워요", en: "Not great", zh: "有点遗憾", vi: "Chưa hài lòng", mn: "Дутагдалтай", bn: "কিছুটা খারাপ", my: "သိပ်မကောင်းဘူး" },
+  score1: { ko: "별로예요", en: "Not good", zh: "不满意", vi: "Không thích", mn: "Таалагдаагүй", bn: "ভালো লাগেনি", my: "မကြိုက်ဘူး" },
+  thanks: { ko: "감사합니다!", en: "Thank you!", zh: "谢谢！", vi: "Cảm ơn bạn!", mn: "Баярлалаа!", bn: "ধন্যবাদ!", my: "ကျေးဇူးတင်ပါတယ်!" },
   completed: {
     ko: "오늘 평가를 완료했습니다.",
     en: "You’ve already rated today’s breakfast.",
     zh: "您今天已完成评价。",
     vi: "Bạn đã đánh giá hôm nay rồi.",
-    mn: "Та өнөөдөр үнэлгээгээ өгсөн байна."
+    mn: "Та өнөөдөр үнэлгээгээ өгсөн байна.",
+    bn: "আপনি আজকের মূল্যায়ন সম্পন্ন করেছেন।",
+    my: "သင်ယနေ့အကဲဖြတ်ပြီးပါပြီ။"
   },
   error: {
     ko: "저장에 실패했습니다. 다시 시도해주세요.",
     en: "Failed to save. Please try again.",
     zh: "保存失败，请重试。",
     vi: "Lưu không thành công. Vui lòng thử lại.",
-    mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу."
+    mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу.",
+    bn: "সংরক্ষণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+    my: "သိမ်းဆည်းမှုမအောင်မြင်ပါ။ ထပ်မံကြိုးစားပါ။"
   }
 };
 
@@ -2083,21 +2112,27 @@ const HELLOKOREAN_INFO = {
     zh: "免费学习韩语",
     vi: "Học tiếng Hàn miễn phí",
     en: "Learn Korean for Free",
-    mn: "Солонгос хэл үнэгүй сурах"
+    mn: "Солонгос хэл үнэгүй сурах",
+    bn: "বিনামূল্যে কোরিয়ান ভাষা শিখুন",
+    my: "ကိုရီးယားစာကို အခမဲ့သင်ယူပါ"
   },
   desc: {
     ko: "한국어를 쉽고 재미있게 배워보세요",
     zh: "轻松有趣地学习韩语",
     vi: "Học tiếng Hàn dễ dàng và thú vị",
     en: "Learn Korean easily and enjoyably",
-    mn: "Солонгос хэлийг хялбар, сонирхолтой сураарай"
+    mn: "Солонгос хэлийг хялбар, сонирхолтой сураарай",
+    bn: "সহজে ও আনন্দের সাথে কোরিয়ান ভাষা শিখুন",
+    my: "ကိုရီးယားစာကို လွယ်ကူပျော်ရွှင်စွာ သင်ယူပါ"
   },
   button: {
     ko: "무료로 시작하기",
     zh: "免费开始",
     vi: "Bắt đầu miễn phí",
     en: "Start for Free",
-    mn: "Үнэгүй эхлэх"
+    mn: "Үнэгүй эхлэх",
+    bn: "বিনামূল্যে শুরু করুন",
+    my: "အခမဲ့စတင်ရန်"
   }
 };
 
@@ -2110,21 +2145,27 @@ const PWA_UPDATE_INFO = {
     zh: "有新的菜单信息",
     vi: "Có thông tin thực đơn mới",
     en: "New menu information is available",
-    mn: "Шинэ цэсийн мэдээлэл гарлаа"
+    mn: "Шинэ цэсийн мэдээлэл гарлаа",
+    bn: "নতুন মেনু তথ্য পাওয়া গেছে",
+    my: "မီနူးအချက်အလက်အသစ်ရှိပါသည်"
   },
   button: {
     ko: "지금 업데이트",
     zh: "立即更新",
     vi: "Cập nhật ngay",
     en: "Update now",
-    mn: "Одоо шинэчлэх"
+    mn: "Одоо шинэчлэх",
+    bn: "এখনই আপডেট করুন",
+    my: "ယခုပင်အပ်ဒိတ်လုပ်ရန်"
   },
   done: {
     ko: "업데이트가 완료되었습니다",
     zh: "更新已完成",
     vi: "Đã cập nhật xong",
     en: "Update complete",
-    mn: "Шинэчлэлт дууслаа"
+    mn: "Шинэчлэлт дууслаа",
+    bn: "আপডেট সম্পন্ন হয়েছে",
+    my: "အပ်ဒိတ်ပြီးစီးပါပြီ"
   }
 };
 
@@ -2134,28 +2175,36 @@ const PWA_INSTALL_INFO = {
     zh: "将饭心菜单添加到主屏幕",
     vi: "Thêm thực đơn Babsim vào màn hình chính",
     en: "Add Babsim Menu to your Home Screen",
-    mn: "Babsim цэсийг нүүр дэлгэцэд нэмэх"
+    mn: "Babsim цэсийг нүүр дэлгэцэд нэмэх",
+    bn: "Babsim মেনু হোম স্ক্রিনে যোগ করুন",
+    my: "Babsim မီနူးကို ပင်မစခရင်တွင်ထည့်ပါ"
   },
   desc: {
     ko: "다음 방문부터 메뉴를 더 빠르게 확인할 수 있습니다",
     zh: "下次可以更快地查看菜单",
     vi: "Xem thực đơn nhanh hơn vào lần sau",
     en: "Check the menu faster next time",
-    mn: "Дараагийн удаа цэсийг хурдан үзээрэй"
+    mn: "Дараагийн удаа цэсийг хурдан үзээрэй",
+    bn: "পরবর্তী বার থেকে দ্রুত মেনু দেখতে পারবেন",
+    my: "နောက်တစ်ကြိမ်တွင် မီနူးကို ပိုမြန်စွာကြည့်ရှုနိုင်ပါသည်"
   },
   button: {
     ko: "바탕화면에 추가",
     zh: "添加到主屏幕",
     vi: "Thêm vào màn hình chính",
     en: "Add to Home Screen",
-    mn: "Нүүр дэлгэцэд нэмэх"
+    mn: "Нүүр дэлгэцэд нэмэх",
+    bn: "হোম স্ক্রিনে যোগ করুন",
+    my: "ပင်မစခရင်တွင်ထည့်ရန်"
   },
   later: {
     ko: "나중에",
     zh: "稍后",
     vi: "Để sau",
     en: "Later",
-    mn: "Дараа"
+    mn: "Дараа",
+    bn: "পরে",
+    my: "နောက်မှ"
   },
   // 아이폰/아이패드는 자동 설치창이 없어 Safari 공유 메뉴로 직접 안내합니다.
   iosSteps: {
@@ -2163,7 +2212,9 @@ const PWA_INSTALL_INFO = {
     zh: ["点击 Safari 浏览器的分享按钮", "选择“添加到主屏幕”", "点击右上角的“添加”"],
     vi: ["Nhấn nút Chia sẻ trên Safari", "Chọn “Thêm vào màn hình chính”", "Nhấn “Thêm” ở góc trên bên phải"],
     en: ["Tap the Share button in Safari", "Select “Add to Home Screen”", "Tap “Add” in the top-right corner"],
-    mn: ["Safari-н Хуваалцах товчийг дарна уу", "“Нүүр дэлгэцэд нэмэх”-ийг сонгоно уу", "Баруун дээд буланд байх “Нэмэх”-ийг дарна уу"]
+    mn: ["Safari-н Хуваалцах товчийг дарна уу", "“Нүүр дэлгэцэд нэмэх”-ийг сонгоно уу", "Баруун дээд буланд байх “Нэмэх”-ийг дарна уу"],
+    bn: ["Safari-এর শেয়ার বাটনে চাপুন", "“হোম স্ক্রিনে যোগ করুন” নির্বাচন করুন", "উপরের ডানদিকে “যোগ করুন”-এ চাপুন"],
+    my: ["Safari ၏ မျှဝေရန်ခလုတ်ကို နှိပ်ပါ", "“ပင်မစခရင်တွင်ထည့်ရန်” ကိုရွေးပါ", "ညာဘက်အပေါ်ရှိ “ထည့်ရန်” ကိုနှိပ်ပါ"]
   }
 };
 
@@ -2187,49 +2238,49 @@ const MENU_DATA = [
     id: "bapsim-breakfast-1000",
     store: "bapsim", group: 1, order: 1,
     image: null,
-    name: { ko: "천원의아침밥", en: "Breakfast for 1,000 Won", zh: "1000韩元早餐", vi: "Bữa sáng 1.000 Won", mn: "1,000 воны өглөөний хоол" },
+    name: { ko: "천원의아침밥", en: "Breakfast for 1,000 Won", zh: "1000韩元早餐", vi: "Bữa sáng 1.000 Won", mn: "1,000 воны өглөөний хоол", bn: "১,০০০ ওনের সকালের খাবার", my: "ဝမ် ၁,၀၀၀ နံနက်စာ" },
     price: 1000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-breakfast-buffet",
     store: "bapsim", group: 1, order: 2,
     image: "/images/bapsim/breakfast-buffet-icon.jpg",
-    name: { ko: "아침뷔페", en: "Breakfast Buffet", zh: "早餐自助", vi: "Buffet sáng", mn: "Өглөөний буфет" },
+    name: { ko: "아침뷔페", en: "Breakfast Buffet", zh: "早餐自助", vi: "Buffet sáng", mn: "Өглөөний буфет", bn: "সকালের বুফে", my: "မနက်စာ ဗူဖေး" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-lunch-buffet",
     store: "bapsim", group: 1, order: 3,
     image: "/images/bapsim/lunch-buffet-icon.jpg",
-    name: { ko: "점심뷔페", en: "Lunch Buffet", zh: "午餐自助", vi: "Buffet trưa", mn: "Өдрийн хоолны буфет" },
+    name: { ko: "점심뷔페", en: "Lunch Buffet", zh: "午餐自助", vi: "Buffet trưa", mn: "Өдрийн хоолны буфет", bn: "দুপুরের বুফে", my: "နေ့လယ်စာ ဗူဖေး" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-lunch-buffet-ramen",
     store: "bapsim", group: 1, order: 4,
     image: "/images/bapsim/korean-buffet-instant-ramen.png",
-    name: { ko: "한식뷔페 즉석라면", en: "Korean Buffet + Instant Ramen", zh: "韩式自助餐＋方便面", vi: "Buffet Hàn Quốc + Mì ăn liền", mn: "Солонгос хоолны буфет + Бэлэн рамен" },
+    name: { ko: "한식뷔페 즉석라면", en: "Korean Buffet + Instant Ramen", zh: "韩式自助餐＋方便面", vi: "Buffet Hàn Quốc + Mì ăn liền", mn: "Солонгос хоолны буфет + Бэлэн рамен", bn: "কোরিয়ান বুফে + ইনস্ট্যান্ট রামেন", my: "ကိုရီးယားဗူဖေး + ရာမန်" },
     price: 8000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-self-ramen",
     store: "bapsim", group: 1, order: 5,
     image: "/images/bapsim/self-ramen.jpg",
-    name: { ko: "셀프라면", en: "Self-Serve Ramen", zh: "自助拉面", vi: "Mì tự phục vụ", mn: "Өөрөө хийх рамен" },
+    name: { ko: "셀프라면", en: "Self-Serve Ramen", zh: "自助拉面", vi: "Mì tự phục vụ", mn: "Өөрөө хийх рамен", bn: "সেলফ-সার্ভ রামেন", my: "ကိုယ်တိုင်ချက် ရာမန်" },
     price: 3000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-fried-eggs",
     store: "bapsim", group: 1, order: 6,
     image: "/images/bapsim/fried-eggs.jpg",
-    name: { ko: "계란후라이 2개", en: "2 Fried Eggs", zh: "煎蛋2个", vi: "2 quả trứng ốp la", mn: "2 ширхэг шарсан өндөг" },
+    name: { ko: "계란후라이 2개", en: "2 Fried Eggs", zh: "煎蛋2个", vi: "2 quả trứng ốp la", mn: "2 ширхэг шарсан өндөг", bn: "২টি ডিম ভাজা", my: "ကြက်ဥကြော် ၂ လုံး" },
     price: 1000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-pork-bulbaek",
     store: "bapsim", group: 1, order: 7,
     image: null,
-    name: { ko: "돼지불백 한접시 200g", en: "Pork Bulgogi Plate 200g", zh: "烤猪肉一份200g", vi: "Thịt heo nướng 200g", mn: "Амталж шарсан гахайн мах 200г таваг" },
+    name: { ko: "돼지불백 한접시 200g", en: "Pork Bulgogi Plate 200g", zh: "烤猪肉一份200g", vi: "Thịt heo nướng 200g", mn: "Амталж шарсан гахайн мах 200г таваг", bn: "শুয়োরের বুলগোগি ২০০ গ্রাম", my: "ဝက်သား ဘူဂိုဂီ ၂၀၀ ဂရမ်" },
     price: null, soldOut: true, needsReview: true
     // 원본 키오스크 사진과 정확한 가격 확인 필요 (가격이 취소선으로 가려져 있음)
   },
@@ -2237,28 +2288,28 @@ const MENU_DATA = [
     id: "bapsim-cola",
     store: "bapsim", group: 1, order: 8,
     image: "/images/bapsim/cola.jpg",
-    name: { ko: "콜라(355ml)밥심", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола (355мл)" },
+    name: { ko: "콜라(355ml)밥심", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола (355мл)", bn: "কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ (၃၅၅ မီလီလီတာ)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-zero-cola",
     store: "bapsim", group: 1, order: 9,
     image: "/images/bapsim/zero-cola.jpg",
-    name: { ko: "제로콜라(355ml)밥심", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола (355мл)" },
+    name: { ko: "제로콜라(355ml)밥심", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола (355мл)", bn: "জিরো কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ ဇီးရို (၃၅၅ မီလီလီတာ)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-fanta-pine",
     store: "bapsim", group: 1, order: 10,
     image: "/images/bapsim/fanta-pine.jpg",
-    name: { ko: "환타파인(355ml)밥심", en: "Fanta Pineapple (355ml)", zh: "芬达菠萝(355ml)", vi: "Fanta Dứa (355ml)", mn: "Фанта ананас (355мл)" },
+    name: { ko: "환타파인(355ml)밥심", en: "Fanta Pineapple (355ml)", zh: "芬达菠萝(355ml)", vi: "Fanta Dứa (355ml)", mn: "Фанта ананас (355мл)", bn: "ফ্যান্টা পাইনঅ্যাপল (৩৫৫ মিলি)", my: "ဖန်တာ နာနတ်သီး (၃၅၅ မီလီလီတာ)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-sprite",
     store: "bapsim", group: 1, order: 11,
     image: "/images/bapsim/sprite.jpg",
-    name: { ko: "스프라이트(355ml)밥심", en: "Sprite (355ml)", zh: "雪碧(355ml)", vi: "Sprite (355ml)", mn: "Спрайт (355мл)" },
+    name: { ko: "스프라이트(355ml)밥심", en: "Sprite (355ml)", zh: "雪碧(355ml)", vi: "Sprite (355ml)", mn: "Спрайт (355мл)", bn: "স্প্রাইট (৩৫৫ মিলি)", my: "စပရိုက် (၃၅၅ မီလီလီတာ)" },
     price: 1500, soldOut: false, needsReview: false
   },
 
@@ -2267,84 +2318,84 @@ const MENU_DATA = [
     id: "mangwon-mul-naengmyeon",
     store: "mangwon", group: 1, order: 1,
     image: "/images/mangwon/mul-naengmyeon.jpg",
-    name: { ko: "물냉면", en: "Mul Naengmyeon (Cold Noodle Soup)", zh: "水冷面", vi: "Mì lạnh nước", mn: "Хүйтэн шөлтэй гоймон" },
+    name: { ko: "물냉면", en: "Mul Naengmyeon (Cold Noodle Soup)", zh: "水冷面", vi: "Mì lạnh nước", mn: "Хүйтэн шөлтэй гоймон", bn: "মুল নেংম্যিওন (ঠান্ডা নুডলস স্যুপ)", my: "မူလ်နန်မျွန် (အေးအေးခေါက်ဆွဲဟင်း)" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-mul-naengmyeon-bulgogi",
     store: "mangwon", group: 1, order: 2,
     image: "/images/mangwon/mul-naengmyeon-bulgogi.jpg",
-    name: { ko: "물냉면 + 돼지불고기", en: "Mul Naengmyeon + Pork Bulgogi", zh: "水冷面+烤猪肉", vi: "Mì lạnh nước + Thịt heo nướng", mn: "Хүйтэн шөлтэй гоймон + Амталж шарсан гахайн мах" },
+    name: { ko: "물냉면 + 돼지불고기", en: "Mul Naengmyeon + Pork Bulgogi", zh: "水冷面+烤猪肉", vi: "Mì lạnh nước + Thịt heo nướng", mn: "Хүйтэн шөлтэй гоймон + Амталж шарсан гахайн мах", bn: "মুল নেংম্যিওন + পর্ক বুলগোগি", my: "မူလ်နန်မျွန် + ဝက်သားဘူဂိုဂီ" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bibim-naengmyeon",
     store: "mangwon", group: 1, order: 3,
     image: "/images/mangwon/bibim-naengmyeon.jpg",
-    name: { ko: "비빔냉면", en: "Bibim Naengmyeon (Spicy Cold Noodles)", zh: "拌冷面", vi: "Mì lạnh trộn cay", mn: "Халуун ногоотой хүйтэн гоймон" },
+    name: { ko: "비빔냉면", en: "Bibim Naengmyeon (Spicy Cold Noodles)", zh: "拌冷面", vi: "Mì lạnh trộn cay", mn: "Халуун ногоотой хүйтэн гоймон", bn: "বিবিম নেংম্যিওন (ঝাল ঠান্ডা নুডলস)", my: "ဗီဘင်နန်မျွန် (စပ်သောအေးအေးခေါက်ဆွဲ)" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bibim-naengmyeon-bulgogi",
     store: "mangwon", group: 1, order: 4,
     image: "/images/mangwon/bibim-naengmyeon-bulgogi.jpg",
-    name: { ko: "비빔냉면 + 돼지불고기", en: "Bibim Naengmyeon + Pork Bulgogi", zh: "拌冷面+烤猪肉", vi: "Mì lạnh trộn cay + Thịt heo nướng", mn: "Халуун ногоотой хүйтэн гоймон + Амталж шарсан гахайн мах" },
+    name: { ko: "비빔냉면 + 돼지불고기", en: "Bibim Naengmyeon + Pork Bulgogi", zh: "拌冷面+烤猪肉", vi: "Mì lạnh trộn cay + Thịt heo nướng", mn: "Халуун ногоотой хүйтэн гоймон + Амталж шарсан гахайн мах", bn: "বিবিম নেংম্যিওন + পর্ক বুলগোগি", my: "ဗီဘင်နန်မျွန် + ဝက်သားဘူဂိုဂီ" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-seafood-sundubu",
     store: "mangwon", group: 1, order: 5,
     image: "/images/mangwon/seafood-sundubu.jpg",
-    name: { ko: "해물순두부(공기밥포함)", en: "Seafood Sundubu (Rice Included)", zh: "海鲜豆腐汤(含米饭)", vi: "Canh đậu phụ hải sản (kèm cơm)", mn: "Далайн бүтээгдэхүүнтэй зөөлөн дүпүний шөл (будаатай)" },
+    name: { ko: "해물순두부(공기밥포함)", en: "Seafood Sundubu (Rice Included)", zh: "海鲜豆腐汤(含米饭)", vi: "Canh đậu phụ hải sản (kèm cơm)", mn: "Далайн бүтээгдэхүүнтэй зөөлөн дүпүний шөл (будаатай)", bn: "সিফুড সুনদুবু (ভাতসহ)", my: "ပင်လယ်စာ ဆွန်ဒူဘူ (ထမင်းပါ)" },
     price: 6000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-usamgyeop-sundubu",
     store: "mangwon", group: 1, order: 6,
     image: "/images/mangwon/usamgyeop-sundubu.jpg",
-    name: { ko: "우삼겹순두부", en: "Beef Belly Sundubu", zh: "牛五花豆腐汤", vi: "Canh đậu phụ ba chỉ bò", mn: "Үхрийн цээжний махтай зөөлөн дүпүний шөл" },
+    name: { ko: "우삼겹순두부", en: "Beef Belly Sundubu", zh: "牛五花豆腐汤", vi: "Canh đậu phụ ba chỉ bò", mn: "Үхрийн цээжний махтай зөөлөн дүпүний шөл", bn: "বিফ বেলি সুনদুবু", my: "နွားသားရင်ညွှန့် ဆွန်ဒူဘူ" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-jikhwa-beef-deopbap",
     store: "mangwon", group: 1, order: 7,
     image: "/images/mangwon/jikhwa-beef-deopbap.jpg",
-    name: { ko: "직화소고기덮밥", en: "Grilled Beef Rice Bowl", zh: "炭烤牛肉盖饭", vi: "Cơm bò nướng", mn: "Гал дээр шарсан үхрийн махтай будаа" },
+    name: { ko: "직화소고기덮밥", en: "Grilled Beef Rice Bowl", zh: "炭烤牛肉盖饭", vi: "Cơm bò nướng", mn: "Гал дээр шарсан үхрийн махтай будаа", bn: "গ্রিলড বিফ রাইস বোল", my: "မီးကင်နွားသား ထမင်းခွက်" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dwaeji-bulbaek",
     store: "mangwon", group: 1, order: 8,
     image: "/images/mangwon/dwaeji-bulbaek.jpg",
-    name: { ko: "돼지불백", en: "Pork Bulgogi", zh: "烤猪肉", vi: "Thịt heo nướng", mn: "Амталж шарсан гахайн мах" },
+    name: { ko: "돼지불백", en: "Pork Bulgogi", zh: "烤猪肉", vi: "Thịt heo nướng", mn: "Амталж шарсан гахайн мах", bn: "পর্ক বুলগোগি", my: "ဝက်သားဘူဂိုဂီ" },
     price: 6500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-jikhwa-beef-kimchi-deopbap",
     store: "mangwon", group: 1, order: 9,
     image: "/images/mangwon/bulhyang-jikhwa-beef-kimchi-deopbap.jpg",
-    name: { ko: "불향직화소고기김치덮밥", en: "Smoky Grilled Beef Kimchi Rice Bowl", zh: "炭火牛肉泡菜盖饭", vi: "Cơm bò nướng kimchi", mn: "Утаат гал дээр шарсан үхэр, кимчитэй будаа" },
+    name: { ko: "불향직화소고기김치덮밥", en: "Smoky Grilled Beef Kimchi Rice Bowl", zh: "炭火牛肉泡菜盖饭", vi: "Cơm bò nướng kimchi", mn: "Утаат гал дээр шарсан үхэр, кимчитэй будаа", bn: "স্মোকি গ্রিলড বিফ কিমচি রাইস বোল", my: "မီးခိုးရနံ့နွားသားကင်နှင့်ကင်မချီ ထမင်းခွက်" },
     price: 7400, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-jikhwa-pork-kimchi-deopbap",
     store: "mangwon", group: 1, order: 10,
     image: "/images/mangwon/bulhyang-jikhwa-pork-kimchi-deopbap.jpg",
-    name: { ko: "불향직화돼지김치덮밥", en: "Smoky Grilled Pork Kimchi Rice Bowl", zh: "炭火猪肉泡菜盖饭", vi: "Cơm heo nướng kimchi", mn: "Утаат гал дээр шарсан гахай, кимчитэй будаа" },
+    name: { ko: "불향직화돼지김치덮밥", en: "Smoky Grilled Pork Kimchi Rice Bowl", zh: "炭火猪肉泡菜盖饭", vi: "Cơm heo nướng kimchi", mn: "Утаат гал дээр шарсан гахай, кимчитэй будаа", bn: "স্মোকি গ্রিলড পর্ক কিমচি রাইস বোল", my: "မီးခိုးရနံ့ဝက်သားကင်နှင့်ကင်မချီ ထမင်းခွက်" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dwaeji-kimchi-jjigae",
     store: "mangwon", group: 1, order: 11,
     image: "/images/mangwon/dwaeji-kimchi-jjigae.jpg",
-    name: { ko: "돼지김치찌개(공기밥포함)", en: "Pork Kimchi Stew (Rice Included)", zh: "猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo (kèm cơm)", mn: "Гахайн кимчийн шөл (будаатай)" },
+    name: { ko: "돼지김치찌개(공기밥포함)", en: "Pork Kimchi Stew (Rice Included)", zh: "猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo (kèm cơm)", mn: "Гахайн кимчийн шөл (будаатай)", bn: "পর্ক কিমচি স্ট্যু (ভাতসহ)", my: "ဝက်သားကင်မချီဟင်း (ထမင်းပါ)" },
     price: 6500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-spam-dwaeji-kimchi-jjigae",
     store: "mangwon", group: 1, order: 12,
     image: "/images/mangwon/spam-dwaeji-kimchi-jjigae.jpg",
-    name: { ko: "스팸돼지김치찌개(공기밥포함)", en: "Spam & Pork Kimchi Stew (Rice Included)", zh: "午餐肉猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo & Spam (kèm cơm)", mn: "Спам, гахайн кимчийн шөл (будаатай)" },
+    name: { ko: "스팸돼지김치찌개(공기밥포함)", en: "Spam & Pork Kimchi Stew (Rice Included)", zh: "午餐肉猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo & Spam (kèm cơm)", mn: "Спам, гахайн кимчийн шөл (будаатай)", bn: "স্প্যাম ও পর্ক কিমচি স্ট্যু (ভাতসহ)", my: "စပမ်နှင့်ဝက်သားကင်မချီဟင်း (ထမင်းပါ)" },
     price: 6900, soldOut: false, needsReview: false
   },
 
@@ -2353,63 +2404,63 @@ const MENU_DATA = [
     id: "mangwon-spam-sundubu",
     store: "mangwon", group: 2, order: 1,
     image: "/images/mangwon/spam-sundubu.jpg",
-    name: { ko: "스팸순두부(공기밥포함)", en: "Spam Sundubu (Rice Included)", zh: "午餐肉豆腐汤(含米饭)", vi: "Canh đậu phụ Spam (kèm cơm)", mn: "Спамтай зөөлөн дүпүний шөл (будаатай)" },
+    name: { ko: "스팸순두부(공기밥포함)", en: "Spam Sundubu (Rice Included)", zh: "午餐肉豆腐汤(含米饭)", vi: "Canh đậu phụ Spam (kèm cơm)", mn: "Спамтай зөөлөн дүпүний шөл (будаатай)", bn: "স্প্যাম সুনদুবু (ভাতসহ)", my: "စပမ် ဆွန်ဒူဘူ (ထမင်းပါ)" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-jikhwa-beef-jjigae-set",
     store: "mangwon", group: 2, order: 2,
     image: "/images/mangwon/jikhwa-beef-jjigae-set.jpg",
-    name: { ko: "직화소고기 + 찌개", en: "Grilled Beef + Stew Set", zh: "炭烤牛肉+汤套餐", vi: "Bò nướng + Canh", mn: "Гал дээр шарсан үхрийн мах + шөл" },
+    name: { ko: "직화소고기 + 찌개", en: "Grilled Beef + Stew Set", zh: "炭烤牛肉+汤套餐", vi: "Bò nướng + Canh", mn: "Гал дээр шарсан үхрийн мах + шөл", bn: "গ্রিলড বিফ + স্ট্যু সেট", my: "မီးကင်နွားသား + ဟင်း အစုံ" },
     price: 9900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dwaeji-bulbaek-jjigae-set",
     store: "mangwon", group: 2, order: 3,
     image: "/images/mangwon/dwaeji-bulbaek-jjigae-set.jpg",
-    name: { ko: "돼지불백 + 찌개", en: "Pork Bulgogi + Stew Set", zh: "烤猪肉+汤套餐", vi: "Thịt heo nướng + Canh", mn: "Амталж шарсан гахайн мах + шөл" },
+    name: { ko: "돼지불백 + 찌개", en: "Pork Bulgogi + Stew Set", zh: "烤猪肉+汤套餐", vi: "Thịt heo nướng + Canh", mn: "Амталж шарсан гахайн мах + шөл", bn: "পর্ক বুলগোগি + স্ট্যু সেট", my: "ဝက်သားဘူဂိုဂီ + ဟင်း အစုံ" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-garlic-soy-chicken-deopbap",
     store: "mangwon", group: 2, order: 4,
     image: "/images/mangwon/garlic-soy-chicken-deopbap.jpg",
-    name: { ko: "갈릭소이치킨덮밥", en: "Garlic Soy Chicken Rice Bowl", zh: "蒜香酱油鸡肉盖饭", vi: "Cơm gà sốt tỏi tương", mn: "Сармис-соевын соустай тахианы будаа" },
+    name: { ko: "갈릭소이치킨덮밥", en: "Garlic Soy Chicken Rice Bowl", zh: "蒜香酱油鸡肉盖饭", vi: "Cơm gà sốt tỏi tương", mn: "Сармис-соевын соустай тахианы будаа", bn: "গার্লিক সয়া চিকেন রাইস বোল", my: "ကြက်သွန်ဖြူ၊ ပဲငံပြာရည်ကြက်သား ထမင်းခွက်" },
     price: 5900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-gochujang-chicken-deopbap",
     store: "mangwon", group: 2, order: 5,
     image: "/images/mangwon/bulhyang-gochujang-chicken-deopbap.jpg",
-    name: { ko: "불향고추장치킨덮밥", en: "Smoky Gochujang Chicken Rice Bowl", zh: "炭火辣椒酱鸡肉盖饭", vi: "Cơm gà sốt ớt cay", mn: "Утаат гочужан соустай тахианы будаа" },
+    name: { ko: "불향고추장치킨덮밥", en: "Smoky Gochujang Chicken Rice Bowl", zh: "炭火辣椒酱鸡肉盖饭", vi: "Cơm gà sốt ớt cay", mn: "Утаат гочужан соустай тахианы будаа", bn: "স্মোকি গোচুজাং চিকেন রাইস বোল", my: "မီးခိုးရနံ့ ဂိုချူဂျန်ကြက်သား ထမင်းခွက်" },
     price: 5900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-garlic-soy-chicken-deopbap-jjigae-set",
     store: "mangwon", group: 2, order: 6,
     image: "/images/mangwon/garlic-soy-chicken-deopbap-jjigae-set.jpg",
-    name: { ko: "갈릭소이치킨덮밥 + 찌개", en: "Garlic Soy Chicken Rice Bowl + Stew", zh: "蒜香酱油鸡肉盖饭+汤", vi: "Cơm gà sốt tỏi tương + Canh", mn: "Сармис-соевын соустай тахианы будаа + шөл" },
+    name: { ko: "갈릭소이치킨덮밥 + 찌개", en: "Garlic Soy Chicken Rice Bowl + Stew", zh: "蒜香酱油鸡肉盖饭+汤", vi: "Cơm gà sốt tỏi tương + Canh", mn: "Сармис-соевын соустай тахианы будаа + шөл", bn: "গার্লিক সয়া চিকেন রাইস বোল + স্ট্যু", my: "ကြက်သွန်ဖြူ၊ ပဲငံပြာရည်ကြက်သား ထမင်းခွက် + ဟင်း" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-gochujang-chicken-deopbap-jjigae-set",
     store: "mangwon", group: 2, order: 7,
     image: "/images/mangwon/bulhyang-gochujang-chicken-deopbap-jjigae-set.jpg",
-    name: { ko: "불향고추장치킨덮밥 + 찌개", en: "Smoky Gochujang Chicken Rice Bowl + Stew", zh: "炭火辣椒酱鸡肉盖饭+汤", vi: "Cơm gà sốt ớt cay + Canh", mn: "Утаат гочужан соустай тахианы будаа + шөл" },
+    name: { ko: "불향고추장치킨덮밥 + 찌개", en: "Smoky Gochujang Chicken Rice Bowl + Stew", zh: "炭火辣椒酱鸡肉盖饭+汤", vi: "Cơm gà sốt ớt cay + Canh", mn: "Утаат гочужан соустай тахианы будаа + шөл", bn: "স্মোকি গোচুজাং চিকেন রাইস বোল + স্ট্যু", my: "မီးခိုးရနံ့ ဂိုချူဂျန်ကြက်သား ထမင်းခွက် + ဟင်း" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-flying-fish-roe-bap",
     store: "mangwon", group: 2, order: 8,
     image: "/images/mangwon/flying-fish-roe-bap.jpg",
-    name: { ko: "날아라날치알밥", en: "Flying Fish Roe Rice Bowl", zh: "飞鱼子拌饭", vi: "Cơm trứng cá bay", mn: "Нисдэг загасны өндөгтэй будаа" },
+    name: { ko: "날아라날치알밥", en: "Flying Fish Roe Rice Bowl", zh: "飞鱼子拌饭", vi: "Cơm trứng cá bay", mn: "Нисдэг загасны өндөгтэй будаа", bn: "ফ্লাইং ফিশ রো রাইস বোল", my: "ပျံသန်းငါးဥ ထမင်းခွက်" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-spam-flying-fish-roe-bap",
     store: "mangwon", group: 2, order: 9,
     image: "/images/mangwon/spam-flying-fish-roe-bap.jpg",
-    name: { ko: "스팸날치알밥", en: "Spam & Flying Fish Roe Rice Bowl", zh: "午餐肉飞鱼子拌饭", vi: "Cơm trứng cá bay & Spam", mn: "Спамтай нисдэг загасны өндөгний будаа" },
+    name: { ko: "스팸날치알밥", en: "Spam & Flying Fish Roe Rice Bowl", zh: "午餐肉飞鱼子拌饭", vi: "Cơm trứng cá bay & Spam", mn: "Спамтай нисдэг загасны өндөгний будаа", bn: "স্প্যাম ও ফ্লাইং ফিশ রো রাইস বোল", my: "စပမ်နှင့်ပျံသန်းငါးဥ ထမင်းခွက်" },
     price: 7000, soldOut: false, needsReview: true
     // 원본 키오스크 사진과 정확한 메뉴명 확인 필요 (사진에는 "스팸펄알밥"으로 보임, 지시서 기준 "스팸날치알밥" 사용)
   },
@@ -2417,21 +2468,21 @@ const MENU_DATA = [
     id: "mangwon-dukkeobi-yukgaejang",
     store: "mangwon", group: 2, order: 10,
     image: "/images/mangwon/dukkeobi-yukgaejang.jpg",
-    name: { ko: "두꺼비육개장", en: "Dukkeobi Yukgaejang (Spicy Beef Soup)", zh: "杜鸡比牛肉辣汤", vi: "Canh cay Yukgaejang Dukkeobi", mn: "Дуккэби югэжан (халуун үхрийн шөл)" },
+    name: { ko: "두꺼비육개장", en: "Dukkeobi Yukgaejang (Spicy Beef Soup)", zh: "杜鸡比牛肉辣汤", vi: "Canh cay Yukgaejang Dukkeobi", mn: "Дуккэби югэжан (халуун үхрийн шөл)", bn: "দুক্কেওবি ইয়ুকগেজাং (ঝাল বিফ স্যুপ)", my: "ဒွတ်ကိုဘီ ယွတ်ကဲဂျန် (စပ်သောနွားသားဟင်း)" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dukkeobi-udon-yukgaejang",
     store: "mangwon", group: 2, order: 11,
     image: "/images/mangwon/dukkeobi-udon-yukgaejang.jpg",
-    name: { ko: "두꺼비우동육개장", en: "Dukkeobi Udon Yukgaejang", zh: "杜鸡比乌冬辣汤", vi: "Canh cay Yukgaejang Udon Dukkeobi", mn: "Дуккэби удон югэжан" },
+    name: { ko: "두꺼비우동육개장", en: "Dukkeobi Udon Yukgaejang", zh: "杜鸡比乌冬辣汤", vi: "Canh cay Yukgaejang Udon Dukkeobi", mn: "Дуккэби удон югэжан", bn: "দুক্কেওবি উদোন ইয়ুকগেজাং", my: "ဒွတ်ကိုဘီ အူဒွန် ယွတ်ကဲဂျန်" },
     price: 5500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-jikhwa-samgyeop-deopbap",
     store: "mangwon", group: 2, order: 12,
     image: "/images/mangwon/jikhwa-samgyeop-deopbap.jpg",
-    name: { ko: "직화삼겹덮밥", en: "Grilled Pork Belly Rice Bowl", zh: "炭烤五花肉盖饭", vi: "Cơm ba chỉ nướng", mn: "Гал дээр шарсан цээжний махтай будаа" },
+    name: { ko: "직화삼겹덮밥", en: "Grilled Pork Belly Rice Bowl", zh: "炭烤五花肉盖饭", vi: "Cơm ba chỉ nướng", mn: "Гал дээр шарсан цээжний махтай будаа", bn: "গ্রিলড পর্ক বেলি রাইস বোল", my: "မီးကင်ဝက်သားရင်ညွှန့် ထမင်းခွက်" },
     price: 7500, soldOut: false, needsReview: false
   },
 
@@ -2440,84 +2491,84 @@ const MENU_DATA = [
     id: "hururuk-usamgyeop-malatang-samgak-kimbap-set",
     store: "hururuk", group: 1, order: 1,
     image: "/images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
-    name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл" },
+    name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি মালাথাং + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်မာလာသန် + တြိဂံကင်းဘတ်ပ် အစုံ" },
     price: 11900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-bomb-riceNoodle-samgak-kimbap-set",
     store: "hururuk", group: 1, order: 2,
     image: "/images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
-    name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл" },
+    name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি ভরপুর ফো + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့ + တြိဂံကင်းဘတ်ပ် အစုံ" },
     price: 11900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set",
     store: "hururuk", group: 1, order: 3,
     image: "/images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
-    name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл" },
+    name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл", bn: "স্মোকি বিফ বেলি রাগু পাস্তা + ত্রিভুজ কিম্বাপ সেট", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုပါစတာ + တြိဂံကင်းဘတ်ပ် အစုံ" },
     price: 12500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-malatang",
     store: "hururuk", group: 1, order: 4,
     image: "/images/hururuk/usamgyeop-malatang.jpg",
-    name: { ko: "우삼겹마라탕", en: "Beef Belly Malatang", zh: "牛五花麻辣烫", vi: "Malatang ba chỉ bò", mn: "Үхрийн цээжний махтай малатан" },
+    name: { ko: "우삼겹마라탕", en: "Beef Belly Malatang", zh: "牛五花麻辣烫", vi: "Malatang ba chỉ bò", mn: "Үхрийн цээжний махтай малатан", bn: "বিফ বেলি মালাথাং", my: "နွားသားရင်ညွှန့်မာလာသန်" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-bomb-rice-noodle",
     store: "hururuk", group: 1, order: 5,
     image: "/images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
-    name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон" },
+    name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон", bn: "বিফ বেলি ভরপুর ফো", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-ragu-deopbap",
     store: "hururuk", group: 1, order: 6,
     image: "/images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
-    name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа" },
+    name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа", bn: "স্মোকি বিফ বেলি রাগু রাইস বোল", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂု ထမင်းခွက်" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-pork-malatang",
     store: "hururuk", group: 1, order: 7,
     image: "/images/hururuk/pork-malatang.jpg",
-    name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан" },
+    name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан", bn: "পর্ক মালাথাং", my: "ဝက်သားမာလာသန်" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-king-chicken-rice-noodles",
     store: "hururuk", group: 1, order: 8,
     image: "/images/hururuk/king-chicken-rice-noodles.jpg",
-    name: { ko: "왕다리쌀국수", en: "Chicken Leg Pho", zh: "大鸡腿米粉", vi: "Phở đùi gà lớn", mn: "Том тахианы хөлтэй будааны гоймон" },
+    name: { ko: "왕다리쌀국수", en: "Chicken Leg Pho", zh: "大鸡腿米粉", vi: "Phở đùi gà lớn", mn: "Том тахианы хөлтэй будааны гоймон", bn: "বড় চিকেন লেগ ফো", my: "ကြီးမားသောကြက်ခြေထောက်ဖို့" },
     price: 7500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-rice-noodle",
     store: "hururuk", group: 1, order: 9,
     image: "/images/hururuk/duthum-chashu-rice-noodle.jpg",
-    name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон" },
+    name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон", bn: "পুরু চাশু ফো", my: "ထူသောချာရှူးဖို့" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-ganjang-usamgyeop-bokkeummyeon",
     store: "hururuk", group: 1, order: 10,
     image: "/images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
-    name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон" },
+    name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон", bn: "স্মোকি সয়া বিফ বেলি স্টার-ফ্রাই নুডলস", my: "မီးခိုးရနံ့စွယ်ဆော့စ်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-hwakkeun-gochujang-usamgyeop-bokkeummyeon",
     store: "hururuk", group: 1, order: 11,
     image: "/images/hururuk/hwakkeun-gochujang-usamgyeop-bokkeummyeon.jpg",
-    name: { ko: "화끈고추장우삼겹볶음면", en: "Fiery Gochujang Beef Belly Stir-Fried Noodles", zh: "香辣辣椒酱牛五花炒面", vi: "Mì xào ba chỉ bò sốt ớt cay", mn: "Халуун гочужан соустай үхрийн цээжний хуурсан гоймон" },
+    name: { ko: "화끈고추장우삼겹볶음면", en: "Fiery Gochujang Beef Belly Stir-Fried Noodles", zh: "香辣辣椒酱牛五花炒面", vi: "Mì xào ba chỉ bò sốt ớt cay", mn: "Халуун гочужан соустай үхрийн цээжний хуурсан гоймон", bn: "ঝাল গোচুজাং বিফ বেলি স্টার-ফ্রাই নুডলস", my: "စပ်သောဂိုချူဂျန်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-meat-ragu-spaghetti",
     store: "hururuk", group: 1, order: 12,
     image: "/images/hururuk/meat-ragu-spaghetti.jpg",
-    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти" },
+    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти", bn: "প্রচুর মাংসসহ রাগু স্প্যাগেটি", my: "အသားအပြည့်ရာဂုစပါဂက်တီ" },
     price: 7900, soldOut: false, needsReview: false
   },
 
@@ -2526,84 +2577,84 @@ const MENU_DATA = [
     id: "hururuk-meat-ragu-deopbap",
     store: "hururuk", group: 2, order: 1,
     image: "/images/hururuk/meat-ragu-deopbap.jpg",
-    name: { ko: "고기듬뿍 라구덮밥", en: "Meat-Loaded Ragu Rice Bowl", zh: "肉酱盖饭(加量)", vi: "Cơm sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай будаа" },
+    name: { ko: "고기듬뿍 라구덮밥", en: "Meat-Loaded Ragu Rice Bowl", zh: "肉酱盖饭(加量)", vi: "Cơm sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай будаа", bn: "প্রচুর মাংসসহ রাগু রাইস বোল", my: "အသားအပြည့်ရာဂု ထမင်းခွက်" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-sausage-ragu-deopbap",
     store: "hururuk", group: 2, order: 2,
     image: "/images/hururuk/sausage-ragu-deopbap.jpg",
-    name: { ko: "통소세지 라구덮밥", en: "Whole Sausage Ragu Rice Bowl", zh: "整根香肠肉酱盖饭", vi: "Cơm sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай будаа" },
+    name: { ko: "통소세지 라구덮밥", en: "Whole Sausage Ragu Rice Bowl", zh: "整根香肠肉酱盖饭", vi: "Cơm sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай будаа", bn: "গোটা সসেজ রাগু রাইস বোল", my: "ဝက်အူချောင်းတစ်ချောင်းလုံးရာဂု ထမင်းခွက်" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
     store: "hururuk", group: 2, order: 3,
     image: "/images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
-    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти" },
+    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти", bn: "স্মোকি বিফ বেলি রাগু স্প্যাগেটি", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုစပါဂက်တီ" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-sausage-ragu-spaghetti",
     store: "hururuk", group: 2, order: 4,
     image: "/images/hururuk/sausage-ragu-spaghetti.jpg",
-    name: { ko: "통소세지 라구스파게티", en: "Whole Sausage Ragu Spaghetti", zh: "整根香肠肉酱意面", vi: "Spaghetti sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай спагетти" },
+    name: { ko: "통소세지 라구스파게티", en: "Whole Sausage Ragu Spaghetti", zh: "整根香肠肉酱意面", vi: "Spaghetti sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай спагетти", bn: "গোটা সসেজ রাগু স্প্যাগেটি", my: "ဝက်အူချောင်းတစ်ချောင်းလုံးရာဂုစပါဂက်တီ" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-ragu-spaghetti",
     store: "hururuk", group: 2, order: 5,
     image: "/images/hururuk/duthum-chashu-ragu-spaghetti.jpg",
-    name: { ko: "두툼차슈 라구스파게티", en: "Thick-Cut Chashu Ragu Spaghetti", zh: "厚切叉烧肉酱意面", vi: "Spaghetti sốt ragu xá xíu dày", mn: "Зузаан чашүтэй рагу соустай спагетти" },
+    name: { ko: "두툼차슈 라구스파게티", en: "Thick-Cut Chashu Ragu Spaghetti", zh: "厚切叉烧肉酱意面", vi: "Spaghetti sốt ragu xá xíu dày", mn: "Зузаан чашүтэй рагу соустай спагетти", bn: "পুরু চাশু রাগু স্প্যাগেটি", my: "ထူသောချာရှူးရာဂုစပါဂက်တီ" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-clam-chowder-spaghetti",
     store: "hururuk", group: 2, order: 6,
     image: "/images/hururuk/clam-chowder-spaghetti.jpg",
-    name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти" },
+    name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти", bn: "ক্ল্যাম চাউডার স্প্যাগেটি", my: "ခရုမြောက်ချောင်ဒါစပါဂက်တီ" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-eolkeun-usamgyeop-haejang-pasta",
     store: "hururuk", group: 2, order: 7,
     image: "/images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
-    name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста" },
+    name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста", bn: "ঝাল বিফ বেলি হ্যাংওভার পাস্তা", my: "စပ်သောနွားသားရင်ညွှန့် အရက်ပြေဆေးပါစတာ" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-kimchi-cream-pasta",
     store: "hururuk", group: 2, order: 8,
     image: "/images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
-    name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста" },
+    name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста", bn: "স্মোকি বিফ বেলি কিমচি ক্রিম পাস্তা", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ကင်မချီကရင်မ်ပါစတာ" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-kimchi-bulgogi-deopbap",
     store: "hururuk", group: 2, order: 9,
     image: "/images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
-    name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа" },
+    name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа", bn: "স্মোকি কিমচি বুলগোগি রাইস বোল", my: "မီးခိုးရနံ့ကင်မချီဘူဂိုဂီ ထမင်းခွက်" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-garlic-pork-deopbap",
     store: "hururuk", group: 2, order: 10,
     image: "/images/hururuk/garlic-pork-deopbap.jpg",
-    name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа" },
+    name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа", bn: "গার্লিক পর্ক রাইস বোল", my: "ကြက်သွန်ဖြူဝက်သား ထမင်းခွက်" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-deopbap",
     store: "hururuk", group: 2, order: 11,
     image: "/images/hururuk/duthum-chashu-deopbap.jpg",
-    name: { ko: "두툼차슈덮밥", en: "Thick-Cut Chashu Rice Bowl", zh: "厚切叉烧盖饭", vi: "Cơm xá xíu dày", mn: "Зузаан чашүтэй будаа" },
+    name: { ko: "두툼차슈덮밥", en: "Thick-Cut Chashu Rice Bowl", zh: "厚切叉烧盖饭", vi: "Cơm xá xíu dày", mn: "Зузаан чашүтэй будаа", bn: "পুরু চাশু রাইস বোল", my: "ထူသောချာရှူး ထမင်းခွက်" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-tomato-pork-curry",
     store: "hururuk", group: 2, order: 12,
     image: "/images/hururuk/tomato-pork-curry.jpg",
-    name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри" },
+    name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри", bn: "টমেটো পর্ক কারি", my: "ခရမ်းချဉ်သီးဝက်သားကရီ" },
     price: 7900, soldOut: false, needsReview: false
   },
 
@@ -2612,58 +2663,62 @@ const MENU_DATA = [
     id: "hururuk-italian-crispy-pork-cheese-deopbap",
     store: "hururuk", group: 3, order: 1,
     image: "/images/hururuk/italian-crispy-pork-cheese-deopbap.jpg",
-    name: { ko: "이태리 바삭포크치즈덮밥", en: "Italian Crispy Pork & Cheese Rice Bowl", zh: "意式脆皮猪肉芝士盖饭", vi: "Cơm heo giòn phô mai kiểu Ý", mn: "Итали маягийн хурц, бяслагтай гахайн махны будаа" },
+    name: { ko: "이태리 바삭포크치즈덮밥", en: "Italian Crispy Pork & Cheese Rice Bowl", zh: "意式脆皮猪肉芝士盖饭", vi: "Cơm heo giòn phô mai kiểu Ý", mn: "Итали маягийн хурц, бяслагтай гахайн махны будаа", bn: "ইতালিয়ান ক্রিসপি পর্ক চিজ রাইস বোল", my: "အီတလီပုံစံကြွပ်သောဝက်သားနှင့်ချိစ် ထမင်းခွက်" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-ramen-rice",
     store: "hururuk", group: 3, order: 2,
     image: null,
-    name: { ko: "우삼겹라면 + 공기밥", en: "Beef Belly Ramen + Rice", zh: "牛五花拉面+米饭", vi: "Mì ramen ba chỉ bò + Cơm", mn: "Үхрийн цээжний махтай рамен + будаа" },
+    name: { ko: "우삼겹라면 + 공기밥", en: "Beef Belly Ramen + Rice", zh: "牛五花拉面+米饭", vi: "Mì ramen ba chỉ bò + Cơm", mn: "Үхрийн цээжний махтай рамен + будаа", bn: "বিফ বেলি রামেন + ভাত", my: "နွားသားရင်ညွှန့်ရာမန် + ထမင်း" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-cola",
     store: "hururuk", group: 3, order: 3,
     image: "/images/hururuk/cola.jpg",
-    name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл" },
+    name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл", bn: "কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ (၃၅၅ မီလီလီတာ)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-zero-cola",
     store: "hururuk", group: 3, order: 4,
     image: "/images/hururuk/zero-cola.jpg",
-    name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл" },
+    name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл", bn: "জিরো কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ ဇီးရို (၃၅၅ မီလီလီတာ)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-fanta",
     store: "hururuk", group: 3, order: 5,
     image: "/images/hururuk/fanta.jpg",
-    name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта" },
+    name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта", bn: "ফ্যান্টা", my: "ဖန်တာ" },
     price: 1500, soldOut: false, needsReview: false
   }
 ];
 
 /* 천원의 아침밥 안내 (밥심 화면 상단 고정 안내칸 + 상세 모달 공용 데이터) */
 const BREAKFAST_INFO = {
-  title: { ko: "천원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐", vi: "Bữa sáng 1.000 won", mn: "1,000 воны өглөөний хоол" },
-  tabLabel: { ko: "일반 메뉴", en: "Menu", zh: "普通菜单", vi: "Thực đơn thường", mn: "Ерөнхий цэс" },
-  todayMenuTitle: { ko: "오늘의 아침 메뉴", en: "Today\u2019s Breakfast Menu", zh: "今日早餐菜单", vi: "Thực đơn bữa sáng hôm nay", mn: "Өнөөдрийн өглөөний цэс" },
-  tomorrowMenuTitle: { ko: "내일의 아침 메뉴", en: "Tomorrow\u2019s Breakfast Menu", zh: "明日早餐菜单", vi: "Thực đơn bữa sáng ngày mai", mn: "Маргаашийн өглөөний цэс" },
+  title: { ko: "천원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐", vi: "Bữa sáng 1.000 won", mn: "1,000 воны өглөөний хоол", bn: "১,০০০ ওনের সকালের খাবার", my: "ဝမ် ၁,၀၀၀ နံနက်စာ" },
+  tabLabel: { ko: "일반 메뉴", en: "Menu", zh: "普通菜单", vi: "Thực đơn thường", mn: "Ерөнхий цэс", bn: "সাধারণ মেনু", my: "ယေဘုယျမီနူး" },
+  todayMenuTitle: { ko: "오늘의 아침 메뉴", en: "Today\u2019s Breakfast Menu", zh: "今日早餐菜单", vi: "Thực đơn bữa sáng hôm nay", mn: "Өнөөдрийн өглөөний цэс", bn: "আজকের সকালের খাবারের মেনু", my: "ယနေ့ နံနက်စာမီနူး" },
+  tomorrowMenuTitle: { ko: "내일의 아침 메뉴", en: "Tomorrow\u2019s Breakfast Menu", zh: "明日早餐菜单", vi: "Thực đơn bữa sáng ngày mai", mn: "Маргаашийн өглөөний цэс", bn: "আগামীকালের সকালের খাবারের মেনু", my: "မနက်ဖြန် နံနက်စာမီနူး" },
   todayClosedMessage: {
     ko: "오늘은 천원의 아침밥을 운영하지 않습니다.",
     en: "The 1,000 Won Breakfast is not available today.",
     zh: "今天不提供1,000韩元早餐。",
     vi: "Hôm nay không phục vụ bữa sáng 1.000 won.",
-    mn: "Өнөөдөр 1,000 воны өглөөний хоол үйлчлэхгүй."
+    mn: "Өнөөдөр 1,000 воны өглөөний хоол үйлчлэхгүй.",
+    bn: "আজ ১,০০০ ওনের সকালের খাবার পরিবেশন করা হবে না।",
+    my: "ယနေ့ ဝမ် ၁,၀၀၀ နံနက်စာ မရရှိနိုင်ပါ။"
   },
   tomorrowClosedMessage: {
     ko: "내일은 천원의 아침밥을 운영하지 않습니다.",
     en: "The 1,000 Won Breakfast is not available tomorrow.",
     zh: "明天不提供1,000韩元早餐。",
     vi: "Ngày mai không phục vụ bữa sáng 1.000 won.",
-    mn: "Маргааш 1,000 воны өглөөний хоол үйлчлэхгүй."
+    mn: "Маргааш 1,000 воны өглөөний хоол үйлчлэхгүй.",
+    bn: "আগামীকাল ১,০০০ ওনের সকালের খাবার পরিবেশন করা হবে না।",
+    my: "မနက်ဖြန် ဝမ် ၁,၀၀၀ နံနက်စာ မရရှိနိုင်ပါ။"
   },
   /* 운영일이지만 아직 메뉴가 등록되지 않았을 때 (휴무 문구와는 다름) */
   menuPreparingMessage: {
@@ -2671,55 +2726,65 @@ const BREAKFAST_INFO = {
     en: "The menu is being prepared.",
     zh: "菜单准备中。",
     vi: "Thực đơn đang được chuẩn bị.",
-    mn: "Цэсийг бэлтгэж байна."
+    mn: "Цэсийг бэлтгэж байна.",
+    bn: "মেনু প্রস্তুত করা হচ্ছে।",
+    my: "မီနူးကို ပြင်ဆင်နေပါသည်။"
   },
   mealFieldLabels: {
-    rice: { ko: "밥", en: "Rice", zh: "米饭", vi: "Cơm", mn: "Будаа" },
-    soup: { ko: "국", en: "Soup", zh: "汤", vi: "Canh", mn: "Шөл" },
-    main: { ko: "주메뉴", en: "Main", zh: "主菜", vi: "Món chính", mn: "Гол хоол" },
-    side1: { ko: "반찬1", en: "Side 1", zh: "小菜1", vi: "Món phụ 1", mn: "Дагалдах хоол 1" },
-    side2: { ko: "반찬2", en: "Side 2", zh: "小菜2", vi: "Món phụ 2", mn: "Дагалдах хоол 2" },
-    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи" },
-    regular: { ko: "일반식", en: "Regular Meal", zh: "普通餐", vi: "Suất thường", mn: "Энгийн хоол" },
-    simple: { ko: "간편식", en: "Simple Meal", zh: "简餐", vi: "Suất đơn giản", mn: "Хялбар хоол" }
+    rice: { ko: "밥", en: "Rice", zh: "米饭", vi: "Cơm", mn: "Будаа", bn: "ভাত", my: "ထမင်း" },
+    soup: { ko: "국", en: "Soup", zh: "汤", vi: "Canh", mn: "Шөл", bn: "স্যুপ", my: "ဟင်းရည်" },
+    main: { ko: "주메뉴", en: "Main", zh: "主菜", vi: "Món chính", mn: "Гол хоол", bn: "প্রধান খাবার", my: "အဓိကဟင်းလျာ" },
+    side1: { ko: "반찬1", en: "Side 1", zh: "小菜1", vi: "Món phụ 1", mn: "Дагалдах хоол 1", bn: "সাইড ডিশ ১", my: "ဘေးထွက်ဟင်း ၁" },
+    side2: { ko: "반찬2", en: "Side 2", zh: "小菜2", vi: "Món phụ 2", mn: "Дагалдах хоол 2", bn: "সাইড ডিশ ২", my: "ဘေးထွက်ဟင်း ၂" },
+    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи", bn: "কিমচি", my: "ကင်မချီ" },
+    regular: { ko: "일반식", en: "Regular Meal", zh: "普通餐", vi: "Suất thường", mn: "Энгийн хоол", bn: "নিয়মিত খাবার", my: "ပုံမှန်အစားအစာ" },
+    simple: { ko: "간편식", en: "Simple Meal", zh: "简餐", vi: "Suất đơn giản", mn: "Хялбар хоол", bn: "সহজ খাবার", my: "လွယ်ကူသောအစားအစာ" }
   },
   tagline: {
     ko: "단돈 1,000원으로 든든한 아침을 시작하세요.",
     en: "Start your day with a filling breakfast for only \u20A91,000.",
     zh: "只需1,000韩元，即可享用一份丰盛的早餐。",
     vi: "Bắt đầu ngày mới với bữa sáng đầy đủ chỉ với 1.000 won.",
-    mn: "Ердөө 1,000 воноор цатгалан өглөөгөө эхлүүлээрэй."
+    mn: "Ердөө 1,000 воноор цатгалан өглөөгөө эхлүүлээрэй.",
+    bn: "মাত্র ১,০০০ ওনে ভরপেট সকালের নাস্তা শুরু করুন।",
+    my: "ဝမ် ၁,၀၀၀ တည်းဖြင့် ဝစွာနံနက်စာစားပြီး တစ်နေ့တာကိုစတင်ပါ။"
   },
   fieldLabels: {
-    location: { ko: "장소", en: "Location", zh: "地点", vi: "Địa điểm", mn: "Байршил" },
-    hours: { ko: "운영시간", en: "Hours", zh: "时间", vi: "Thời gian", mn: "Ажиллах цаг" },
-    price: { ko: "이용요금", en: "Price", zh: "价格", vi: "Giá", mn: "Үнэ" },
-    eligibility: { ko: "이용대상", en: "Eligibility", zh: "适用对象", vi: "Đối tượng sử dụng", mn: "Хэрэглэгч" },
-    steps: { ko: "이용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" }
+    location: { ko: "장소", en: "Location", zh: "地点", vi: "Địa điểm", mn: "Байршил", bn: "স্থান", my: "တည်နေရာ" },
+    hours: { ko: "운영시간", en: "Hours", zh: "时间", vi: "Thời gian", mn: "Ажиллах цаг", bn: "সময়সূচী", my: "ဖွင့်ချိန်" },
+    price: { ko: "이용요금", en: "Price", zh: "价格", vi: "Giá", mn: "Үнэ", bn: "মূল্য", my: "ဈေးနှုန်း" },
+    eligibility: { ko: "이용대상", en: "Eligibility", zh: "适用对象", vi: "Đối tượng sử dụng", mn: "Хэрэглэгч", bn: "যোগ্যতা", my: "အရည်အချင်း" },
+    steps: { ko: "이용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" }
   },
-  location: { ko: "밥심, 1층", en: "밥심, 1st Floor", zh: "밥심, 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар" },
-  hours: { ko: "오전 7:30~9:30", en: "7:30 AM\u20139:30 AM", zh: "上午7:30\u20139:30", vi: "7:30\u20139:30", mn: "Өглөө 7:30~9:30" },
-  price: { ko: "1,000원", en: "\u20A91,000", zh: "1,000韩元", vi: "1.000 won", mn: "1,000 вон" },
+  location: { ko: "밥심, 1층", en: "밥심, 1st Floor", zh: "밥심, 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар", bn: "밥심, ১ম তলা", my: "밥심, ပထမထပ်" },
+  hours: { ko: "오전 7:30~9:30", en: "7:30 AM\u20139:30 AM", zh: "上午7:30\u20139:30", vi: "7:30\u20139:30", mn: "Өглөө 7:30~9:30", bn: "সকাল ৭:৩০~৯:৩০", my: "မနက် ၇:၃၀~၉:၃၀" },
+  price: { ko: "1,000원", en: "\u20A91,000", zh: "1,000韩元", vi: "1.000 won", mn: "1,000 вон", bn: "১,০০০ ওন", my: "၁,၀၀၀ ဝမ်" },
   eligibility: {
     ko: ["인제대학교 학생", "외국인 유학생", "인제글로벌어학원\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
     en: ["Inje University students", "International students", "INJE GLOBAL LANGUAGE INSTITUTE students"],
     zh: ["仁济大学学生", "外国留学生", "INJE GLOBAL LANGUAGE INSTITUTE 学生"],
     vi: ["Sinh viên Đại học Inje", "Du học sinh quốc tế", "Học viên INJE GLOBAL LANGUAGE INSTITUTE"],
-    mn: ["Inje их сургуулийн оюутан", "Гадаад оюутан", "Inje глобал хэлний сургууль\n(INJE GLOBAL LANGUAGE INSTITUTE)"]
+    mn: ["Inje их сургуулийн оюутан", "Гадаад оюутан", "Inje глобал хэлний сургууль\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
+    bn: ["ইনজে বিশ্ববিদ্যালয়ের শিক্ষার্থী", "বিদেশী আন্তর্জাতিক শিক্ষার্থী", "ইনজে গ্লোবাল ল্যাঙ্গুয়েজ ইনস্টিটিউট\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
+    my: ["အင်ဂျေတက္ကသိုလ်ကျောင်းသား", "နိုင်ငံခြားနိုင်ငံတကာကျောင်းသား", "အင်ဂျေ ဂလိုဘယ်ဘာသာစကားသင်တန်းကျောင်း\n(INJE GLOBAL LANGUAGE INSTITUTE)"]
   },
   steps: {
     ko: ["헤이영 앱에서 QR 인증", "1,000원 식권 구매", "밥 또는 빵 라인 중 한 곳 선택"],
     en: ["Verify the QR code using the HeyYoung app.", "Purchase a \u20A91,000 meal ticket.", "Choose either the rice line or the bread line."],
     zh: ["使用HeyYoung应用程序进行二维码认证。", "购买1,000韩元餐券。", "米饭餐线和面包餐线中选择一种。"],
     vi: ["Xác thực mã QR bằng ứng dụng HeyYoung.", "Mua phiếu ăn giá 1.000 won.", "Chọn một trong hai quầy: cơm hoặc bánh mì."],
-    mn: ["HeyYoung апп-аар QR код баталгаажуулах", "1,000 воны хоолны тасалбар худалдаж авах", "Будаа эсвэл талхны эгнээнээс сонгох"]
+    mn: ["HeyYoung апп-аар QR код баталгаажуулах", "1,000 воны хоолны тасалбар худалдаж авах", "Будаа эсвэл талхны эгнээнээс сонгох"],
+    bn: ["HeyYoung অ্যাপে QR কোড যাচাই করুন", "১,০০০ ওনের খাবার টিকিট কিনুন", "ভাত অথবা রুটি লাইনের যেকোনো একটি বেছে নিন"],
+    my: ["HeyYoung အက်ပ်တွင် QR ကုဒ် စစ်ဆေးပါ", "ဝမ် ၁,၀၀၀ အစားအစာလက်မှတ် ဝယ်ယူပါ", "ထမင်း သို့မဟုတ် ပေါင်မုန့် တန်းတစ်ခုကို ရွေးချယ်ပါ"]
   },
   notes: {
     ko: ["준비된 수량 소진 시 조기 종료될 수 있습니다.", "밥과 빵은 중복 이용할 수 없습니다."],
     en: ["Available while supplies last.", "You may use only one line: rice or bread."],
     zh: ["数量有限，售完即止。", "米饭和面包不可重复领取。"],
     vi: ["Có thể kết thúc sớm khi hết suất.", "Không được sử dụng đồng thời cả hai quầy."],
-    mn: ["Бэлтгэсэн хэмжээ дуусвал эрт зогсож болно.", "Будаа, талхыг давхар ашиглах боломжгүй."]
+    mn: ["Бэлтгэсэн хэмжээ дуусвал эрт зогсож болно.", "Будаа, талхыг давхар ашиглах боломжгүй."],
+    bn: ["প্রস্তুতকৃত পরিমাণ শেষ হলে আগেই বন্ধ হতে পারে।", "ভাত ও রুটি একসাথে ব্যবহার করা যাবে না।"],
+    my: ["ပြင်ဆင်ထားသောပမာဏကုန်ပါက စောစီးစွာ ရပ်နားနိုင်ပါသည်။", "ထမင်းနှင့်ပေါင်မုန့်ကို တစ်ပြိုင်နက် အသုံးပြု၍မရပါ။"]
   }
 };
 
@@ -2727,101 +2792,119 @@ const BREAKFAST_INFO = {
 const COLA_COUPON = {
   eligibleStores: ["mangwon", "hururuk"],
   banner: {
-    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН" },
+    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН", bn: "ফ্রি কোকা-কোলা কুপন", my: "အခမဲ့ ကိုကာကိုလာ ကူပွန်" },
     subtitle: {
       ko: "음식 주문하고 콜라 1캔 무료로 받으세요!",
       en: "Order food and get 1 can of Coke free!",
       zh: "点餐即可免费获得1罐可乐！",
       vi: "Gọi món và nhận miễn phí 1 lon Coca-Cola!",
-      mn: "Хоол захиалаад 1 лааз кола үнэгүй аваарай!"
+      mn: "Хоол захиалаад 1 лааз кола үнэгүй аваарай!",
+      bn: "খাবার অর্ডার করুন এবং ১ ক্যান কোকা-কোলা ফ্রি পান!",
+      my: "အစားအစာမှာပြီး ကိုကာကိုလာ ၁ ဘူး အခမဲ့ ရယူလိုက်ပါ!"
     },
-    button: { ko: "쿠폰 보기", en: "View Coupon", zh: "查看优惠券", vi: "Xem phiếu", mn: "Купон харах" }
+    button: { ko: "쿠폰 보기", en: "View Coupon", zh: "查看优惠券", vi: "Xem phiếu", mn: "Купон харах", bn: "কুপন দেখুন", my: "ကူပွန်ကြည့်ရန်" }
   },
   detail: {
-    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН" },
+    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН", bn: "ফ্রি কোকা-কোলা কুপন", my: "အခမဲ့ ကိုကာကိုလာ ကူပွန်" },
     subtitle: {
       ko: "음식 구매 시 콜라 1캔 무료!",
       en: "Get 1 can of Coke free with any food purchase!",
       zh: "购买餐点即可免费获得1罐可乐！",
       vi: "Mua món ăn được tặng miễn phí 1 lon Coca-Cola!",
-      mn: "Хоол худалдаж авахад 1 лааз кола үнэгүй!"
+      mn: "Хоол худалдаж авахад 1 лааз кола үнэгүй!",
+      bn: "খাবার কিনলেই ১ ক্যান কোকা-কোলা ফ্রি!",
+      my: "အစားအစာဝယ်ယူပါက ကိုကာကိုလာ ၁ ဘူး အခမဲ့!"
     },
-    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар" },
+    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар", bn: "ব্যবহারযোগ্য দোকান", my: "အသုံးပြုနိုင်သောဆိုင်များ" },
     stores: [
-      { brand: "만권화밥", floor: { ko: "1층", en: "1F", zh: "1楼", vi: "tầng 1", mn: "1-р давхар" } },
-      { brand: "후루룩찹찹", floor: { ko: "2층", en: "2F", zh: "2楼", vi: "tầng 2", mn: "2-р давхар" } }
+      { brand: "만권화밥", floor: { ko: "1층", en: "1F", zh: "1楼", vi: "tầng 1", mn: "1-р давхар", bn: "১ম তলা", my: "ပထမထပ်" } },
+      { brand: "후루룩찹찹", floor: { ko: "2층", en: "2F", zh: "2楼", vi: "tầng 2", mn: "2-р давхар", bn: "২য় তলা", my: "ဒုတိယထပ်" } }
     ],
-    conditionLabel: { ko: "사용 조건", en: "Conditions", zh: "使用条件", vi: "Điều kiện sử dụng", mn: "Ашиглах нөхцөл" },
+    conditionLabel: { ko: "사용 조건", en: "Conditions", zh: "使用条件", vi: "Điều kiện sử dụng", mn: "Ашиглах нөхцөл", bn: "ব্যবহারের শর্ত", my: "အသုံးပြုရန်စည်းကမ်းချက်" },
     conditions: {
       ko: ["음식 1개 구매 시 1인 1매", "콜라 1캔 무료 제공"],
       en: ["1 coupon per person with 1 food item purchased", "1 free can of Coke provided"],
       zh: ["购买1份餐点，每人限用1张", "赠送可乐1罐"],
       vi: ["Mỗi người 1 phiếu khi mua 1 món ăn", "Tặng 1 lon Coca-Cola miễn phí"],
-      mn: ["Хоол худалдаж авах үед нэг хүн нэг купон ашиглана.", "1 лааз кола үнэгүй өгнө."]
+      mn: ["Хоол худалдаж авах үед нэг хүн нэг купон ашиглана.", "1 лааз кола үнэгүй өгнө."],
+      bn: ["১টি খাবার কিনলে প্রতিজনে ১টি কুপন", "১ ক্যান কোকা-কোলা ফ্রি প্রদান করা হয়"],
+      my: ["အစားအစာ ၁ ခု ဝယ်ယူပါက တစ်ဦးလျှင် ၁ စောင်", "ကိုကာကိုလာ ၁ ဘူး အခမဲ့ ပေးအပ်ပါသည်"]
     },
-    countLabel: { ko: "사용 횟수", en: "Usage Limit", zh: "使用次数", vi: "Số lần sử dụng", mn: "Ашиглах тоо" },
-    count: { ko: "횟수 제한 없음", en: "No limit", zh: "次数不限", vi: "Không giới hạn", mn: "Ашиглах давтамжийн хязгааргүй" },
-    howToLabel: { ko: "사용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах" },
+    countLabel: { ko: "사용 횟수", en: "Usage Limit", zh: "使用次数", vi: "Số lần sử dụng", mn: "Ашиглах тоо", bn: "ব্যবহারের সংখ্যা", my: "အသုံးပြုနိုင်သောအကြိမ်" },
+    count: { ko: "횟수 제한 없음", en: "No limit", zh: "次数不限", vi: "Không giới hạn", mn: "Ашиглах давтамжийн хязгааргүй", bn: "সীমাহীন ব্যবহার", my: "ကန့်သတ်ချက်မရှိ" },
+    howToLabel: { ko: "사용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" },
     howTo: {
       ko: "음식을 제공받을 때 직원에게 이 쿠폰을 보여주세요.",
       en: "Show this coupon to staff when you receive your food.",
       zh: "领取餐点时向工作人员出示此优惠券。",
       vi: "Xuất trình phiếu này cho nhân viên khi nhận món ăn.",
-      mn: "Хоолоо авахдаа купоноо үзүүлнэ үү."
+      mn: "Хоолоо авахдаа купоноо үзүүлнэ үү.",
+      bn: "খাবার গ্রহণের সময় কর্মীকে এই কুপনটি দেখান।",
+      my: "အစားအစာလက်ခံရရှိချိန်တွင် ဝန်ထမ်းအား ဤကူပွန်ကို ပြသပါ။"
     },
-    captureLabel: { ko: "캡처 화면", en: "Screenshot", zh: "截图", vi: "Ảnh chụp màn hình", mn: "Дэлгэцийн зураг" },
+    captureLabel: { ko: "캡처 화면", en: "Screenshot", zh: "截图", vi: "Ảnh chụp màn hình", mn: "Дэлгэцийн зураг", bn: "স্ক্রিনশট", my: "မျက်နှာပြင်ဓာတ်ပုံ" },
     capture: {
       ko: "캡처한 쿠폰 화면도 사용할 수 있습니다.",
       en: "A screenshot of this coupon can also be used.",
       zh: "截图保存的优惠券画面同样可以使用。",
       vi: "Có thể sử dụng ảnh chụp màn hình của phiếu này.",
-      mn: "Дэлгэцийн зураг ашиглаж болно."
+      mn: "Дэлгэцийн зураг ашиглаж болно.",
+      bn: "স্ক্রিনশট নেওয়া কুপনও ব্যবহার করা যাবে।",
+      my: "ဖမ်းယူထားသော ကူပွန်ပုံကိုလည်း အသုံးပြုနိုင်ပါသည်။"
     },
-    periodLabel: { ko: "사용기간", en: "Valid Until", zh: "使用期限", vi: "Thời hạn sử dụng", mn: "Хугацаа" },
+    periodLabel: { ko: "사용기간", en: "Valid Until", zh: "使用期限", vi: "Thời hạn sử dụng", mn: "Хугацаа", bn: "ব্যবহারের মেয়াদ", my: "သက်တမ်း" },
     period: {
       ko: "2026년 9월 30일까지",
       en: "Until September 30, 2026",
       zh: "至2026年9月30日",
       vi: "Đến hết ngày 30/9/2026",
-      mn: "2026 оны 9-р сарын 30 хүртэл"
+      mn: "2026 оны 9-р сарын 30 хүртэл",
+      bn: "২০২৬ সালের ৩০ সেপ্টেম্বর পর্যন্ত",
+      my: "၂၀၂၆ ခုနှစ် စက်တင်ဘာလ ၃၀ ရက်အထိ"
     },
     notes: {
       ko: ["음식 구매 고객에게만 제공됩니다.", "음식 1개 구매 시 콜라 1캔을 제공합니다.", "매장 사정에 따라 제공 음료가 변경되거나 조기 종료될 수 있습니다."],
       en: ["Available only to customers who purchase food.", "1 can of Coke is provided per 1 food item purchased.", "The provided drink may change or the offer may end early depending on store circumstances."],
       zh: ["仅限购买餐点的顾客使用。", "购买1份餐点可获得可乐1罐。", "根据门店情况，提供的饮品可能变更或提前结束。"],
       vi: ["Chỉ áp dụng cho khách hàng mua món ăn.", "Mua 1 món ăn được tặng 1 lon Coca-Cola.", "Loại nước uống cung cấp có thể thay đổi hoặc chương trình có thể kết thúc sớm tùy tình hình cửa hàng."],
-      mn: ["Зөвхөн хоол худалдаж авсан үйлчлүүлэгчид олгоно.", "1 хоол авахад 1 лааз кола өгнө.", "Дэлгүүрийн нөхцөл байдлаас шалтгаалан ундаа солигдох эсвэл эрт дуусч болно."]
+      mn: ["Зөвхөн хоол худалдаж авсан үйлчлүүлэгчид олгоно.", "1 хоол авахад 1 лааз кола өгнө.", "Дэлгүүрийн нөхцөл байдлаас шалтгаалан ундаа солигдох эсвэл эрт дуусч болно."],
+      bn: ["শুধুমাত্র খাবার ক্রয়কারী গ্রাহকদের জন্য প্রযোজ্য।", "১টি খাবার কিনলে ১ ক্যান কোকা-কোলা দেওয়া হয়।", "দোকানের পরিস্থিতি অনুযায়ী প্রদত্ত পানীয় পরিবর্তন হতে পারে বা আগেই শেষ হতে পারে।"],
+      my: ["အစားအစာဝယ်ယူသောဖောက်သည်များအတွက်သာ ရရှိနိုင်ပါသည်။", "အစားအစာ ၁ ခု ဝယ်ယူပါက ကိုကာကိုလာ ၁ ဘူး ပေးအပ်ပါသည်။", "ဆိုင်၏အခြေအနေပေါ်မူတည်၍ ပေးအပ်သောဖျော်ရည် ပြောင်းလဲနိုင်သည် သို့မဟုတ် စောစီးစွာရပ်နားနိုင်ပါသည်။"]
     },
-    showButton: { ko: "직원에게 보여주기", en: "Show to Staff", zh: "出示给工作人员", vi: "Xuất trình cho nhân viên", mn: "Ажилтанд үзүүлэх" },
-    closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах" }
+    showButton: { ko: "직원에게 보여주기", en: "Show to Staff", zh: "出示给工作人员", vi: "Xuất trình cho nhân viên", mn: "Ажилтанд үзүүлэх", bn: "কর্মীকে দেখান", my: "ဝန်ထမ်းအားပြရန်" },
+    closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" }
   },
   staffShow: {
-    title: { ko: "무료 콜라 1캔", en: "1 Free Coke", zh: "免费可乐1罐", vi: "1 lon Coca-Cola miễn phí", mn: "1 лааз үнэгүй кола" },
+    title: { ko: "무료 콜라 1캔", en: "1 Free Coke", zh: "免费可乐1罐", vi: "1 lon Coca-Cola miễn phí", mn: "1 лааз үнэгүй кола", bn: "১ ক্যান ফ্রি কোকা-কোলা", my: "အခမဲ့ကိုကာကိုလာ ၁ ဘူး" },
     subtitle: {
       ko: "음식 수령 시 직원에게 보여주세요.",
       en: "Show this to staff when you receive your food.",
       zh: "领取餐点时请出示给工作人员。",
       vi: "Vui lòng xuất trình cho nhân viên khi nhận món ăn.",
-      mn: "Хоолоо авахдаа ажилтанд үзүүлнэ үү."
+      mn: "Хоолоо авахдаа ажилтанд үзүүлнэ үү.",
+      bn: "খাবার নেওয়ার সময় কর্মীকে দেখান।",
+      my: "အစားအစာလက်ခံသည့်အခါ ဝန်ထမ်းအားပြပါ။"
     },
-    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар" },
+    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар", bn: "ব্যবহারযোগ্য দোকান", my: "အသုံးပြုနိုင်သောဆိုင်များ" },
     storesValue: "만권화밥 · 후루룩찹찹",
-    period: { ko: "2026. 9. 30.까지", en: "Until 2026. 9. 30.", zh: "至2026.9.30.", vi: "Đến 30.9.2026", mn: "2026.9.30 хүртэл" }
+    period: { ko: "2026. 9. 30.까지", en: "Until 2026. 9. 30.", zh: "至2026.9.30.", vi: "Đến 30.9.2026", mn: "2026.9.30 хүртэл", bn: "২০২৬. ৯. ৩০. পর্যন্ত", my: "၂၀၂၆.၉.၃၀ အထိ" }
   }
 };
 
 /* 사장님께 말해요 (하단 안내칸 + 모바일 고정 버튼, 카카오톡 오픈채팅 연결) */
 const OWNER_CHAT = {
   url: "https://open.kakao.com/o/sxJlUwMi",
-  title: { ko: "사장님께 말해요", en: "Talk to the Owner", zh: "告诉店主", vi: "Nhắn với chủ quán", mn: "Эзэнд нь хэлэх" },
+  title: { ko: "사장님께 말해요", en: "Talk to the Owner", zh: "告诉店主", vi: "Nhắn với chủ quán", mn: "Эзэнд нь хэлэх", bn: "মালিকের সাথে কথা বলুন", my: "ပိုင်ရှင်ကိုပြောပါ" },
   desc: {
     ko: ["메뉴 제안, 칭찬, 불편사항을 편하게 알려주세요.", "작성한 내용은 홈페이지에 공개되거나 저장되지 않습니다."],
     en: ["Share your menu suggestions, compliments, or concerns with us.", "Your message will not be posted or stored on this website."],
     zh: ["欢迎通过KakaoTalk告诉我们您的菜单建议、意见或遇到的问题。", "您的留言不会在本网站公开或保存。"],
     vi: ["Hãy chia sẻ đề xuất món ăn, lời khen hoặc điều bất tiện với chúng tôi.", "Nội dung của bạn sẽ không được đăng hoặc lưu trên trang web này."],
-    mn: ["Цэсийн санал, магтаал, эсвэл тав тухгүй зүйлээ чөлөөтэй мэдэгдээрэй.", "Таны бичсэн зүйл вэбсайтад нийтлэгдэхгүй, хадгалагдахгүй."]
+    mn: ["Цэсийн санал, магтаал, эсвэл тав тухгүй зүйлээ чөлөөтэй мэдэгдээрэй.", "Таны бичсэн зүйл вэбсайтад нийтлэгдэхгүй, хадгалагдахгүй."],
+    bn: ["মেনুর পরামর্শ, প্রশংসা বা অসুবিধা নির্দ্বিধায় জানান।", "আপনার লেখা বিষয়বস্তু ওয়েবসাইটে প্রকাশ বা সংরক্ষণ করা হয় না।"],
+    my: ["မီနူးအကြံပြုချက်၊ ချီးမွမ်းစကား၊ မကျေနပ်ချက်များကို လွတ်လပ်စွာ ပြောပြပါ။", "သင်ရေးသားသောအကြောင်းအရာသည် ဝဘ်ဆိုက်တွင် ထုတ်ဖော်ခြင်း သို့မဟုတ် သိမ်းဆည်းခြင်း မပြုပါ။"]
   },
-  button: { ko: "카카오톡으로 말하기", en: "Chat on KakaoTalk", zh: "通过KakaoTalk联系", vi: "Trò chuyện qua KakaoTalk", mn: "KakaoTalk-аар холбогдох" }
+  button: { ko: "카카오톡으로 말하기", en: "Chat on KakaoTalk", zh: "通过KakaoTalk联系", vi: "Trò chuyện qua KakaoTalk", mn: "KakaoTalk-аар холбогдох", bn: "কাকাওটক-এ কথা বলুন", my: "KakaoTalk ဖြင့်ပြောရန်" }
 };
 
 </script>
@@ -4054,244 +4137,245 @@ document.addEventListener("DOMContentLoaded", PwaManager.init);
 <script>
 /* ==========================================================================
    유학생 커뮤니티 다국어 문구 (js/community-translations.js)
-   - js/translations.js와 같은 패턴({ko,zh,vi,en,mn})을 그대로 따릅니다.
+   - js/translations.js와 같은 패턴({ko,zh,vi,en,mn,bn,my})을 그대로 따릅니다.
    - babsim.store에서 선택한 언어(js/app.js state.lang, localStorage
      "foodhall_lang")를 커뮤니티 화면에도 그대로 사용합니다.
+   - 2026-09-10: 벵골어(bn)·미얀마어(my) 지원 추가.
    ========================================================================== */
 
 /* 상단 커뮤니티 버튼(두 줄) */
 var COMMUNITY_NAV = {
-  line1: { ko: "유학생", zh: "留学生", vi: "Cộng đồng", en: "International", mn: "Олон улсын" },
-  line2: { ko: "커뮤니티", zh: "社区", vi: "Du học sinh", en: "Community", mn: "Оюутнууд" }
+  line1: { ko: "유학생", zh: "留学生", vi: "Cộng đồng", en: "International", mn: "Олон улсын", bn: "আন্তর্জাতিক শিক্ষার্থী", my: "နိုင်ငံတကာကျောင်းသား" },
+  line2: { ko: "커뮤니티", zh: "社区", vi: "Du học sinh", en: "Community", mn: "Оюутнууд", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
 };
 
 /* 게시판 5개 카테고리 — "생활정보"는 2026-09-10에 "구인·구직"으로
    교체되었습니다. life는 예전 게시글 표시(관리자 이동 전까지)를 위해
    번역만 남겨두고 선택 목록(COMMUNITY_CATEGORY_ORDER)에서는 뺐습니다. */
 var COMMUNITY_CATEGORIES = {
-  friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох" },
-  market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа" },
-  help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх" },
-  together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох" },
-  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх" },
-  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл" }
+  friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
+  market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа", bn: "পুরোনো পণ্য কেনাবেচা", my: "တစ်ပတ်ရစ်ပစ္စည်း အရောင်းအဝယ်" },
+  help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
+  together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох", bn: "একসঙ্গে করি", my: "အတူတူလုပ်ကြမယ်" },
+  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
+  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" }
 };
 var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job"];
 
 /* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
 var COMMUNITY_AUTH = {
-  loginTitle: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх" },
-  signupTitle: { ko: "회원가입", zh: "注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх" },
-  emailLabel: { ko: "이메일", zh: "邮箱", vi: "Email", en: "Email", mn: "И-мэйл" },
-  passwordLabel: { ko: "비밀번호", zh: "密码", vi: "Mật khẩu", en: "Password", mn: "Нууц үг" },
-  passwordConfirmLabel: { ko: "비밀번호 확인", zh: "确认密码", vi: "Xác nhận mật khẩu", en: "Confirm Password", mn: "Нууц үг баталгаажуулах" },
-  nameLabel: { ko: "이름", zh: "姓名", vi: "Họ tên", en: "Name", mn: "Нэр" },
-  nationalityLabel: { ko: "국적", zh: "国籍", vi: "Quốc tịch", en: "Nationality", mn: "Иргэншил" },
-  nationalitySearchPlaceholder: { ko: "국가 검색", zh: "搜索国家", vi: "Tìm quốc gia", en: "Search country", mn: "Улс хайх" },
-  langLabel: { ko: "사용할 언어", zh: "使用语言", vi: "Ngôn ngữ sử dụng", en: "Preferred Language", mn: "Ашиглах хэл" },
-  privacyAgree: { ko: "개인정보 수집에 동의합니다", zh: "同意收集个人信息", vi: "Tôi đồng ý thu thập thông tin cá nhân", en: "I agree to the collection of personal information", mn: "Хувийн мэдээлэл цуглуулахыг зөвшөөрч байна" },
-  rulesAgree: { ko: "커뮤니티 이용규칙에 동의합니다", zh: "同意社区使用规则", vi: "Tôi đồng ý với quy tắc cộng đồng", en: "I agree to the community rules", mn: "Нийгэмлэгийн дүрэмтэй зөвшөөрч байна" },
-  viewText: { ko: "보기", zh: "查看", vi: "Xem", en: "View", mn: "Харах" },
-  submitSignup: { ko: "가입하기", zh: "注册", vi: "Đăng ký", en: "Create Account", mn: "Бүртгүүлэх" },
-  submitLogin: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх" },
-  keepLoggedIn: { ko: "로그인 상태 유지", zh: "保持登录", vi: "Duy trì đăng nhập", en: "Keep me logged in", mn: "Нэвтэрсэн хэвээр байх" },
-  forgotPassword: { ko: "비밀번호 찾기", zh: "忘记密码", vi: "Quên mật khẩu", en: "Forgot Password", mn: "Нууц үг сэргээх" },
-  goSignup: { ko: "회원가입", zh: "去注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх" },
-  goLogin: { ko: "이미 계정이 있나요? 로그인", zh: "已有账号？登录", vi: "Đã có tài khoản? Đăng nhập", en: "Already have an account? Log in", mn: "Бүртгэлтэй юу? Нэвтрэх" },
-  resendVerification: { ko: "인증메일 다시 보내기", zh: "重新发送验证邮件", vi: "Gửi lại email xác nhận", en: "Resend verification email", mn: "Баталгаажуулах имэйлийг дахин илгээх" },
-  verifyNotice: { ko: "이메일 인증을 완료해 주세요.", zh: "请完成邮箱验证。", vi: "Vui lòng hoàn tất xác nhận email.", en: "Please verify your email.", mn: "И-мэйлээ баталгаажуулна уу." },
-  logout: { ko: "로그아웃", zh: "登出", vi: "Đăng xuất", en: "Log Out", mn: "Гарах" },
-  resetSent: { ko: "비밀번호 재설정 메일을 보냈습니다.", zh: "已发送密码重置邮件。", vi: "Đã gửi email đặt lại mật khẩu.", en: "Password reset email sent.", mn: "Нууц үг сэргээх и-мэйл илгээгдлээ." },
-  verificationSent: { ko: "인증메일을 다시 보냈습니다.", zh: "已重新发送验证邮件。", vi: "Đã gửi lại email xác nhận.", en: "Verification email resent.", mn: "Баталгаажуулах имэйлийг дахин илгээлээ." },
-  loginRequiredTitle: { ko: "로그인이 필요합니다", zh: "需要登录", vi: "Cần đăng nhập", en: "Login Required", mn: "Нэвтрэх шаардлагатай" },
-  loginRequiredDesc: { ko: "유학생 커뮤니티는 회원가입을 완료한 회원만 이용할 수 있습니다.", zh: "留学生社区仅限完成注册的会员使用。", vi: "Cộng đồng du học sinh chỉ dành cho thành viên đã đăng ký.", en: "The community is available only to registered members.", mn: "Олон улсын оюутнуудын нийгэмлэг нь бүртгэлтэй гишүүдэд л нээлттэй." },
-  suspendedNotice: { ko: "이용이 정지된 계정입니다.", zh: "该账号已被停用。", vi: "Tài khoản đã bị đình chỉ.", en: "This account has been suspended.", mn: "Энэ бүртгэл түдгэлзүүлэгдсэн байна." },
-  googleContinue: { ko: "Google로 계속하기", zh: "使用Google继续", vi: "Tiếp tục với Google", en: "Continue with Google", mn: "Google-ээр үргэлжлүүлэх" },
-  orDivider: { ko: "또는", zh: "或", vi: "Hoặc", en: "or", mn: "эсвэл" },
-  completeProfileTitle: { ko: "추가 정보 입력", zh: "填写更多信息", vi: "Hoàn tất thông tin", en: "Complete Your Profile", mn: "Мэдээллээ бөглөнө үү" },
-  completeProfileDesc: { ko: "커뮤니티 이용을 위해 몇 가지 정보가 더 필요합니다.", zh: "使用社区还需要填写一些信息。", vi: "Cần thêm một vài thông tin để sử dụng cộng đồng.", en: "A few more details are needed to use the community.", mn: "Нийгэмлэгийг ашиглахын тулд зарим нэмэлт мэдээлэл шаардлагатай." }
+  loginTitle: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх", bn: "লগইন", my: "ဝင်ရောက်ရန်" },
+  signupTitle: { ko: "회원가입", zh: "注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх", bn: "সদস্য নিবন্ধন", my: "အကောင့်ဖွင့်ရန်" },
+  emailLabel: { ko: "이메일", zh: "邮箱", vi: "Email", en: "Email", mn: "И-мэйл", bn: "ইমেইল", my: "အီးမေးလ်" },
+  passwordLabel: { ko: "비밀번호", zh: "密码", vi: "Mật khẩu", en: "Password", mn: "Нууц үг", bn: "পাসওয়ার্ড", my: "စကားဝှက်" },
+  passwordConfirmLabel: { ko: "비밀번호 확인", zh: "确认密码", vi: "Xác nhận mật khẩu", en: "Confirm Password", mn: "Нууц үг баталгаажуулах", bn: "পাসওয়ার্ড নিশ্চিত করুন", my: "စကားဝှက်အတည်ပြုရန်" },
+  nameLabel: { ko: "이름", zh: "姓名", vi: "Họ tên", en: "Name", mn: "Нэр", bn: "নাম", my: "အမည်" },
+  nationalityLabel: { ko: "국적", zh: "国籍", vi: "Quốc tịch", en: "Nationality", mn: "Иргэншил", bn: "জাতীয়তা", my: "နိုင်ငံသား" },
+  nationalitySearchPlaceholder: { ko: "국가 검색", zh: "搜索国家", vi: "Tìm quốc gia", en: "Search country", mn: "Улс хайх", bn: "দেশ অনুসন্ধান করুন", my: "နိုင်ငံရှာရန်" },
+  langLabel: { ko: "사용할 언어", zh: "使用语言", vi: "Ngôn ngữ sử dụng", en: "Preferred Language", mn: "Ашиглах хэл", bn: "ব্যবহারের ভাষা", my: "အသုံးပြုမည့်ဘာသာစကား" },
+  privacyAgree: { ko: "개인정보 수집에 동의합니다", zh: "同意收集个人信息", vi: "Tôi đồng ý thu thập thông tin cá nhân", en: "I agree to the collection of personal information", mn: "Хувийн мэдээлэл цуглуулахыг зөвшөөрч байна", bn: "ব্যক্তিগত তথ্য সংগ্রহে সম্মত", my: "ကိုယ်ရေးအချက်အလက်စုဆောင်းခြင်းကို သဘောတူပါသည်" },
+  rulesAgree: { ko: "커뮤니티 이용규칙에 동의합니다", zh: "同意社区使用规则", vi: "Tôi đồng ý với quy tắc cộng đồng", en: "I agree to the community rules", mn: "Нийгэмлэгийн дүрэмтэй зөвшөөрч байна", bn: "কমিউনিটি ব্যবহারের নিয়মে সম্মত", my: "အသိုင်းအဝိုင်းအသုံးပြုစည်းမျဉ်းကို သဘောတူပါသည်" },
+  viewText: { ko: "보기", zh: "查看", vi: "Xem", en: "View", mn: "Харах", bn: "দেখুন", my: "ကြည့်ရန်" },
+  submitSignup: { ko: "가입하기", zh: "注册", vi: "Đăng ký", en: "Create Account", mn: "Бүртгүүлэх", bn: "নিবন্ধন করুন", my: "စာရင်းသွင်းရန်" },
+  submitLogin: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх", bn: "লগইন", my: "ဝင်ရောက်ရန်" },
+  keepLoggedIn: { ko: "로그인 상태 유지", zh: "保持登录", vi: "Duy trì đăng nhập", en: "Keep me logged in", mn: "Нэвтэрсэн хэвээр байх", bn: "লগইন অবস্থায় থাকুন", my: "ဝင်ရောက်ထားသည့်အခြေအနေတွင်ထားရန်" },
+  forgotPassword: { ko: "비밀번호 찾기", zh: "忘记密码", vi: "Quên mật khẩu", en: "Forgot Password", mn: "Нууц үг сэргээх", bn: "পাসওয়ার্ড ভুলে গেছেন", my: "စကားဝှက်မေ့နေပါသလား" },
+  goSignup: { ko: "회원가입", zh: "去注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх", bn: "সদস্য নিবন্ধন", my: "အကောင့်ဖွင့်ရန်" },
+  goLogin: { ko: "이미 계정이 있나요? 로그인", zh: "已有账号？登录", vi: "Đã có tài khoản? Đăng nhập", en: "Already have an account? Log in", mn: "Бүртгэлтэй юу? Нэвтрэх", bn: "ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন করুন", my: "အကောင့်ရှိပြီးသားလား? ဝင်ရောက်ပါ" },
+  resendVerification: { ko: "인증메일 다시 보내기", zh: "重新发送验证邮件", vi: "Gửi lại email xác nhận", en: "Resend verification email", mn: "Баталгаажуулах имэйлийг дахин илгээх", bn: "যাচাইকরণ ইমেইল আবার পাঠান", my: "အတည်ပြုအီးမေးလ်ကို ထပ်မံပေးပို့ရန်" },
+  verifyNotice: { ko: "이메일 인증을 완료해 주세요.", zh: "请完成邮箱验证。", vi: "Vui lòng hoàn tất xác nhận email.", en: "Please verify your email.", mn: "И-мэйлээ баталгаажуулна уу.", bn: "অনুগ্রহ করে ইমেইল যাচাই সম্পন্ন করুন।", my: "အီးမေးလ်အတည်ပြုမှုကို ပြီးမြောက်အောင်ပြုလုပ်ပါ။" },
+  logout: { ko: "로그아웃", zh: "登出", vi: "Đăng xuất", en: "Log Out", mn: "Гарах", bn: "লগআউট", my: "ထွက်ရန်" },
+  resetSent: { ko: "비밀번호 재설정 메일을 보냈습니다.", zh: "已发送密码重置邮件。", vi: "Đã gửi email đặt lại mật khẩu.", en: "Password reset email sent.", mn: "Нууц үг сэргээх и-мэйл илгээгдлээ.", bn: "পাসওয়ার্ড রিসেট ইমেইল পাঠানো হয়েছে।", my: "စကားဝှက်ပြန်လည်သတ်မှတ်ရန်အီးမေးလ်ကို ပေးပို့ပြီးပါပြီ။" },
+  verificationSent: { ko: "인증메일을 다시 보냈습니다.", zh: "已重新发送验证邮件。", vi: "Đã gửi lại email xác nhận.", en: "Verification email resent.", mn: "Баталгаажуулах имэйлийг дахин илгээлээ.", bn: "যাচাইকরণ ইমেইল আবার পাঠানো হয়েছে।", my: "အတည်ပြုအီးမေးလ်ကို ထပ်မံပေးပို့ပြီးပါပြီ။" },
+  loginRequiredTitle: { ko: "로그인이 필요합니다", zh: "需要登录", vi: "Cần đăng nhập", en: "Login Required", mn: "Нэвтрэх шаардлагатай", bn: "লগইন প্রয়োজন", my: "ဝင်ရောက်ရန်လိုအပ်ပါသည်" },
+  loginRequiredDesc: { ko: "유학생 커뮤니티는 회원가입을 완료한 회원만 이용할 수 있습니다.", zh: "留学生社区仅限完成注册的会员使用。", vi: "Cộng đồng du học sinh chỉ dành cho thành viên đã đăng ký.", en: "The community is available only to registered members.", mn: "Олон улсын оюутнуудын нийгэмлэг нь бүртгэлтэй гишүүдэд л нээлттэй.", bn: "আন্তর্জাতিক শিক্ষার্থী কমিউনিটি শুধুমাত্র নিবন্ধিত সদস্যদের জন্য উপলব্ধ।", my: "နိုင်ငံတကာကျောင်းသားများ အသိုင်းအဝိုင်းကို စာရင်းသွင်းထားသောအဖွဲ့ဝင်များသာ အသုံးပြုနိုင်ပါသည်။" },
+  suspendedNotice: { ko: "이용이 정지된 계정입니다.", zh: "该账号已被停用。", vi: "Tài khoản đã bị đình chỉ.", en: "This account has been suspended.", mn: "Энэ бүртгэл түдгэлзүүлэгдсэн байна.", bn: "এই অ্যাকাউন্টটি স্থগিত করা হয়েছে।", my: "ဤအကောင့်ကို ဆိုင်းငံ့ထားပါသည်။" },
+  googleContinue: { ko: "Google로 계속하기", zh: "使用Google继续", vi: "Tiếp tục với Google", en: "Continue with Google", mn: "Google-ээр үргэлжлүүлэх", bn: "Google দিয়ে চালিয়ে যান", my: "Google ဖြင့်ဆက်လက်လုပ်ဆောင်ရန်" },
+  orDivider: { ko: "또는", zh: "或", vi: "Hoặc", en: "or", mn: "эсвэл", bn: "অথবা", my: "သို့မဟုတ်" },
+  completeProfileTitle: { ko: "추가 정보 입력", zh: "填写更多信息", vi: "Hoàn tất thông tin", en: "Complete Your Profile", mn: "Мэдээллээ бөглөнө үү", bn: "অতিরিক্ত তথ্য প্রদান করুন", my: "နောက်ထပ်အချက်အလက်ဖြည့်ရန်" },
+  completeProfileDesc: { ko: "커뮤니티 이용을 위해 몇 가지 정보가 더 필요합니다.", zh: "使用社区还需要填写一些信息。", vi: "Cần thêm một vài thông tin để sử dụng cộng đồng.", en: "A few more details are needed to use the community.", mn: "Нийгэмлэгийг ашиглахын тулд зарим нэмэлт мэдээлэл шаардлагатай.", bn: "কমিউনিটি ব্যবহারের জন্য আরও কিছু তথ্য প্রয়োজন।", my: "အသိုင်းအဝိုင်းကို အသုံးပြုရန် နောက်ထပ်အချက်အလက်အနည်းငယ် လိုအပ်ပါသည်။" }
 };
 
 /* 회원 메뉴/내 정보 */
 var COMMUNITY_MY = {
-  myPageTitle: { ko: "내 정보", zh: "我的信息", vi: "Thông tin của tôi", en: "My Info", mn: "Миний мэдээлэл" },
-  myPosts: { ko: "내가 작성한 글", zh: "我写的帖子", vi: "Bài viết của tôi", en: "My Posts", mn: "Миний бичсэн зурвас" },
-  myComments: { ko: "내가 작성한 댓글", zh: "我写的评论", vi: "Bình luận của tôi", en: "My Comments", mn: "Миний сэтгэгдэл" },
-  savedPosts: { ko: "저장한 글", zh: "已保存的帖子", vi: "Bài đã lưu", en: "Saved Posts", mn: "Хадгалсан зурвас" },
-  editName: { ko: "이름 수정", zh: "修改姓名", vi: "Sửa họ tên", en: "Edit Name", mn: "Нэр засах" },
-  editNationality: { ko: "국적 수정", zh: "修改国籍", vi: "Sửa quốc tịch", en: "Edit Nationality", mn: "Иргэншил засах" },
-  editLang: { ko: "선택 언어 변경", zh: "更改语言", vi: "Đổi ngôn ngữ", en: "Change Language", mn: "Хэл солих" },
-  editPassword: { ko: "비밀번호 변경", zh: "修改密码", vi: "Đổi mật khẩu", en: "Change Password", mn: "Нууц үг солих" },
-  withdraw: { ko: "회원 탈퇴", zh: "注销账号", vi: "Xóa tài khoản", en: "Delete Account", mn: "Гишүүнчлэл цуцлах" },
-  withdrawConfirm: { ko: "정말 탈퇴하시겠습니까? 되돌릴 수 없습니다.", zh: "确定要注销吗？此操作无法撤销。", vi: "Bạn có chắc muốn xóa tài khoản? Không thể hoàn tác.", en: "Are you sure you want to delete your account? This cannot be undone.", mn: "Та гишүүнчлэлээ цуцлахдаа итгэлтэй байна уу? Буцаах боломжгүй." },
-  save: { ko: "저장", zh: "保存", vi: "Lưu", en: "Save", mn: "Хадгалах" }
+  myPageTitle: { ko: "내 정보", zh: "我的信息", vi: "Thông tin của tôi", en: "My Info", mn: "Миний мэдээлэл", bn: "আমার তথ্য", my: "ကျွန်ုပ်၏အချက်အလက်" },
+  myPosts: { ko: "내가 작성한 글", zh: "我写的帖子", vi: "Bài viết của tôi", en: "My Posts", mn: "Миний бичсэн зурвас", bn: "আমার লেখা পোস্ট", my: "ကျွန်ုပ်ရေးသားထားသောပို့စ်များ" },
+  myComments: { ko: "내가 작성한 댓글", zh: "我写的评论", vi: "Bình luận của tôi", en: "My Comments", mn: "Миний сэтгэгдэл", bn: "আমার মন্তব্য", my: "ကျွန်ုပ်ရေးသားထားသောမှတ်ချက်များ" },
+  savedPosts: { ko: "저장한 글", zh: "已保存的帖子", vi: "Bài đã lưu", en: "Saved Posts", mn: "Хадгалсан зурвас", bn: "সংরক্ষিত পোস্ট", my: "သိမ်းဆည်းထားသောပို့စ်များ" },
+  editName: { ko: "이름 수정", zh: "修改姓名", vi: "Sửa họ tên", en: "Edit Name", mn: "Нэр засах", bn: "নাম সম্পাদনা", my: "အမည်ပြင်ဆင်ရန်" },
+  editNationality: { ko: "국적 수정", zh: "修改国籍", vi: "Sửa quốc tịch", en: "Edit Nationality", mn: "Иргэншил засах", bn: "জাতীয়তা সম্পাদনা", my: "နိုင်ငံသားပြင်ဆင်ရန်" },
+  editLang: { ko: "선택 언어 변경", zh: "更改语言", vi: "Đổi ngôn ngữ", en: "Change Language", mn: "Хэл солих", bn: "ভাষা পরিবর্তন", my: "ဘာသာစကားပြောင်းရန်" },
+  editPassword: { ko: "비밀번호 변경", zh: "修改密码", vi: "Đổi mật khẩu", en: "Change Password", mn: "Нууц үг солих", bn: "পাসওয়ার্ড পরিবর্তন", my: "စကားဝှက်ပြောင်းရန်" },
+  withdraw: { ko: "회원 탈퇴", zh: "注销账号", vi: "Xóa tài khoản", en: "Delete Account", mn: "Гишүүнчлэл цуцлах", bn: "সদস্যপদ বাতিল", my: "အသင်းဝင်ရပ်ဆိုင်းရန်" },
+  withdrawConfirm: { ko: "정말 탈퇴하시겠습니까? 되돌릴 수 없습니다.", zh: "确定要注销吗？此操作无法撤销。", vi: "Bạn có chắc muốn xóa tài khoản? Không thể hoàn tác.", en: "Are you sure you want to delete your account? This cannot be undone.", mn: "Та гишүүнчлэлээ цуцлахдаа итгэлтэй байна уу? Буцаах боломжгүй.", bn: "আপনি কি সত্যিই সদস্যপদ বাতিল করতে চান? এটি ফিরিয়ে আনা যাবে না।", my: "သင်ဧကန်အသင်းဝင်ရပ်ဆိုင်းလိုပါသလား? ပြန်ပြင်၍မရပါ။" },
+  save: { ko: "저장", zh: "保存", vi: "Lưu", en: "Save", mn: "Хадгалах", bn: "সংরক্ষণ", my: "သိမ်းဆည်းရန်" }
 };
 
 /* 게시글/댓글 작성, 상세, 목록, 검색 */
 var COMMUNITY_POST = {
-  writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих" },
-  categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал" },
-  titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг" },
-  contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга" },
-  originalLangLabel: { ko: "원문 언어", zh: "原文语言", vi: "Ngôn ngữ gốc", en: "Original Language", mn: "Эх хэл" },
-  photoLabel: { ko: "사진 (최대 3장)", zh: "照片（最多3张）", vi: "Ảnh (tối đa 3 ảnh)", en: "Photos (up to 3)", mn: "Зураг (хамгийн ихдээ 3)" },
-  submitPost: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх" },
-  editPost: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах" },
-  deletePost: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах" },
-  deleteConfirm: { ko: "정말 삭제하시겠습니까?", zh: "确定要删除吗？", vi: "Bạn có chắc muốn xóa?", en: "Are you sure you want to delete this?", mn: "Устгахдаа итгэлтэй байна уу?" },
-  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах" },
-  viewTranslated: { ko: "선택 언어로 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translated", mn: "Орчуулгыг харах" },
-  aiNotice: { ko: "AI로 번역된 내용입니다.", zh: "本内容由AI翻译。", vi: "Nội dung này được dịch bằng AI.", en: "This content was translated by AI.", mn: "Энэ агуулгыг AI орчуулсан." },
-  translateBtn: { ko: "선택한 언어로 번역하기", zh: "翻译成所选语言", vi: "Dịch sang ngôn ngữ đã chọn", en: "Translate to selected language", mn: "Сонгосон хэл рүү орчуулах" },
-  translating: { ko: "번역 중입니다.", zh: "正在翻译中。", vi: "Đang dịch.", en: "Translating...", mn: "Орчуулж байна." },
-  quotaExceeded: { ko: "오늘의 번역 이용량을 초과했습니다. 원문으로 확인해 주세요.", zh: "今日翻译使用量已用完，请查看原文。", vi: "Đã vượt quá lượt dịch hôm nay. Vui lòng xem bản gốc.", en: "Today's translation quota has been used up. Please check the original text.", mn: "Өнөөдрийн орчуулгын хязгаарт хүрсэн байна. Эх хувиар нь харна уу." },
-  noPosts: { ko: "게시글이 없습니다.", zh: "暂无帖子。", vi: "Không có bài viết.", en: "No posts yet.", mn: "Зурвас алга байна." },
-  loading: { ko: "불러오는 중...", zh: "加载中...", vi: "Đang tải...", en: "Loading...", mn: "Ачааллаж байна..." },
-  searchPlaceholder: { ko: "제목·본문 검색", zh: "搜索标题·内容", vi: "Tìm tiêu đề, nội dung", en: "Search title/content", mn: "Гарчиг, агуулга хайх" },
-  sortLatest: { ko: "최신순", zh: "最新", vi: "Mới nhất", en: "Latest", mn: "Хамгийн сүүлийн" },
-  sortComments: { ko: "댓글 많은 순", zh: "评论最多", vi: "Nhiều bình luận nhất", en: "Most Commented", mn: "Хамгийн олон сэтгэгдэлтэй" },
-  loadMore: { ko: "더보기", zh: "查看更多", vi: "Xem thêm", en: "Load more", mn: "Дэлгэрэнгүй" },
-  commentCount: { ko: "댓글", zh: "评论", vi: "Bình luận", en: "Comments", mn: "Сэтгэгдэл" },
-  saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах" },
-  unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах" },
-  kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой." },
-  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат" }
+  writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих", bn: "পোস্ট লিখুন", my: "ပို့စ်ရေးရန်" },
+  categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал", bn: "বিভাগ", my: "အမျိုးအစား" },
+  titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг", bn: "শিরোনাম", my: "ခေါင်းစဉ်" },
+  contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга", bn: "বিষয়বস্তু", my: "အကြောင်းအရာ" },
+  originalLangLabel: { ko: "원문 언어", zh: "原文语言", vi: "Ngôn ngữ gốc", en: "Original Language", mn: "Эх хэл", bn: "মূল ভাষা", my: "မူရင်းဘာသာစကား" },
+  photoLabel: { ko: "사진 (최대 1장)", zh: "照片（最多1张）", vi: "Ảnh (tối đa 1 ảnh)", en: "Photo (up to 1)", mn: "Зураг (хамгийн ихдээ 1)", bn: "ছবি (সর্বোচ্চ ১টি)", my: "ဓာတ်ပုံ (အများဆုံး ၁ ပုံ)" },
+  submitPost: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх", bn: "পোস্ট করুন", my: "တင်ရန်" },
+  editPost: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах", bn: "সম্পাদনা", my: "ပြင်ဆင်ရန်" },
+  deletePost: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах", bn: "মুছুন", my: "ဖျက်ရန်" },
+  deleteConfirm: { ko: "정말 삭제하시겠습니까?", zh: "确定要删除吗？", vi: "Bạn có chắc muốn xóa?", en: "Are you sure you want to delete this?", mn: "Устгахдаа итгэлтэй байна уу?", bn: "আপনি কি সত্যিই মুছে ফেলতে চান?", my: "သင်ဧကန်ဖျက်လိုပါသလား?" },
+  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах", bn: "মূল লেখা দেখুন", my: "မူရင်းစာကို ကြည့်ရန်" },
+  viewTranslated: { ko: "선택 언어로 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translated", mn: "Орчуулгыг харах", bn: "নির্বাচিত ভাষায় দেখুন", my: "ရွေးချယ်ထားသောဘာသာစကားဖြင့်ကြည့်ရန်" },
+  aiNotice: { ko: "AI로 번역된 내용입니다.", zh: "本内容由AI翻译。", vi: "Nội dung này được dịch bằng AI.", en: "This content was translated by AI.", mn: "Энэ агуулгыг AI орчуулсан.", bn: "এটি AI দ্বারা অনুবাদিত বিষয়বস্তু।", my: "ဤအကြောင်းအရာသည် AI ဖြင့်ဘာသာပြန်ထားခြင်းဖြစ်သည်။" },
+  translateBtn: { ko: "선택한 언어로 번역하기", zh: "翻译成所选语言", vi: "Dịch sang ngôn ngữ đã chọn", en: "Translate to selected language", mn: "Сонгосон хэл рүү орчуулах", bn: "নির্বাচিত ভাষায় অনুবাদ করুন", my: "ရွေးချယ်ထားသောဘာသာသို့ ဘာသာပြန်ရန်" },
+  translating: { ko: "번역 중입니다.", zh: "正在翻译中。", vi: "Đang dịch.", en: "Translating...", mn: "Орчуулж байна.", bn: "অনুবাদ করা হচ্ছে।", my: "ဘာသာပြန်နေပါသည်။" },
+  quotaExceeded: { ko: "오늘의 번역 이용량을 초과했습니다. 원문으로 확인해 주세요.", zh: "今日翻译使用量已用完，请查看原文。", vi: "Đã vượt quá lượt dịch hôm nay. Vui lòng xem bản gốc.", en: "Today's translation quota has been used up. Please check the original text.", mn: "Өнөөдрийн орчуулгын хязгаарт хүрсэн байна. Эх хувиар нь харна уу.", bn: "আজকের অনুবাদের পরিমাণ শেষ হয়ে গেছে। মূল লেখা দেখুন।", my: "ယနေ့ ဘာသာပြန်အသုံးပြုနိုင်မှု ကျော်လွန်သွားပါပြီ။ မူရင်းစာဖြင့်ကြည့်ပါ။" },
+  noPosts: { ko: "게시글이 없습니다.", zh: "暂无帖子。", vi: "Không có bài viết.", en: "No posts yet.", mn: "Зурвас алга байна.", bn: "কোনো পোস্ট নেই।", my: "ပို့စ်မရှိပါ။" },
+  loading: { ko: "불러오는 중...", zh: "加载中...", vi: "Đang tải...", en: "Loading...", mn: "Ачааллаж байна...", bn: "লোড হচ্ছে...", my: "ဖွင့်နေပါသည်..." },
+  searchPlaceholder: { ko: "제목·본문 검색", zh: "搜索标题·内容", vi: "Tìm tiêu đề, nội dung", en: "Search title/content", mn: "Гарчиг, агуулга хайх", bn: "শিরোনাম·বিষয়বস্তু খুঁজুন", my: "ခေါင်းစဉ်၊ အကြောင်းအရာရှာရန်" },
+  sortLatest: { ko: "최신순", zh: "最新", vi: "Mới nhất", en: "Latest", mn: "Хамгийн сүүлийн", bn: "সাম্প্রতিক", my: "အသစ်ဆုံး" },
+  sortComments: { ko: "댓글 많은 순", zh: "评论最多", vi: "Nhiều bình luận nhất", en: "Most Commented", mn: "Хамгийн олон сэтгэгдэлтэй", bn: "সর্বাধিক মন্তব্য", my: "မှတ်ချက်အများဆုံး" },
+  loadMore: { ko: "더보기", zh: "查看更多", vi: "Xem thêm", en: "Load more", mn: "Дэлгэрэнгүй", bn: "আরও দেখুন", my: "ပိုမိုကြည့်ရန်" },
+  commentCount: { ko: "댓글", zh: "评论", vi: "Bình luận", en: "Comments", mn: "Сэтгэгдэл", bn: "মন্তব্য", my: "မှတ်ချက်" },
+  saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах", bn: "সংরক্ষণ", my: "သိမ်းဆည်းရန်" },
+  unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах", bn: "সংরক্ষণ বাতিল", my: "သိမ်းဆည်းမှုပယ်ဖျက်ရန်" },
+  kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой.", bn: "ব্যক্তিগত তথ্য প্রকাশ এবং অফলাইন সাক্ষাতে সতর্ক থাকুন।", my: "ကိုယ်ရေးအချက်အလက်ဖော်ပြခြင်းနှင့် အော့ဖ်လိုင်းတွေ့ဆုံခြင်းတွင် သတိထားပါ။" },
+  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" }
 };
 
 /* 중고거래 */
 var COMMUNITY_MARKET = {
-  dealTypeSell: { ko: "판매", zh: "出售", vi: "Bán", en: "Sell", mn: "Зарах" },
-  dealTypeBuy: { ko: "구매", zh: "求购", vi: "Mua", en: "Buy", mn: "Худалдан авах" },
-  priceLabel: { ko: "가격", zh: "价格", vi: "Giá", en: "Price", mn: "Үнэ" },
-  freeShare: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free Giveaway", mn: "Үнэгүй хуваалцах" },
-  locationLabel: { ko: "거래 희망 장소", zh: "交易地点", vi: "Địa điểm giao dịch", en: "Preferred Location", mn: "Худалдааны байршил" },
-  conditionLabel: { ko: "물품 상태", zh: "物品状态", vi: "Tình trạng đồ", en: "Item Condition", mn: "Барааны байдал" },
-  statusLabel: { ko: "거래 상태", zh: "交易状态", vi: "Trạng thái giao dịch", en: "Deal Status", mn: "Худалдааны төлөв" },
-  statusSelling: { ko: "판매 중", zh: "出售中", vi: "Đang bán", en: "Selling", mn: "Зарж байна" },
-  statusReserved: { ko: "예약 중", zh: "已预订", vi: "Đã đặt trước", en: "Reserved", mn: "Захиалагдсан" },
-  statusDone: { ko: "거래 완료", zh: "交易完成", vi: "Đã giao dịch", en: "Sold", mn: "Худалдаа дууссан" },
-  statusFree: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free", mn: "Үнэгүй" },
-  hideDone: { ko: "거래 완료 게시물 숨기기", zh: "隐藏已完成交易", vi: "Ẩn bài đã giao dịch", en: "Hide completed deals", mn: "Дууссан худалдааг нуух" },
-  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах" },
-  safetyNotice: { ko: "학교 안의 공개된 장소에서 만나고 송금 전에 물건을 직접 확인하세요.", zh: "请在学校内的公开场所见面，转账前请务必确认物品。", vi: "Hãy gặp ở nơi công cộng trong trường và kiểm tra hàng trước khi chuyển khoản.", en: "Meet in a public place on campus and check the item before paying.", mn: "Сургуулийн нээлттэй газарт уулзаж, мөнгө шилжүүлэхийн өмнө барааг өөрөө шалгаарай." }
+  dealTypeSell: { ko: "판매", zh: "出售", vi: "Bán", en: "Sell", mn: "Зарах", bn: "বিক্রয়", my: "ရောင်းရန်" },
+  dealTypeBuy: { ko: "구매", zh: "求购", vi: "Mua", en: "Buy", mn: "Худалдан авах", bn: "ক্রয়", my: "ဝယ်ရန်" },
+  priceLabel: { ko: "가격", zh: "价格", vi: "Giá", en: "Price", mn: "Үнэ", bn: "মূল্য", my: "ဈေးနှုန်း" },
+  freeShare: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free Giveaway", mn: "Үнэгүй хуваалцах", bn: "ফ্রি বিতরণ", my: "အခမဲ့ ဝေမျှခြင်း" },
+  locationLabel: { ko: "거래 희망 장소", zh: "交易地点", vi: "Địa điểm giao dịch", en: "Preferred Location", mn: "Худалдааны байршил", bn: "লেনদেনের স্থান", my: "ရောင်းဝယ်လိုသည့်နေရာ" },
+  conditionLabel: { ko: "물품 상태", zh: "物品状态", vi: "Tình trạng đồ", en: "Item Condition", mn: "Барааны байдал", bn: "পণ্যের অবস্থা", my: "ပစ္စည်းအခြေအနေ" },
+  statusLabel: { ko: "거래 상태", zh: "交易状态", vi: "Trạng thái giao dịch", en: "Deal Status", mn: "Худалдааны төлөв", bn: "লেনদেনের অবস্থা", my: "ရောင်းဝယ်မှုအခြေအနေ" },
+  statusSelling: { ko: "판매 중", zh: "出售中", vi: "Đang bán", en: "Selling", mn: "Зарж байна", bn: "বিক্রয় চলছে", my: "ရောင်းနေဆဲ" },
+  statusReserved: { ko: "예약 중", zh: "已预订", vi: "Đã đặt trước", en: "Reserved", mn: "Захиалагдсан", bn: "বুকিং হয়েছে", my: "ကြိုတင်မှာထားသည်" },
+  statusDone: { ko: "거래 완료", zh: "交易完成", vi: "Đã giao dịch", en: "Sold", mn: "Худалдаа дууссан", bn: "লেনদেন সম্পন্ন", my: "ရောင်းပြီးပါပြီ" },
+  statusFree: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free", mn: "Үнэгүй", bn: "ফ্রি", my: "အခမဲ့" },
+  hideDone: { ko: "거래 완료 게시물 숨기기", zh: "隐藏已完成交易", vi: "Ẩn bài đã giao dịch", en: "Hide completed deals", mn: "Дууссан худалдааг нуух", bn: "সম্পন্ন পোস্ট লুকান", my: "ပြီးစီးသောပို့စ်များဖျောက်ရန်" },
+  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах", bn: "৩০ দিন বাড়ান", my: "၃၀ ရက်တိုးရန်" },
+  safetyNotice: { ko: "학교 안의 공개된 장소에서 만나고 송금 전에 물건을 직접 확인하세요.", zh: "请在学校内的公开场所见面，转账前请务必确认物品。", vi: "Hãy gặp ở nơi công cộng trong trường và kiểm tra hàng trước khi chuyển khoản.", en: "Meet in a public place on campus and check the item before paying.", mn: "Сургуулийн нээлттэй газарт уулзаж, мөнгө шилжүүлэхийн өмнө барааг өөрөө шалгаарай.", bn: "স্কুলের ভেতরে প্রকাশ্য স্থানে দেখা করুন এবং টাকা পাঠানোর আগে পণ্য সরাসরি পরীক্ষা করুন।", my: "ကျောင်းအတွင်းရှိ လူသိရှင်ကြားနေရာတွင်တွေ့ဆုံပြီး ငွေလွှဲမပေးမီ ပစ္စည်းကိုကိုယ်တိုင်စစ်ဆေးပါ။" }
 };
 
 /* 도움 요청 */
 var COMMUNITY_HELP = {
-  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв" },
-  statusNeeded: { ko: "도움 필요", zh: "需要帮助", vi: "Cần giúp đỡ", en: "Help Needed", mn: "Тусламж хэрэгтэй" },
-  statusInProgress: { ko: "해결 중", zh: "处理中", vi: "Đang xử lý", en: "In Progress", mn: "Шийдвэрлэж байна" },
-  statusResolved: { ko: "해결 완료", zh: "已解决", vi: "Đã giải quyết", en: "Resolved", mn: "Шийдэгдсэн" },
-  typeLabel: { ko: "분류", zh: "分类", vi: "Phân loại", en: "Type", mn: "Төрөл" },
-  typeSchool: { ko: "학교생활", zh: "校园生活", vi: "Đời sống học đường", en: "School Life", mn: "Сургуулийн амьдрал" },
-  typeKorean: { ko: "한국어", zh: "韩语", vi: "Tiếng Hàn", en: "Korean Language", mn: "Солонгос хэл" },
-  typeHospital: { ko: "병원", zh: "医院", vi: "Bệnh viện", en: "Hospital", mn: "Эмнэлэг" },
-  typeTransport: { ko: "교통", zh: "交通", vi: "Giao thông", en: "Transportation", mn: "Тээвэр" },
-  typeAdmin: { ko: "행정", zh: "行政", vi: "Hành chính", en: "Administration", mn: "Захиргаа" },
-  typeLost: { ko: "분실물", zh: "失物招领", vi: "Đồ thất lạc", en: "Lost & Found", mn: "Алдагдсан зүйл" },
-  typeLife: { ko: "생활 도움", zh: "生活帮助", vi: "Hỗ trợ sinh hoạt", en: "Daily Help", mn: "Амьдралын тусламж" },
-  typeEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
-  emergencyNotice: { ko: "긴급하거나 위험한 상황은 경찰, 학교 담당 부서 등 공식 기관에 연락하세요.", zh: "紧急或危险情况请联系警察或学校相关部门等官方机构。", vi: "Trường hợp khẩn cấp hoặc nguy hiểm, hãy liên hệ công an hoặc bộ phận phụ trách của trường.", en: "For urgent or dangerous situations, contact the police or your school's official office.", mn: "Яаралтай, аюултай тохиолдолд цагдаа, сургуулийн албан ёсны газарт хандана уу." }
+  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв", bn: "অবস্থা", my: "အခြေအနေ" },
+  statusNeeded: { ko: "도움 필요", zh: "需要帮助", vi: "Cần giúp đỡ", en: "Help Needed", mn: "Тусламж хэрэгтэй", bn: "সাহায্য প্রয়োজন", my: "အကူအညီလိုအပ်သည်" },
+  statusInProgress: { ko: "해결 중", zh: "处理中", vi: "Đang xử lý", en: "In Progress", mn: "Шийдвэрлэж байна", bn: "সমাধান চলছে", my: "ဖြေရှင်းနေဆဲ" },
+  statusResolved: { ko: "해결 완료", zh: "已解决", vi: "Đã giải quyết", en: "Resolved", mn: "Шийдэгдсэн", bn: "সমাধান হয়েছে", my: "ဖြေရှင်းပြီးပါပြီ" },
+  typeLabel: { ko: "분류", zh: "分类", vi: "Phân loại", en: "Type", mn: "Төрөл", bn: "শ্রেণী", my: "အမျိုးအစား" },
+  typeSchool: { ko: "학교생활", zh: "校园生活", vi: "Đời sống học đường", en: "School Life", mn: "Сургуулийн амьдрал", bn: "স্কুল জীবন", my: "ကျောင်းဘဝ" },
+  typeKorean: { ko: "한국어", zh: "韩语", vi: "Tiếng Hàn", en: "Korean Language", mn: "Солонгос хэл", bn: "কোরিয়ান ভাষা", my: "ကိုရီးယားစာ" },
+  typeHospital: { ko: "병원", zh: "医院", vi: "Bệnh viện", en: "Hospital", mn: "Эмнэлэг", bn: "হাসপাতাল", my: "ဆေးရုံ" },
+  typeTransport: { ko: "교통", zh: "交通", vi: "Giao thông", en: "Transportation", mn: "Тээвэр", bn: "পরিবহন", my: "သယ်ယူပို့ဆောင်ရေး" },
+  typeAdmin: { ko: "행정", zh: "行政", vi: "Hành chính", en: "Administration", mn: "Захиргаа", bn: "প্রশাসন", my: "အုပ်ချုပ်ရေး" },
+  typeLost: { ko: "분실물", zh: "失物招领", vi: "Đồ thất lạc", en: "Lost & Found", mn: "Алдагдсан зүйл", bn: "হারানো জিনিস", my: "ပျောက်ဆုံးပစ္စည်း" },
+  typeLife: { ko: "생활 도움", zh: "生活帮助", vi: "Hỗ trợ sinh hoạt", en: "Daily Help", mn: "Амьдралын тусламж", bn: "জীবনযাত্রার সাহায্য", my: "နေထိုင်မှုအကူအညီ" },
+  typeEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" },
+  emergencyNotice: { ko: "긴급하거나 위험한 상황은 경찰, 학교 담당 부서 등 공식 기관에 연락하세요.", zh: "紧急或危险情况请联系警察或学校相关部门等官方机构。", vi: "Trường hợp khẩn cấp hoặc nguy hiểm, hãy liên hệ công an hoặc bộ phận phụ trách của trường.", en: "For urgent or dangerous situations, contact the police or your school's official office.", mn: "Яаралтай, аюултай тохиолдолд цагдаа, сургуулийн албан ёсны газарт хандана уу.", bn: "জরুরি বা বিপজ্জনক পরিস্থিতিতে পুলিশ, বিশ্ববিদ্যালয়ের সংশ্লিষ্ট বিভাগের মতো সরকারি প্রতিষ্ঠানে যোগাযোগ করুন।", my: "အရေးပေါ်သို့မဟုတ်အန္တရာယ်ရှိသောအခြေအနေများတွင် ရဲသို့မဟုတ်ကျောင်း၏တာဝန်ရှိဌာနကဲ့သို့သောတရားဝင်အဖွဲ့အစည်းသို့ ဆက်သွယ်ပါ။" }
 };
 
 /* 구인·구직 (2026-09-10, "생활정보" 카테고리를 대체) */
 var COMMUNITY_JOB = {
-  typeLabel: { ko: "구분", zh: "类型", vi: "Loại", en: "Type", mn: "Төрөл" },
-  typeHiring: { ko: "구인", zh: "招聘", vi: "Tuyển dụng", en: "Hiring", mn: "Ажилтан авах" },
-  typeSeeking: { ko: "구직", zh: "求职", vi: "Tìm việc", en: "Looking for Work", mn: "Ажил хайх" },
-  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв" },
-  statusOpen: { ko: "모집 중", zh: "招聘中", vi: "Đang tuyển", en: "Open", mn: "Авч байна" },
-  statusClosed: { ko: "모집 마감", zh: "招聘已结束", vi: "Đã ngừng tuyển", en: "Closed", mn: "Дууссан" },
-  statusSeeking: { ko: "구직 중", zh: "求职中", vi: "Đang tìm việc", en: "Seeking", mn: "Ажил хайж байна" },
-  statusDone: { ko: "구직 완료", zh: "已找到工作", vi: "Đã tìm được việc", en: "Found a job", mn: "Ажил олдсон" },
+  typeLabel: { ko: "구분", zh: "类型", vi: "Loại", en: "Type", mn: "Төрөл", bn: "ধরন", my: "အမျိုးအစား" },
+  typeHiring: { ko: "구인", zh: "招聘", vi: "Tuyển dụng", en: "Hiring", mn: "Ажилтан авах", bn: "নিয়োগ", my: "အလုပ်ခေါ်ယူခြင်း" },
+  typeSeeking: { ko: "구직", zh: "求职", vi: "Tìm việc", en: "Looking for Work", mn: "Ажил хайх", bn: "চাকরি খোঁজা", my: "အလုပ်ရှာဖွေခြင်း" },
+  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв", bn: "অবস্থা", my: "အခြေအနေ" },
+  statusOpen: { ko: "모집 중", zh: "招聘中", vi: "Đang tuyển", en: "Open", mn: "Авч байна", bn: "নিয়োগ চলছে", my: "ခေါ်ယူနေဆဲ" },
+  statusClosed: { ko: "모집 마감", zh: "招聘已结束", vi: "Đã ngừng tuyển", en: "Closed", mn: "Дууссан", bn: "নিয়োগ বন্ধ", my: "ခေါ်ယူမှုပိတ်ပြီ" },
+  statusSeeking: { ko: "구직 중", zh: "求职中", vi: "Đang tìm việc", en: "Seeking", mn: "Ажил хайж байна", bn: "চাকরি খোঁজা হচ্ছে", my: "အလုပ်ရှာနေဆဲ" },
+  statusDone: { ko: "구직 완료", zh: "已找到工作", vi: "Đã tìm được việc", en: "Found a job", mn: "Ажил олдсон", bn: "চাকরি পেয়েছেন", my: "အလုပ်ရရှိပြီ" },
 
-  industryLabel: { ko: "업종", zh: "行业", vi: "Ngành nghề", en: "Industry", mn: "Салбар" },
-  workLocationLabel: { ko: "근무 장소", zh: "工作地点", vi: "Địa điểm làm việc", en: "Work Location", mn: "Ажлын байршил" },
-  jobDescriptionLabel: { ko: "업무 내용", zh: "工作内容", vi: "Nội dung công việc", en: "Job Description", mn: "Ажлын агуулга" },
-  workDaysLabel: { ko: "근무 요일", zh: "工作日", vi: "Ngày làm việc", en: "Work Days", mn: "Ажиллах өдөр" },
-  workHoursLabel: { ko: "근무시간", zh: "工作时间", vi: "Giờ làm việc", en: "Work Hours", mn: "Ажиллах цаг" },
-  salaryLabel: { ko: "급여", zh: "薪资", vi: "Lương", en: "Salary", mn: "Цалин" },
-  deadlineLabel: { ko: "모집 마감일", zh: "招聘截止日期", vi: "Hạn tuyển dụng", en: "Application Deadline", mn: "Өргөдлийн эцсийн хугацаа" },
-  contactMethodLabel: { ko: "연락방법", zh: "联系方式", vi: "Cách liên hệ", en: "Contact Method", mn: "Холбоо барих арга" },
-  koreanLevelLabel: { ko: "한국어 능력", zh: "韩语水平", vi: "Trình độ tiếng Hàn", en: "Korean Level", mn: "Солонгос хэлний түвшин" },
-  experienceLabel: { ko: "경력", zh: "工作经验", vi: "Kinh nghiệm", en: "Experience", mn: "Туршлага" },
+  industryLabel: { ko: "업종", zh: "行业", vi: "Ngành nghề", en: "Industry", mn: "Салбар", bn: "শিল্প", my: "လုပ်ငန်းအမျိုးအစား" },
+  workLocationLabel: { ko: "근무 장소", zh: "工作地点", vi: "Địa điểm làm việc", en: "Work Location", mn: "Ажлын байршил", bn: "কর্মস্থল", my: "အလုပ်ချိန်နေရာ" },
+  jobDescriptionLabel: { ko: "업무 내용", zh: "工作内容", vi: "Nội dung công việc", en: "Job Description", mn: "Ажлын агуулга", bn: "কাজের বিবরণ", my: "အလုပ်ဖော်ပြချက်" },
+  workDaysLabel: { ko: "근무 요일", zh: "工作日", vi: "Ngày làm việc", en: "Work Days", mn: "Ажиллах өдөр", bn: "কর্মদিবস", my: "အလုပ်လုပ်ရက်" },
+  workHoursLabel: { ko: "근무시간", zh: "工作时间", vi: "Giờ làm việc", en: "Work Hours", mn: "Ажиллах цаг", bn: "কর্মঘণ্টা", my: "အလုပ်ချိန်" },
+  salaryLabel: { ko: "급여", zh: "薪资", vi: "Lương", en: "Salary", mn: "Цалин", bn: "বেতন", my: "လစာ" },
+  deadlineLabel: { ko: "모집 마감일", zh: "招聘截止日期", vi: "Hạn tuyển dụng", en: "Application Deadline", mn: "Өргөдлийн эцсийн хугацаа", bn: "আবেদনের শেষ তারিখ", my: "လျှောက်လွှာပိတ်ရက်" },
+  contactMethodLabel: { ko: "연락방법", zh: "联系方式", vi: "Cách liên hệ", en: "Contact Method", mn: "Холбоо барих арга", bn: "যোগাযোগের পদ্ধতি", my: "ဆက်သွယ်ရန်နည်းလမ်း" },
+  koreanLevelLabel: { ko: "한국어 능력", zh: "韩语水平", vi: "Trình độ tiếng Hàn", en: "Korean Level", mn: "Солонгос хэлний түвшин", bn: "কোরিয়ান ভাষার দক্ষতা", my: "ကိုရီးယားဘာသာအရည်အချင်း" },
+  experienceLabel: { ko: "경력", zh: "工作经验", vi: "Kinh nghiệm", en: "Experience", mn: "Туршлага", bn: "অভিজ্ঞতা", my: "အတွေ့အကြုံ" },
 
-  desiredIndustryLabel: { ko: "희망 업종", zh: "希望从事的行业", vi: "Ngành nghề mong muốn", en: "Desired Industry", mn: "Хүссэн салбар" },
-  availableDaysLabel: { ko: "가능한 요일", zh: "可工作日", vi: "Ngày có thể làm", en: "Available Days", mn: "Ажиллах боломжтой өдөр" },
-  availableHoursLabel: { ko: "가능한 시간", zh: "可工作时间", vi: "Giờ có thể làm", en: "Available Hours", mn: "Ажиллах боломжтой цаг" },
-  desiredLocationLabel: { ko: "희망 근무지역", zh: "希望工作地区", vi: "Khu vực mong muốn làm việc", en: "Desired Work Area", mn: "Хүссэн ажлын байршил" },
-  availableLanguagesLabel: { ko: "사용 가능한 언어", zh: "可使用的语言", vi: "Ngôn ngữ có thể sử dụng", en: "Languages Spoken", mn: "Ашиглаж чадах хэл" },
+  desiredIndustryLabel: { ko: "희망 업종", zh: "希望从事的行业", vi: "Ngành nghề mong muốn", en: "Desired Industry", mn: "Хүссэн салбар", bn: "কাঙ্ক্ষিত শিল্প", my: "လိုချင်သောလုပ်ငန်းအမျိုးအစား" },
+  availableDaysLabel: { ko: "가능한 요일", zh: "可工作日", vi: "Ngày có thể làm", en: "Available Days", mn: "Ажиллах боломжтой өдөр", bn: "সম্ভাব্য দিন", my: "အလုပ်လုပ်နိုင်သောရက်" },
+  availableHoursLabel: { ko: "가능한 시간", zh: "可工作时间", vi: "Giờ có thể làm", en: "Available Hours", mn: "Ажиллах боломжтой цаг", bn: "সম্ভাব্য সময়", my: "အလုပ်လုပ်နိုင်သောအချိန်" },
+  desiredLocationLabel: { ko: "희망 근무지역", zh: "希望工作地区", vi: "Khu vực mong muốn làm việc", en: "Desired Work Area", mn: "Хүссэн ажлын байршил", bn: "কাঙ্ক্ষিত কর্মস্থল", my: "လိုချင်သောအလုပ်ဒေသ" },
+  availableLanguagesLabel: { ko: "사용 가능한 언어", zh: "可使用的语言", vi: "Ngôn ngữ có thể sử dụng", en: "Languages Spoken", mn: "Ашиглаж чадах хэл", bn: "ব্যবহারযোগ্য ভাষা", my: "ပြောဆိုနိုင်သောဘာသာစကား" },
 
-  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах" },
-  safetyNotice: { ko: "근무 전 사업장과 근로조건을 직접 확인하세요. 취업을 대가로 돈이나 개인정보를 요구하는 게시글에 주의하세요.", zh: "上班前请亲自确认工作单位和劳动条件。请警惕以就业为由索要钱财或个人信息的帖子。", vi: "Hãy tự xác nhận nơi làm việc và điều kiện lao động trước khi bắt đầu. Cẩn thận với các bài đăng yêu cầu tiền hoặc thông tin cá nhân để đổi lấy việc làm.", en: "Check the workplace and working conditions yourself before starting. Be cautious of posts asking for money or personal information in exchange for a job.", mn: "Ажилдаа орохын өмнө ажлын байр, нөхцөлийг өөрөө шалгаарай. Ажилд оруулах нэрээр мөнгө, хувийн мэдээлэл шаардсан зурвасаас болгоомжлоорой." },
-  personalInfoWarning: { ko: "전화번호, 이메일, 계좌번호, 외국인등록번호, 여권번호, 상세주소 같은 개인정보가 포함된 것 같습니다. 다시 확인해 주세요.", zh: "内容中似乎包含电话号码、邮箱、账户、外国人登录证号、护照号、详细地址等个人信息，请再次确认。", vi: "Nội dung có vẻ chứa thông tin cá nhân như số điện thoại, email, số tài khoản, số đăng ký người nước ngoài, số hộ chiếu, địa chỉ chi tiết. Vui lòng kiểm tra lại.", en: "Your post seems to contain personal information such as a phone number, email, bank account, registration number, passport number, or detailed address. Please double-check.", mn: "Таны зурвас утасны дугаар, и-мэйл, дансны дугаар, гадаадын иргэний бүртгэлийн дугаар, паспортын дугаар, дэлгэрэнгүй хаяг зэрэг хувийн мэдээлэл агуулж байж болзошгүй байна. Дахин шалгана уу." },
-  bannedContentError: { ko: "취업 관련 금지된 내용이 포함되어 있어 등록할 수 없습니다(금전 요구, 신분증·통장 양도, 외국인등록번호·여권 보관 요구 등).", zh: "内容包含被禁止的求职相关信息（如索要钱财、转让身份证/账户、要求保管外国人登录证或护照等），无法发布。", vi: "Không thể đăng vì nội dung chứa thông tin bị cấm liên quan đến việc làm (yêu cầu tiền, chuyển nhượng CMND/tài khoản, giữ số đăng ký người nước ngoài/hộ chiếu, v.v.).", en: "This cannot be posted because it contains prohibited job-related content (requests for money, ID/bank account transfer, holding registration cards or passports, etc.).", mn: "Мөнгө шаардах, иргэний үнэмлэх/дансаа шилжүүлэх, гадаадын иргэний бүртгэл/паспортоо хадгалуулах гэх мэт хориотой ажлын агуулга орсон тул нийтлэх боломжгүй." },
+  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах", bn: "৩০ দিন বাড়ান", my: "၃၀ ရက်တိုးရန်" },
+  safetyNotice: { ko: "근무 전 사업장과 근로조건을 직접 확인하세요. 취업을 대가로 돈이나 개인정보를 요구하는 게시글에 주의하세요.", zh: "上班前请亲自确认工作单位和劳动条件。请警惕以就业为由索要钱财或个人信息的帖子。", vi: "Hãy tự xác nhận nơi làm việc và điều kiện lao động trước khi bắt đầu. Cẩn thận với các bài đăng yêu cầu tiền hoặc thông tin cá nhân để đổi lấy việc làm.", en: "Check the workplace and working conditions yourself before starting. Be cautious of posts asking for money or personal information in exchange for a job.", mn: "Ажилдаа орохын өмнө ажлын байр, нөхцөлийг өөрөө шалгаарай. Ажилд оруулах нэрээр мөнгө, хувийн мэдээлэл шаардсан зурвасаас болгоомжлоорой.", bn: "কাজ শুরুর আগে প্রতিষ্ঠান ও কাজের শর্তাবলী নিজে যাচাই করুন। চাকরির বিনিময়ে অর্থ বা ব্যক্তিগত তথ্য চাওয়া পোস্ট সম্পর্কে সতর্ক থাকুন।", my: "အလုပ်မစတင်မီ လုပ်ငန်းခွင်နှင့် အလုပ်အခြေအနေများကို ကိုယ်တိုင်စစ်ဆေးပါ။ အလုပ်ရရှိရေးအတွက် ငွေ သို့မဟုတ် ကိုယ်ရေးအချက်အလက်တောင်းသောပို့စ်များကို သတိထားပါ။" },
+  personalInfoWarning: { ko: "전화번호, 이메일, 계좌번호, 외국인등록번호, 여권번호, 상세주소 같은 개인정보가 포함된 것 같습니다. 다시 확인해 주세요.", zh: "内容中似乎包含电话号码、邮箱、账户、外国人登录证号、护照号、详细地址等个人信息，请再次确认。", vi: "Nội dung có vẻ chứa thông tin cá nhân như số điện thoại, email, số tài khoản, số đăng ký người nước ngoài, số hộ chiếu, địa chỉ chi tiết. Vui lòng kiểm tra lại.", en: "Your post seems to contain personal information such as a phone number, email, bank account, registration number, passport number, or detailed address. Please double-check.", mn: "Таны зурвас утасны дугаар, и-мэйл, дансны дугаар, гадаадын иргэний бүртгэлийн дугаар, паспортын дугаар, дэлгэрэнгүй хаяг зэрэг хувийн мэдээлэл агуулж байж болзошгүй байна. Дахин шалгана уу.", bn: "আপনার পোস্টে ফোন নম্বর, ইমেইল, অ্যাকাউন্ট নম্বর, বিদেশি নিবন্ধন নম্বর, পাসপোর্ট নম্বর বা বিস্তারিত ঠিকানার মতো ব্যক্তিগত তথ্য থাকতে পারে। অনুগ্রহ করে আবার যাচাই করুন।", my: "သင်၏ပို့စ်တွင် ဖုန်းနံပါတ်၊ အီးမေးလ်၊ အကောင့်နံပါတ်၊ နိုင်ငံခြားသားမှတ်ပုံတင်နံပါတ်၊ နိုင်ငံကူးလက်မှတ်နံပါတ် သို့မဟုတ် အသေးစိတ်လိပ်စာကဲ့သို့သော ကိုယ်ရေးအချက်အလက်ပါဝင်နေပုံရသည်။ ပြန်လည်စစ်ဆေးပါ။" },
+  bannedContentError: { ko: "취업 관련 금지된 내용이 포함되어 있어 등록할 수 없습니다(금전 요구, 신분증·통장 양도, 외국인등록번호·여권 보관 요구 등).", zh: "内容包含被禁止的求职相关信息（如索要钱财、转让身份证/账户、要求保管外国人登录证或护照等），无法发布。", vi: "Không thể đăng vì nội dung chứa thông tin bị cấm liên quan đến việc làm (yêu cầu tiền, chuyển nhượng CMND/tài khoản, giữ số đăng ký người nước ngoài/hộ chiếu, v.v.).", en: "This cannot be posted because it contains prohibited job-related content (requests for money, ID/bank account transfer, holding registration cards or passports, etc.).", mn: "Мөнгө шаардах, иргэний үнэмлэх/дансаа шилжүүлэх, гадаадын иргэний бүртгэл/паспортоо хадгалуулах гэх мэт хориотой ажлын агуулга орсон тул нийтлэх боломжгүй.", bn: "চাকরি সম্পর্কিত নিষিদ্ধ বিষয়বস্তু (অর্থ দাবি, পরিচয়পত্র/অ্যাকাউন্ট হস্তান্তর, বিদেশি নিবন্ধন নম্বর/পাসপোর্ট জমা রাখার দাবি ইত্যাদি) থাকায় পোস্ট করা যাবে না।", my: "အလုပ်နှင့်ပတ်သက်သော တားမြစ်ထားသောအကြောင်းအရာ (ငွေတောင်းခံခြင်း၊ ID/အကောင့်လွှဲပြောင်းခြင်း၊ နိုင်ငံခြားသားမှတ်ပုံတင်/နိုင်ငံကူးလက်မှတ်ထိန်းသိမ်းရန်တောင်းဆိုခြင်း စသည်) ပါဝင်နေသဖြင့် တင်၍မရပါ။" },
 
-  filterAll: { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд" },
-  openOnlyLabel: { ko: "모집 중만 보기", zh: "只看招聘中", vi: "Chỉ xem đang tuyển", en: "Show open only", mn: "Зөвхөн авч байгааг харах" },
-  industryFilterPlaceholder: { ko: "업종 검색", zh: "搜索行业", vi: "Tìm ngành nghề", en: "Search industry", mn: "Салбар хайх" },
-  locationFilterPlaceholder: { ko: "근무지역 검색", zh: "搜索工作地区", vi: "Tìm khu vực làm việc", en: "Search location", mn: "Байршил хайх" }
+  filterAll: { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд", bn: "সব", my: "အားလုံး" },
+  openOnlyLabel: { ko: "모집 중만 보기", zh: "只看招聘中", vi: "Chỉ xem đang tuyển", en: "Show open only", mn: "Зөвхөн авч байгааг харах", bn: "শুধু নিয়োগ চলমান দেখুন", my: "ခေါ်ယူနေဆဲသာကြည့်ရန်" },
+  industryFilterPlaceholder: { ko: "업종 검색", zh: "搜索行业", vi: "Tìm ngành nghề", en: "Search industry", mn: "Салбар хайх", bn: "শিল্প খুঁজুন", my: "လုပ်ငန်းအမျိုးအစားရှာရန်" },
+  locationFilterPlaceholder: { ko: "근무지역 검색", zh: "搜索工作地区", vi: "Tìm khu vực làm việc", en: "Search location", mn: "Байршил хайх", bn: "কর্মস্থল খুঁজুন", my: "အလုပ်ဒေသရှာရန်" }
 };
 
 /* 댓글 */
 var COMMUNITY_COMMENT = {
-  writeLabel: { ko: "댓글 작성", zh: "写评论", vi: "Viết bình luận", en: "Write a Comment", mn: "Сэтгэгдэл бичих" },
-  submitComment: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх" },
-  replyLabel: { ko: "답글", zh: "回复", vi: "Trả lời", en: "Reply", mn: "Хариулах" },
-  editComment: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах" },
-  deleteComment: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах" },
-  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах" },
-  viewTranslated: { ko: "번역 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translation", mn: "Орчуулга харах" },
-  translating: { ko: "번역 중...", zh: "翻译中...", vi: "Đang dịch...", en: "Translating...", mn: "Орчуулж байна..." },
-  noComments: { ko: "댓글이 없습니다.", zh: "暂无评论。", vi: "Chưa có bình luận.", en: "No comments yet.", mn: "Сэтгэгдэл алга." }
+  writeLabel: { ko: "댓글 작성", zh: "写评论", vi: "Viết bình luận", en: "Write a Comment", mn: "Сэтгэгдэл бичих", bn: "মন্তব্য লিখুন", my: "မှတ်ချက်ရေးရန်" },
+  submitComment: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх", bn: "পোস্ট করুন", my: "တင်ရန်" },
+  replyLabel: { ko: "답글", zh: "回复", vi: "Trả lời", en: "Reply", mn: "Хариулах", bn: "উত্তর", my: "ပြန်စာ" },
+  editComment: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах", bn: "সম্পাদনা", my: "ပြင်ဆင်ရန်" },
+  deleteComment: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах", bn: "মুছুন", my: "ဖျက်ရန်" },
+  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах", bn: "মূল লেখা দেখুন", my: "မူရင်းစာကို ကြည့်ရန်" },
+  viewTranslated: { ko: "번역 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translation", mn: "Орчуулга харах", bn: "অনুবাদ দেখুন", my: "ဘာသာပြန်ကို ကြည့်ရန်" },
+  translating: { ko: "번역 중...", zh: "翻译中...", vi: "Đang dịch...", en: "Translating...", mn: "Орчуулж байна...", bn: "অনুবাদ হচ্ছে...", my: "ဘာသာပြန်နေဆဲ..." },
+  noComments: { ko: "댓글이 없습니다.", zh: "暂无评论。", vi: "Chưa có bình luận.", en: "No comments yet.", mn: "Сэтгэгдэл алга.", bn: "কোনো মন্তব্য নেই।", my: "မှတ်ချက်မရှိပါ။" }
 };
 
 /* 신고 */
 var COMMUNITY_REPORT = {
-  reportBtn: { ko: "신고하기", zh: "举报", vi: "Báo cáo", en: "Report", mn: "Мэдээлэх" },
-  reportTitle: { ko: "신고 사유 선택", zh: "选择举报原因", vi: "Chọn lý do báo cáo", en: "Select Report Reason", mn: "Мэдээлэх шалтгаанаа сонгоно уу" },
-  reasonScam: { ko: "사기 의심", zh: "疑似诈骗", vi: "Nghi ngờ lừa đảo", en: "Suspected Scam", mn: "Залилан гэж сэжиглэгдэж байна" },
-  reasonAbuse: { ko: "욕설·괴롭힘", zh: "辱骂·骚扰", vi: "Lăng mạ/quấy rối", en: "Abuse/Harassment", mn: "Доромжлол/дарамт" },
-  reasonPrivacy: { ko: "개인정보 노출", zh: "个人信息泄露", vi: "Lộ thông tin cá nhân", en: "Privacy Exposure", mn: "Хувийн мэдээлэл ил гарсан" },
-  reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа" },
-  reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам" },
-  reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт" },
-  reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
-  submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх" },
-  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа." },
-  alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна." },
-  hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа." }
+  reportBtn: { ko: "신고하기", zh: "举报", vi: "Báo cáo", en: "Report", mn: "Мэдээлэх", bn: "রিপোর্ট করুন", my: "တိုင်ကြားရန်" },
+  reportTitle: { ko: "신고 사유 선택", zh: "选择举报原因", vi: "Chọn lý do báo cáo", en: "Select Report Reason", mn: "Мэдээлэх шалтгаанаа сонгоно уу", bn: "রিপোর্টের কারণ নির্বাচন করুন", my: "တိုင်ကြားရသည့်အကြောင်းရင်းရွေးပါ" },
+  reasonScam: { ko: "사기 의심", zh: "疑似诈骗", vi: "Nghi ngờ lừa đảo", en: "Suspected Scam", mn: "Залилан гэж сэжиглэгдэж байна", bn: "প্রতারণার সন্দেহ", my: "လိမ်လည်မှုဖြစ်နိုင်ချေ" },
+  reasonAbuse: { ko: "욕설·괴롭힘", zh: "辱骂·骚扰", vi: "Lăng mạ/quấy rối", en: "Abuse/Harassment", mn: "Доромжлол/дарамт", bn: "গালিগালাজ/হয়রানি", my: "ကျိန်ဆဲခြင်း/နှောင့်ယှက်ခြင်း" },
+  reasonPrivacy: { ko: "개인정보 노출", zh: "个人信息泄露", vi: "Lộ thông tin cá nhân", en: "Privacy Exposure", mn: "Хувийн мэдээлэл ил гарсан", bn: "ব্যক্তিগত তথ্য ফাঁস", my: "ကိုယ်ရေးအချက်အလက်ပေါက်ကြားခြင်း" },
+  reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа", bn: "অবৈধ বা বিপজ্জনক পণ্য", my: "တရားမဝင် သို့မဟုတ် အန္တရာယ်ရှိသောပစ္စည်း" },
+  reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам", bn: "বিজ্ঞাপন/স্প্যাম", my: "ကြော်ငြာ/စပမ်း" },
+  reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт", bn: "অনুপযুক্ত সাক্ষাতের অনুরোধ", my: "မသင့်လျော်သောတွေ့ဆုံမှုတောင်းဆိုခြင်း" },
+  reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" },
+  submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх", bn: "রিপোর্ট জমা দিন", my: "တိုင်ကြားချက်တင်ရန်" },
+  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа.", bn: "রিপোর্ট গ্রহণ করা হয়েছে।", my: "တိုင်ကြားချက်လက်ခံရရှိပါပြီ။" },
+  alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна.", bn: "আপনি ইতিমধ্যে এটি রিপোর্ট করেছেন।", my: "သင်ဤပို့စ်ကို တိုင်ကြားပြီးဖြစ်သည်။" },
+  hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа.", bn: "একাধিক রিপোর্টের কারণে এটি সাময়িকভাবে লুকানো হয়েছে।", my: "တိုင်ကြားချက်များစုပုံလာသဖြင့် ယာယီဖျောက်ထားပါသည်။" }
 };
 
 /* 개인정보 동의 / 이용규칙 화면 */
 var COMMUNITY_CONSENT = {
-  privacyTitle: { ko: "개인정보처리방침", zh: "隐私政策", vi: "Chính sách bảo mật", en: "Privacy Policy", mn: "Хувийн мэдээллийн бодлого" },
-  rulesTitle: { ko: "커뮤니티 이용규칙", zh: "社区使用规则", vi: "Quy tắc cộng đồng", en: "Community Rules", mn: "Нийгэмлэгийн дүрэм" },
-  collectItems: { ko: "수집정보: 이름, 국적, 이메일, 선택 언어", zh: "收集信息：姓名、国籍、邮箱、使用语言", vi: "Thông tin thu thập: Họ tên, quốc tịch, email, ngôn ngữ sử dụng", en: "Collected: Name, Nationality, Email, Preferred Language", mn: "Цуглуулах мэдээлэл: Нэр, иргэншил, и-мэйл, ашиглах хэл" },
-  purpose: { ko: "이용목적: 회원 확인, 커뮤니티 운영, 다국어 서비스 제공, 신고 처리, 부정 이용 방지", zh: "使用目的：会员确认、社区运营、多语言服务、举报处理、防止滥用", vi: "Mục đích: Xác thực thành viên, vận hành cộng đồng, dịch vụ đa ngôn ngữ, xử lý báo cáo, ngăn chặn lạm dụng", en: "Purpose: Member verification, community operation, multilingual service, report handling, abuse prevention", mn: "Зорилго: Гишүүнчлэл баталгаажуулах, нийгэмлэг ажиллуулах, олон хэлний үйлчилгээ, гомдол шийдвэрлэх, буруу ашиглалтаас сэргийлэх" },
-  retention: { ko: "보유기간: 회원 탈퇴 시까지(관계 법령상 보관 의무가 있는 경우 해당 기간)", zh: "保留期限：至注销为止（如法律要求保存的情况按相关期限）", vi: "Thời hạn lưu trữ: Đến khi xóa tài khoản (theo quy định pháp luật nếu có)", en: "Retention: Until account deletion (or as required by applicable law)", mn: "Хадгалах хугацаа: Гишүүнчлэл цуцлах хүртэл (хууль тогтоомжийн дагуу хадгалах шаардлагатай бол тухайн хугацаагаар)" }
+  privacyTitle: { ko: "개인정보처리방침", zh: "隐私政策", vi: "Chính sách bảo mật", en: "Privacy Policy", mn: "Хувийн мэдээллийн бодлого", bn: "গোপনীয়তা নীতি", my: "ကိုယ်ရေးအချက်အလက်မူဝါဒ" },
+  rulesTitle: { ko: "커뮤니티 이용규칙", zh: "社区使用规则", vi: "Quy tắc cộng đồng", en: "Community Rules", mn: "Нийгэмлэгийн дүрэм", bn: "কমিউনিটি ব্যবহারের নিয়ম", my: "အသိုင်းအဝိုင်းအသုံးပြုစည်းမျဉ်း" },
+  collectItems: { ko: "수집정보: 이름, 국적, 이메일, 선택 언어", zh: "收集信息：姓名、国籍、邮箱、使用语言", vi: "Thông tin thu thập: Họ tên, quốc tịch, email, ngôn ngữ sử dụng", en: "Collected: Name, Nationality, Email, Preferred Language", mn: "Цуглуулах мэдээлэл: Нэр, иргэншил, и-мэйл, ашиглах хэл", bn: "সংগৃহীত তথ্য: নাম, জাতীয়তা, ইমেইল, ব্যবহারের ভাষা", my: "စုဆောင်းသည့်အချက်အလက်: အမည်၊ နိုင်ငံသား၊ အီးမေးလ်၊ အသုံးပြုမည့်ဘာသာစကား" },
+  purpose: { ko: "이용목적: 회원 확인, 커뮤니티 운영, 다국어 서비스 제공, 신고 처리, 부정 이용 방지", zh: "使用目的：会员确认、社区运营、多语言服务、举报处理、防止滥用", vi: "Mục đích: Xác thực thành viên, vận hành cộng đồng, dịch vụ đa ngôn ngữ, xử lý báo cáo, ngăn chặn lạm dụng", en: "Purpose: Member verification, community operation, multilingual service, report handling, abuse prevention", mn: "Зорилго: Гишүүнчлэл баталгаажуулах, нийгэмлэг ажиллуулах, олон хэлний үйлчилгээ, гомдол шийдвэрлэх, буруу ашиглалтаас сэргийлэх", bn: "ব্যবহারের উদ্দেশ্য: সদস্য যাচাই, কমিউনিটি পরিচালনা, বহুভাষিক সেবা প্রদান, রিপোর্ট প্রক্রিয়াকরণ, অপব্যবহার প্রতিরোধ", my: "အသုံးပြုရည်ရွယ်ချက်: အဖွဲ့ဝင်စစ်ဆေးခြင်း၊ အသိုင်းအဝိုင်းလည်ပတ်ခြင်း၊ ဘာသာစကားများစွာဝန်ဆောင်မှု၊ တိုင်ကြားချက်ဖြေရှင်းခြင်း၊ အလွဲသုံးစားမှုကာကွယ်ခြင်း" },
+  retention: { ko: "보유기간: 회원 탈퇴 시까지(관계 법령상 보관 의무가 있는 경우 해당 기간)", zh: "保留期限：至注销为止（如法律要求保存的情况按相关期限）", vi: "Thời hạn lưu trữ: Đến khi xóa tài khoản (theo quy định pháp luật nếu có)", en: "Retention: Until account deletion (or as required by applicable law)", mn: "Хадгалах хугацаа: Гишүүнчлэл цуцлах хүртэл (хууль тогтоомжийн дагуу хадгалах шаардлагатай бол тухайн хугацаагаар)", bn: "সংরক্ষণকাল: সদস্যপদ বাতিল না হওয়া পর্যন্ত (সংশ্লিষ্ট আইন অনুযায়ী সংরক্ষণ বাধ্যতামূলক হলে সেই সময়কাল)", my: "ထိန်းသိမ်းမည့်ကာလ: အသင်းဝင်ရပ်ဆိုင်းသည်အထိ (သက်ဆိုင်ရာဥပဒေအရ ထိန်းသိမ်းရန်တာဝန်ရှိပါက ထိုကာလအထိ)" }
 };
 
 /* 공통 오류/완료 메시지 */
 var COMMUNITY_MSG = {
-  errRequired: { ko: "필수 항목을 모두 입력해 주세요.", zh: "请填写所有必填项。", vi: "Vui lòng điền đầy đủ thông tin bắt buộc.", en: "Please fill in all required fields.", mn: "Заавал бөглөх бүх талбарыг бөглөнө үү." },
-  errPasswordMismatch: { ko: "비밀번호가 일치하지 않습니다.", zh: "两次输入的密码不一致。", vi: "Mật khẩu xác nhận không khớp.", en: "Passwords do not match.", mn: "Нууц үг таарахгүй байна." },
-  errEmailInUse: { ko: "이미 사용 중인 이메일입니다.", zh: "该邮箱已被使用。", vi: "Email này đã được sử dụng.", en: "This email is already in use.", mn: "Энэ и-мэйл хаяг аль хэдийн ашиглагдаж байна." },
-  errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна." },
-  errPhotoLimit: { ko: "사진은 1장만 첨부할 수 있습니다.", zh: "只能上传1张照片。", vi: "Chỉ có thể đính kèm 1 ảnh.", en: "You can attach only 1 photo.", mn: "Зөвхөн 1 зураг хавсаргах боломжтой." },
-  errPhotoTooLarge: { ko: "사진 용량이 너무 커서 압축 후에도 등록할 수 없습니다. 다른 사진을 선택해 주세요.", zh: "照片文件过大，压缩后仍无法上传，请选择其他照片。", vi: "Ảnh quá lớn, sau khi nén vẫn không thể đăng. Vui lòng chọn ảnh khác.", en: "This photo is too large to upload even after compression. Please choose a different photo.", mn: "Зургийн хэмжээ хэт том тул шахсны дараа ч оруулах боломжгүй байна. Өөр зураг сонгоно уу." },
-  errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу." },
-  doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа." },
-  doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа." }
+  errRequired: { ko: "필수 항목을 모두 입력해 주세요.", zh: "请填写所有必填项。", vi: "Vui lòng điền đầy đủ thông tin bắt buộc.", en: "Please fill in all required fields.", mn: "Заавал бөглөх бүх талбарыг бөглөнө үү.", bn: "অনুগ্রহ করে সমস্ত আবশ্যক তথ্য পূরণ করুন।", my: "လိုအပ်သောအချက်အလက်အားလုံးဖြည့်ပါ။" },
+  errPasswordMismatch: { ko: "비밀번호가 일치하지 않습니다.", zh: "两次输入的密码不一致。", vi: "Mật khẩu xác nhận không khớp.", en: "Passwords do not match.", mn: "Нууц үг таарахгүй байна.", bn: "পাসওয়ার্ড মিলছে না।", my: "စကားဝှက်များမတူညီပါ။" },
+  errEmailInUse: { ko: "이미 사용 중인 이메일입니다.", zh: "该邮箱已被使用。", vi: "Email này đã được sử dụng.", en: "This email is already in use.", mn: "Энэ и-мэйл хаяг аль хэдийн ашиглагдаж байна.", bn: "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে।", my: "ဤအီးမေးလ်ကို အသုံးပြုပြီးဖြစ်သည်။" },
+  errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна.", bn: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।", my: "အီးမေးလ် သို့မဟုတ် စကားဝှက်မှားနေသည်။" },
+  errPhotoLimit: { ko: "사진은 1장만 첨부할 수 있습니다.", zh: "只能上传1张照片。", vi: "Chỉ có thể đính kèm 1 ảnh.", en: "You can attach only 1 photo.", mn: "Зөвхөн 1 зураг хавсаргах боломжтой.", bn: "শুধুমাত্র ১টি ছবি সংযুক্ত করা যাবে।", my: "ဓာတ်ပုံ ၁ ပုံသာ ပူးတွဲနိုင်ပါသည်။" },
+  errPhotoTooLarge: { ko: "사진 용량이 너무 커서 압축 후에도 등록할 수 없습니다. 다른 사진을 선택해 주세요.", zh: "照片文件过大，压缩后仍无法上传，请选择其他照片。", vi: "Ảnh quá lớn, sau khi nén vẫn không thể đăng. Vui lòng chọn ảnh khác.", en: "This photo is too large to upload even after compression. Please choose a different photo.", mn: "Зургийн хэмжээ хэт том тул шахсны дараа ч оруулах боломжгүй байна. Өөр зураг сонгоно уу.", bn: "ছবির আকার অনেক বড় হওয়ায় কম্প্রেস করার পরও আপলোড করা যাচ্ছে না। অন্য ছবি বেছে নিন।", my: "ဓာတ်ပုံအရွယ်အစားကြီးလွန်းသောကြောင့် ချုံ့ပြီးနောက်တွင်ပင် တင်၍မရပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
+  errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу.", bn: "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।", my: "အမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ။" },
+  doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа.", bn: "সংরক্ষিত হয়েছে।", my: "သိမ်းဆည်းပြီးပါပြီ။" },
+  doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа.", bn: "মুছে ফেলা হয়েছে।", my: "ဖျက်ပြီးပါပြီ။" }
 };
 
 /* 관리자 번역 상태 표시(관리자 페이지 번역관리 탭) */
 var COMMUNITY_TRANSLATION_STATUS = {
-  pending: { ko: "번역 전", zh: "待翻译", vi: "Chưa dịch", en: "Not translated", mn: "Орчуулаагүй" },
-  inProgress: { ko: "번역 중", zh: "翻译中", vi: "Đang dịch", en: "Translating", mn: "Орчуулж байна" },
-  done: { ko: "번역 완료", zh: "翻译完成", vi: "Đã dịch", en: "Translated", mn: "Орчуулсан" },
-  failed: { ko: "번역 실패", zh: "翻译失败", vi: "Dịch thất bại", en: "Translation failed", mn: "Орчуулга амжилтгүй" },
-  adminEdited: { ko: "관리자 수정", zh: "管理员已修改", vi: "Quản trị viên đã sửa", en: "Edited by admin", mn: "Админ засварласан" }
+  pending: { ko: "번역 전", zh: "待翻译", vi: "Chưa dịch", en: "Not translated", mn: "Орчуулаагүй", bn: "অনুবাদের আগে", my: "ဘာသာမပြန်ရသေးပါ" },
+  inProgress: { ko: "번역 중", zh: "翻译中", vi: "Đang dịch", en: "Translating", mn: "Орчуулж байна", bn: "অনুবাদ হচ্ছে", my: "ဘာသာပြန်နေဆဲ" },
+  done: { ko: "번역 완료", zh: "翻译完成", vi: "Đã dịch", en: "Translated", mn: "Орчуулсан", bn: "অনুবাদ সম্পন্ন", my: "ဘာသာပြန်ပြီးပါပြီ" },
+  failed: { ko: "번역 실패", zh: "翻译失败", vi: "Dịch thất bại", en: "Translation failed", mn: "Орчуулга амжилтгүй", bn: "অনুবাদ ব্যর্থ", my: "ဘာသာပြန်ခြင်းမအောင်မြင်ပါ" },
+  adminEdited: { ko: "관리자 수정", zh: "管理员已修改", vi: "Quản trị viên đã sửa", en: "Edited by admin", mn: "Админ засварласан", bn: "প্রশাসক সম্পাদিত", my: "စီမံခန့်ခွဲသူပြင်ဆင်ခဲ့သည်" }
 };
 
 /* 회원가입 국적 선택용 국가 목록(검색 가능한 <datalist>용, 영문 표기).
@@ -4349,7 +4433,7 @@ var Community = (function () {
   "use strict";
 
   var ROUTE_PREFIX = "/community";
-  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
   var MAX_PHOTOS = 1; // 게시글당 사진 1장(2026-09-11 비용 최소화 지시서)
   var MAX_PHOTO_DIMENSION = 800;
   var PHOTO_QUALITY_INITIAL = 0.65;
@@ -4690,7 +4774,7 @@ var Community = (function () {
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code;
       if (code === lang) opt.selected = true;
       langSelect.appendChild(opt);
@@ -4774,7 +4858,7 @@ var Community = (function () {
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code;
       if (code === lang) opt.selected = true;
       langSelect.appendChild(opt);
@@ -4890,7 +4974,7 @@ var Community = (function () {
     COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code;
       if (code === ((profile && profile.preferredLanguage) || lang)) opt.selected = true;
       langSelect.appendChild(opt);
@@ -5015,7 +5099,7 @@ var Community = (function () {
     var d = db();
     if (!d || !authUser) return;
     var uid = authUser.uid;
-    var withdrawnLabel = { ko: "탈퇴회원", zh: "已注销会员", vi: "Thành viên đã xóa", en: "Withdrawn member", mn: "Гарсан гишүүн" }[lang] || "탈퇴회원";
+    var withdrawnLabel = { ko: "탈퇴회원", zh: "已注销会员", vi: "Thành viên đã xóa", en: "Withdrawn member", mn: "Гарсан гишүүн", bn: "প্রত্যাহারকৃত সদস্য", my: "ရပ်ဆိုင်းထားသောအဖွဲ့ဝင်" }[lang] || "탈퇴회원";
 
     function anonymizeCollection(collectionName, field) {
       return d.collection(collectionName).where(field, "==", uid).get().then(function (snap) {
@@ -6023,7 +6107,7 @@ var Community = (function () {
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
-      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
       opt.value = code; if (code === lang) opt.selected = true;
       langSelect.appendChild(opt);
     });
@@ -6130,7 +6214,7 @@ var Community = (function () {
     toggleJobTypeFields();
 
     var kakaoInput = el("input"); kakaoInput.type = "url"; kakaoInput.placeholder = "https://open.kakao.com/...";
-    form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)" }, kakaoInput));
+    form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)", bn: "কাকাওটক ওপেন চ্যাট লিংক (ঐচ্ছিক)", my: "KakaoTalk Open Chat လင့်ခ် (ရွေးချယ်ခွင့်)" }, kakaoInput));
 
     var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
     form.appendChild(photoLabel);
@@ -6461,7 +6545,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var STORE_ORDER = ["bapsim", "mangwon", "hururuk"];
   var LANG_KEY = "foodhall_lang";
-  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
 
   var state = {
     store: "bapsim",
@@ -6687,7 +6771,7 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ---------------- 날짜 계산 (Asia/Seoul 기준) ---------------- */
 
   var SEOUL_TZ = "Asia/Seoul";
-  var DATE_LOCALE_MAP = { ko: "ko-KR", en: "en-US", zh: "zh-CN", vi: "vi-VN", mn: "mn-MN" };
+  var DATE_LOCALE_MAP = { ko: "ko-KR", en: "en-US", zh: "zh-CN", vi: "vi-VN", mn: "mn-MN", bn: "bn-BD", my: "my-MM" };
 
   function seoulInstant(offsetDays) {
     return new Date(Date.now() + (offsetDays || 0) * 24 * 60 * 60 * 1000);

@@ -22,7 +22,7 @@
 html, body { margin: 0; padding: 0; }
 
 body {
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", sans-serif;
   background: var(--bg-page);
   color: var(--text-dark);
   font-size: 15px;

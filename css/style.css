@@ -25,7 +25,7 @@ html, body {
 }
 
 body {
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", sans-serif;
   background: var(--bg-page);
   color: var(--text-dark);
   font-size: 16px;
@@ -73,7 +73,16 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.lang-btn,
+.lang-sep {
+  flex: 0 0 auto;
 }
 
 .lang-btn {
@@ -1372,7 +1381,7 @@ main {
   max-width: 760px;
   margin: 0 auto;
   padding: 16px 16px 48px;
-  font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", inherit;
+  font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", "Noto Sans Bengali", "Noto Sans Myanmar", inherit;
   color: var(--comm-text);
 }
 

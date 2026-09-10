@@ -82,6 +82,12 @@ def build():
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="모인관">
+<!-- 벵골어·미얀마어 표시용 웹폰트 — 필요한 굵기(400/700)만 불러오고,
+     Google Fonts CSS2가 실제 쓰인 글자에 맞춰 자동으로 서브셋을 나눠
+     보내주므로 브라우저는 화면에 쓰인 문자 범위만 내려받습니다. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&family=Noto+Sans+Myanmar:wght@400;700&display=swap">
 <style>
 """ + css + """
 </style>
@@ -101,6 +107,10 @@ def build():
       <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
       <span class="lang-sep" aria-hidden="true">|</span>
       <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
@@ -352,6 +362,11 @@ def build_admin():
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>관리자 - 메뉴 평가 통계</title>
 <meta name="robots" content="noindex, nofollow">
+<!-- 커뮤니티 탭에서 벵골어·미얀마어 게시글 원문/번역을 볼 때 깨지지
+     않도록 같은 웹폰트를 불러옵니다(필요한 굵기 400/700만). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&family=Noto+Sans+Myanmar:wght@400;700&display=swap">
 <style>
 """ + admin_css + """
 </style>
