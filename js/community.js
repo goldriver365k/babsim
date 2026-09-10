@@ -16,10 +16,18 @@ var Community = (function () {
 
   var ROUTE_PREFIX = "/community";
   var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
-  var MAX_PHOTOS = 3;
-  var MAX_PHOTO_DIMENSION = 1280;
-  var PHOTO_QUALITY = 0.78;
-  var POST_LIST_LIMIT = 200; // 1차 버전: 최근 N개 안에서 검색/정렬(유료 검색서비스 미사용)
+  var MAX_PHOTOS = 1; // 게시글당 사진 1장(2026-09-11 비용 최소화 지시서)
+  var MAX_PHOTO_DIMENSION = 800;
+  var PHOTO_QUALITY_INITIAL = 0.65;
+  var PHOTO_QUALITY_RETRY = 0.45;
+  var PHOTO_RETRY_DIMENSION = 600;
+  var PHOTO_MAX_BYTES = 200 * 1024; // 재압축 후에도 넘으면 업로드 거절
+  var POST_PAGE_SIZE = 15;
+  var COMMENT_PAGE_SIZE = 20;
+  var TITLE_MAX_LEN = 100;
+  var CONTENT_MAX_LEN = 2000;
+  var JOB_INTRO_MAX_LEN = 1000; // 구직 자기소개(본문 필드 재사용)
+  var COMMENT_MAX_LEN = 500;
 
   var lang = "ko";
   var els = {};
@@ -723,7 +731,7 @@ var Community = (function () {
       var hideDoneInput = el("input"); hideDoneInput.type = "checkbox"; hideDoneInput.checked = state_hideDone;
       hideDoneRow.appendChild(hideDoneInput);
       hideDoneRow.appendChild(document.createTextNode(" " + t(COMMUNITY_MARKET.hideDone)));
-      hideDoneInput.addEventListener("change", function () { state_hideDone = hideDoneInput.checked; renderPostList(listArea); });
+      hideDoneInput.addEventListener("change", function () { state_hideDone = hideDoneInput.checked; renderLoadedPosts(); });
       wrap.appendChild(hideDoneRow);
     }
 
@@ -734,17 +742,17 @@ var Community = (function () {
         var o = el("option", null, t(p[1])); o.value = p[0]; if (p[0] === state_jobType) o.selected = true;
         jobTypeFilter.appendChild(o);
       });
-      jobTypeFilter.addEventListener("change", function () { state_jobType = jobTypeFilter.value; renderPostList(listArea); });
+      jobTypeFilter.addEventListener("change", function () { state_jobType = jobTypeFilter.value; renderLoadedPosts(); });
       jobFilterBar.appendChild(jobTypeFilter);
 
       var industryFilter = el("input", "community-search-input"); industryFilter.type = "search";
       industryFilter.placeholder = t(COMMUNITY_JOB.industryFilterPlaceholder); industryFilter.value = state_jobIndustry;
-      industryFilter.addEventListener("input", function () { state_jobIndustry = industryFilter.value; renderPostList(listArea); });
+      industryFilter.addEventListener("input", function () { state_jobIndustry = industryFilter.value; renderLoadedPosts(); });
       jobFilterBar.appendChild(industryFilter);
 
       var locationFilter = el("input", "community-search-input"); locationFilter.type = "search";
       locationFilter.placeholder = t(COMMUNITY_JOB.locationFilterPlaceholder); locationFilter.value = state_jobLocation;
-      locationFilter.addEventListener("input", function () { state_jobLocation = locationFilter.value; renderPostList(listArea); });
+      locationFilter.addEventListener("input", function () { state_jobLocation = locationFilter.value; renderLoadedPosts(); });
       jobFilterBar.appendChild(locationFilter);
       wrap.appendChild(jobFilterBar);
 
@@ -752,7 +760,7 @@ var Community = (function () {
       var openOnlyInput = el("input"); openOnlyInput.type = "checkbox"; openOnlyInput.checked = state_jobOpenOnly;
       openOnlyRow.appendChild(openOnlyInput);
       openOnlyRow.appendChild(document.createTextNode(" " + t(COMMUNITY_JOB.openOnlyLabel)));
-      openOnlyInput.addEventListener("change", function () { state_jobOpenOnly = openOnlyInput.checked; renderPostList(listArea); });
+      openOnlyInput.addEventListener("change", function () { state_jobOpenOnly = openOnlyInput.checked; renderLoadedPosts(); });
       wrap.appendChild(openOnlyRow);
     }
 
@@ -768,9 +776,9 @@ var Community = (function () {
     var searchDebounce = null;
     searchInput.addEventListener("input", function () {
       clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(function () { state_search = searchInput.value; renderPostList(listArea); }, 250);
+      searchDebounce = setTimeout(function () { state_search = searchInput.value; renderLoadedPosts(); }, 250);
     });
-    sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderPostList(listArea); });
+    sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderLoadedPosts(); });
 
     renderPostList(listArea);
   }
@@ -784,61 +792,116 @@ var Community = (function () {
   var state_jobLocation = "";
   var state_jobOpenOnly = false;
 
+  // 페이지네이션 상태 — 카테고리를 바꿀 때만 초기화하고, 검색/정렬/필터를
+  // 바꿀 때는 새로 읽지 않고 "이미 불러온 페이지" 안에서만 다시 걸러
+  // 보여줍니다(비용 최소화 지시서: 별도 전문검색 없이 현재 불러온 목록
+  // 안에서만 클라이언트 검색을 하는 가장 저렴한 방식을 씁니다).
+  var state_loadedPosts = [];
+  var state_lastPostDoc = null;
+  var state_hasMorePosts = true;
+  var state_postListLoading = false;
+  var state_postListContainer = null;
+
   function renderPostList(container) {
+    state_postListContainer = container;
+    state_loadedPosts = [];
+    state_lastPostDoc = null;
+    state_hasMorePosts = true;
     container.innerHTML = "";
     container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    fetchPostPage(true);
+  }
+
+  function fetchPostPage(isFirstPage) {
+    var container = state_postListContainer;
     var d = db();
-    if (!d) return;
-    d.collection("communityPosts")
+    if (!d || !container || state_postListLoading || !state_hasMorePosts) return;
+    state_postListLoading = true;
+    var q = d.collection("communityPosts")
       .where("category", "==", state_category)
       .where("status", "==", "visible")
       .orderBy("createdAt", "desc")
-      .limit(POST_LIST_LIMIT)
-      .get()
+      .limit(POST_PAGE_SIZE);
+    if (state_lastPostDoc) q = q.startAfter(state_lastPostDoc);
+    q.get()
       .then(function (snap) {
-        var posts = [];
-        snap.forEach(function (doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
-
-        if (state_search.trim()) {
-          var q = state_search.trim().toLowerCase();
-          posts = posts.filter(function (p) {
-            var title = (p.originalTitle || "").toLowerCase();
-            var content = (p.originalContent || "").toLowerCase();
-            return title.indexOf(q) !== -1 || content.indexOf(q) !== -1;
-          });
-        }
-        if (state_category === "market" && state_hideDone) {
-          posts = posts.filter(function (p) { return p.dealStatus !== "done"; });
-        }
-        if (state_category === "job") {
-          if (state_jobType !== "all") posts = posts.filter(function (p) { return p.jobType === state_jobType; });
-          if (state_jobIndustry.trim()) {
-            var iq = state_jobIndustry.trim().toLowerCase();
-            posts = posts.filter(function (p) { return ((p.industry || p.desiredIndustry || "")).toLowerCase().indexOf(iq) !== -1; });
-          }
-          if (state_jobLocation.trim()) {
-            var lq = state_jobLocation.trim().toLowerCase();
-            posts = posts.filter(function (p) { return ((p.workLocation || p.desiredLocation || "")).toLowerCase().indexOf(lq) !== -1; });
-          }
-          if (state_jobOpenOnly) {
-            posts = posts.filter(function (p) {
-              if (p.jobType === "hiring") return p.jobStatus === "open" && !isJobDeadlinePassed(p);
-              return p.jobStatus === "seeking";
-            });
-          }
-        }
-        if (state_sort === "comments") {
-          posts.sort(function (a, b) { return (b.commentCount || 0) - (a.commentCount || 0); });
-        }
-
-        container.innerHTML = "";
-        if (!posts.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts))); return; }
-        posts.forEach(function (p) { container.appendChild(buildPostListItem(p)); });
+        state_postListLoading = false;
+        if (snap.size < POST_PAGE_SIZE) state_hasMorePosts = false;
+        if (snap.size) state_lastPostDoc = snap.docs[snap.docs.length - 1];
+        snap.forEach(function (doc) { state_loadedPosts.push(Object.assign({ id: doc.id }, doc.data())); });
+        renderLoadedPosts();
       })
       .catch(function () {
-        container.innerHTML = "";
-        container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
+        state_postListLoading = false;
+        if (isFirstPage && container) {
+          container.innerHTML = "";
+          container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
+        }
       });
+  }
+
+  function isPostExpired(p) {
+    if (!p.expiresAt || typeof p.expiresAt.toDate !== "function") return false;
+    return p.expiresAt.toDate().getTime() < Date.now();
+  }
+
+  function renderLoadedPosts() {
+    var container = state_postListContainer;
+    if (!container) return;
+    var posts = state_loadedPosts.slice();
+
+    // 만료된 글(30일 기본, 거래완료 후 7일 단축 등)은 별도 예약 함수 없이
+    // 목록을 보여줄 때마다 걸러냅니다(비용 최소화 — cron 없음).
+    posts = posts.filter(function (p) { return !isPostExpired(p); });
+
+    if (state_search.trim()) {
+      var q = state_search.trim().toLowerCase();
+      posts = posts.filter(function (p) {
+        var title = (p.originalTitle || "").toLowerCase();
+        var content = (p.originalContent || "").toLowerCase();
+        return title.indexOf(q) !== -1 || content.indexOf(q) !== -1;
+      });
+    }
+    if (state_category === "market" && state_hideDone) {
+      posts = posts.filter(function (p) { return p.dealStatus !== "done"; });
+    }
+    if (state_category === "job") {
+      // 기본 목록에서는 모집마감/지원기한 지남/구직완료 글을 항상 제외합니다
+      // (별도 필터를 켜지 않아도 제외 — 비용 최소화 지시서 10번).
+      posts = posts.filter(function (p) {
+        if (p.jobType === "hiring") return p.jobStatus !== "closed" && !isJobDeadlinePassed(p);
+        return p.jobStatus !== "done";
+      });
+      if (state_jobType !== "all") posts = posts.filter(function (p) { return p.jobType === state_jobType; });
+      if (state_jobIndustry.trim()) {
+        var iq = state_jobIndustry.trim().toLowerCase();
+        posts = posts.filter(function (p) { return ((p.industry || p.desiredIndustry || "")).toLowerCase().indexOf(iq) !== -1; });
+      }
+      if (state_jobLocation.trim()) {
+        var lq = state_jobLocation.trim().toLowerCase();
+        posts = posts.filter(function (p) { return ((p.workLocation || p.desiredLocation || "")).toLowerCase().indexOf(lq) !== -1; });
+      }
+      if (state_jobOpenOnly) {
+        posts = posts.filter(function (p) {
+          if (p.jobType === "hiring") return p.jobStatus === "open" && !isJobDeadlinePassed(p);
+          return p.jobStatus === "seeking";
+        });
+      }
+    }
+    if (state_sort === "comments") {
+      posts.sort(function (a, b) { return (b.commentCount || 0) - (a.commentCount || 0); });
+    }
+
+    container.innerHTML = "";
+    if (!posts.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts))); }
+    else { posts.forEach(function (p) { container.appendChild(buildPostListItem(p)); }); }
+
+    if (state_hasMorePosts) {
+      var moreBtn = el("button", "community-btn-secondary community-load-more", t(COMMUNITY_POST.loadMore));
+      moreBtn.type = "button";
+      moreBtn.addEventListener("click", function () { fetchPostPage(false); });
+      container.appendChild(moreBtn);
+    }
   }
 
   function localizedTitle(post) {
@@ -928,15 +991,42 @@ var Community = (function () {
     body.appendChild(aiNotice);
 
     if (!isOriginalLang) {
-      var toggleBtn = el("button", "community-link-btn", t(COMMUNITY_POST.viewOriginal));
-      toggleBtn.type = "button";
-      toggleBtn.setAttribute("data-action", "toggle-original");
-      toggleBtn.addEventListener("click", function () {
-        detailShowOriginal = !detailShowOriginal;
-        toggleBtn.textContent = detailShowOriginal ? t(COMMUNITY_POST.viewTranslated) : t(COMMUNITY_POST.viewOriginal);
-        fillDetailText(title, bodyText, aiNotice, post);
-      });
-      body.appendChild(toggleBtn);
+      var trState = post.translations && post.translations[lang];
+      if (trState && trState.content) {
+        var toggleBtn = el("button", "community-link-btn", t(COMMUNITY_POST.viewOriginal));
+        toggleBtn.type = "button";
+        toggleBtn.setAttribute("data-action", "toggle-original");
+        toggleBtn.addEventListener("click", function () {
+          detailShowOriginal = !detailShowOriginal;
+          toggleBtn.textContent = detailShowOriginal ? t(COMMUNITY_POST.viewTranslated) : t(COMMUNITY_POST.viewOriginal);
+          fillDetailText(title, bodyText, aiNotice, post);
+        });
+        body.appendChild(toggleBtn);
+      } else if (trState && trState.status === "translating") {
+        body.appendChild(el("p", "community-ai-notice", t(COMMUNITY_POST.translating)));
+      } else {
+        var translateBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.translateBtn));
+        translateBtn.type = "button";
+        translateBtn.setAttribute("data-action", "translate-post");
+        translateBtn.addEventListener("click", function () {
+          translateBtn.disabled = true;
+          translateBtn.textContent = t(COMMUNITY_POST.translating);
+          requestPostTranslation(post).then(function (result) {
+            if (result === "quota") {
+              translateBtn.disabled = false;
+              translateBtn.textContent = t(COMMUNITY_POST.translateBtn);
+              showToast(t(COMMUNITY_POST.quotaExceeded));
+            } else if (result) {
+              renderPostDetailBody(wrap, postCache[post.id]);
+            } else {
+              translateBtn.disabled = false;
+              translateBtn.textContent = t(COMMUNITY_POST.translateBtn);
+              showToast(t(COMMUNITY_MSG.errGeneric));
+            }
+          });
+        });
+        body.appendChild(translateBtn);
+      }
     }
     wrap.appendChild(body);
     fillDetailText(title, bodyText, aiNotice, post);
@@ -1045,7 +1135,13 @@ var Community = (function () {
           statusSelect.appendChild(o);
         });
       statusSelect.addEventListener("change", function () {
-        db().collection("communityPosts").doc(post.id).update({ dealStatus: statusSelect.value });
+        var update = { dealStatus: statusSelect.value };
+        // 거래완료로 바꾸면 노출 기간을 7일로 단축합니다(비용 절감 —
+        // 별도 예약 함수 없이 조회 시점에 만료된 글만 걸러냅니다).
+        if (statusSelect.value === "done") {
+          update.expiresAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+        }
+        db().collection("communityPosts").doc(post.id).update(update);
       });
       panel.appendChild(statusSelect);
 
@@ -1235,7 +1331,7 @@ var Community = (function () {
 
     if (authUser) {
       var form = el("form", "community-comment-form");
-      var textarea = el("textarea"); textarea.maxLength = 2000; textarea.required = true;
+      var textarea = el("textarea"); textarea.maxLength = COMMENT_MAX_LEN; textarea.required = true;
       form.appendChild(textarea);
       var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_COMMENT.submitComment));
       submitBtn.type = "submit";
@@ -1257,6 +1353,34 @@ var Community = (function () {
     loadCommentList(postId, listEl);
   }
 
+  /* ---------------- 하루 작성 한도(비용 최소화) ---------------- */
+
+  function seoulDateKey() {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  }
+
+  function rateLimitRef() {
+    return db().collection("communityRateLimits").doc(authUser.uid + "_" + seoulDateKey());
+  }
+
+  /* 게시글/댓글을 실제로 쓰는 것과 "하루 작성 한도" 카운터를 같은
+     트랜잭션으로 묶어서, 한도를 넘으면 카운터 문서 쓰기 자체가
+     보안 규칙에서 거부되어 게시글/댓글 쓰기까지 함께 취소되도록
+     합니다(클라이언트가 카운터 증가를 건너뛰고 글만 쓰는 것을 막음). */
+  function withRateLimit(kind, writeFn) {
+    var d = db();
+    var rlRef = rateLimitRef();
+    return d.runTransaction(function (tx) {
+      return tx.get(rlRef).then(function (snap) {
+        var cur = snap.exists ? snap.data() : { postCount: 0, commentCount: 0 };
+        var next = { postCount: cur.postCount || 0, commentCount: cur.commentCount || 0 };
+        if (kind === "post") next.postCount += 1; else next.commentCount += 1;
+        tx.set(rlRef, next, { merge: true });
+        return writeFn(tx);
+      });
+    });
+  }
+
   function postComment(postId, content, parentId) {
     var d = db();
     var ref = d.collection("communityComments").doc();
@@ -1274,32 +1398,87 @@ var Community = (function () {
       status: "visible",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    return ref.set(payload).then(function () {
-      return postRef.update({ commentCount: firebase.firestore.FieldValue.increment(1) });
+    return withRateLimit("comment", function (tx) {
+      tx.set(ref, payload);
+      tx.update(postRef, { commentCount: firebase.firestore.FieldValue.increment(1) });
     });
   }
 
+  // 댓글도 게시글 목록과 같은 방식으로 페이지네이션합니다 — 처음 20개만
+  // 불러오고 "더보기"를 누를 때마다 20개씩 이어서 불러옵니다(비용 최소화
+  // 지시서: 실시간 리스너 없음, 한 번에 다 불러오지 않음). 답글은 항상
+  // 원댓글보다 나중에 작성되므로(createdAt 오름차순) 답글이 로드된
+  // 시점에는 그 원댓글도 이미 같은 배치 안에(또는 이전 페이지에) 들어있어
+  // 그룹핑이 깨지지 않습니다. 기존 쿼리(postId/status 동등조건 +
+  // createdAt 정렬)를 그대로 재사용해 새 복합 인덱스가 필요 없습니다.
+  var state_commentListPostId = null;
+  var state_commentListContainer = null;
+  var state_loadedComments = [];
+  var state_lastCommentDoc = null;
+  var state_hasMoreComments = true;
+  var state_commentListLoading = false;
+
   function loadCommentList(postId, container) {
+    state_commentListPostId = postId;
+    state_commentListContainer = container;
+    state_loadedComments = [];
+    state_lastCommentDoc = null;
+    state_hasMoreComments = true;
     container.innerHTML = "";
     container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    fetchCommentPage(true);
+  }
+
+  function fetchCommentPage(isFirstPage) {
+    var postId = state_commentListPostId;
+    var container = state_commentListContainer;
     var d = db();
-    d.collection("communityComments").where("postId", "==", postId).where("status", "==", "visible")
-      .orderBy("createdAt", "asc").limit(300).get().then(function (snap) {
+    if (!d || !container || state_commentListLoading || !state_hasMoreComments) return;
+    state_commentListLoading = true;
+    var q = d.collection("communityComments").where("postId", "==", postId).where("status", "==", "visible")
+      .orderBy("createdAt", "asc").limit(COMMENT_PAGE_SIZE);
+    if (state_lastCommentDoc) q = q.startAfter(state_lastCommentDoc);
+    q.get().then(function (snap) {
+      state_commentListLoading = false;
+      if (snap.size < COMMENT_PAGE_SIZE) state_hasMoreComments = false;
+      if (snap.size) state_lastCommentDoc = snap.docs[snap.docs.length - 1];
+      snap.forEach(function (doc) { state_loadedComments.push(Object.assign({ id: doc.id }, doc.data())); });
+      renderLoadedComments();
+    }).catch(function () {
+      state_commentListLoading = false;
+      if (isFirstPage && container) {
         container.innerHTML = "";
-        var all = [];
-        snap.forEach(function (doc) { all.push(Object.assign({ id: doc.id }, doc.data())); });
-        if (!all.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_COMMENT.noComments))); return; }
-        var topLevel = all.filter(function (c) { return !c.parentCommentId; });
-        var replies = all.filter(function (c) { return c.parentCommentId; });
-        topLevel.forEach(function (c) {
-          container.appendChild(buildCommentNode(c, postId, container));
-          replies.filter(function (r) { return r.parentCommentId === c.id; }).forEach(function (r) {
-            var node = buildCommentNode(r, postId, container);
-            node.classList.add("community-comment-reply");
-            container.appendChild(node);
-          });
+        container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
+      }
+    });
+  }
+
+  function renderLoadedComments() {
+    var container = state_commentListContainer;
+    var postId = state_commentListPostId;
+    if (!container) return;
+    container.innerHTML = "";
+    var all = state_loadedComments;
+    if (!all.length) {
+      container.appendChild(el("p", "community-empty", t(COMMUNITY_COMMENT.noComments)));
+    } else {
+      var topLevel = all.filter(function (c) { return !c.parentCommentId; });
+      var replies = all.filter(function (c) { return c.parentCommentId; });
+      topLevel.forEach(function (c) {
+        container.appendChild(buildCommentNode(c, postId, container));
+        replies.filter(function (r) { return r.parentCommentId === c.id; }).forEach(function (r) {
+          var node = buildCommentNode(r, postId, container);
+          node.classList.add("community-comment-reply");
+          container.appendChild(node);
         });
       });
+    }
+    if (state_hasMoreComments) {
+      var moreBtn = el("button", "community-btn-secondary community-load-more", t(COMMUNITY_POST.loadMore));
+      moreBtn.type = "button";
+      moreBtn.addEventListener("click", function () { fetchCommentPage(false); });
+      container.appendChild(moreBtn);
+    }
   }
 
   function buildCommentNode(c, postId, listContainer) {
@@ -1382,7 +1561,11 @@ var Community = (function () {
           action: "translateComment", idToken: idToken,
           originalLanguage: comment.originalLanguage, content: comment.originalContent, targetLanguage: lang
         })
-      }).then(function (res) { return res.json(); }).then(function (data) {
+      }).then(function (res) {
+        if (res.status === 429) return "quota";
+        return res.json();
+      }).then(function (data) {
+        if (data === "quota") { showToast(t(COMMUNITY_POST.quotaExceeded)); return null; }
         if (!data || !data.content) return null;
         var update = {};
         update["translations." + lang] = { content: data.content };
@@ -1391,6 +1574,57 @@ var Community = (function () {
         return data.content;
       }).catch(function () { return null; });
     }).catch(function () { return null; });
+  }
+
+  /* 게시글 번역(선택한 언어로 번역하기 버튼을 눌렀을 때만 호출).
+     여러 사람이 거의 동시에 같은 글·같은 언어를 요청해도 API를 여러 번
+     부르지 않도록, 호출 전에 먼저 Firestore에 "번역 중" 상태를 표시해
+     둡니다(완벽한 잠금은 아니지만 정확히 동시에 누르는 경우가 아니면
+     중복 호출을 막습니다). 반환값: true(성공)/false(실패)/"quota"(한도 초과). */
+  function requestPostTranslation(post) {
+    if (!authUser) return Promise.resolve(false);
+    var d = db();
+    var ref = d.collection("communityPosts").doc(post.id);
+    var claimField = {};
+    claimField["translations." + lang] = { status: "translating" };
+
+    function setStatus(status, extra) {
+      var field = {};
+      field["translations." + lang] = Object.assign({ status: status }, extra || {});
+      return ref.update(field).catch(function () { /* 표시 갱신 실패해도 번역 결과 자체는 유효 */ });
+    }
+
+    return ref.update(claimField).catch(function () {}).then(function () {
+      return authUser.getIdToken();
+    }).then(function (idToken) {
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
+          title: post.originalTitle, content: post.originalContent, targetLanguages: [lang]
+        })
+      });
+    }).then(function (res) {
+      if (res.status === 429) {
+        return setStatus("failed").then(function () { return "quota"; });
+      }
+      return res.json().then(function (data) {
+        var tr = data && data.translations && data.translations[lang];
+        if (tr && tr.title && tr.content) {
+          return setStatus("done", { title: tr.title, content: tr.content }).then(function () {
+            if (postCache[post.id]) {
+              postCache[post.id].translations = postCache[post.id].translations || {};
+              postCache[post.id].translations[lang] = { status: "done", title: tr.title, content: tr.content };
+            }
+            return true;
+          });
+        }
+        return setStatus("failed").then(function () { return false; });
+      });
+    }).catch(function () {
+      return setStatus("failed").then(function () { return false; });
+    });
   }
 
   /* ---------------- 글쓰기 ---------------- */
@@ -1441,10 +1675,10 @@ var Community = (function () {
     });
     form.appendChild(formField(COMMUNITY_POST.categoryLabel, catSelect));
 
-    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = 100; titleInput.required = true;
+    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
     form.appendChild(formField(COMMUNITY_POST.titleLabel, titleInput));
 
-    var contentArea = el("textarea"); contentArea.maxLength = 4000; contentArea.required = true;
+    var contentArea = el("textarea"); contentArea.maxLength = CONTENT_MAX_LEN; contentArea.required = true;
     form.appendChild(formField(COMMUNITY_POST.contentLabel, contentArea));
 
     var langSelect = el("select");
@@ -1539,9 +1773,18 @@ var Community = (function () {
     jobFields.appendChild(jobWarningP);
     form.appendChild(jobFields);
 
+    function updateContentMaxLength() {
+      // 구직 게시글의 본문은 "간단한 자기소개"로 쓰이므로 1,000자,
+      // 그 외에는 2,000자까지 허용합니다.
+      var max = (catSelect.value === "job" && jobTypeSelect.value === "seeking") ? JOB_INTRO_MAX_LEN : CONTENT_MAX_LEN;
+      contentArea.maxLength = max;
+      if (contentArea.value.length > max) contentArea.value = contentArea.value.slice(0, max);
+    }
+
     function toggleJobTypeFields() {
       jobHiringFields.hidden = jobTypeSelect.value !== "hiring";
       jobSeekingFields.hidden = jobTypeSelect.value !== "seeking";
+      updateContentMaxLength();
     }
     jobTypeSelect.addEventListener("change", toggleJobTypeFields);
     toggleJobTypeFields();
@@ -1572,13 +1815,13 @@ var Community = (function () {
       photoInput.value = "";
     });
 
-    function currentMaxPhotos() { return catSelect.value === "job" ? 1 : MAX_PHOTOS; }
+    function currentMaxPhotos() { return MAX_PHOTOS; } // 모든 카테고리 사진 1장(비용 최소화)
 
     function toggleCategoryFields() {
       marketFields.hidden = catSelect.value !== "market";
       helpFields.hidden = catSelect.value !== "help";
       jobFields.hidden = catSelect.value !== "job";
-      // 구인·구직은 사진을 1장까지만 허용합니다(그 외 카테고리는 3장).
+      updateContentMaxLength();
       while (pendingFiles.length > currentMaxPhotos()) {
         pendingFiles.pop();
         if (photoPreview.lastChild) photoPreview.removeChild(photoPreview.lastChild);
@@ -1660,8 +1903,8 @@ var Community = (function () {
         photoFiles: pendingFiles
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
-      }).catch(function () {
-        errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+      }).catch(function (err) {
+        errorP.textContent = (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge) : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
 
@@ -1669,24 +1912,69 @@ var Community = (function () {
     els.root.appendChild(wrap);
   }
 
-  function compressImage(file) {
+  /* 사진 압축(2026-09-11 비용 최소화 지시서) — 원본은 저장하지 않고
+     압축된 WebP 한 장만 저장합니다. createImageBitmap의
+     imageOrientation:"from-image" 옵션으로 방향을 자동 보정하고,
+     캔버스로 다시 그리는 과정에서 EXIF·위치정보는 자동으로 사라집니다
+     (메타데이터를 옮겨 담지 않으므로 별도 제거 코드가 필요 없습니다).
+     기본 품질 65%로 압축하고, 200KB를 넘으면 크기·품질을 한 번 더
+     낮춰 재시도하며, 그래도 넘으면 업로드를 거절합니다. 별도의
+     썸네일 파일은 만들지 않고 목록·상세화면 모두 같은 파일을 씁니다. */
+  function loadImageSource(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: "from-image" }).catch(function () {
+        return loadImageViaTag(file);
+      });
+    }
+    return loadImageViaTag(file);
+  }
+
+  function loadImageViaTag(file) {
     return new Promise(function (resolve, reject) {
       var img = new Image();
       var url = URL.createObjectURL(file);
-      img.onload = function () {
-        var scale = Math.min(1, MAX_PHOTO_DIMENSION / Math.max(img.width, img.height));
-        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
-        var canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        canvas.toBlob(function (blob) {
-          URL.revokeObjectURL(url);
-          if (blob) resolve(blob); else reject(new Error("COMPRESS_FAILED"));
-        }, "image/jpeg", PHOTO_QUALITY);
-      };
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
       img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("IMAGE_LOAD_FAILED")); };
       img.src = url;
     });
+  }
+
+  function drawToCanvas(source, maxDim) {
+    var srcW = source.width, srcH = source.height;
+    var scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+    var w = Math.max(1, Math.round(srcW * scale)), h = Math.max(1, Math.round(srcH * scale));
+    var canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+    return canvas;
+  }
+
+  function canvasToWebp(canvas, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (blob) {
+        if (blob) resolve(blob); else reject(new Error("COMPRESS_FAILED"));
+      }, "image/webp", quality);
+    });
+  }
+
+  function compressImage(file) {
+    return loadImageSource(file).then(function (source) {
+      return canvasToWebp(drawToCanvas(source, MAX_PHOTO_DIMENSION), PHOTO_QUALITY_INITIAL).then(function (blob) {
+        if (blob.size <= PHOTO_MAX_BYTES) { releaseImageSource(source); return blob; }
+        return canvasToWebp(drawToCanvas(source, PHOTO_RETRY_DIMENSION), PHOTO_QUALITY_RETRY).then(function (blob2) {
+          releaseImageSource(source);
+          if (blob2.size <= PHOTO_MAX_BYTES) return blob2;
+          throw new Error("PHOTO_TOO_LARGE");
+        });
+      }).catch(function (err) {
+        releaseImageSource(source);
+        throw err;
+      });
+    });
+  }
+
+  function releaseImageSource(source) {
+    if (source && typeof source.close === "function") source.close();
   }
 
   function uploadPhotos(postId, files) {
@@ -1694,7 +1982,7 @@ var Community = (function () {
     if (!st || !files.length) return Promise.resolve([]);
     return Promise.all(files.map(function (file, i) {
       return compressImage(file).then(function (blob) {
-        var ref = st.ref().child("communityImages/" + postId + "/" + Date.now() + "-" + i + ".jpg");
+        var ref = st.ref().child("communityImages/" + postId + "/" + Date.now() + "-" + i + ".webp");
         return ref.put(blob).then(function () { return ref.getDownloadURL(); });
       });
     }));
@@ -1720,37 +2008,22 @@ var Community = (function () {
         reportCount: 0,
         commentCount: isEdit ? undefined : 0,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        translationStatus: "pending"
+        // 번역은 등록 시점에 미리 하지 않고, 방문자가 "선택한 언어로
+        // 번역하기"를 눌렀을 때만 합니다(비용 최소화). 원문을 수정하면
+        // 예전 번역이 남아있지 않도록 비워서, 다음에 보는 사람이 새로
+        // 번역하게 합니다(원문이 안 바뀌면 이 값은 그대로 유지됨).
+        translations: {}
       };
       if (urls.length) base.photos = urls;
       if (!isEdit) base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       Object.keys(fields.extra || {}).forEach(function (k) { base[k] = fields.extra[k]; });
       Object.keys(base).forEach(function (k) { if (base[k] === undefined) delete base[k]; });
 
-      var writeOp = isEdit ? ref.update(base) : ref.set(base);
+      var writeOp = isEdit ? ref.update(base) : withRateLimit("post", function (tx) { tx.set(ref, base); });
       return writeOp.then(function () {
         editPostId = null;
-        triggerPostTranslation(postId, fields.originalLanguage, fields.title, fields.content);
         return postId;
       });
-    });
-  }
-
-  function triggerPostTranslation(postId, originalLanguage, title, content) {
-    if (!authUser) return;
-    var targets = SUPPORTED_LANGS.filter(function (l) { return l !== originalLanguage; });
-    authUser.getIdToken().then(function (idToken) {
-      return fetch("/.netlify/functions/community-translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "translatePost", idToken: idToken, originalLanguage: originalLanguage, title: title, content: content, targetLanguages: targets })
-      });
-    }).then(function (res) { return res.json(); }).then(function (data) {
-      var update = { translations: data.translations || {} };
-      update.translationStatus = (data.failedLanguages && data.failedLanguages.length) ? "failed" : "done";
-      return db().collection("communityPosts").doc(postId).update(update);
-    }).catch(function () {
-      db().collection("communityPosts").doc(postId).update({ translationStatus: "failed" }).catch(function () {});
     });
   }
 

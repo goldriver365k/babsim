@@ -80,11 +80,13 @@
           }
 
           // ---------------- 유학생 커뮤니티 (2026-09-10 추가, 2026-09-11
-          // 이메일 인증 요구 제거 + Google 로그인 지원으로 수정) ----------------
+          // 이메일 인증 요구 제거 + Google 로그인 지원, 2026-09-11 비용
+          // 최소화(글자 수·사진 개수·하루 작성 한도) 반영) ----------------
           function isSignedIn() { return request.auth != null; }
           function myProfile() { return get(/databases/$(database)/documents/communityUsers/$(request.auth.uid)).data; }
           function isActiveMember() { return isSignedIn() && myProfile().status == 'active'; }
           function isAdmin() { return isSignedIn() && myProfile().role == 'admin'; }
+          function limits() { return get(/databases/$(database)/documents/communityConfig/limits).data; }
 
           // 회원 정보 — 이메일 노출 방지를 위해 본인 또는 관리자만 문서를
           // 읽을 수 있습니다(다른 회원의 이름·국적은 게시글/댓글에 저장된
@@ -112,24 +114,39 @@
           match /communityPosts/{postId} {
             allow read: if resource.data.status == 'visible'
               || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
-            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
-            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+            // 글자 수(제목 100자·본문 2,000자)와 사진 개수(1장)는 서버(이 규칙)
+            // 에서도 다시 확인합니다(프런트엔드 maxlength만 믿지 않음).
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid
+              && request.resource.data.originalTitle is string && request.resource.data.originalTitle.size() > 0
+              && request.resource.data.originalTitle.size() <= 100
+              && request.resource.data.originalContent is string && request.resource.data.originalContent.size() > 0
+              && request.resource.data.originalContent.size() <= 2000
+              && (!('photos' in request.resource.data) || request.resource.data.photos.size() <= 1);
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin())
+                  && (!('originalTitle' in request.resource.data) || request.resource.data.originalTitle.size() <= 100)
+                  && (!('originalContent' in request.resource.data) || request.resource.data.originalContent.size() <= 2000)
+                  && (!('photos' in request.resource.data) || request.resource.data.photos.size() <= 1))
               || (isActiveMember()
                   && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
                   && request.resource.data.reportCount == resource.data.reportCount + 1
                   && (request.resource.data.status == resource.data.status
-                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')));
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')))
+              // 번역 캐시(translations 필드)만 채워 넣는 것은 로그인한 회원
+              // 누구나 할 수 있게 허용합니다("번역하기"를 누른 회원이 결과를
+              // 저장해 재사용 — 댓글과 동일한 방식).
+              || (isActiveMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['translations']));
             allow delete: if false; // 삭제는 status:'deleted'로만(관리자가 복구 가능하도록)
           }
 
-          // 댓글 — 게시글과 같은 원칙 + 번역 캐시(translations 필드)만
-          // 별도로 채워 넣는 것은 로그인한 회원 누구나 할 수 있게 허용합니다
-          // ("번역 보기"를 처음 누른 회원이 결과를 저장해 재사용).
+          // 댓글 — 게시글과 같은 원칙(글자 수 500자까지)
           match /communityComments/{commentId} {
             allow read: if resource.data.status == 'visible'
               || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
-            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
-            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid
+              && request.resource.data.originalContent is string && request.resource.data.originalContent.size() > 0
+              && request.resource.data.originalContent.size() <= 500;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin())
+                  && (!('originalContent' in request.resource.data) || request.resource.data.originalContent.size() <= 500))
               || (isActiveMember()
                   && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
                   && request.resource.data.reportCount == resource.data.reportCount + 1
@@ -137,6 +154,65 @@
                       || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')))
               || (isActiveMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['translations']));
             allow delete: if false;
+          }
+
+          // 하루 작성/번역 한도(회원 1명당 게시글 5개·댓글 30개·번역 20회) —
+          // 글/댓글을 쓸 때는 클라이언트가 이 문서를 같은 트랜잭션으로 함께
+          // 1씩 늘리고, 번역을 요청할 때는 서버(Netlify 함수)가 호출자의
+          // ID 토큰으로 이 문서의 translationCount만 늘립니다. 어느 쪽이든
+          // 한도를 넘으면 이 문서 쓰기 자체가 거부됩니다(글/댓글은 같은
+          // 트랜잭션의 본문 쓰기까지 함께 취소됨). 문서 ID는
+          // "{uid}_{오늘날짜}"라서 날짜가 바뀌면 자동으로 새 문서로
+          // 초기화됩니다(별도 초기화 스케줄 불필요).
+          function rlPrev(field) { return resource != null && field in resource.data ? resource.data[field] : 0; }
+          function rlNext(field) { return field in request.resource.data ? request.resource.data[field] : 0; }
+          match /communityRateLimits/{docId} {
+            allow read: if isSignedIn() && docId.matches(request.auth.uid + '_.*');
+            allow write: if isActiveMember() && docId.matches(request.auth.uid + '_.*')
+              && rlNext('postCount') is int && rlNext('postCount') >= 0
+              && rlNext('postCount') <= limits().postsPerDay
+              && rlNext('commentCount') is int && rlNext('commentCount') >= 0
+              && rlNext('commentCount') <= limits().commentsPerDay
+              && rlNext('translationCount') is int && rlNext('translationCount') >= 0
+              && rlNext('translationCount') <= limits().translationsPerDayUser
+              && (
+                (rlNext('postCount') == rlPrev('postCount') + 1
+                  && rlNext('commentCount') == rlPrev('commentCount')
+                  && rlNext('translationCount') == rlPrev('translationCount'))
+                ||
+                (rlNext('commentCount') == rlPrev('commentCount') + 1
+                  && rlNext('postCount') == rlPrev('postCount')
+                  && rlNext('translationCount') == rlPrev('translationCount'))
+                ||
+                (rlNext('translationCount') == rlPrev('translationCount') + 1
+                  && rlNext('postCount') == rlPrev('postCount')
+                  && rlNext('commentCount') == rlPrev('commentCount'))
+              );
+          }
+
+          // 사이트 전체 하루 번역 한도(회원 개인 한도와 별개로 비용을 한 번
+          // 더 관리) — Netlify 함수가 호출자의 ID 토큰으로 늘리므로 일반
+          // 회원도 이 카운터 문서 자체는 쓸 수 있어야 합니다(문서 내용은
+          // 숫자 하나뿐이라 정보 노출이 없습니다). 문서 ID는 "오늘 날짜"라서
+          // 날짜가 바뀌면 자동으로 새 문서로 초기화됩니다.
+          match /communitySiteRateLimits/{dateKey} {
+            allow read: if isSignedIn();
+            allow write: if isActiveMember()
+              && request.resource.data.translationCount is int
+              && request.resource.data.translationCount >= 0
+              && request.resource.data.translationCount <= limits().translationsPerDaySite
+              && request.resource.data.translationCount ==
+                (resource != null ? resource.data.translationCount : 0) + 1;
+          }
+
+          // 하루 한도 값(관리자가 Firestore 콘솔에서 직접 고칠 수 있음).
+          // 문서 예시(communityConfig/limits): { postsPerDay: 5, commentsPerDay: 30,
+          //   translationsPerDayUser: 20, translationsPerDaySite: 300 }
+          // ⚠️ 이 문서가 없으면 limits() 조회가 실패해 위 한도 쓰기가 모두
+          // 막힙니다 — 배포 후 반드시 Firebase 콘솔에서 한 번 만들어 두세요.
+          match /communityConfig/{docId} {
+            allow read: if isSignedIn();
+            allow write: if isAdmin();
           }
 
           // 신고 — 문서 ID를 "대상종류_대상ID_신고자ID"로 고정해 같은
@@ -174,14 +250,14 @@
               && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
-          // 커뮤니티 게시글 사진(게시글당 최대 3장, 브라우저에서 이미
-          // 압축된 상태로 올라오므로 5MB면 충분히 넉넉합니다). 로그인한
-          // 회원만 올릴 수 있고, 누구나 볼 수 있습니다(게시글 자체의
-          // Firestore 읽기 규칙이 이미 비회원/미인증 회원을 막습니다).
+          // 커뮤니티 게시글 사진(게시글당 최대 1장, 브라우저에서 WebP로
+          // 압축해 200KB 이하로 만든 뒤에만 올립니다 — 비용 최소화
+          // 지시서). 500KB로 한도를 두어 클라이언트 압축 로직을 우회해도
+          // 큰 원본이 그대로 올라가지 않도록 방어합니다(2차 방어선).
           match /communityImages/{allPaths=**} {
             allow read: if true;
             allow write: if request.auth != null
-              && request.resource.size < 5 * 1024 * 1024
+              && request.resource.size < 500 * 1024
               && request.resource.contentType.matches('image/.*');
           }
         }
