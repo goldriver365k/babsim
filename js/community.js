@@ -1182,13 +1182,10 @@ var Community = (function () {
         return;
       }
       var post = Object.assign({ id: doc.id }, doc.data());
-      if (!authUser) {
-        // 비회원은 요약만 보고, 전체 본문·댓글·연락처·번역은 로그인해야
-        // 볼 수 있습니다(2026-09-10 "회원가입 노출 방식 변경" 지시서 2번).
-        renderGuestPostPreview(wrap, post);
-        showAuthGateModal(ROUTE_PREFIX + "/post/" + postId);
-        return;
-      }
+      // 2026-09-13 "로그인/회원가입 동선" 지시서: 공개 게시글 상세는
+      // 비회원도 그대로 볼 수 있습니다. 글쓰기·댓글 작성·번역·연락처
+      // 등 참여 기능만 renderPostDetailBody 안에서 개별적으로
+      // 로그인 안내창을 띄웁니다.
       postCache[postId] = post;
       renderPostDetailBody(wrap, post);
     }).catch(function (err) {
@@ -1196,32 +1193,6 @@ var Community = (function () {
       wrap.innerHTML = "";
       wrap.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
     });
-  }
-
-  /* 비회원용 게시글 미리보기 — 제목·요약(100자)·가려진 작성자·국적·
-     작성일·사진 1장·댓글 개수만 보여주고, 전체 본문·댓글 내용·연락처는
-     보여주지 않습니다. "자세히 보기"를 누르면(이미 열려 있는 안내창을
-     다시 띄워) 로그인/가입을 안내합니다. */
-  function renderGuestPostPreview(wrap, post) {
-    wrap.innerHTML = "";
-    wrap.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
-    wrap.appendChild(el("h2", "community-detail-title", localizedTitle(post)));
-    var meta = el("p", "community-post-card-meta",
-      maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
-      (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
-    wrap.appendChild(meta);
-    if (post.photos && post.photos.length) {
-      var img = document.createElement("img");
-      img.className = "community-post-card-photo";
-      img.src = post.photos[0]; img.alt = ""; img.loading = "lazy";
-      wrap.appendChild(img);
-    }
-    var summaryText = summarize(post);
-    if (summaryText) wrap.appendChild(el("p", "community-post-card-summary", summaryText));
-    var detailBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.detailBtn));
-    detailBtn.type = "button";
-    detailBtn.addEventListener("click", function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
-    wrap.appendChild(detailBtn);
   }
 
   var detailShowOriginal = false;
@@ -1265,6 +1236,7 @@ var Community = (function () {
         translateBtn.type = "button";
         translateBtn.setAttribute("data-action", "translate-post");
         translateBtn.addEventListener("click", function () {
+          if (!authUser) { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); return; }
           translateBtn.disabled = true;
           translateBtn.textContent = t(COMMUNITY_POST.translating);
           requestPostTranslation(post).then(function (result) {
@@ -1306,6 +1278,11 @@ var Community = (function () {
       kakaoWrap.appendChild(el("p", "community-kakao-warn", t(COMMUNITY_POST.kakaoWarn)));
       var kakaoBtn = el("a", "community-btn-secondary", t(COMMUNITY_POST.kakaoBtn));
       kakaoBtn.href = post.kakaoLink; kakaoBtn.target = "_blank"; kakaoBtn.rel = "noopener noreferrer";
+      // 작성자에게 연락(카카오톡 오픈채팅)은 참여 기능이라 로그인이
+      // 필요합니다 — 비회원 클릭 시 실제 링크로 이동하지 않고 안내창만 뜹니다.
+      kakaoBtn.addEventListener("click", function (e) {
+        if (!authUser) { e.preventDefault(); showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); }
+      });
       kakaoWrap.appendChild(kakaoBtn);
       wrap.appendChild(kakaoWrap);
     }
@@ -1326,6 +1303,9 @@ var Community = (function () {
             .then(function () { saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn); });
         });
       });
+    } else {
+      // 비회원은 "저장(좋아요류 참여 기능)"을 누르면 로그인 안내창을 봅니다.
+      saveBtn.addEventListener("click", function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
     }
     actions.appendChild(saveBtn);
 
@@ -1602,6 +1582,12 @@ var Community = (function () {
         }).finally(function () { submitBtn.disabled = false; });
       });
       container.appendChild(form);
+    } else {
+      // 비회원은 댓글 목록은 보되, 작성은 로그인해야 합니다.
+      var guestCommentBtn = el("button", "community-btn-secondary", t(COMMUNITY_COMMENT.submitComment));
+      guestCommentBtn.type = "button";
+      guestCommentBtn.addEventListener("click", function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + postId); });
+      container.appendChild(guestCommentBtn);
     }
 
     var listEl = el("div", "community-comment-list");
