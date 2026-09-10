@@ -8,9 +8,9 @@
 
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="./images/icon/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./images/icon/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./images/icon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/icon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/icon/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/icon/apple-touch-icon.png">
 <meta name="theme-color" content="#1957d6">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1349,6 +1349,414 @@ main {
   * { transition: none !important; animation: none !important; }
 }
 
+/* ==========================================================================
+   유학생 커뮤니티 (작업지시서 24번 색상·수치를 그대로 따릅니다)
+   ========================================================================== */
+
+:root {
+  --comm-blue: #1559D6;
+  --comm-navy: #12345B;
+  --comm-bg: #F7F9FC;
+  --comm-card: #FFFFFF;
+  --comm-border: #CBDDF7;
+  --comm-text: #334155;
+  --comm-help: #E85D3F;
+  --comm-free: #169B62;
+  --comm-done: #64748B;
+}
+
+/* 상단 브랜드 줄의 커뮤니티 버튼(밥심 바로 앞) */
+.community-tab {
+  background: #FFFFFF;
+  color: #334155;
+  border-color: #CBD5E1;
+}
+
+.community-tab-line1,
+.community-tab-line2 {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.community-tab.active {
+  background: #1559D6;
+  border-color: #1559D6;
+  color: #FFFFFF;
+}
+
+/* 화면 전체 컨테이너 — 모바일 우선, 폭이 넓은 화면에서는 가운데 정렬 */
+.community-root {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", inherit;
+  color: var(--comm-text);
+}
+
+.community-root[hidden] { display: none; }
+
+.community-page-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--comm-navy);
+  margin: 4px 0 16px;
+  overflow-wrap: anywhere;
+}
+
+.community-loading,
+.community-empty {
+  color: var(--comm-text);
+  font-size: 14px;
+  padding: 16px 0;
+}
+
+.community-form-error {
+  color: var(--comm-help);
+  font-size: 13px;
+  min-height: 18px;
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+
+/* 버튼 — 최소 높이 48px, 모서리 14px보다 조금 작은 12px(버튼은 살짝
+   더 둥글지 않게 카드와 구분), 과도한 애니메이션 없음 */
+.community-btn-primary,
+.community-btn-secondary,
+.community-btn-danger {
+  min-height: 48px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.community-btn-primary {
+  background: var(--comm-blue);
+  color: #FFFFFF;
+}
+
+.community-btn-secondary {
+  background: #FFFFFF;
+  color: var(--comm-blue);
+  border-color: var(--comm-border);
+}
+
+.community-btn-danger {
+  background: #FFFFFF;
+  color: var(--comm-help);
+  border-color: var(--comm-help);
+}
+
+.community-btn-primary:disabled,
+.community-btn-secondary:disabled { opacity: 0.6; cursor: default; }
+
+.community-link-btn,
+.community-link-btn-inline {
+  background: none;
+  border: none;
+  color: var(--comm-blue);
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.community-write-btn { width: 100%; margin: 10px 0 16px; }
+
+/* 폼 */
+.community-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--comm-card);
+  border: 1px solid var(--comm-border);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(18, 52, 91, 0.06);
+}
+
+.community-field { display: flex; flex-direction: column; gap: 6px; }
+
+.community-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--comm-navy);
+}
+
+.community-form input[type="text"],
+.community-form input[type="email"],
+.community-form input[type="password"],
+.community-form input[type="number"],
+.community-form input[type="url"],
+.community-form input[type="search"],
+.community-form select,
+.community-form textarea {
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--comm-border);
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--comm-text);
+  background: #FFFFFF;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.community-form textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.community-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  min-height: 44px;
+}
+
+.community-auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+
+/* 로그인 필요 안내 */
+.community-gate {
+  background: var(--comm-card);
+  border: 1px solid var(--comm-border);
+  border-radius: 14px;
+  padding: 24px 18px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(18, 52, 91, 0.06);
+}
+
+.community-gate-desc { font-size: 14px; margin: 10px 0 18px; overflow-wrap: anywhere; }
+.community-verify-notice { color: var(--comm-help); font-weight: 700; margin-bottom: 12px; }
+.community-gate-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* 카테고리 탭 — 모바일에서는 가로 스크롤 */
+.community-category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+
+.community-category-tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--comm-border);
+  background: #FFFFFF;
+  color: var(--comm-text);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.community-category-tab.active {
+  background: var(--comm-blue);
+  border-color: var(--comm-blue);
+  color: #FFFFFF;
+}
+
+.community-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.community-search-input { flex: 1 1 auto; min-height: 44px; padding: 8px 14px; border: 1px solid var(--comm-border); border-radius: 10px; }
+.community-sort-select { min-height: 44px; padding: 8px 10px; border: 1px solid var(--comm-border); border-radius: 10px; background: #FFFFFF; }
+
+/* 게시글 카드 */
+.community-post-list { display: flex; flex-direction: column; gap: 10px; }
+
+.community-post-card {
+  background: var(--comm-card);
+  border: 1px solid var(--comm-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(18, 52, 91, 0.05);
+  cursor: pointer;
+}
+
+.community-post-card-cat {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--comm-blue);
+  margin-bottom: 6px;
+}
+
+.community-post-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--comm-navy);
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.community-post-card-meta { font-size: 12px; color: #64748B; overflow-wrap: anywhere; }
+
+.community-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-left: 6px;
+  color: #FFFFFF;
+  background: var(--comm-blue);
+}
+
+.community-badge-selling { background: var(--comm-blue); }
+.community-badge-reserved { background: #94A3B8; }
+.community-badge-done { background: var(--comm-done); }
+.community-badge-free { background: var(--comm-free); }
+.community-badge-help-needed { background: var(--comm-help); }
+.community-badge-help-inProgress { background: #F0A93A; }
+.community-badge-help-resolved { background: var(--comm-free); }
+
+/* 게시글 상세 */
+.community-detail-head { margin-bottom: 10px; }
+.community-detail-title { font-size: 19px; font-weight: 800; color: var(--comm-navy); margin: 6px 0; overflow-wrap: anywhere; }
+.community-detail-body { margin-bottom: 14px; }
+.community-detail-content { font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.community-ai-notice { font-size: 12px; color: #94A3B8; margin-top: 6px; }
+
+.community-detail-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.community-detail-gallery img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--comm-border);
+}
+
+.community-market-panel,
+.community-help-panel {
+  background: #FFFFFF;
+  border: 1px solid var(--comm-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.community-safety-notice { color: var(--comm-help); font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+
+.community-kakao-wrap { margin-bottom: 14px; }
+.community-kakao-warn { font-size: 13px; color: var(--comm-help); margin-bottom: 8px; overflow-wrap: anywhere; }
+
+.community-detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+
+/* 댓글 */
+.community-comments-title { font-size: 15px; font-weight: 700; color: var(--comm-navy); margin: 0 0 10px; }
+.community-comment-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.community-comment-form textarea { min-height: 70px; padding: 10px; border: 1px solid var(--comm-border); border-radius: 10px; font-family: inherit; }
+.community-comment-list { display: flex; flex-direction: column; gap: 12px; }
+
+.community-comment {
+  border-bottom: 1px solid var(--comm-border);
+  padding-bottom: 12px;
+}
+
+.community-comment-reply { margin-left: 24px; }
+.community-comment-meta { font-size: 12px; color: #64748B; margin-bottom: 4px; }
+.community-comment-text { font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 4px; }
+.community-comment-actions { display: flex; gap: 6px; }
+
+/* 신고 사유 목록 */
+.community-reason-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.community-reason-btn {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--comm-border);
+  border-radius: 10px;
+  background: #FFFFFF;
+  text-align: left;
+  font-size: 14px;
+}
+.community-reason-btn.active { border-color: var(--comm-blue); background: #EEF3FE; color: var(--comm-blue); font-weight: 700; }
+
+/* 내 정보 */
+.community-my-info { margin-bottom: 16px; }
+.community-my-sub { font-size: 13px; color: #64748B; margin: 2px 0; overflow-wrap: anywhere; }
+.community-my-tabs { display: flex; gap: 8px; margin: 18px 0 10px; overflow-x: auto; }
+.community-my-tab {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--comm-border);
+  background: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.community-my-tab.active { background: var(--comm-blue); border-color: var(--comm-blue); color: #FFFFFF; }
+.community-my-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.community-my-comment-row { background: #FFFFFF; border: 1px solid var(--comm-border); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+.community-my-comment-text { font-size: 14px; margin: 0 0 4px; overflow-wrap: anywhere; }
+
+/* 사진 미리보기 */
+.community-photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.community-photo-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--comm-border); }
+
+.community-market-fields,
+.community-help-fields { display: flex; flex-direction: column; gap: 14px; }
+.community-market-fields[hidden],
+.community-help-fields[hidden] { display: none; }
+
+/* 문서(규칙/개인정보) 화면 */
+.community-doc-body { font-size: 14px; line-height: 1.7; }
+.community-doc-body ul { padding-left: 20px; }
+.community-doc-body p { margin: 0 0 10px; overflow-wrap: anywhere; }
+
+/* 토스트 */
+.community-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 12px);
+  background: var(--comm-navy);
+  color: #FFFFFF;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 200;
+  max-width: 90vw;
+  overflow-wrap: anywhere;
+}
+
+.community-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (min-width: 700px) {
+  .community-root { padding-top: 24px; }
+}
+
 </style>
 </head>
 <body>
@@ -1369,14 +1777,21 @@ main {
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
+    <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="유학생 커뮤니티">
+      <span class="community-tab-line1"></span><span class="community-tab-line2"></span>
+    </button>
     <button type="button" class="store-tab" data-store="bapsim">밥심<br>1층</button>
     <button type="button" class="store-tab" data-store="mangwon">만권화밥<br>1층</button>
     <button type="button" class="store-tab" data-store="hururuk">후루룩찹찹<br>2층</button>
   </nav>
 </header>
 
+<!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
+     때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->
+<div class="community-root" id="communityRoot" hidden></div>
+
 <div class="cola-banner" id="colaBanner" hidden>
-  <img class="cola-banner-icon" src="images/bapsim/cola.jpg" alt="" aria-hidden="true">
+  <img class="cola-banner-icon" src="/images/bapsim/cola.jpg" alt="" aria-hidden="true">
   <div class="cola-banner-text">
     <p class="cola-banner-title" id="colaBannerTitle">🎁 무료 콜라 쿠폰</p>
     <p class="cola-banner-subtitle" id="colaBannerSubtitle">음식 주문하고 콜라 1캔 무료로 받으세요!</p>
@@ -1751,35 +2166,35 @@ const MENU_DATA = [
   {
     id: "bapsim-breakfast-buffet",
     store: "bapsim", group: 1, order: 2,
-    image: "images/bapsim/breakfast-buffet-icon.jpg",
+    image: "/images/bapsim/breakfast-buffet-icon.jpg",
     name: { ko: "아침뷔페", en: "Breakfast Buffet", zh: "早餐自助", vi: "Buffet sáng", mn: "Өглөөний буфет" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-lunch-buffet",
     store: "bapsim", group: 1, order: 3,
-    image: "images/bapsim/lunch-buffet-icon.jpg",
+    image: "/images/bapsim/lunch-buffet-icon.jpg",
     name: { ko: "점심뷔페", en: "Lunch Buffet", zh: "午餐自助", vi: "Buffet trưa", mn: "Өдрийн хоолны буфет" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-lunch-buffet-ramen",
     store: "bapsim", group: 1, order: 4,
-    image: "images/bapsim/korean-buffet-instant-ramen.png",
+    image: "/images/bapsim/korean-buffet-instant-ramen.png",
     name: { ko: "한식뷔페 즉석라면", en: "Korean Buffet + Instant Ramen", zh: "韩式自助餐＋方便面", vi: "Buffet Hàn Quốc + Mì ăn liền", mn: "Солонгос хоолны буфет + Бэлэн рамен" },
     price: 8000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-self-ramen",
     store: "bapsim", group: 1, order: 5,
-    image: "images/bapsim/self-ramen.jpg",
+    image: "/images/bapsim/self-ramen.jpg",
     name: { ko: "셀프라면", en: "Self-Serve Ramen", zh: "自助拉面", vi: "Mì tự phục vụ", mn: "Өөрөө хийх рамен" },
     price: 3000, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-fried-eggs",
     store: "bapsim", group: 1, order: 6,
-    image: "images/bapsim/fried-eggs.jpg",
+    image: "/images/bapsim/fried-eggs.jpg",
     name: { ko: "계란후라이 2개", en: "2 Fried Eggs", zh: "煎蛋2个", vi: "2 quả trứng ốp la", mn: "2 ширхэг шарсан өндөг" },
     price: 1000, soldOut: false, needsReview: false
   },
@@ -1794,28 +2209,28 @@ const MENU_DATA = [
   {
     id: "bapsim-cola",
     store: "bapsim", group: 1, order: 8,
-    image: "images/bapsim/cola.jpg",
+    image: "/images/bapsim/cola.jpg",
     name: { ko: "콜라(355ml)밥심", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола (355мл)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-zero-cola",
     store: "bapsim", group: 1, order: 9,
-    image: "images/bapsim/zero-cola.jpg",
+    image: "/images/bapsim/zero-cola.jpg",
     name: { ko: "제로콜라(355ml)밥심", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола (355мл)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-fanta-pine",
     store: "bapsim", group: 1, order: 10,
-    image: "images/bapsim/fanta-pine.jpg",
+    image: "/images/bapsim/fanta-pine.jpg",
     name: { ko: "환타파인(355ml)밥심", en: "Fanta Pineapple (355ml)", zh: "芬达菠萝(355ml)", vi: "Fanta Dứa (355ml)", mn: "Фанта ананас (355мл)" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "bapsim-sprite",
     store: "bapsim", group: 1, order: 11,
-    image: "images/bapsim/sprite.jpg",
+    image: "/images/bapsim/sprite.jpg",
     name: { ko: "스프라이트(355ml)밥심", en: "Sprite (355ml)", zh: "雪碧(355ml)", vi: "Sprite (355ml)", mn: "Спрайт (355мл)" },
     price: 1500, soldOut: false, needsReview: false
   },
@@ -1824,84 +2239,84 @@ const MENU_DATA = [
   {
     id: "mangwon-mul-naengmyeon",
     store: "mangwon", group: 1, order: 1,
-    image: "images/mangwon/mul-naengmyeon.jpg",
+    image: "/images/mangwon/mul-naengmyeon.jpg",
     name: { ko: "물냉면", en: "Mul Naengmyeon (Cold Noodle Soup)", zh: "水冷面", vi: "Mì lạnh nước", mn: "Хүйтэн шөлтэй гоймон" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-mul-naengmyeon-bulgogi",
     store: "mangwon", group: 1, order: 2,
-    image: "images/mangwon/mul-naengmyeon-bulgogi.jpg",
+    image: "/images/mangwon/mul-naengmyeon-bulgogi.jpg",
     name: { ko: "물냉면 + 돼지불고기", en: "Mul Naengmyeon + Pork Bulgogi", zh: "水冷面+烤猪肉", vi: "Mì lạnh nước + Thịt heo nướng", mn: "Хүйтэн шөлтэй гоймон + Амталж шарсан гахайн мах" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bibim-naengmyeon",
     store: "mangwon", group: 1, order: 3,
-    image: "images/mangwon/bibim-naengmyeon.jpg",
+    image: "/images/mangwon/bibim-naengmyeon.jpg",
     name: { ko: "비빔냉면", en: "Bibim Naengmyeon (Spicy Cold Noodles)", zh: "拌冷面", vi: "Mì lạnh trộn cay", mn: "Халуун ногоотой хүйтэн гоймон" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bibim-naengmyeon-bulgogi",
     store: "mangwon", group: 1, order: 4,
-    image: "images/mangwon/bibim-naengmyeon-bulgogi.jpg",
+    image: "/images/mangwon/bibim-naengmyeon-bulgogi.jpg",
     name: { ko: "비빔냉면 + 돼지불고기", en: "Bibim Naengmyeon + Pork Bulgogi", zh: "拌冷面+烤猪肉", vi: "Mì lạnh trộn cay + Thịt heo nướng", mn: "Халуун ногоотой хүйтэн гоймон + Амталж шарсан гахайн мах" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-seafood-sundubu",
     store: "mangwon", group: 1, order: 5,
-    image: "images/mangwon/seafood-sundubu.jpg",
+    image: "/images/mangwon/seafood-sundubu.jpg",
     name: { ko: "해물순두부(공기밥포함)", en: "Seafood Sundubu (Rice Included)", zh: "海鲜豆腐汤(含米饭)", vi: "Canh đậu phụ hải sản (kèm cơm)", mn: "Далайн бүтээгдэхүүнтэй зөөлөн дүпүний шөл (будаатай)" },
     price: 6000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-usamgyeop-sundubu",
     store: "mangwon", group: 1, order: 6,
-    image: "images/mangwon/usamgyeop-sundubu.jpg",
+    image: "/images/mangwon/usamgyeop-sundubu.jpg",
     name: { ko: "우삼겹순두부", en: "Beef Belly Sundubu", zh: "牛五花豆腐汤", vi: "Canh đậu phụ ba chỉ bò", mn: "Үхрийн цээжний махтай зөөлөн дүпүний шөл" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-jikhwa-beef-deopbap",
     store: "mangwon", group: 1, order: 7,
-    image: "images/mangwon/jikhwa-beef-deopbap.jpg",
+    image: "/images/mangwon/jikhwa-beef-deopbap.jpg",
     name: { ko: "직화소고기덮밥", en: "Grilled Beef Rice Bowl", zh: "炭烤牛肉盖饭", vi: "Cơm bò nướng", mn: "Гал дээр шарсан үхрийн махтай будаа" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dwaeji-bulbaek",
     store: "mangwon", group: 1, order: 8,
-    image: "images/mangwon/dwaeji-bulbaek.jpg",
+    image: "/images/mangwon/dwaeji-bulbaek.jpg",
     name: { ko: "돼지불백", en: "Pork Bulgogi", zh: "烤猪肉", vi: "Thịt heo nướng", mn: "Амталж шарсан гахайн мах" },
     price: 6500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-jikhwa-beef-kimchi-deopbap",
     store: "mangwon", group: 1, order: 9,
-    image: "images/mangwon/bulhyang-jikhwa-beef-kimchi-deopbap.jpg",
+    image: "/images/mangwon/bulhyang-jikhwa-beef-kimchi-deopbap.jpg",
     name: { ko: "불향직화소고기김치덮밥", en: "Smoky Grilled Beef Kimchi Rice Bowl", zh: "炭火牛肉泡菜盖饭", vi: "Cơm bò nướng kimchi", mn: "Утаат гал дээр шарсан үхэр, кимчитэй будаа" },
     price: 7400, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-jikhwa-pork-kimchi-deopbap",
     store: "mangwon", group: 1, order: 10,
-    image: "images/mangwon/bulhyang-jikhwa-pork-kimchi-deopbap.jpg",
+    image: "/images/mangwon/bulhyang-jikhwa-pork-kimchi-deopbap.jpg",
     name: { ko: "불향직화돼지김치덮밥", en: "Smoky Grilled Pork Kimchi Rice Bowl", zh: "炭火猪肉泡菜盖饭", vi: "Cơm heo nướng kimchi", mn: "Утаат гал дээр шарсан гахай, кимчитэй будаа" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dwaeji-kimchi-jjigae",
     store: "mangwon", group: 1, order: 11,
-    image: "images/mangwon/dwaeji-kimchi-jjigae.jpg",
+    image: "/images/mangwon/dwaeji-kimchi-jjigae.jpg",
     name: { ko: "돼지김치찌개(공기밥포함)", en: "Pork Kimchi Stew (Rice Included)", zh: "猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo (kèm cơm)", mn: "Гахайн кимчийн шөл (будаатай)" },
     price: 6500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-spam-dwaeji-kimchi-jjigae",
     store: "mangwon", group: 1, order: 12,
-    image: "images/mangwon/spam-dwaeji-kimchi-jjigae.jpg",
+    image: "/images/mangwon/spam-dwaeji-kimchi-jjigae.jpg",
     name: { ko: "스팸돼지김치찌개(공기밥포함)", en: "Spam & Pork Kimchi Stew (Rice Included)", zh: "午餐肉猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo & Spam (kèm cơm)", mn: "Спам, гахайн кимчийн шөл (будаатай)" },
     price: 6900, soldOut: false, needsReview: false
   },
@@ -1910,63 +2325,63 @@ const MENU_DATA = [
   {
     id: "mangwon-spam-sundubu",
     store: "mangwon", group: 2, order: 1,
-    image: "images/mangwon/spam-sundubu.jpg",
+    image: "/images/mangwon/spam-sundubu.jpg",
     name: { ko: "스팸순두부(공기밥포함)", en: "Spam Sundubu (Rice Included)", zh: "午餐肉豆腐汤(含米饭)", vi: "Canh đậu phụ Spam (kèm cơm)", mn: "Спамтай зөөлөн дүпүний шөл (будаатай)" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-jikhwa-beef-jjigae-set",
     store: "mangwon", group: 2, order: 2,
-    image: "images/mangwon/jikhwa-beef-jjigae-set.jpg",
+    image: "/images/mangwon/jikhwa-beef-jjigae-set.jpg",
     name: { ko: "직화소고기 + 찌개", en: "Grilled Beef + Stew Set", zh: "炭烤牛肉+汤套餐", vi: "Bò nướng + Canh", mn: "Гал дээр шарсан үхрийн мах + шөл" },
     price: 9900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dwaeji-bulbaek-jjigae-set",
     store: "mangwon", group: 2, order: 3,
-    image: "images/mangwon/dwaeji-bulbaek-jjigae-set.jpg",
+    image: "/images/mangwon/dwaeji-bulbaek-jjigae-set.jpg",
     name: { ko: "돼지불백 + 찌개", en: "Pork Bulgogi + Stew Set", zh: "烤猪肉+汤套餐", vi: "Thịt heo nướng + Canh", mn: "Амталж шарсан гахайн мах + шөл" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-garlic-soy-chicken-deopbap",
     store: "mangwon", group: 2, order: 4,
-    image: "images/mangwon/garlic-soy-chicken-deopbap.jpg",
+    image: "/images/mangwon/garlic-soy-chicken-deopbap.jpg",
     name: { ko: "갈릭소이치킨덮밥", en: "Garlic Soy Chicken Rice Bowl", zh: "蒜香酱油鸡肉盖饭", vi: "Cơm gà sốt tỏi tương", mn: "Сармис-соевын соустай тахианы будаа" },
     price: 5900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-gochujang-chicken-deopbap",
     store: "mangwon", group: 2, order: 5,
-    image: "images/mangwon/bulhyang-gochujang-chicken-deopbap.jpg",
+    image: "/images/mangwon/bulhyang-gochujang-chicken-deopbap.jpg",
     name: { ko: "불향고추장치킨덮밥", en: "Smoky Gochujang Chicken Rice Bowl", zh: "炭火辣椒酱鸡肉盖饭", vi: "Cơm gà sốt ớt cay", mn: "Утаат гочужан соустай тахианы будаа" },
     price: 5900, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-garlic-soy-chicken-deopbap-jjigae-set",
     store: "mangwon", group: 2, order: 6,
-    image: "images/mangwon/garlic-soy-chicken-deopbap-jjigae-set.jpg",
+    image: "/images/mangwon/garlic-soy-chicken-deopbap-jjigae-set.jpg",
     name: { ko: "갈릭소이치킨덮밥 + 찌개", en: "Garlic Soy Chicken Rice Bowl + Stew", zh: "蒜香酱油鸡肉盖饭+汤", vi: "Cơm gà sốt tỏi tương + Canh", mn: "Сармис-соевын соустай тахианы будаа + шөл" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-bulhyang-gochujang-chicken-deopbap-jjigae-set",
     store: "mangwon", group: 2, order: 7,
-    image: "images/mangwon/bulhyang-gochujang-chicken-deopbap-jjigae-set.jpg",
+    image: "/images/mangwon/bulhyang-gochujang-chicken-deopbap-jjigae-set.jpg",
     name: { ko: "불향고추장치킨덮밥 + 찌개", en: "Smoky Gochujang Chicken Rice Bowl + Stew", zh: "炭火辣椒酱鸡肉盖饭+汤", vi: "Cơm gà sốt ớt cay + Canh", mn: "Утаат гочужан соустай тахианы будаа + шөл" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-flying-fish-roe-bap",
     store: "mangwon", group: 2, order: 8,
-    image: "images/mangwon/flying-fish-roe-bap.jpg",
+    image: "/images/mangwon/flying-fish-roe-bap.jpg",
     name: { ko: "날아라날치알밥", en: "Flying Fish Roe Rice Bowl", zh: "飞鱼子拌饭", vi: "Cơm trứng cá bay", mn: "Нисдэг загасны өндөгтэй будаа" },
     price: 7000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-spam-flying-fish-roe-bap",
     store: "mangwon", group: 2, order: 9,
-    image: "images/mangwon/spam-flying-fish-roe-bap.jpg",
+    image: "/images/mangwon/spam-flying-fish-roe-bap.jpg",
     name: { ko: "스팸날치알밥", en: "Spam & Flying Fish Roe Rice Bowl", zh: "午餐肉飞鱼子拌饭", vi: "Cơm trứng cá bay & Spam", mn: "Спамтай нисдэг загасны өндөгний будаа" },
     price: 7000, soldOut: false, needsReview: true
     // 원본 키오스크 사진과 정확한 메뉴명 확인 필요 (사진에는 "스팸펄알밥"으로 보임, 지시서 기준 "스팸날치알밥" 사용)
@@ -1974,21 +2389,21 @@ const MENU_DATA = [
   {
     id: "mangwon-dukkeobi-yukgaejang",
     store: "mangwon", group: 2, order: 10,
-    image: "images/mangwon/dukkeobi-yukgaejang.jpg",
+    image: "/images/mangwon/dukkeobi-yukgaejang.jpg",
     name: { ko: "두꺼비육개장", en: "Dukkeobi Yukgaejang (Spicy Beef Soup)", zh: "杜鸡比牛肉辣汤", vi: "Canh cay Yukgaejang Dukkeobi", mn: "Дуккэби югэжан (халуун үхрийн шөл)" },
     price: 5000, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-dukkeobi-udon-yukgaejang",
     store: "mangwon", group: 2, order: 11,
-    image: "images/mangwon/dukkeobi-udon-yukgaejang.jpg",
+    image: "/images/mangwon/dukkeobi-udon-yukgaejang.jpg",
     name: { ko: "두꺼비우동육개장", en: "Dukkeobi Udon Yukgaejang", zh: "杜鸡比乌冬辣汤", vi: "Canh cay Yukgaejang Udon Dukkeobi", mn: "Дуккэби удон югэжан" },
     price: 5500, soldOut: false, needsReview: false
   },
   {
     id: "mangwon-jikhwa-samgyeop-deopbap",
     store: "mangwon", group: 2, order: 12,
-    image: "images/mangwon/jikhwa-samgyeop-deopbap.jpg",
+    image: "/images/mangwon/jikhwa-samgyeop-deopbap.jpg",
     name: { ko: "직화삼겹덮밥", en: "Grilled Pork Belly Rice Bowl", zh: "炭烤五花肉盖饭", vi: "Cơm ba chỉ nướng", mn: "Гал дээр шарсан цээжний махтай будаа" },
     price: 7500, soldOut: false, needsReview: false
   },
@@ -1997,84 +2412,84 @@ const MENU_DATA = [
   {
     id: "hururuk-usamgyeop-malatang-samgak-kimbap-set",
     store: "hururuk", group: 1, order: 1,
-    image: "images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
+    image: "/images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
     name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл" },
     price: 11900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-bomb-riceNoodle-samgak-kimbap-set",
     store: "hururuk", group: 1, order: 2,
-    image: "images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
+    image: "/images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
     name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл" },
     price: 11900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set",
     store: "hururuk", group: 1, order: 3,
-    image: "images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
     name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл" },
     price: 12500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-malatang",
     store: "hururuk", group: 1, order: 4,
-    image: "images/hururuk/usamgyeop-malatang.jpg",
+    image: "/images/hururuk/usamgyeop-malatang.jpg",
     name: { ko: "우삼겹마라탕", en: "Beef Belly Malatang", zh: "牛五花麻辣烫", vi: "Malatang ba chỉ bò", mn: "Үхрийн цээжний махтай малатан" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-usamgyeop-bomb-rice-noodle",
     store: "hururuk", group: 1, order: 5,
-    image: "images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
+    image: "/images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
     name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-ragu-deopbap",
     store: "hururuk", group: 1, order: 6,
-    image: "images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
     name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-pork-malatang",
     store: "hururuk", group: 1, order: 7,
-    image: "images/hururuk/pork-malatang.jpg",
+    image: "/images/hururuk/pork-malatang.jpg",
     name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-king-chicken-rice-noodles",
     store: "hururuk", group: 1, order: 8,
-    image: "images/hururuk/king-chicken-rice-noodles.jpg",
+    image: "/images/hururuk/king-chicken-rice-noodles.jpg",
     name: { ko: "왕다리쌀국수", en: "Chicken Leg Pho", zh: "大鸡腿米粉", vi: "Phở đùi gà lớn", mn: "Том тахианы хөлтэй будааны гоймон" },
     price: 7500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-rice-noodle",
     store: "hururuk", group: 1, order: 9,
-    image: "images/hururuk/duthum-chashu-rice-noodle.jpg",
+    image: "/images/hururuk/duthum-chashu-rice-noodle.jpg",
     name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-ganjang-usamgyeop-bokkeummyeon",
     store: "hururuk", group: 1, order: 10,
-    image: "images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
+    image: "/images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
     name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-hwakkeun-gochujang-usamgyeop-bokkeummyeon",
     store: "hururuk", group: 1, order: 11,
-    image: "images/hururuk/hwakkeun-gochujang-usamgyeop-bokkeummyeon.jpg",
+    image: "/images/hururuk/hwakkeun-gochujang-usamgyeop-bokkeummyeon.jpg",
     name: { ko: "화끈고추장우삼겹볶음면", en: "Fiery Gochujang Beef Belly Stir-Fried Noodles", zh: "香辣辣椒酱牛五花炒面", vi: "Mì xào ba chỉ bò sốt ớt cay", mn: "Халуун гочужан соустай үхрийн цээжний хуурсан гоймон" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-meat-ragu-spaghetti",
     store: "hururuk", group: 1, order: 12,
-    image: "images/hururuk/meat-ragu-spaghetti.jpg",
+    image: "/images/hururuk/meat-ragu-spaghetti.jpg",
     name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти" },
     price: 7900, soldOut: false, needsReview: false
   },
@@ -2083,84 +2498,84 @@ const MENU_DATA = [
   {
     id: "hururuk-meat-ragu-deopbap",
     store: "hururuk", group: 2, order: 1,
-    image: "images/hururuk/meat-ragu-deopbap.jpg",
+    image: "/images/hururuk/meat-ragu-deopbap.jpg",
     name: { ko: "고기듬뿍 라구덮밥", en: "Meat-Loaded Ragu Rice Bowl", zh: "肉酱盖饭(加量)", vi: "Cơm sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай будаа" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-sausage-ragu-deopbap",
     store: "hururuk", group: 2, order: 2,
-    image: "images/hururuk/sausage-ragu-deopbap.jpg",
+    image: "/images/hururuk/sausage-ragu-deopbap.jpg",
     name: { ko: "통소세지 라구덮밥", en: "Whole Sausage Ragu Rice Bowl", zh: "整根香肠肉酱盖饭", vi: "Cơm sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай будаа" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
     store: "hururuk", group: 2, order: 3,
-    image: "images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
     name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-sausage-ragu-spaghetti",
     store: "hururuk", group: 2, order: 4,
-    image: "images/hururuk/sausage-ragu-spaghetti.jpg",
+    image: "/images/hururuk/sausage-ragu-spaghetti.jpg",
     name: { ko: "통소세지 라구스파게티", en: "Whole Sausage Ragu Spaghetti", zh: "整根香肠肉酱意面", vi: "Spaghetti sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай спагетти" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-ragu-spaghetti",
     store: "hururuk", group: 2, order: 5,
-    image: "images/hururuk/duthum-chashu-ragu-spaghetti.jpg",
+    image: "/images/hururuk/duthum-chashu-ragu-spaghetti.jpg",
     name: { ko: "두툼차슈 라구스파게티", en: "Thick-Cut Chashu Ragu Spaghetti", zh: "厚切叉烧肉酱意面", vi: "Spaghetti sốt ragu xá xíu dày", mn: "Зузаан чашүтэй рагу соустай спагетти" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-clam-chowder-spaghetti",
     store: "hururuk", group: 2, order: 6,
-    image: "images/hururuk/clam-chowder-spaghetti.jpg",
+    image: "/images/hururuk/clam-chowder-spaghetti.jpg",
     name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-eolkeun-usamgyeop-haejang-pasta",
     store: "hururuk", group: 2, order: 7,
-    image: "images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
+    image: "/images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
     name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-usamgyeop-kimchi-cream-pasta",
     store: "hururuk", group: 2, order: 8,
-    image: "images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
+    image: "/images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
     name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-bulhyang-kimchi-bulgogi-deopbap",
     store: "hururuk", group: 2, order: 9,
-    image: "images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
+    image: "/images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
     name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-garlic-pork-deopbap",
     store: "hururuk", group: 2, order: 10,
-    image: "images/hururuk/garlic-pork-deopbap.jpg",
+    image: "/images/hururuk/garlic-pork-deopbap.jpg",
     name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-deopbap",
     store: "hururuk", group: 2, order: 11,
-    image: "images/hururuk/duthum-chashu-deopbap.jpg",
+    image: "/images/hururuk/duthum-chashu-deopbap.jpg",
     name: { ko: "두툼차슈덮밥", en: "Thick-Cut Chashu Rice Bowl", zh: "厚切叉烧盖饭", vi: "Cơm xá xíu dày", mn: "Зузаан чашүтэй будаа" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-tomato-pork-curry",
     store: "hururuk", group: 2, order: 12,
-    image: "images/hururuk/tomato-pork-curry.jpg",
+    image: "/images/hururuk/tomato-pork-curry.jpg",
     name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри" },
     price: 7900, soldOut: false, needsReview: false
   },
@@ -2169,7 +2584,7 @@ const MENU_DATA = [
   {
     id: "hururuk-italian-crispy-pork-cheese-deopbap",
     store: "hururuk", group: 3, order: 1,
-    image: "images/hururuk/italian-crispy-pork-cheese-deopbap.jpg",
+    image: "/images/hururuk/italian-crispy-pork-cheese-deopbap.jpg",
     name: { ko: "이태리 바삭포크치즈덮밥", en: "Italian Crispy Pork & Cheese Rice Bowl", zh: "意式脆皮猪肉芝士盖饭", vi: "Cơm heo giòn phô mai kiểu Ý", mn: "Итали маягийн хурц, бяслагтай гахайн махны будаа" },
     price: 8500, soldOut: false, needsReview: false
   },
@@ -2183,21 +2598,21 @@ const MENU_DATA = [
   {
     id: "hururuk-cola",
     store: "hururuk", group: 3, order: 3,
-    image: "images/hururuk/cola.jpg",
+    image: "/images/hururuk/cola.jpg",
     name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-zero-cola",
     store: "hururuk", group: 3, order: 4,
-    image: "images/hururuk/zero-cola.jpg",
+    image: "/images/hururuk/zero-cola.jpg",
     name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл" },
     price: 1500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-fanta",
     store: "hururuk", group: 3, order: 5,
-    image: "images/hururuk/fanta.jpg",
+    image: "/images/hururuk/fanta.jpg",
     name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта" },
     price: 1500, soldOut: false, needsReview: false
   }
@@ -2428,11 +2843,14 @@ const BREAKFAST_WEEKLY_MENU = {
 
 </script>
 
-<!-- "오늘의 메뉴 평가" 기능이 사용하는 Firestore(DB) SDK.
-     js/firebase-config.js에 실제 프로젝트 값을 넣기 전까지는 평가 데이터가
-     각 학생의 기기에만 저장되며, 이 화면의 다른 기능에는 영향을 주지 않습니다. -->
+<!-- "오늘의 메뉴 평가" 기능과 유학생 커뮤니티(회원가입/로그인/이미지 업로드)가
+     함께 사용하는 Firebase SDK. js/firebase-config.js에 실제 프로젝트 값을
+     넣기 전까지는 평가 데이터가 각 학생의 기기에만 저장되며, 이 화면의
+     다른 기능에는 영향을 주지 않습니다. -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script>
 /* ==========================================================================
    Firebase 프로젝트 연결 설정
@@ -2440,8 +2858,11 @@ const BREAKFAST_WEEKLY_MENU = {
    - Firestore(DB)는 학생 화면(천원의 아침밥 평가, 언어 통계, 주간메뉴)과
      관리자 페이지가 함께 사용합니다.
    - Firebase Authentication과 Storage는 관리자 페이지의 "주간메뉴 관리"
-     (이미지 업로드, 직접 입력 저장/수정/삭제)에서만 사용합니다.
-     학생 화면(index.html)은 이 둘을 전혀 불러오지 않습니다(가벼운 상태 유지).
+     (이미지 업로드, 직접 입력 저장/수정/삭제)와, 학생 화면(index.html)의
+     유학생 커뮤니티 회원가입·로그인·이메일 인증·게시글 사진 업로드에서
+     사용합니다(2026-09-10 커뮤니티 기능 추가로 학생 화면도 이 두 SDK를
+     불러오기 시작했습니다 — 커뮤니티를 쓰지 않는 방문자에게는 추가
+     네트워크 요청 몇 개 외에 다른 영향이 없습니다).
 
    ⚠ Firestore 보안 규칙 — 아래 규칙 전체를 Firebase 콘솔의
    Firestore Database → "규칙" 탭에 그대로 붙여넣어야 합니다.
@@ -2511,10 +2932,86 @@ const BREAKFAST_WEEKLY_MENU = {
             allow read: if true;   // 관리자 페이지 통계 조회용
             allow update, delete: if false;
           }
+
+          // ---------------- 유학생 커뮤니티 (2026-09-10 추가) ----------------
+          function isSignedIn() { return request.auth != null; }
+          function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+          function myProfile() { return get(/databases/$(database)/documents/communityUsers/$(request.auth.uid)).data; }
+          function isActiveMember() { return isVerified() && myProfile().status == 'active'; }
+          function isAdmin() { return isVerified() && myProfile().role == 'admin'; }
+
+          // 회원 정보 — 이메일 노출 방지를 위해 본인 또는 관리자만 문서를
+          // 읽을 수 있습니다(다른 회원의 이름·국적은 게시글/댓글에 저장된
+          // 스냅샷 필드로만 공개됩니다 — 아래 communityPosts 참고).
+          match /communityUsers/{uid} {
+            allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+            // role은 반드시 'user'로만 가입할 수 있습니다(가입 시 스스로
+            // 'admin'을 적어 넣는 권한 상승을 막기 위함) — 관리자 지정은
+            // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다.
+            allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
+            allow update: if (isSignedIn() && request.auth.uid == uid
+                && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
+              || isAdmin();
+            allow delete: if false; // 탈퇴는 status:'withdrawn'으로만 처리
+          }
+
+          // 게시글 — 비회원·이메일 미인증·정지 회원은 전혀 접근 불가.
+          // 작성자 본인/관리자는 모든 필드를 수정할 수 있고, 그 외 로그인
+          // 회원은 신고 시 reportCount를 1씩만 늘리고 3회가 되면 status를
+          // hidden으로 바꾸는 것만 허용합니다(신고 누적 자동 숨김).
+          match /communityPosts/{postId} {
+            allow read: if resource.data.status == 'visible'
+              || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+              || (isActiveMember()
+                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
+                  && request.resource.data.reportCount == resource.data.reportCount + 1
+                  && (request.resource.data.status == resource.data.status
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')));
+            allow delete: if false; // 삭제는 status:'deleted'로만(관리자가 복구 가능하도록)
+          }
+
+          // 댓글 — 게시글과 같은 원칙 + 번역 캐시(translations 필드)만
+          // 별도로 채워 넣는 것은 로그인한 회원 누구나 할 수 있게 허용합니다
+          // ("번역 보기"를 처음 누른 회원이 결과를 저장해 재사용).
+          match /communityComments/{commentId} {
+            allow read: if resource.data.status == 'visible'
+              || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+              || (isActiveMember()
+                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
+                  && request.resource.data.reportCount == resource.data.reportCount + 1
+                  && (request.resource.data.status == resource.data.status
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')))
+              || (isActiveMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['translations']));
+            allow delete: if false;
+          }
+
+          // 신고 — 문서 ID를 "대상종류_대상ID_신고자ID"로 고정해 같은
+          // 회원이 같은 대상을 두 번 신고해도 덮어쓰지 못하게 막습니다
+          // (allow update가 없으므로 이미 존재하면 재작성 자체가 거부됨).
+          // 신고자 목록은 본인과 관리자만 볼 수 있습니다(다른 회원에게 비공개).
+          match /communityReports/{reportId} {
+            allow create: if isActiveMember()
+              && request.resource.data.reporterId == request.auth.uid
+              && reportId == request.resource.data.targetType + '_' + request.resource.data.targetId + '_' + request.auth.uid;
+            allow read: if isSignedIn() && (request.auth.uid == resource.data.reporterId || isAdmin());
+            allow update, delete: if isAdmin();
+          }
+
+          // 저장한 글(내 정보 > 저장한 글) — 본인 것만 읽고 쓸 수 있습니다.
+          match /communitySaves/{saveId} {
+            allow read, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+          }
         }
       }
 
-   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"에 필요합니다.
+   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"와 "커뮤니티
+   게시글 사진 업로드"에 필요합니다.
    Firebase 콘솔 → Storage → "규칙" 탭에 아래를 붙여넣으세요.
    (Storage를 아직 한 번도 안 켰다면 "시작하기"부터 눌러 생성해야 합니다.)
 
@@ -2527,6 +3024,16 @@ const BREAKFAST_WEEKLY_MENU = {
               && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
+          // 커뮤니티 게시글 사진(게시글당 최대 3장, 브라우저에서 이미
+          // 압축된 상태로 올라오므로 5MB면 충분히 넉넉합니다). 로그인한
+          // 회원만 올릴 수 있고, 누구나 볼 수 있습니다(게시글 자체의
+          // Firestore 읽기 규칙이 이미 비회원/미인증 회원을 막습니다).
+          match /communityImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 5 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
         }
       }
 
@@ -2537,6 +3044,13 @@ const BREAKFAST_WEEKLY_MENU = {
    주간메뉴를 등록·수정·삭제하고 이미지를 업로드할 수 있습니다.
    (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
    별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
+
+   ⚠ 유학생 커뮤니티 회원가입/이메일 인증은 "이메일/비밀번호" 제공업체가
+   켜져 있기만 하면 별도 설정 없이 바로 동작합니다(위 항목에서 이미
+   켜둔 것과 같은 설정). 인증메일 발신 주소·문구를 바꾸고 싶다면 Firebase
+   콘솔 → Authentication → Templates 탭에서 수정할 수 있습니다(선택 사항).
+   커뮤니티 번역(netlify/functions/community-translate.js)은 새 환경변수
+   없이 기존 OPENAI_API_KEY를 그대로 재사용합니다.
 
    ⚠ Netlify 환경변수 OPENAI_API_KEY — 주간메뉴 이미지 자동인식/번역에
    필요합니다(netlify/functions/parse-weekly-menu.js). Netlify 대시보드
@@ -3425,6 +3939,1680 @@ document.addEventListener("DOMContentLoaded", PwaManager.init);
 </script>
 <script>
 /* ==========================================================================
+   유학생 커뮤니티 다국어 문구 (js/community-translations.js)
+   - js/translations.js와 같은 패턴({ko,zh,vi,en,mn})을 그대로 따릅니다.
+   - babsim.store에서 선택한 언어(js/app.js state.lang, localStorage
+     "foodhall_lang")를 커뮤니티 화면에도 그대로 사용합니다.
+   ========================================================================== */
+
+/* 상단 커뮤니티 버튼(두 줄) */
+var COMMUNITY_NAV = {
+  line1: { ko: "유학생", zh: "留学生", vi: "Cộng đồng", en: "International", mn: "Олон улсын" },
+  line2: { ko: "커뮤니티", zh: "社区", vi: "Du học sinh", en: "Community", mn: "Оюутнууд" }
+};
+
+/* 게시판 5개 카테고리 */
+var COMMUNITY_CATEGORIES = {
+  friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох" },
+  market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа" },
+  help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх" },
+  together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох" },
+  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл" }
+};
+var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "life"];
+
+/* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
+var COMMUNITY_AUTH = {
+  loginTitle: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх" },
+  signupTitle: { ko: "회원가입", zh: "注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх" },
+  emailLabel: { ko: "이메일", zh: "邮箱", vi: "Email", en: "Email", mn: "И-мэйл" },
+  passwordLabel: { ko: "비밀번호", zh: "密码", vi: "Mật khẩu", en: "Password", mn: "Нууц үг" },
+  passwordConfirmLabel: { ko: "비밀번호 확인", zh: "确认密码", vi: "Xác nhận mật khẩu", en: "Confirm Password", mn: "Нууц үг баталгаажуулах" },
+  nameLabel: { ko: "이름", zh: "姓名", vi: "Họ tên", en: "Name", mn: "Нэр" },
+  nationalityLabel: { ko: "국적", zh: "国籍", vi: "Quốc tịch", en: "Nationality", mn: "Иргэншил" },
+  nationalitySearchPlaceholder: { ko: "국가 검색", zh: "搜索国家", vi: "Tìm quốc gia", en: "Search country", mn: "Улс хайх" },
+  langLabel: { ko: "사용할 언어", zh: "使用语言", vi: "Ngôn ngữ sử dụng", en: "Preferred Language", mn: "Ашиглах хэл" },
+  privacyAgree: { ko: "개인정보 수집에 동의합니다", zh: "同意收集个人信息", vi: "Tôi đồng ý thu thập thông tin cá nhân", en: "I agree to the collection of personal information", mn: "Хувийн мэдээлэл цуглуулахыг зөвшөөрч байна" },
+  rulesAgree: { ko: "커뮤니티 이용규칙에 동의합니다", zh: "同意社区使用规则", vi: "Tôi đồng ý với quy tắc cộng đồng", en: "I agree to the community rules", mn: "Нийгэмлэгийн дүрэмтэй зөвшөөрч байна" },
+  viewText: { ko: "보기", zh: "查看", vi: "Xem", en: "View", mn: "Харах" },
+  submitSignup: { ko: "가입하기", zh: "注册", vi: "Đăng ký", en: "Create Account", mn: "Бүртгүүлэх" },
+  submitLogin: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх" },
+  keepLoggedIn: { ko: "로그인 상태 유지", zh: "保持登录", vi: "Duy trì đăng nhập", en: "Keep me logged in", mn: "Нэвтэрсэн хэвээр байх" },
+  forgotPassword: { ko: "비밀번호 찾기", zh: "忘记密码", vi: "Quên mật khẩu", en: "Forgot Password", mn: "Нууц үг сэргээх" },
+  goSignup: { ko: "회원가입", zh: "去注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх" },
+  goLogin: { ko: "이미 계정이 있나요? 로그인", zh: "已有账号？登录", vi: "Đã có tài khoản? Đăng nhập", en: "Already have an account? Log in", mn: "Бүртгэлтэй юу? Нэвтрэх" },
+  resendVerification: { ko: "인증메일 다시 보내기", zh: "重新发送验证邮件", vi: "Gửi lại email xác nhận", en: "Resend verification email", mn: "Баталгаажуулах имэйлийг дахин илгээх" },
+  verifyNotice: { ko: "이메일 인증을 완료해 주세요.", zh: "请完成邮箱验证。", vi: "Vui lòng hoàn tất xác nhận email.", en: "Please verify your email.", mn: "И-мэйлээ баталгаажуулна уу." },
+  logout: { ko: "로그아웃", zh: "登出", vi: "Đăng xuất", en: "Log Out", mn: "Гарах" },
+  resetSent: { ko: "비밀번호 재설정 메일을 보냈습니다.", zh: "已发送密码重置邮件。", vi: "Đã gửi email đặt lại mật khẩu.", en: "Password reset email sent.", mn: "Нууц үг сэргээх и-мэйл илгээгдлээ." },
+  verificationSent: { ko: "인증메일을 다시 보냈습니다.", zh: "已重新发送验证邮件。", vi: "Đã gửi lại email xác nhận.", en: "Verification email resent.", mn: "Баталгаажуулах имэйлийг дахин илгээлээ." },
+  loginRequiredTitle: { ko: "로그인이 필요합니다", zh: "需要登录", vi: "Cần đăng nhập", en: "Login Required", mn: "Нэвтрэх шаардлагатай" },
+  loginRequiredDesc: { ko: "유학생 커뮤니티는 회원가입과 이메일 인증을 완료한 회원만 이용할 수 있습니다.", zh: "留学生社区仅限完成注册及邮箱验证的会员使用。", vi: "Cộng đồng du học sinh chỉ dành cho thành viên đã đăng ký và xác nhận email.", en: "The community is available only to members who have signed up and verified their email.", mn: "Олон улсын оюутнуудын нийгэмлэг нь бүртгэл болон и-мэйл баталгаажуулалтыг дуусгасан гишүүдэд л нээлттэй." },
+  suspendedNotice: { ko: "이용이 정지된 계정입니다.", zh: "该账号已被停用。", vi: "Tài khoản đã bị đình chỉ.", en: "This account has been suspended.", mn: "Энэ бүртгэл түдгэлзүүлэгдсэн байна." }
+};
+
+/* 회원 메뉴/내 정보 */
+var COMMUNITY_MY = {
+  myPageTitle: { ko: "내 정보", zh: "我的信息", vi: "Thông tin của tôi", en: "My Info", mn: "Миний мэдээлэл" },
+  myPosts: { ko: "내가 작성한 글", zh: "我写的帖子", vi: "Bài viết của tôi", en: "My Posts", mn: "Миний бичсэн зурвас" },
+  myComments: { ko: "내가 작성한 댓글", zh: "我写的评论", vi: "Bình luận của tôi", en: "My Comments", mn: "Миний сэтгэгдэл" },
+  savedPosts: { ko: "저장한 글", zh: "已保存的帖子", vi: "Bài đã lưu", en: "Saved Posts", mn: "Хадгалсан зурвас" },
+  editName: { ko: "이름 수정", zh: "修改姓名", vi: "Sửa họ tên", en: "Edit Name", mn: "Нэр засах" },
+  editNationality: { ko: "국적 수정", zh: "修改国籍", vi: "Sửa quốc tịch", en: "Edit Nationality", mn: "Иргэншил засах" },
+  editLang: { ko: "선택 언어 변경", zh: "更改语言", vi: "Đổi ngôn ngữ", en: "Change Language", mn: "Хэл солих" },
+  editPassword: { ko: "비밀번호 변경", zh: "修改密码", vi: "Đổi mật khẩu", en: "Change Password", mn: "Нууц үг солих" },
+  withdraw: { ko: "회원 탈퇴", zh: "注销账号", vi: "Xóa tài khoản", en: "Delete Account", mn: "Гишүүнчлэл цуцлах" },
+  withdrawConfirm: { ko: "정말 탈퇴하시겠습니까? 되돌릴 수 없습니다.", zh: "确定要注销吗？此操作无法撤销。", vi: "Bạn có chắc muốn xóa tài khoản? Không thể hoàn tác.", en: "Are you sure you want to delete your account? This cannot be undone.", mn: "Та гишүүнчлэлээ цуцлахдаа итгэлтэй байна уу? Буцаах боломжгүй." },
+  save: { ko: "저장", zh: "保存", vi: "Lưu", en: "Save", mn: "Хадгалах" }
+};
+
+/* 게시글/댓글 작성, 상세, 목록, 검색 */
+var COMMUNITY_POST = {
+  writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих" },
+  categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал" },
+  titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг" },
+  contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга" },
+  originalLangLabel: { ko: "원문 언어", zh: "原文语言", vi: "Ngôn ngữ gốc", en: "Original Language", mn: "Эх хэл" },
+  photoLabel: { ko: "사진 (최대 3장)", zh: "照片（最多3张）", vi: "Ảnh (tối đa 3 ảnh)", en: "Photos (up to 3)", mn: "Зураг (хамгийн ихдээ 3)" },
+  submitPost: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх" },
+  editPost: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах" },
+  deletePost: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах" },
+  deleteConfirm: { ko: "정말 삭제하시겠습니까?", zh: "确定要删除吗？", vi: "Bạn có chắc muốn xóa?", en: "Are you sure you want to delete this?", mn: "Устгахдаа итгэлтэй байна уу?" },
+  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах" },
+  viewTranslated: { ko: "선택 언어로 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translated", mn: "Орчуулгыг харах" },
+  aiNotice: { ko: "AI로 번역된 내용입니다.", zh: "本内容由AI翻译。", vi: "Nội dung này được dịch bằng AI.", en: "This content was translated by AI.", mn: "Энэ агуулгыг AI орчуулсан." },
+  noPosts: { ko: "게시글이 없습니다.", zh: "暂无帖子。", vi: "Không có bài viết.", en: "No posts yet.", mn: "Зурвас алга байна." },
+  loading: { ko: "불러오는 중...", zh: "加载中...", vi: "Đang tải...", en: "Loading...", mn: "Ачааллаж байна..." },
+  searchPlaceholder: { ko: "제목·본문 검색", zh: "搜索标题·内容", vi: "Tìm tiêu đề, nội dung", en: "Search title/content", mn: "Гарчиг, агуулга хайх" },
+  sortLatest: { ko: "최신순", zh: "最新", vi: "Mới nhất", en: "Latest", mn: "Хамгийн сүүлийн" },
+  sortComments: { ko: "댓글 많은 순", zh: "评论最多", vi: "Nhiều bình luận nhất", en: "Most Commented", mn: "Хамгийн олон сэтгэгдэлтэй" },
+  commentCount: { ko: "댓글", zh: "评论", vi: "Bình luận", en: "Comments", mn: "Сэтгэгдэл" },
+  saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах" },
+  unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах" },
+  kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой." },
+  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат" }
+};
+
+/* 중고거래 */
+var COMMUNITY_MARKET = {
+  dealTypeSell: { ko: "판매", zh: "出售", vi: "Bán", en: "Sell", mn: "Зарах" },
+  dealTypeBuy: { ko: "구매", zh: "求购", vi: "Mua", en: "Buy", mn: "Худалдан авах" },
+  priceLabel: { ko: "가격", zh: "价格", vi: "Giá", en: "Price", mn: "Үнэ" },
+  freeShare: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free Giveaway", mn: "Үнэгүй хуваалцах" },
+  locationLabel: { ko: "거래 희망 장소", zh: "交易地点", vi: "Địa điểm giao dịch", en: "Preferred Location", mn: "Худалдааны байршил" },
+  conditionLabel: { ko: "물품 상태", zh: "物品状态", vi: "Tình trạng đồ", en: "Item Condition", mn: "Барааны байдал" },
+  statusLabel: { ko: "거래 상태", zh: "交易状态", vi: "Trạng thái giao dịch", en: "Deal Status", mn: "Худалдааны төлөв" },
+  statusSelling: { ko: "판매 중", zh: "出售中", vi: "Đang bán", en: "Selling", mn: "Зарж байна" },
+  statusReserved: { ko: "예약 중", zh: "已预订", vi: "Đã đặt trước", en: "Reserved", mn: "Захиалагдсан" },
+  statusDone: { ko: "거래 완료", zh: "交易完成", vi: "Đã giao dịch", en: "Sold", mn: "Худалдаа дууссан" },
+  statusFree: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free", mn: "Үнэгүй" },
+  hideDone: { ko: "거래 완료 게시물 숨기기", zh: "隐藏已完成交易", vi: "Ẩn bài đã giao dịch", en: "Hide completed deals", mn: "Дууссан худалдааг нуух" },
+  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах" },
+  safetyNotice: { ko: "학교 안의 공개된 장소에서 만나고 송금 전에 물건을 직접 확인하세요.", zh: "请在学校内的公开场所见面，转账前请务必确认物品。", vi: "Hãy gặp ở nơi công cộng trong trường và kiểm tra hàng trước khi chuyển khoản.", en: "Meet in a public place on campus and check the item before paying.", mn: "Сургуулийн нээлттэй газарт уулзаж, мөнгө шилжүүлэхийн өмнө барааг өөрөө шалгаарай." }
+};
+
+/* 도움 요청 */
+var COMMUNITY_HELP = {
+  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв" },
+  statusNeeded: { ko: "도움 필요", zh: "需要帮助", vi: "Cần giúp đỡ", en: "Help Needed", mn: "Тусламж хэрэгтэй" },
+  statusInProgress: { ko: "해결 중", zh: "处理中", vi: "Đang xử lý", en: "In Progress", mn: "Шийдвэрлэж байна" },
+  statusResolved: { ko: "해결 완료", zh: "已解决", vi: "Đã giải quyết", en: "Resolved", mn: "Шийдэгдсэн" },
+  typeLabel: { ko: "분류", zh: "分类", vi: "Phân loại", en: "Type", mn: "Төрөл" },
+  typeSchool: { ko: "학교생활", zh: "校园生活", vi: "Đời sống học đường", en: "School Life", mn: "Сургуулийн амьдрал" },
+  typeKorean: { ko: "한국어", zh: "韩语", vi: "Tiếng Hàn", en: "Korean Language", mn: "Солонгос хэл" },
+  typeHospital: { ko: "병원", zh: "医院", vi: "Bệnh viện", en: "Hospital", mn: "Эмнэлэг" },
+  typeTransport: { ko: "교통", zh: "交通", vi: "Giao thông", en: "Transportation", mn: "Тээвэр" },
+  typeAdmin: { ko: "행정", zh: "行政", vi: "Hành chính", en: "Administration", mn: "Захиргаа" },
+  typeLost: { ko: "분실물", zh: "失物招领", vi: "Đồ thất lạc", en: "Lost & Found", mn: "Алдагдсан зүйл" },
+  typeLife: { ko: "생활 도움", zh: "生活帮助", vi: "Hỗ trợ sinh hoạt", en: "Daily Help", mn: "Амьдралын тусламж" },
+  typeEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
+  emergencyNotice: { ko: "긴급하거나 위험한 상황은 경찰, 학교 담당 부서 등 공식 기관에 연락하세요.", zh: "紧急或危险情况请联系警察或学校相关部门等官方机构。", vi: "Trường hợp khẩn cấp hoặc nguy hiểm, hãy liên hệ công an hoặc bộ phận phụ trách của trường.", en: "For urgent or dangerous situations, contact the police or your school's official office.", mn: "Яаралтай, аюултай тохиолдолд цагдаа, сургуулийн албан ёсны газарт хандана уу." }
+};
+
+/* 댓글 */
+var COMMUNITY_COMMENT = {
+  writeLabel: { ko: "댓글 작성", zh: "写评论", vi: "Viết bình luận", en: "Write a Comment", mn: "Сэтгэгдэл бичих" },
+  submitComment: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх" },
+  replyLabel: { ko: "답글", zh: "回复", vi: "Trả lời", en: "Reply", mn: "Хариулах" },
+  editComment: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах" },
+  deleteComment: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах" },
+  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах" },
+  viewTranslated: { ko: "번역 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translation", mn: "Орчуулга харах" },
+  translating: { ko: "번역 중...", zh: "翻译中...", vi: "Đang dịch...", en: "Translating...", mn: "Орчуулж байна..." },
+  noComments: { ko: "댓글이 없습니다.", zh: "暂无评论。", vi: "Chưa có bình luận.", en: "No comments yet.", mn: "Сэтгэгдэл алга." }
+};
+
+/* 신고 */
+var COMMUNITY_REPORT = {
+  reportBtn: { ko: "신고하기", zh: "举报", vi: "Báo cáo", en: "Report", mn: "Мэдээлэх" },
+  reportTitle: { ko: "신고 사유 선택", zh: "选择举报原因", vi: "Chọn lý do báo cáo", en: "Select Report Reason", mn: "Мэдээлэх шалтгаанаа сонгоно уу" },
+  reasonScam: { ko: "사기 의심", zh: "疑似诈骗", vi: "Nghi ngờ lừa đảo", en: "Suspected Scam", mn: "Залилан гэж сэжиглэгдэж байна" },
+  reasonAbuse: { ko: "욕설·괴롭힘", zh: "辱骂·骚扰", vi: "Lăng mạ/quấy rối", en: "Abuse/Harassment", mn: "Доромжлол/дарамт" },
+  reasonPrivacy: { ko: "개인정보 노출", zh: "个人信息泄露", vi: "Lộ thông tin cá nhân", en: "Privacy Exposure", mn: "Хувийн мэдээлэл ил гарсан" },
+  reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа" },
+  reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам" },
+  reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт" },
+  reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
+  submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх" },
+  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа." },
+  alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна." },
+  hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа." }
+};
+
+/* 개인정보 동의 / 이용규칙 화면 */
+var COMMUNITY_CONSENT = {
+  privacyTitle: { ko: "개인정보처리방침", zh: "隐私政策", vi: "Chính sách bảo mật", en: "Privacy Policy", mn: "Хувийн мэдээллийн бодлого" },
+  rulesTitle: { ko: "커뮤니티 이용규칙", zh: "社区使用规则", vi: "Quy tắc cộng đồng", en: "Community Rules", mn: "Нийгэмлэгийн дүрэм" },
+  collectItems: { ko: "수집정보: 이름, 국적, 이메일, 선택 언어", zh: "收集信息：姓名、国籍、邮箱、使用语言", vi: "Thông tin thu thập: Họ tên, quốc tịch, email, ngôn ngữ sử dụng", en: "Collected: Name, Nationality, Email, Preferred Language", mn: "Цуглуулах мэдээлэл: Нэр, иргэншил, и-мэйл, ашиглах хэл" },
+  purpose: { ko: "이용목적: 회원 확인, 커뮤니티 운영, 다국어 서비스 제공, 신고 처리, 부정 이용 방지", zh: "使用目的：会员确认、社区运营、多语言服务、举报处理、防止滥用", vi: "Mục đích: Xác thực thành viên, vận hành cộng đồng, dịch vụ đa ngôn ngữ, xử lý báo cáo, ngăn chặn lạm dụng", en: "Purpose: Member verification, community operation, multilingual service, report handling, abuse prevention", mn: "Зорилго: Гишүүнчлэл баталгаажуулах, нийгэмлэг ажиллуулах, олон хэлний үйлчилгээ, гомдол шийдвэрлэх, буруу ашиглалтаас сэргийлэх" },
+  retention: { ko: "보유기간: 회원 탈퇴 시까지(관계 법령상 보관 의무가 있는 경우 해당 기간)", zh: "保留期限：至注销为止（如法律要求保存的情况按相关期限）", vi: "Thời hạn lưu trữ: Đến khi xóa tài khoản (theo quy định pháp luật nếu có)", en: "Retention: Until account deletion (or as required by applicable law)", mn: "Хадгалах хугацаа: Гишүүнчлэл цуцлах хүртэл (хууль тогтоомжийн дагуу хадгалах шаардлагатай бол тухайн хугацаагаар)" }
+};
+
+/* 공통 오류/완료 메시지 */
+var COMMUNITY_MSG = {
+  errRequired: { ko: "필수 항목을 모두 입력해 주세요.", zh: "请填写所有必填项。", vi: "Vui lòng điền đầy đủ thông tin bắt buộc.", en: "Please fill in all required fields.", mn: "Заавал бөглөх бүх талбарыг бөглөнө үү." },
+  errPasswordMismatch: { ko: "비밀번호가 일치하지 않습니다.", zh: "两次输入的密码不一致。", vi: "Mật khẩu xác nhận không khớp.", en: "Passwords do not match.", mn: "Нууц үг таарахгүй байна." },
+  errEmailInUse: { ko: "이미 사용 중인 이메일입니다.", zh: "该邮箱已被使用。", vi: "Email này đã được sử dụng.", en: "This email is already in use.", mn: "Энэ и-мэйл хаяг аль хэдийн ашиглагдаж байна." },
+  errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна." },
+  errPhotoLimit: { ko: "사진은 최대 3장까지 첨부할 수 있습니다.", zh: "最多只能上传3张照片。", vi: "Chỉ có thể đính kèm tối đa 3 ảnh.", en: "You can attach up to 3 photos.", mn: "Хамгийн ихдээ 3 зураг хавсаргах боломжтой." },
+  errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу." },
+  doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа." },
+  doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа." }
+};
+
+/* 관리자 번역 상태 표시(관리자 페이지 번역관리 탭) */
+var COMMUNITY_TRANSLATION_STATUS = {
+  pending: { ko: "번역 전", zh: "待翻译", vi: "Chưa dịch", en: "Not translated", mn: "Орчуулаагүй" },
+  inProgress: { ko: "번역 중", zh: "翻译中", vi: "Đang dịch", en: "Translating", mn: "Орчуулж байна" },
+  done: { ko: "번역 완료", zh: "翻译完成", vi: "Đã dịch", en: "Translated", mn: "Орчуулсан" },
+  failed: { ko: "번역 실패", zh: "翻译失败", vi: "Dịch thất bại", en: "Translation failed", mn: "Орчуулга амжилтгүй" },
+  adminEdited: { ko: "관리자 수정", zh: "管理员已修改", vi: "Quản trị viên đã sửa", en: "Edited by admin", mn: "Админ засварласан" }
+};
+
+/* 회원가입 국적 선택용 국가 목록(검색 가능한 <datalist>용, 영문 표기).
+   국제학생 다수인 국가를 우선 배치하지 않고 알파벳순으로 정렬해
+   특정 국가를 우대하지 않습니다. */
+var COUNTRY_LIST = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina",
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh",
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso",
+  "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic",
+  "Chad", "Chile", "China", "Colombia", "Comoros", "Congo",
+  "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
+  "Djibouti", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia",
+  "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon",
+  "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Guatemala",
+  "Guinea", "Haiti", "Honduras", "Hong Kong", "Hungary", "Iceland",
+  "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+  "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan",
+  "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
+  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein",
+  "Lithuania", "Luxembourg", "Macau", "Madagascar", "Malawi", "Malaysia",
+  "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico",
+  "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+  "Myanmar", "Namibia", "Nepal", "Netherlands", "New Zealand", "Nicaragua",
+  "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman",
+  "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay",
+  "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+  "Russia", "Rwanda", "Saudi Arabia", "Senegal", "Serbia", "Sierra Leone",
+  "Singapore", "Slovakia", "Slovenia", "Somalia", "South Africa", "South Korea",
+  "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden",
+  "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand",
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey",
+  "Turkmenistan", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
+  "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+  "Yemen", "Zambia", "Zimbabwe"
+];
+
+</script>
+<script>
+/* ==========================================================================
+   유학생 커뮤니티 (js/community.js)
+   - babsim.store(index.html) 안에 통째로 포함되는 모듈입니다(별도 사이트
+     아님). 기존 Firebase 프로젝트(Firestore/Auth/Storage), 기존 언어
+     선택(js/app.js state.lang, localStorage "foodhall_lang"), 기존
+     번역 인프라(Netlify Function + OpenAI)를 그대로 재사용합니다.
+   - 라우팅은 별도 패키지 없이 history.pushState + location.pathname으로
+     직접 처리합니다(모든 경로가 index.html로 오는 기존 netlify.toml
+     catch-all을 그대로 사용).
+   - 이 스크립트가 없거나 실패해도 기존 식당 메뉴 화면은 영향받지
+     않습니다(다른 js/*.js 모듈과 같은 독립 실행 패턴).
+   ========================================================================== */
+
+var Community = (function () {
+  "use strict";
+
+  var ROUTE_PREFIX = "/community";
+  var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn"];
+  var MAX_PHOTOS = 3;
+  var MAX_PHOTO_DIMENSION = 1280;
+  var PHOTO_QUALITY = 0.78;
+  var POST_LIST_LIMIT = 200; // 1차 버전: 최근 N개 안에서 검색/정렬(유료 검색서비스 미사용)
+
+  var lang = "ko";
+  var els = {};
+  var authUser = null;      // firebase.auth().currentUser
+  var profile = null;       // communityUsers/{uid} 문서 데이터
+  var currentRoute = { path: "/", postId: null };
+  var postCache = {};       // postId -> 마지막으로 불러온 게시글 문서(상세 화면 재사용)
+
+  function qs(id) { return document.getElementById(id); }
+  function t(dict) { return (dict && (dict[lang] || dict.ko)) || ""; }
+  function el(tag, className, text) {
+    var n = document.createElement(tag);
+    if (className) n.className = className;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+  function auth() { return (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null; }
+  function storage() { return (typeof getFirebaseStorage === "function") ? getFirebaseStorage() : null; }
+
+  /* ---------------- 라우팅 ---------------- */
+
+  function isCommunityPath(path) {
+    return path === ROUTE_PREFIX || path.indexOf(ROUTE_PREFIX + "/") === 0;
+  }
+
+  function parseRoute(path) {
+    if (path === ROUTE_PREFIX || path === ROUTE_PREFIX + "/") return { name: "list" };
+    var rest = path.slice(ROUTE_PREFIX.length + 1);
+    var segs = rest.split("/").filter(Boolean);
+    if (segs[0] === "login") return { name: "login" };
+    if (segs[0] === "signup") return { name: "signup" };
+    if (segs[0] === "write") return { name: "write" };
+    if (segs[0] === "my") return { name: "my" };
+    if (segs[0] === "rules") return { name: "rules" };
+    if (segs[0] === "privacy") return { name: "privacy" };
+    if (segs[0] === "post" && segs[1]) return { name: "post", postId: segs[1] };
+    return { name: "list" };
+  }
+
+  function navigate(path, replace) {
+    if (location.pathname !== path) {
+      if (replace) history.replaceState({}, "", path);
+      else history.pushState({}, "", path);
+    }
+    route();
+  }
+
+  window.addEventListener("popstate", function () { route(); });
+
+  function route() {
+    var path = location.pathname;
+    var inCommunity = isCommunityPath(path);
+    toggleStoreChrome(!inCommunity);
+    if (els.communityTabBtn) {
+      els.communityTabBtn.classList.toggle("active", inCommunity);
+      els.communityTabBtn.setAttribute("aria-pressed", inCommunity ? "true" : "false");
+    }
+    if (!inCommunity) return;
+
+    currentRoute = parseRoute(path);
+    render();
+  }
+
+  /* 커뮤니티 화면일 때는 기존 매장 콘텐츠를 숨기고, 아닐 때는 되돌립니다.
+     (기존 밥심/만권화밥/후루룩찹찹, 콜라 배너, 한국어 학습 카드, 하단
+     "사장님께 말해요" 배너는 그대로 두고 손대지 않습니다 — 보이기/숨기기만) */
+  function toggleStoreChrome(show) {
+    var ids = ["colaBanner"];
+    ids.forEach(function (id) {
+      var node = qs(id);
+      if (node) node.hidden = !show || node.hidden && !show ? node.hidden : node.hidden;
+    });
+    var main = document.querySelector("main");
+    if (main) main.hidden = !show;
+    var cola = qs("colaBanner");
+    if (cola && !show) cola.hidden = true;
+    var hello = document.querySelector(".hellokorean-card");
+    if (hello) hello.hidden = !show;
+    var ownerBanner = document.querySelector(".owner-chat-banner");
+    if (ownerBanner) ownerBanner.hidden = !show;
+    if (els.root) els.root.hidden = show;
+  }
+
+  /* ---------------- 이름 마스킹 / 표시 ---------------- */
+
+  function maskName(name) {
+    if (!name) return "";
+    var trimmed = String(name).trim();
+    var parts = trimmed.split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0) + "**";
+    return parts[0] + " " + parts[1].charAt(0) + "**";
+  }
+
+  function formatDate(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : (ts instanceof Date ? ts : null);
+    if (!d) return "";
+    var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+    return y + "." + m + "." + day;
+  }
+
+  /* ---------------- 렌더 디스패처 ---------------- */
+
+  function render() {
+    if (!els.root) return;
+    els.root.innerHTML = "";
+    els.root.hidden = false;
+
+    if (currentRoute.name === "rules") { renderStaticDoc(COMMUNITY_CONSENT.rulesTitle, communityRulesBody()); return; }
+    if (currentRoute.name === "privacy") { renderStaticDoc(COMMUNITY_CONSENT.privacyTitle, communityPrivacyBody()); return; }
+
+    var user = authUser;
+    var verified = !!(user && user.emailVerified);
+
+    if (currentRoute.name === "login") { renderLogin(); return; }
+    if (currentRoute.name === "signup") { renderSignup(); return; }
+
+    if (!user || !verified) {
+      renderLoginGate();
+      return;
+    }
+    if (profile && profile.status === "suspended") { renderSuspended(); return; }
+
+    if (currentRoute.name === "my") { renderMyPage(); return; }
+    if (currentRoute.name === "write") { renderWrite(); return; }
+    if (currentRoute.name === "post") { renderPostDetail(currentRoute.postId); return; }
+    renderList();
+  }
+
+  function renderStaticDoc(titleDict, bodyHtml) {
+    var wrap = el("div", "community-page community-doc");
+    wrap.appendChild(el("h2", "community-page-title", t(titleDict)));
+    var body = el("div", "community-doc-body");
+    body.innerHTML = bodyHtml;
+    wrap.appendChild(body);
+    els.root.appendChild(wrap);
+  }
+
+  function communityRulesBody() {
+    var items = {
+      ko: ["서로 존중하며 예의를 지켜주세요.", "사기, 욕설, 괴롭힘, 불법 거래는 금지됩니다.", "개인정보(전화번호, 계좌 등)를 게시글에 직접 공개하지 마세요.", "신고가 누적된 게시물은 관리자 확인 후 처리됩니다."],
+      zh: ["请互相尊重并遵守礼仪。", "禁止诈骗、辱骂、骚扰和非法交易。", "请勿在帖子中直接公开个人信息（电话号码、账户等）。", "被多次举报的帖子将由管理员审核处理。"],
+      vi: ["Hãy tôn trọng lẫn nhau và giữ phép lịch sự.", "Nghiêm cấm lừa đảo, lăng mạ, quấy rối và giao dịch bất hợp pháp.", "Không công khai thông tin cá nhân (số điện thoại, tài khoản...) trong bài viết.", "Bài viết bị báo cáo nhiều lần sẽ được quản trị viên xem xét xử lý."],
+      en: ["Please be respectful and courteous to others.", "Scams, abuse, harassment, and illegal trading are prohibited.", "Do not post personal information (phone numbers, bank accounts, etc.) directly in posts.", "Posts with multiple reports will be reviewed and handled by admins."],
+      mn: ["Бие биенээ хүндэлж, зохистой харьцаарай.", "Залилан, доромжлол, дарамт, хууль бус худалдаа хориотой.", "Хувийн мэдээллийг (утасны дугаар, дансны дугаар гэх мэт) зурвасдаа шууд бүү оруулаарай.", "Олон удаа мэдээлэгдсэн зурвасыг админ шалгаж шийдвэрлэнэ."]
+    };
+    var list = items[lang] || items.ko;
+    return "<ul>" + list.map(function (s) { return "<li>" + s.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</li>"; }).join("") + "</ul>";
+  }
+
+  function communityPrivacyBody() {
+    var lines = [t(COMMUNITY_CONSENT.collectItems), t(COMMUNITY_CONSENT.purpose), t(COMMUNITY_CONSENT.retention)];
+    return "<p>" + lines.map(function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }).join("</p><p>") + "</p>";
+  }
+
+  /* ---------------- 로그인 필요 / 정지 안내 ---------------- */
+
+  function renderLoginGate() {
+    var wrap = el("div", "community-page community-gate");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginRequiredTitle)));
+    wrap.appendChild(el("p", "community-gate-desc", t(COMMUNITY_AUTH.loginRequiredDesc)));
+
+    if (authUser && !authUser.emailVerified) {
+      wrap.appendChild(el("p", "community-verify-notice", t(COMMUNITY_AUTH.verifyNotice)));
+      var resendBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.resendVerification));
+      resendBtn.type = "button";
+      resendBtn.addEventListener("click", function () { resendVerification(resendBtn); });
+      wrap.appendChild(resendBtn);
+    } else {
+      var actions = el("div", "community-gate-actions");
+      var loginBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.loginTitle));
+      loginBtn.type = "button";
+      loginBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
+      var signupBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
+      signupBtn.type = "button";
+      signupBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
+      actions.appendChild(loginBtn);
+      actions.appendChild(signupBtn);
+      wrap.appendChild(actions);
+    }
+    els.root.appendChild(wrap);
+  }
+
+  function renderSuspended() {
+    var wrap = el("div", "community-page community-gate");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginRequiredTitle)));
+    wrap.appendChild(el("p", "community-gate-desc", t(COMMUNITY_AUTH.suspendedNotice)));
+    els.root.appendChild(wrap);
+  }
+
+  async function resendVerification(btn) {
+    if (!authUser) return;
+    btn.disabled = true;
+    try {
+      await authUser.sendEmailVerification();
+      showToast(t(COMMUNITY_AUTH.verificationSent));
+    } catch (e) {
+      showToast(t(COMMUNITY_MSG.errGeneric));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  /* ---------------- 로그인 / 회원가입 ---------------- */
+
+  function formField(labelDict, inputEl) {
+    var wrap = el("div", "community-field");
+    var label = el("label", "community-label", t(labelDict));
+    var id = "cf-" + Math.random().toString(36).slice(2, 9);
+    label.setAttribute("for", id);
+    inputEl.id = id;
+    wrap.appendChild(label);
+    wrap.appendChild(inputEl);
+    return wrap;
+  }
+
+  function renderLogin() {
+    var wrap = el("div", "community-page community-auth");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginTitle)));
+
+    var form = el("form", "community-form");
+    var emailInput = el("input"); emailInput.type = "email"; emailInput.autocomplete = "username"; emailInput.required = true;
+    var pwInput = el("input"); pwInput.type = "password"; pwInput.autocomplete = "current-password"; pwInput.required = true;
+    form.appendChild(formField(COMMUNITY_AUTH.emailLabel, emailInput));
+    form.appendChild(formField(COMMUNITY_AUTH.passwordLabel, pwInput));
+
+    var keepWrap = el("label", "community-checkbox-row");
+    var keepInput = el("input"); keepInput.type = "checkbox"; keepInput.checked = true;
+    keepWrap.appendChild(keepInput);
+    keepWrap.appendChild(document.createTextNode(" " + t(COMMUNITY_AUTH.keepLoggedIn)));
+    form.appendChild(keepWrap);
+
+    var errorP = el("p", "community-form-error");
+    form.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.submitLogin));
+    submitBtn.type = "submit";
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      errorP.textContent = "";
+      var a = auth();
+      if (!a) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
+      submitBtn.disabled = true;
+      var persistence = keepInput.checked ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+      a.setPersistence(persistence).then(function () {
+        return a.signInWithEmailAndPassword(emailInput.value.trim(), pwInput.value);
+      }).then(function () {
+        navigate(ROUTE_PREFIX);
+      }).catch(function () {
+        errorP.textContent = t(COMMUNITY_MSG.errLogin);
+      }).finally(function () { submitBtn.disabled = false; });
+    });
+
+    wrap.appendChild(form);
+
+    var links = el("div", "community-auth-links");
+    var forgotBtn = el("button", "community-link-btn", t(COMMUNITY_AUTH.forgotPassword));
+    forgotBtn.type = "button";
+    forgotBtn.addEventListener("click", function () { handleForgotPassword(emailInput.value.trim(), errorP); });
+    var signupBtn = el("button", "community-link-btn", t(COMMUNITY_AUTH.goSignup));
+    signupBtn.type = "button";
+    signupBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
+    links.appendChild(forgotBtn);
+    links.appendChild(signupBtn);
+    wrap.appendChild(links);
+
+    els.root.appendChild(wrap);
+  }
+
+  function handleForgotPassword(email, errorP) {
+    var a = auth();
+    if (!a || !email) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+    a.sendPasswordResetEmail(email).then(function () {
+      showToast(t(COMMUNITY_AUTH.resetSent));
+    }).catch(function () {
+      errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+    });
+  }
+
+  function renderSignup() {
+    var wrap = el("div", "community-page community-auth");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.signupTitle)));
+
+    var form = el("form", "community-form");
+    var nameInput = el("input"); nameInput.type = "text"; nameInput.required = true; nameInput.maxLength = 40;
+    var natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList");
+    natInput.placeholder = t(COMMUNITY_AUTH.nationalitySearchPlaceholder); natInput.required = true;
+    var emailInput = el("input"); emailInput.type = "email"; emailInput.autocomplete = "username"; emailInput.required = true;
+    var pwInput = el("input"); pwInput.type = "password"; pwInput.autocomplete = "new-password"; pwInput.required = true; pwInput.minLength = 6;
+    var pwConfirmInput = el("input"); pwConfirmInput.type = "password"; pwConfirmInput.autocomplete = "new-password"; pwConfirmInput.required = true;
+
+    var langSelect = el("select");
+    SUPPORTED_LANGS.forEach(function (code) {
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      opt.value = code;
+      if (code === lang) opt.selected = true;
+      langSelect.appendChild(opt);
+    });
+
+    form.appendChild(formField(COMMUNITY_AUTH.nameLabel, nameInput));
+    form.appendChild(formField(COMMUNITY_AUTH.nationalityLabel, natInput));
+    var datalist = el("datalist"); datalist.id = "communityNationalityList";
+    COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+    form.appendChild(datalist);
+    form.appendChild(formField(COMMUNITY_AUTH.emailLabel, emailInput));
+    form.appendChild(formField(COMMUNITY_AUTH.passwordLabel, pwInput));
+    form.appendChild(formField(COMMUNITY_AUTH.passwordConfirmLabel, pwConfirmInput));
+    form.appendChild(formField(COMMUNITY_AUTH.langLabel, langSelect));
+
+    var privacyRow = el("label", "community-checkbox-row");
+    var privacyInput = el("input"); privacyInput.type = "checkbox"; privacyInput.required = true;
+    privacyRow.appendChild(privacyInput);
+    privacyRow.appendChild(document.createTextNode(" " + t(COMMUNITY_AUTH.privacyAgree) + " "));
+    var privacyViewBtn = el("button", "community-link-btn-inline", t(COMMUNITY_AUTH.viewText));
+    privacyViewBtn.type = "button";
+    privacyViewBtn.addEventListener("click", function (e) { e.preventDefault(); window.open(ROUTE_PREFIX + "/privacy", "_blank"); });
+    privacyRow.appendChild(privacyViewBtn);
+    form.appendChild(privacyRow);
+
+    var rulesRow = el("label", "community-checkbox-row");
+    var rulesInput = el("input"); rulesInput.type = "checkbox"; rulesInput.required = true;
+    rulesRow.appendChild(rulesInput);
+    rulesRow.appendChild(document.createTextNode(" " + t(COMMUNITY_AUTH.rulesAgree) + " "));
+    var rulesViewBtn = el("button", "community-link-btn-inline", t(COMMUNITY_AUTH.viewText));
+    rulesViewBtn.type = "button";
+    rulesViewBtn.addEventListener("click", function (e) { e.preventDefault(); window.open(ROUTE_PREFIX + "/rules", "_blank"); });
+    rulesRow.appendChild(rulesViewBtn);
+    form.appendChild(rulesRow);
+
+    var errorP = el("p", "community-form-error");
+    form.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.submitSignup));
+    submitBtn.type = "submit";
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      errorP.textContent = "";
+      if (!nameInput.value.trim() || !natInput.value.trim() || !emailInput.value.trim() || !pwInput.value) {
+        errorP.textContent = t(COMMUNITY_MSG.errRequired);
+        return;
+      }
+      if (pwInput.value !== pwConfirmInput.value) {
+        errorP.textContent = t(COMMUNITY_MSG.errPasswordMismatch);
+        return;
+      }
+      var a = auth(), d = db();
+      if (!a || !d) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
+      submitBtn.disabled = true;
+      var now = firebase.firestore.FieldValue.serverTimestamp();
+      a.createUserWithEmailAndPassword(emailInput.value.trim(), pwInput.value).then(function (cred) {
+        return d.collection("communityUsers").doc(cred.user.uid).set({
+          name: nameInput.value.trim(),
+          nationality: natInput.value.trim(),
+          email: emailInput.value.trim(),
+          preferredLanguage: langSelect.value,
+          emailVerified: false,
+          role: "user",
+          status: "active",
+          createdAt: now,
+          lastLoginAt: now,
+          termsAgreedAt: now,
+          privacyAgreedAt: now
+        }).then(function () { return cred.user.sendEmailVerification(); });
+      }).then(function () {
+        setLang(langSelect.value);
+        navigate(ROUTE_PREFIX);
+      }).catch(function (err) {
+        errorP.textContent = (err && err.code === "auth/email-already-in-use")
+          ? t(COMMUNITY_MSG.errEmailInUse) : t(COMMUNITY_MSG.errGeneric);
+      }).finally(function () { submitBtn.disabled = false; });
+    });
+
+    wrap.appendChild(form);
+
+    var links = el("div", "community-auth-links");
+    var loginBtn = el("button", "community-link-btn", t(COMMUNITY_AUTH.goLogin));
+    loginBtn.type = "button";
+    loginBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
+    links.appendChild(loginBtn);
+    wrap.appendChild(links);
+
+    els.root.appendChild(wrap);
+  }
+
+  /* ---------------- 내 정보 ---------------- */
+
+  function renderMyPage() {
+    var wrap = el("div", "community-page community-my");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_MY.myPageTitle)));
+
+    var info = el("div", "community-my-info");
+    info.appendChild(el("p", null, (profile && profile.name) || ""));
+    info.appendChild(el("p", "community-my-sub", (profile && profile.nationality) || ""));
+    info.appendChild(el("p", "community-my-sub", (authUser && authUser.email) || ""));
+    wrap.appendChild(info);
+
+    var editForm = el("form", "community-form");
+    var nameInput = el("input"); nameInput.type = "text"; nameInput.value = (profile && profile.name) || "";
+    var natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList2");
+    natInput.value = (profile && profile.nationality) || "";
+    var datalist = el("datalist"); datalist.id = "communityNationalityList2";
+    COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+    var langSelect = el("select");
+    SUPPORTED_LANGS.forEach(function (code) {
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      opt.value = code;
+      if (code === ((profile && profile.preferredLanguage) || lang)) opt.selected = true;
+      langSelect.appendChild(opt);
+    });
+    editForm.appendChild(formField(COMMUNITY_MY.editName, nameInput));
+    editForm.appendChild(formField(COMMUNITY_MY.editNationality, natInput));
+    editForm.appendChild(datalist);
+    editForm.appendChild(formField(COMMUNITY_MY.editLang, langSelect));
+    var saveBtn = el("button", "community-btn-primary", t(COMMUNITY_MY.save));
+    saveBtn.type = "submit";
+    editForm.appendChild(saveBtn);
+    editForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var d = db();
+      if (!d || !authUser) return;
+      d.collection("communityUsers").doc(authUser.uid).update({
+        name: nameInput.value.trim(),
+        nationality: natInput.value.trim(),
+        preferredLanguage: langSelect.value
+      }).then(function () {
+        profile.name = nameInput.value.trim();
+        profile.nationality = natInput.value.trim();
+        profile.preferredLanguage = langSelect.value;
+        setLang(langSelect.value);
+        showToast(t(COMMUNITY_MSG.doneSaved));
+      }).catch(function () { showToast(t(COMMUNITY_MSG.errGeneric)); });
+    });
+    wrap.appendChild(editForm);
+
+    var pwForm = el("form", "community-form");
+    var newPw = el("input"); newPw.type = "password"; newPw.minLength = 6; newPw.autocomplete = "new-password";
+    pwForm.appendChild(formField(COMMUNITY_MY.editPassword, newPw));
+    var pwBtn = el("button", "community-btn-secondary", t(COMMUNITY_MY.save));
+    pwBtn.type = "submit";
+    pwForm.appendChild(pwBtn);
+    pwForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!newPw.value || !authUser) return;
+      authUser.updatePassword(newPw.value).then(function () {
+        showToast(t(COMMUNITY_MSG.doneSaved));
+        newPw.value = "";
+      }).catch(function () { showToast(t(COMMUNITY_MSG.errGeneric)); });
+    });
+    wrap.appendChild(pwForm);
+
+    var tabs = el("div", "community-my-tabs");
+    var tabBtns = {};
+    ["myPosts", "myComments", "savedPosts"].forEach(function (key, i) {
+      var b = el("button", "community-my-tab" + (i === 0 ? " active" : ""), t(COMMUNITY_MY[key]));
+      b.type = "button";
+      b.addEventListener("click", function () {
+        Object.keys(tabBtns).forEach(function (k) { tabBtns[k].classList.remove("active"); });
+        b.classList.add("active");
+        loadMyList(key, listArea);
+      });
+      tabBtns[key] = b;
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+    var listArea = el("div", "community-my-list");
+    wrap.appendChild(listArea);
+    loadMyList("myPosts", listArea);
+
+    var withdrawBtn = el("button", "community-btn-danger", t(COMMUNITY_MY.withdraw));
+    withdrawBtn.type = "button";
+    withdrawBtn.addEventListener("click", function () { handleWithdraw(); });
+    wrap.appendChild(withdrawBtn);
+
+    var logoutBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.logout));
+    logoutBtn.type = "button";
+    logoutBtn.setAttribute("data-action", "logout");
+    logoutBtn.addEventListener("click", function () { auth() && auth().signOut(); navigate(ROUTE_PREFIX); });
+    wrap.appendChild(logoutBtn);
+
+    els.root.appendChild(wrap);
+  }
+
+  function loadMyList(kind, container) {
+    container.innerHTML = "";
+    container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    var d = db();
+    if (!d || !authUser) return;
+
+    var query;
+    if (kind === "myPosts") query = d.collection("communityPosts").where("authorId", "==", authUser.uid).orderBy("createdAt", "desc").limit(50);
+    else if (kind === "myComments") query = d.collection("communityComments").where("authorId", "==", authUser.uid).orderBy("createdAt", "desc").limit(50);
+    else query = d.collection("communitySaves").where("uid", "==", authUser.uid).orderBy("createdAt", "desc").limit(50);
+
+    query.get().then(function (snap) {
+      container.innerHTML = "";
+      if (snap.empty) { container.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts))); return; }
+      if (kind === "savedPosts") {
+        var ids = snap.docs.map(function (doc) { return doc.data().postId; });
+        Promise.all(ids.map(function (id) { return d.collection("communityPosts").doc(id).get(); })).then(function (docs) {
+          container.innerHTML = "";
+          docs.filter(function (doc) { return doc.exists; }).forEach(function (doc) {
+            container.appendChild(buildPostListItem(Object.assign({ id: doc.id }, doc.data())));
+          });
+        });
+        return;
+      }
+      snap.forEach(function (doc) {
+        var data = doc.data();
+        if (kind === "myPosts") {
+          container.appendChild(buildPostListItem(Object.assign({ id: doc.id }, data)));
+        } else {
+          var row = el("div", "community-my-comment-row");
+          row.appendChild(el("p", "community-my-comment-text", data.originalContent));
+          row.appendChild(el("p", "community-my-sub", formatDate(data.createdAt)));
+          row.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + data.postId); });
+          container.appendChild(row);
+        }
+      });
+    }).catch(function () {
+      container.innerHTML = "";
+      container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
+    });
+  }
+
+  function handleWithdraw() {
+    if (!window.confirm(t(COMMUNITY_MY.withdrawConfirm))) return;
+    var d = db();
+    if (!d || !authUser) return;
+    var uid = authUser.uid;
+    var withdrawnLabel = { ko: "탈퇴회원", zh: "已注销会员", vi: "Thành viên đã xóa", en: "Withdrawn member", mn: "Гарсан гишүүн" }[lang] || "탈퇴회원";
+
+    function anonymizeCollection(collectionName, field) {
+      return d.collection(collectionName).where(field, "==", uid).get().then(function (snap) {
+        if (snap.empty) return;
+        var batch = d.batch();
+        snap.forEach(function (doc) { batch.update(doc.ref, { authorNameMasked: withdrawnLabel, authorNationality: "" }); });
+        return batch.commit();
+      });
+    }
+
+    Promise.all([anonymizeCollection("communityPosts", "authorId"), anonymizeCollection("communityComments", "authorId")])
+      .then(function () { return d.collection("communityUsers").doc(uid).update({ status: "withdrawn", name: withdrawnLabel, nationality: "" }); })
+      .then(function () { return authUser.delete().catch(function () { /* 재로그인 필요할 수 있음 — 상태는 이미 반영됨 */ }); })
+      .then(function () { navigate(ROUTE_PREFIX); })
+      .catch(function () { showToast(t(COMMUNITY_MSG.errGeneric)); });
+  }
+
+  /* ---------------- 게시글 목록 ---------------- */
+
+  function renderList() {
+    var wrap = el("div", "community-page community-list-page");
+
+    var catTabs = el("div", "community-category-tabs");
+    COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
+      var b = el("button", "community-category-tab" + (state_category === cat ? " active" : ""), t(COMMUNITY_CATEGORIES[cat]));
+      b.type = "button";
+      b.addEventListener("click", function () { state_category = cat; render(); });
+      catTabs.appendChild(b);
+    });
+    wrap.appendChild(catTabs);
+
+    var toolbar = el("div", "community-toolbar");
+    var searchInput = el("input", "community-search-input"); searchInput.type = "search"; searchInput.placeholder = t(COMMUNITY_POST.searchPlaceholder);
+    searchInput.value = state_search;
+    var sortSelect = el("select", "community-sort-select");
+    ["latest", "comments"].forEach(function (v) {
+      var o = el("option", null, v === "latest" ? t(COMMUNITY_POST.sortLatest) : t(COMMUNITY_POST.sortComments));
+      o.value = v; if (v === state_sort) o.selected = true;
+      sortSelect.appendChild(o);
+    });
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(sortSelect);
+    wrap.appendChild(toolbar);
+
+    if (state_category === "market") {
+      var hideDoneRow = el("label", "community-checkbox-row");
+      var hideDoneInput = el("input"); hideDoneInput.type = "checkbox"; hideDoneInput.checked = state_hideDone;
+      hideDoneRow.appendChild(hideDoneInput);
+      hideDoneRow.appendChild(document.createTextNode(" " + t(COMMUNITY_MARKET.hideDone)));
+      hideDoneInput.addEventListener("change", function () { state_hideDone = hideDoneInput.checked; renderPostList(listArea); });
+      wrap.appendChild(hideDoneRow);
+    }
+
+    var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
+    writeBtn.type = "button";
+    writeBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write"); });
+    wrap.appendChild(writeBtn);
+
+    var listArea = el("div", "community-post-list");
+    wrap.appendChild(listArea);
+    els.root.appendChild(wrap);
+
+    var searchDebounce = null;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(function () { state_search = searchInput.value; renderPostList(listArea); }, 250);
+    });
+    sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderPostList(listArea); });
+
+    renderPostList(listArea);
+  }
+
+  var state_category = "friends";
+  var state_search = "";
+  var state_sort = "latest";
+  var state_hideDone = false;
+
+  function renderPostList(container) {
+    container.innerHTML = "";
+    container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    var d = db();
+    if (!d) return;
+    d.collection("communityPosts")
+      .where("category", "==", state_category)
+      .where("status", "==", "visible")
+      .orderBy("createdAt", "desc")
+      .limit(POST_LIST_LIMIT)
+      .get()
+      .then(function (snap) {
+        var posts = [];
+        snap.forEach(function (doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
+
+        if (state_search.trim()) {
+          var q = state_search.trim().toLowerCase();
+          posts = posts.filter(function (p) {
+            var title = (p.originalTitle || "").toLowerCase();
+            var content = (p.originalContent || "").toLowerCase();
+            return title.indexOf(q) !== -1 || content.indexOf(q) !== -1;
+          });
+        }
+        if (state_category === "market" && state_hideDone) {
+          posts = posts.filter(function (p) { return p.dealStatus !== "done"; });
+        }
+        if (state_sort === "comments") {
+          posts.sort(function (a, b) { return (b.commentCount || 0) - (a.commentCount || 0); });
+        }
+
+        container.innerHTML = "";
+        if (!posts.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts))); return; }
+        posts.forEach(function (p) { container.appendChild(buildPostListItem(p)); });
+      })
+      .catch(function () {
+        container.innerHTML = "";
+        container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
+      });
+  }
+
+  function localizedTitle(post) {
+    if (post.originalLanguage === lang) return post.originalTitle;
+    var tr = post.translations && post.translations[lang];
+    return (tr && tr.title) || post.originalTitle;
+  }
+
+  function buildPostListItem(post) {
+    var card = el("div", "community-post-card");
+    card.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + post.id); });
+
+    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category]));
+    card.appendChild(catLine);
+
+    if (post.category === "market" && post.dealStatus) {
+      var statusLabelMap = { selling: COMMUNITY_MARKET.statusSelling, reserved: COMMUNITY_MARKET.statusReserved, done: COMMUNITY_MARKET.statusDone, free: COMMUNITY_MARKET.statusFree };
+      var badge = el("span", "community-badge community-badge-" + post.dealStatus, t(statusLabelMap[post.dealStatus]));
+      card.appendChild(badge);
+    }
+    if (post.category === "help" && post.helpStatus) {
+      var helpMap = { needed: COMMUNITY_HELP.statusNeeded, inProgress: COMMUNITY_HELP.statusInProgress, resolved: COMMUNITY_HELP.statusResolved };
+      var hbadge = el("span", "community-badge community-badge-help-" + post.helpStatus, t(helpMap[post.helpStatus]));
+      card.appendChild(hbadge);
+    }
+
+    card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+    var meta = el("p", "community-post-card-meta",
+      maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
+      (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
+    card.appendChild(meta);
+    return card;
+  }
+
+  /* ---------------- 게시글 상세 ---------------- */
+
+  function renderPostDetail(postId) {
+    var wrap = el("div", "community-page community-detail");
+    wrap.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    els.root.appendChild(wrap);
+
+    var d = db();
+    if (!d) return;
+    d.collection("communityPosts").doc(postId).get().then(function (doc) {
+      if (!doc.exists || doc.data().status === "deleted") {
+        wrap.innerHTML = "";
+        wrap.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts)));
+        return;
+      }
+      var post = Object.assign({ id: doc.id }, doc.data());
+      postCache[postId] = post;
+      renderPostDetailBody(wrap, post);
+    }).catch(function () {
+      wrap.innerHTML = "";
+      wrap.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
+    });
+  }
+
+  var detailShowOriginal = false;
+
+  function renderPostDetailBody(wrap, post) {
+    wrap.innerHTML = "";
+    detailShowOriginal = false;
+
+    var isOriginalLang = post.originalLanguage === lang;
+    var head = el("div", "community-detail-head");
+    head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
+    var title = el("h2", "community-detail-title", "");
+    head.appendChild(title);
+    var meta = el("p", "community-post-card-meta", "");
+    head.appendChild(meta);
+    wrap.appendChild(head);
+
+    var body = el("div", "community-detail-body");
+    var bodyText = el("p", "community-detail-content", "");
+    body.appendChild(bodyText);
+    var aiNotice = el("p", "community-ai-notice", t(COMMUNITY_POST.aiNotice));
+    aiNotice.hidden = true;
+    body.appendChild(aiNotice);
+
+    if (!isOriginalLang) {
+      var toggleBtn = el("button", "community-link-btn", t(COMMUNITY_POST.viewOriginal));
+      toggleBtn.type = "button";
+      toggleBtn.setAttribute("data-action", "toggle-original");
+      toggleBtn.addEventListener("click", function () {
+        detailShowOriginal = !detailShowOriginal;
+        toggleBtn.textContent = detailShowOriginal ? t(COMMUNITY_POST.viewTranslated) : t(COMMUNITY_POST.viewOriginal);
+        fillDetailText(title, bodyText, aiNotice, post);
+      });
+      body.appendChild(toggleBtn);
+    }
+    wrap.appendChild(body);
+    fillDetailText(title, bodyText, aiNotice, post);
+
+    if (post.photos && post.photos.length) {
+      var gallery = el("div", "community-detail-gallery");
+      post.photos.forEach(function (url) {
+        var img = document.createElement("img");
+        img.src = url; img.alt = ""; img.loading = "lazy";
+        gallery.appendChild(img);
+      });
+      wrap.appendChild(gallery);
+    }
+
+    if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
+    if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
+
+    if (post.kakaoLink) {
+      var kakaoWrap = el("div", "community-kakao-wrap");
+      kakaoWrap.appendChild(el("p", "community-kakao-warn", t(COMMUNITY_POST.kakaoWarn)));
+      var kakaoBtn = el("a", "community-btn-secondary", t(COMMUNITY_POST.kakaoBtn));
+      kakaoBtn.href = post.kakaoLink; kakaoBtn.target = "_blank"; kakaoBtn.rel = "noopener noreferrer";
+      kakaoWrap.appendChild(kakaoBtn);
+      wrap.appendChild(kakaoWrap);
+    }
+
+    var actions = el("div", "community-detail-actions");
+    var saveBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.saveBtn));
+    saveBtn.type = "button";
+    var saveDocId = authUser ? (authUser.uid + "_" + post.id) : null;
+    if (saveDocId) {
+      db().collection("communitySaves").doc(saveDocId).get().then(function (doc) {
+        if (doc.exists) saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn);
+      });
+      saveBtn.addEventListener("click", function () {
+        var ref = db().collection("communitySaves").doc(saveDocId);
+        ref.get().then(function (doc) {
+          if (doc.exists) return ref.delete().then(function () { saveBtn.textContent = t(COMMUNITY_POST.saveBtn); });
+          return ref.set({ uid: authUser.uid, postId: post.id, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+            .then(function () { saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn); });
+        });
+      });
+    }
+    actions.appendChild(saveBtn);
+
+    if (authUser && post.authorId === authUser.uid) {
+      var editBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.editPost));
+      editBtn.type = "button";
+      editBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write?edit=" + post.id); editPostId = post.id; render(); });
+      actions.appendChild(editBtn);
+
+      var delBtn = el("button", "community-btn-danger", t(COMMUNITY_POST.deletePost));
+      delBtn.type = "button";
+      delBtn.addEventListener("click", function () {
+        if (!window.confirm(t(COMMUNITY_POST.deleteConfirm))) return;
+        db().collection("communityPosts").doc(post.id).update({ status: "deleted" }).then(function () {
+          navigate(ROUTE_PREFIX);
+        });
+      });
+      actions.appendChild(delBtn);
+    } else if (authUser) {
+      actions.appendChild(buildReportButton("post", post.id));
+    }
+    wrap.appendChild(actions);
+
+    var commentsSection = el("div", "community-comments");
+    wrap.appendChild(commentsSection);
+    renderComments(commentsSection, post.id);
+  }
+
+  function fillDetailText(titleEl, bodyEl, aiNoticeEl, post) {
+    var isOriginalLang = post.originalLanguage === lang;
+    var useOriginal = isOriginalLang || detailShowOriginal;
+    if (useOriginal) {
+      titleEl.textContent = post.originalTitle;
+      bodyEl.textContent = post.originalContent;
+      aiNoticeEl.hidden = true;
+    } else {
+      var tr = post.translations && post.translations[lang];
+      if (tr) {
+        titleEl.textContent = tr.title;
+        bodyEl.textContent = tr.content;
+        aiNoticeEl.hidden = false;
+      } else {
+        titleEl.textContent = post.originalTitle;
+        bodyEl.textContent = post.originalContent;
+        aiNoticeEl.hidden = true;
+      }
+    }
+  }
+
+  function buildMarketPanel(post) {
+    var panel = el("div", "community-market-panel");
+    panel.appendChild(el("p", null, t(COMMUNITY_MARKET.priceLabel) + ": " + (post.isFree ? t(COMMUNITY_MARKET.freeShare) : (post.price || "-"))));
+    if (post.dealLocation) panel.appendChild(el("p", null, t(COMMUNITY_MARKET.locationLabel) + ": " + post.dealLocation));
+    if (post.itemCondition) panel.appendChild(el("p", null, t(COMMUNITY_MARKET.conditionLabel) + ": " + post.itemCondition));
+    panel.appendChild(el("p", "community-safety-notice", t(COMMUNITY_MARKET.safetyNotice)));
+
+    if (authUser && post.authorId === authUser.uid) {
+      var statusSelect = el("select");
+      [["selling", COMMUNITY_MARKET.statusSelling], ["reserved", COMMUNITY_MARKET.statusReserved], ["done", COMMUNITY_MARKET.statusDone], ["free", COMMUNITY_MARKET.statusFree]]
+        .forEach(function (pair) {
+          var o = el("option", null, t(pair[1])); o.value = pair[0];
+          if (post.dealStatus === pair[0]) o.selected = true;
+          statusSelect.appendChild(o);
+        });
+      statusSelect.addEventListener("change", function () {
+        db().collection("communityPosts").doc(post.id).update({ dealStatus: statusSelect.value });
+      });
+      panel.appendChild(statusSelect);
+
+      var extendBtn = el("button", "community-btn-secondary", t(COMMUNITY_MARKET.extend));
+      extendBtn.type = "button";
+      extendBtn.addEventListener("click", function () {
+        var newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        db().collection("communityPosts").doc(post.id).update({
+          expiresAt: firebase.firestore.Timestamp.fromDate(newExpiry),
+          extendedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function () { showToast(t(COMMUNITY_MSG.doneSaved)); });
+      });
+      panel.appendChild(extendBtn);
+    }
+    return panel;
+  }
+
+  function buildHelpPanel(post) {
+    var panel = el("div", "community-help-panel");
+    var typeMap = { school: COMMUNITY_HELP.typeSchool, korean: COMMUNITY_HELP.typeKorean, hospital: COMMUNITY_HELP.typeHospital, transport: COMMUNITY_HELP.typeTransport, admin: COMMUNITY_HELP.typeAdmin, lost: COMMUNITY_HELP.typeLost, life: COMMUNITY_HELP.typeLife, etc: COMMUNITY_HELP.typeEtc };
+    if (post.helpType) panel.appendChild(el("p", null, t(COMMUNITY_HELP.typeLabel) + ": " + t(typeMap[post.helpType])));
+    panel.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HELP.emergencyNotice)));
+
+    if (authUser && post.authorId === authUser.uid) {
+      var statusSelect = el("select");
+      [["needed", COMMUNITY_HELP.statusNeeded], ["inProgress", COMMUNITY_HELP.statusInProgress], ["resolved", COMMUNITY_HELP.statusResolved]]
+        .forEach(function (pair) {
+          var o = el("option", null, t(pair[1])); o.value = pair[0];
+          if (post.helpStatus === pair[0]) o.selected = true;
+          statusSelect.appendChild(o);
+        });
+      statusSelect.addEventListener("change", function () {
+        db().collection("communityPosts").doc(post.id).update({ helpStatus: statusSelect.value });
+      });
+      panel.appendChild(statusSelect);
+    }
+    return panel;
+  }
+
+  /* ---------------- 신고 ---------------- */
+
+  function buildReportButton(targetType, targetId) {
+    var btn = el("button", "community-btn-secondary", t(COMMUNITY_REPORT.reportBtn));
+    btn.type = "button";
+    btn.setAttribute("data-action", "report");
+    btn.addEventListener("click", function () { openReportModal(targetType, targetId); });
+    return btn;
+  }
+
+  function openReportModal(targetType, targetId) {
+    var overlay = el("div", "modal-overlay");
+    var modal = el("div", "modal");
+    modal.appendChild(el("h3", "modal-title", t(COMMUNITY_REPORT.reportTitle)));
+
+    var reasons = ["reasonScam", "reasonAbuse", "reasonPrivacy", "reasonIllegal", "reasonAd", "reasonMeet", "reasonEtc"];
+    var selected = null;
+    var reasonList = el("div", "community-reason-list");
+    reasons.forEach(function (key) {
+      var b = el("button", "community-reason-btn", t(COMMUNITY_REPORT[key]));
+      b.type = "button";
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(reasonList.children, function (c) { c.classList.remove("active"); });
+        b.classList.add("active");
+        selected = key;
+      });
+      reasonList.appendChild(b);
+    });
+    modal.appendChild(reasonList);
+
+    var errorP = el("p", "community-form-error");
+    modal.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_REPORT.submitReport));
+    submitBtn.type = "button";
+    submitBtn.addEventListener("click", function () {
+      if (!selected) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      submitReport(targetType, targetId, selected).then(function (ok) {
+        if (ok) { showToast(t(COMMUNITY_REPORT.reportDone)); overlay.remove(); }
+        else errorP.textContent = t(COMMUNITY_REPORT.alreadyReported);
+      });
+    });
+    modal.appendChild(submitBtn);
+
+    var closeBtn = el("button", "modal-close", "×");
+    closeBtn.setAttribute("aria-label", "닫기");
+    closeBtn.type = "button";
+    closeBtn.addEventListener("click", function () { overlay.remove(); });
+    modal.appendChild(closeBtn);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  }
+
+  function submitReport(targetType, targetId, reason) {
+    var d = db();
+    if (!d || !authUser) return Promise.resolve(false);
+    var collectionName = targetType === "post" ? "communityPosts" : "communityComments";
+    var targetRef = d.collection(collectionName).doc(targetId);
+    var reportRef = d.collection("communityReports").doc(targetType + "_" + targetId + "_" + authUser.uid);
+
+    return d.runTransaction(function (tx) {
+      return tx.get(reportRef).then(function (reportSnap) {
+        if (reportSnap.exists) throw new Error("ALREADY_REPORTED");
+        return tx.get(targetRef).then(function (targetSnap) {
+          if (!targetSnap.exists) throw new Error("NOT_FOUND");
+          var newCount = (targetSnap.data().reportCount || 0) + 1;
+          tx.set(reportRef, {
+            targetType: targetType, targetId: targetId, reporterId: authUser.uid,
+            reason: reason, createdAt: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
+          });
+          var updates = { reportCount: newCount };
+          if (newCount >= 3 && targetSnap.data().status === "visible") updates.status = "hidden";
+          tx.update(targetRef, updates);
+        });
+      });
+    }).then(function () { return true; }).catch(function () { return false; });
+  }
+
+  /* ---------------- 댓글 ---------------- */
+
+  function renderComments(container, postId) {
+    container.innerHTML = "";
+    container.appendChild(el("h3", "community-comments-title", t(COMMUNITY_COMMENT.writeLabel)));
+
+    if (authUser) {
+      var form = el("form", "community-comment-form");
+      var textarea = el("textarea"); textarea.maxLength = 2000; textarea.required = true;
+      form.appendChild(textarea);
+      var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_COMMENT.submitComment));
+      submitBtn.type = "submit";
+      form.appendChild(submitBtn);
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (!textarea.value.trim()) return;
+        submitBtn.disabled = true;
+        postComment(postId, textarea.value.trim(), null).then(function () {
+          textarea.value = "";
+          loadCommentList(postId, listEl);
+        }).finally(function () { submitBtn.disabled = false; });
+      });
+      container.appendChild(form);
+    }
+
+    var listEl = el("div", "community-comment-list");
+    container.appendChild(listEl);
+    loadCommentList(postId, listEl);
+  }
+
+  function postComment(postId, content, parentId) {
+    var d = db();
+    var ref = d.collection("communityComments").doc();
+    var postRef = d.collection("communityPosts").doc(postId);
+    var payload = {
+      postId: postId,
+      parentCommentId: parentId || null,
+      authorId: authUser.uid,
+      authorNameMasked: (profile && profile.name) || "",
+      authorNationality: (profile && profile.nationality) || "",
+      originalLanguage: lang,
+      originalContent: content,
+      translations: {},
+      reportCount: 0,
+      status: "visible",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    return ref.set(payload).then(function () {
+      return postRef.update({ commentCount: firebase.firestore.FieldValue.increment(1) });
+    });
+  }
+
+  function loadCommentList(postId, container) {
+    container.innerHTML = "";
+    container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    var d = db();
+    d.collection("communityComments").where("postId", "==", postId).where("status", "==", "visible")
+      .orderBy("createdAt", "asc").limit(300).get().then(function (snap) {
+        container.innerHTML = "";
+        var all = [];
+        snap.forEach(function (doc) { all.push(Object.assign({ id: doc.id }, doc.data())); });
+        if (!all.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_COMMENT.noComments))); return; }
+        var topLevel = all.filter(function (c) { return !c.parentCommentId; });
+        var replies = all.filter(function (c) { return c.parentCommentId; });
+        topLevel.forEach(function (c) {
+          container.appendChild(buildCommentNode(c, postId, container));
+          replies.filter(function (r) { return r.parentCommentId === c.id; }).forEach(function (r) {
+            var node = buildCommentNode(r, postId, container);
+            node.classList.add("community-comment-reply");
+            container.appendChild(node);
+          });
+        });
+      });
+  }
+
+  function buildCommentNode(c, postId, listContainer) {
+    var node = el("div", "community-comment");
+    var meta = el("p", "community-comment-meta", maskName(c.authorNameMasked) + " · " + (c.authorNationality || "") + " · " + formatDate(c.createdAt));
+    node.appendChild(meta);
+    var textEl = el("p", "community-comment-text", c.originalContent);
+    node.appendChild(textEl);
+
+    var showingTranslation = false;
+    if (c.originalLanguage !== lang) {
+      var toggleBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.viewTranslated));
+      toggleBtn.type = "button";
+      toggleBtn.setAttribute("data-action", "translate-comment");
+      toggleBtn.addEventListener("click", function () {
+        if (showingTranslation) {
+          textEl.textContent = c.originalContent;
+          toggleBtn.textContent = t(COMMUNITY_COMMENT.viewTranslated);
+          showingTranslation = false;
+          return;
+        }
+        if (c.translations && c.translations[lang]) {
+          textEl.textContent = c.translations[lang].content;
+          toggleBtn.textContent = t(COMMUNITY_COMMENT.viewOriginal);
+          showingTranslation = true;
+          return;
+        }
+        toggleBtn.disabled = true;
+        toggleBtn.textContent = t(COMMUNITY_COMMENT.translating);
+        requestCommentTranslation(c).then(function (content) {
+          toggleBtn.disabled = false;
+          if (content) {
+            c.translations = c.translations || {};
+            c.translations[lang] = { content: content };
+            textEl.textContent = content;
+            toggleBtn.textContent = t(COMMUNITY_COMMENT.viewOriginal);
+            showingTranslation = true;
+          } else {
+            toggleBtn.textContent = t(COMMUNITY_COMMENT.viewTranslated);
+          }
+        });
+      });
+      node.appendChild(toggleBtn);
+    }
+
+    var actions = el("div", "community-comment-actions");
+    if (authUser && c.authorId === authUser.uid) {
+      var delBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.deleteComment));
+      delBtn.type = "button";
+      delBtn.addEventListener("click", function () {
+        if (!window.confirm(t(COMMUNITY_POST.deleteConfirm))) return;
+        db().collection("communityComments").doc(c.id).update({ status: "deleted" }).then(function () {
+          loadCommentList(postId, listContainer);
+        });
+      });
+      actions.appendChild(delBtn);
+    } else if (authUser && !c.parentCommentId) {
+      var replyBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.replyLabel));
+      replyBtn.type = "button";
+      replyBtn.addEventListener("click", function () {
+        var content = window.prompt(t(COMMUNITY_COMMENT.replyLabel) + ":");
+        if (content && content.trim()) {
+          postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); });
+        }
+      });
+      actions.appendChild(replyBtn);
+      actions.appendChild(buildReportButton("comment", c.id));
+    }
+    node.appendChild(actions);
+    return node;
+  }
+
+  function requestCommentTranslation(comment) {
+    if (!authUser) return Promise.resolve(null);
+    return authUser.getIdToken().then(function (idToken) {
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translateComment", idToken: idToken,
+          originalLanguage: comment.originalLanguage, content: comment.originalContent, targetLanguage: lang
+        })
+      }).then(function (res) { return res.json(); }).then(function (data) {
+        if (!data || !data.content) return null;
+        var update = {};
+        update["translations." + lang] = { content: data.content };
+        db().collection("communityComments").doc(comment.id).update(update)
+          .catch(function () { /* 캐시 저장 실패해도 화면 표시는 이미 됨 */ });
+        return data.content;
+      }).catch(function () { return null; });
+    }).catch(function () { return null; });
+  }
+
+  /* ---------------- 글쓰기 ---------------- */
+
+  var editPostId = null;
+
+  function renderWrite() {
+    var wrap = el("div", "community-page community-write");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_POST.writeTitle)));
+
+    var form = el("form", "community-form");
+    var catSelect = el("select");
+    COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
+      var o = el("option", null, t(COMMUNITY_CATEGORIES[cat])); o.value = cat;
+      catSelect.appendChild(o);
+    });
+    form.appendChild(formField(COMMUNITY_POST.categoryLabel, catSelect));
+
+    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = 100; titleInput.required = true;
+    form.appendChild(formField(COMMUNITY_POST.titleLabel, titleInput));
+
+    var contentArea = el("textarea"); contentArea.maxLength = 4000; contentArea.required = true;
+    form.appendChild(formField(COMMUNITY_POST.contentLabel, contentArea));
+
+    var langSelect = el("select");
+    SUPPORTED_LANGS.forEach(function (code) {
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      opt.value = code; if (code === lang) opt.selected = true;
+      langSelect.appendChild(opt);
+    });
+    form.appendChild(formField(COMMUNITY_POST.originalLangLabel, langSelect));
+
+    var marketFields = el("div", "community-market-fields");
+    var dealTypeSelect = el("select");
+    [["sell", COMMUNITY_MARKET.dealTypeSell], ["buy", COMMUNITY_MARKET.dealTypeBuy]].forEach(function (p) {
+      var o = el("option", null, t(p[1])); o.value = p[0]; dealTypeSelect.appendChild(o);
+    });
+    marketFields.appendChild(formField(COMMUNITY_POST.categoryLabel, dealTypeSelect));
+    var priceInput = el("input"); priceInput.type = "number"; priceInput.min = "0";
+    marketFields.appendChild(formField(COMMUNITY_MARKET.priceLabel, priceInput));
+    var freeRow = el("label", "community-checkbox-row");
+    var freeInput = el("input"); freeInput.type = "checkbox";
+    freeRow.appendChild(freeInput); freeRow.appendChild(document.createTextNode(" " + t(COMMUNITY_MARKET.freeShare)));
+    marketFields.appendChild(freeRow);
+    var locationInput = el("input"); locationInput.type = "text";
+    marketFields.appendChild(formField(COMMUNITY_MARKET.locationLabel, locationInput));
+    var conditionInput = el("input"); conditionInput.type = "text";
+    marketFields.appendChild(formField(COMMUNITY_MARKET.conditionLabel, conditionInput));
+    form.appendChild(marketFields);
+
+    var helpFields = el("div", "community-help-fields");
+    var helpTypeSelect = el("select");
+    [["school", COMMUNITY_HELP.typeSchool], ["korean", COMMUNITY_HELP.typeKorean], ["hospital", COMMUNITY_HELP.typeHospital],
+     ["transport", COMMUNITY_HELP.typeTransport], ["admin", COMMUNITY_HELP.typeAdmin], ["lost", COMMUNITY_HELP.typeLost],
+     ["life", COMMUNITY_HELP.typeLife], ["etc", COMMUNITY_HELP.typeEtc]].forEach(function (p) {
+      var o = el("option", null, t(p[1])); o.value = p[0]; helpTypeSelect.appendChild(o);
+    });
+    helpFields.appendChild(formField(COMMUNITY_HELP.typeLabel, helpTypeSelect));
+    helpFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HELP.emergencyNotice)));
+    form.appendChild(helpFields);
+
+    function toggleCategoryFields() {
+      marketFields.hidden = catSelect.value !== "market";
+      helpFields.hidden = catSelect.value !== "help";
+    }
+    catSelect.addEventListener("change", toggleCategoryFields);
+    toggleCategoryFields();
+
+    var kakaoInput = el("input"); kakaoInput.type = "url"; kakaoInput.placeholder = "https://open.kakao.com/...";
+    form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)" }, kakaoInput));
+
+    var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
+    form.appendChild(photoLabel);
+    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.multiple = true;
+    form.appendChild(photoInput);
+    var photoPreview = el("div", "community-photo-preview");
+    form.appendChild(photoPreview);
+    var pendingFiles = [];
+    photoInput.addEventListener("change", function () {
+      var files = Array.prototype.slice.call(photoInput.files || []);
+      if (pendingFiles.length + files.length > MAX_PHOTOS) {
+        errorP.textContent = t(COMMUNITY_MSG.errPhotoLimit);
+        files = files.slice(0, MAX_PHOTOS - pendingFiles.length);
+      }
+      files.forEach(function (f) {
+        pendingFiles.push(f);
+        var img = document.createElement("img");
+        img.src = URL.createObjectURL(f);
+        photoPreview.appendChild(img);
+      });
+      photoInput.value = "";
+    });
+
+    var errorP = el("p", "community-form-error");
+    form.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.submitPost));
+    submitBtn.type = "submit";
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      errorP.textContent = "";
+      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      submitBtn.disabled = true;
+
+      var extra = {};
+      if (catSelect.value === "market") {
+        extra = {
+          dealType: dealTypeSelect.value, price: priceInput.value ? Number(priceInput.value) : null,
+          isFree: freeInput.checked, dealLocation: locationInput.value.trim(), itemCondition: conditionInput.value.trim(),
+          dealStatus: freeInput.checked ? "free" : "selling",
+          expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+        };
+      } else if (catSelect.value === "help") {
+        extra = { helpType: helpTypeSelect.value, helpStatus: "needed" };
+      }
+
+      createOrUpdatePost({
+        category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
+        originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null, extra: extra,
+        photoFiles: pendingFiles
+      }).then(function (postId) {
+        navigate(ROUTE_PREFIX + "/post/" + postId, true);
+      }).catch(function () {
+        errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+      }).finally(function () { submitBtn.disabled = false; });
+    });
+
+    wrap.appendChild(form);
+    els.root.appendChild(wrap);
+  }
+
+  function compressImage(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var scale = Math.min(1, MAX_PHOTO_DIMENSION / Math.max(img.width, img.height));
+        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob(function (blob) {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob); else reject(new Error("COMPRESS_FAILED"));
+        }, "image/jpeg", PHOTO_QUALITY);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("IMAGE_LOAD_FAILED")); };
+      img.src = url;
+    });
+  }
+
+  function uploadPhotos(postId, files) {
+    var st = storage();
+    if (!st || !files.length) return Promise.resolve([]);
+    return Promise.all(files.map(function (file, i) {
+      return compressImage(file).then(function (blob) {
+        var ref = st.ref().child("communityImages/" + postId + "/" + Date.now() + "-" + i + ".jpg");
+        return ref.put(blob).then(function () { return ref.getDownloadURL(); });
+      });
+    }));
+  }
+
+  function createOrUpdatePost(fields) {
+    var d = db();
+    var isEdit = !!editPostId;
+    var ref = isEdit ? d.collection("communityPosts").doc(editPostId) : d.collection("communityPosts").doc();
+    var postId = ref.id;
+
+    return uploadPhotos(postId, fields.photoFiles).then(function (urls) {
+      var base = {
+        category: fields.category,
+        originalLanguage: fields.originalLanguage,
+        originalTitle: fields.title,
+        originalContent: fields.content,
+        kakaoLink: fields.kakaoLink,
+        authorId: authUser.uid,
+        authorNameMasked: (profile && profile.name) || "",
+        authorNationality: (profile && profile.nationality) || "",
+        status: "visible",
+        reportCount: 0,
+        commentCount: isEdit ? undefined : 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        translationStatus: "pending"
+      };
+      if (urls.length) base.photos = urls;
+      if (!isEdit) base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      Object.keys(fields.extra || {}).forEach(function (k) { base[k] = fields.extra[k]; });
+      Object.keys(base).forEach(function (k) { if (base[k] === undefined) delete base[k]; });
+
+      var writeOp = isEdit ? ref.update(base) : ref.set(base);
+      return writeOp.then(function () {
+        editPostId = null;
+        triggerPostTranslation(postId, fields.originalLanguage, fields.title, fields.content);
+        return postId;
+      });
+    });
+  }
+
+  function triggerPostTranslation(postId, originalLanguage, title, content) {
+    if (!authUser) return;
+    var targets = SUPPORTED_LANGS.filter(function (l) { return l !== originalLanguage; });
+    authUser.getIdToken().then(function (idToken) {
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "translatePost", idToken: idToken, originalLanguage: originalLanguage, title: title, content: content, targetLanguages: targets })
+      });
+    }).then(function (res) { return res.json(); }).then(function (data) {
+      var update = { translations: data.translations || {} };
+      update.translationStatus = (data.failedLanguages && data.failedLanguages.length) ? "failed" : "done";
+      return db().collection("communityPosts").doc(postId).update(update);
+    }).catch(function () {
+      db().collection("communityPosts").doc(postId).update({ translationStatus: "failed" }).catch(function () {});
+    });
+  }
+
+  /* ---------------- 토스트 ---------------- */
+
+  function showToast(msg) {
+    var toast = el("div", "community-toast", msg);
+    document.body.appendChild(toast);
+    setTimeout(function () { toast.classList.add("show"); }, 10);
+    setTimeout(function () { toast.remove(); }, 2400);
+  }
+
+  /* ---------------- 초기화 / 인증 상태 감시 ---------------- */
+
+  function loadProfile(uid) {
+    var d = db();
+    if (!d) return Promise.resolve(null);
+    return d.collection("communityUsers").doc(uid).get().then(function (doc) {
+      profile = doc.exists ? doc.data() : null;
+      if (profile && profile.preferredLanguage && !document.__communityLangForced) {
+        // 최초 진입 시 회원이 저장해둔 언어를 존중(이미 로컬에 언어가
+        // 없을 때만) — 기존 저장방식(LANG_KEY)을 그대로 사용합니다.
+      }
+      return profile;
+    }).catch(function () { profile = null; return null; });
+  }
+
+  function setLang(newLang) {
+    if (SUPPORTED_LANGS.indexOf(newLang) === -1) return;
+    lang = newLang;
+    if (els.communityTabBtn) {
+      els.communityTabBtn.querySelector(".community-tab-line1").textContent = t(COMMUNITY_NAV.line1);
+      els.communityTabBtn.querySelector(".community-tab-line2").textContent = t(COMMUNITY_NAV.line2);
+    }
+    if (isCommunityPath(location.pathname)) render();
+  }
+
+  function init() {
+    els.root = qs("communityRoot");
+    els.communityTabBtn = qs("communityTabBtn");
+    if (!els.root || !els.communityTabBtn) return;
+
+    els.communityTabBtn.querySelector(".community-tab-line1").textContent = t(COMMUNITY_NAV.line1);
+    els.communityTabBtn.querySelector(".community-tab-line2").textContent = t(COMMUNITY_NAV.line2);
+    els.communityTabBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX); });
+
+    var a = auth();
+    if (a) {
+      a.onAuthStateChanged(function (user) {
+        authUser = user;
+        if (user) {
+          loadProfile(user.uid).then(function () {
+            if (db()) db().collection("communityUsers").doc(user.uid).update({
+              lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+              emailVerified: !!user.emailVerified
+            }).catch(function () {});
+            if (isCommunityPath(location.pathname)) render();
+          });
+        } else {
+          profile = null;
+          if (isCommunityPath(location.pathname)) render();
+        }
+      });
+    }
+
+    route();
+  }
+
+  return { init: init, setLang: setLang, isCommunityPath: isCommunityPath };
+})();
+
+document.addEventListener("DOMContentLoaded", function () {
+  if (document.getElementById("communityRoot")) Community.init();
+});
+
+</script>
+<script>
+/* ==========================================================================
    모인관(인제대학교) app.js
    - 매장 선택 / 언어 선택 / 메뉴 그룹 이전·다음 / 천원의 아침밥 모달
    - 외부 라이브러리 없이 순수 JavaScript로 동작합니다.
@@ -3641,6 +5829,9 @@ document.addEventListener("DOMContentLoaded", PwaManager.init);
     }
     if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
       window.PwaManager.setLang(lang);
+    }
+    if (window.Community && typeof window.Community.setLang === "function") {
+      window.Community.setLang(lang);
     }
   }
 
@@ -4119,7 +6310,8 @@ document.addEventListener("DOMContentLoaded", PwaManager.init);
     els.helloKoreanUrl = qs("helloKoreanUrl");
 
     els.storeTabButtons = {};
-    Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab"), function (btn) {
+    // 커뮤니티 버튼(.community-tab, data-store 없음)은 매장이 아니므로 제외합니다.
+    Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab[data-store]"), function (btn) {
       var store = btn.getAttribute("data-store");
       els.storeTabButtons[store] = btn;
       btn.addEventListener("click", function () { setStore(store); });
@@ -4178,6 +6370,10 @@ document.addEventListener("DOMContentLoaded", PwaManager.init);
     // PWA 업데이트/설치 배너 문구도 처음부터 저장된 언어에 맞춰 둡니다.
     if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
       window.PwaManager.setLang(state.lang);
+    }
+    // 커뮤니티 상단 버튼 문구도 처음부터 저장된 언어에 맞춰 둡니다.
+    if (window.Community && typeof window.Community.setLang === "function") {
+      window.Community.setLang(state.lang);
     }
 
     /* 관리자 페이지에서 등록한 주간메뉴로 동기화 (없으면 정적 데이터 유지) */

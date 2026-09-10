@@ -4,8 +4,11 @@
    - Firestore(DB)는 학생 화면(천원의 아침밥 평가, 언어 통계, 주간메뉴)과
      관리자 페이지가 함께 사용합니다.
    - Firebase Authentication과 Storage는 관리자 페이지의 "주간메뉴 관리"
-     (이미지 업로드, 직접 입력 저장/수정/삭제)에서만 사용합니다.
-     학생 화면(index.html)은 이 둘을 전혀 불러오지 않습니다(가벼운 상태 유지).
+     (이미지 업로드, 직접 입력 저장/수정/삭제)와, 학생 화면(index.html)의
+     유학생 커뮤니티 회원가입·로그인·이메일 인증·게시글 사진 업로드에서
+     사용합니다(2026-09-10 커뮤니티 기능 추가로 학생 화면도 이 두 SDK를
+     불러오기 시작했습니다 — 커뮤니티를 쓰지 않는 방문자에게는 추가
+     네트워크 요청 몇 개 외에 다른 영향이 없습니다).
 
    ⚠ Firestore 보안 규칙 — 아래 규칙 전체를 Firebase 콘솔의
    Firestore Database → "규칙" 탭에 그대로 붙여넣어야 합니다.
@@ -75,10 +78,86 @@
             allow read: if true;   // 관리자 페이지 통계 조회용
             allow update, delete: if false;
           }
+
+          // ---------------- 유학생 커뮤니티 (2026-09-10 추가) ----------------
+          function isSignedIn() { return request.auth != null; }
+          function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+          function myProfile() { return get(/databases/$(database)/documents/communityUsers/$(request.auth.uid)).data; }
+          function isActiveMember() { return isVerified() && myProfile().status == 'active'; }
+          function isAdmin() { return isVerified() && myProfile().role == 'admin'; }
+
+          // 회원 정보 — 이메일 노출 방지를 위해 본인 또는 관리자만 문서를
+          // 읽을 수 있습니다(다른 회원의 이름·국적은 게시글/댓글에 저장된
+          // 스냅샷 필드로만 공개됩니다 — 아래 communityPosts 참고).
+          match /communityUsers/{uid} {
+            allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+            // role은 반드시 'user'로만 가입할 수 있습니다(가입 시 스스로
+            // 'admin'을 적어 넣는 권한 상승을 막기 위함) — 관리자 지정은
+            // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다.
+            allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
+            allow update: if (isSignedIn() && request.auth.uid == uid
+                && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
+              || isAdmin();
+            allow delete: if false; // 탈퇴는 status:'withdrawn'으로만 처리
+          }
+
+          // 게시글 — 비회원·이메일 미인증·정지 회원은 전혀 접근 불가.
+          // 작성자 본인/관리자는 모든 필드를 수정할 수 있고, 그 외 로그인
+          // 회원은 신고 시 reportCount를 1씩만 늘리고 3회가 되면 status를
+          // hidden으로 바꾸는 것만 허용합니다(신고 누적 자동 숨김).
+          match /communityPosts/{postId} {
+            allow read: if resource.data.status == 'visible'
+              || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+              || (isActiveMember()
+                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
+                  && request.resource.data.reportCount == resource.data.reportCount + 1
+                  && (request.resource.data.status == resource.data.status
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')));
+            allow delete: if false; // 삭제는 status:'deleted'로만(관리자가 복구 가능하도록)
+          }
+
+          // 댓글 — 게시글과 같은 원칙 + 번역 캐시(translations 필드)만
+          // 별도로 채워 넣는 것은 로그인한 회원 누구나 할 수 있게 허용합니다
+          // ("번역 보기"를 처음 누른 회원이 결과를 저장해 재사용).
+          match /communityComments/{commentId} {
+            allow read: if resource.data.status == 'visible'
+              || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+              || (isActiveMember()
+                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
+                  && request.resource.data.reportCount == resource.data.reportCount + 1
+                  && (request.resource.data.status == resource.data.status
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')))
+              || (isActiveMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['translations']));
+            allow delete: if false;
+          }
+
+          // 신고 — 문서 ID를 "대상종류_대상ID_신고자ID"로 고정해 같은
+          // 회원이 같은 대상을 두 번 신고해도 덮어쓰지 못하게 막습니다
+          // (allow update가 없으므로 이미 존재하면 재작성 자체가 거부됨).
+          // 신고자 목록은 본인과 관리자만 볼 수 있습니다(다른 회원에게 비공개).
+          match /communityReports/{reportId} {
+            allow create: if isActiveMember()
+              && request.resource.data.reporterId == request.auth.uid
+              && reportId == request.resource.data.targetType + '_' + request.resource.data.targetId + '_' + request.auth.uid;
+            allow read: if isSignedIn() && (request.auth.uid == resource.data.reporterId || isAdmin());
+            allow update, delete: if isAdmin();
+          }
+
+          // 저장한 글(내 정보 > 저장한 글) — 본인 것만 읽고 쓸 수 있습니다.
+          match /communitySaves/{saveId} {
+            allow read, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+          }
         }
       }
 
-   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"에 필요합니다.
+   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"와 "커뮤니티
+   게시글 사진 업로드"에 필요합니다.
    Firebase 콘솔 → Storage → "규칙" 탭에 아래를 붙여넣으세요.
    (Storage를 아직 한 번도 안 켰다면 "시작하기"부터 눌러 생성해야 합니다.)
 
@@ -91,6 +170,16 @@
               && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
+          // 커뮤니티 게시글 사진(게시글당 최대 3장, 브라우저에서 이미
+          // 압축된 상태로 올라오므로 5MB면 충분히 넉넉합니다). 로그인한
+          // 회원만 올릴 수 있고, 누구나 볼 수 있습니다(게시글 자체의
+          // Firestore 읽기 규칙이 이미 비회원/미인증 회원을 막습니다).
+          match /communityImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 5 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
         }
       }
 
@@ -101,6 +190,13 @@
    주간메뉴를 등록·수정·삭제하고 이미지를 업로드할 수 있습니다.
    (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
    별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
+
+   ⚠ 유학생 커뮤니티 회원가입/이메일 인증은 "이메일/비밀번호" 제공업체가
+   켜져 있기만 하면 별도 설정 없이 바로 동작합니다(위 항목에서 이미
+   켜둔 것과 같은 설정). 인증메일 발신 주소·문구를 바꾸고 싶다면 Firebase
+   콘솔 → Authentication → Templates 탭에서 수정할 수 있습니다(선택 사항).
+   커뮤니티 번역(netlify/functions/community-translate.js)은 새 환경변수
+   없이 기존 OPENAI_API_KEY를 그대로 재사용합니다.
 
    ⚠ Netlify 환경변수 OPENAI_API_KEY — 주간메뉴 이미지 자동인식/번역에
    필요합니다(netlify/functions/parse-weekly-menu.js). Netlify 대시보드
