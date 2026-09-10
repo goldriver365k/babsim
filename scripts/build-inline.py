@@ -96,21 +96,28 @@ def build():
 
 <header class="site-header">
   <div class="header-top">
-    <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
-    <div class="lang-select" role="group" aria-label="언어 선택" id="langSelect">
-      <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+    <div class="site-brand">
+      <!-- 로고 placeholder — 이 경로(images/icon/site-logo.png)에 이미지
+           파일 하나만 올리면 코드 수정 없이 사이트 전체 헤더에 자동
+           적용됩니다. 파일이 없는 동안은 js/app.js가 자동으로 숨겨서
+           깨진 이미지 아이콘이 보이지 않습니다(임의 로고 제작 금지). -->
+      <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.png" alt="">
+      <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
+    </div>
+    <div class="lang-toggle-wrap">
+      <button type="button" class="lang-toggle-btn" id="langToggleBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langSelect">
+        <span class="lang-toggle-label" id="langToggleLabel">한국어</span>
+        <span class="lang-toggle-icon" aria-hidden="true">&#9776;</span>
+      </button>
+      <div class="lang-select" role="menu" aria-label="언어 선택" id="langSelect" hidden>
+        <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
+        <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
+        <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
+        <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+        <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+        <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+      </div>
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">

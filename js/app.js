@@ -170,6 +170,9 @@
       btn.classList.toggle("active", lang === state.lang);
       btn.setAttribute("aria-pressed", lang === state.lang ? "true" : "false");
     });
+    if (els.langToggleLabel && els.langButtons[state.lang]) {
+      els.langToggleLabel.textContent = els.langButtons[state.lang].textContent;
+    }
 
     els.storeHeading.textContent = UI_TEXT.storeHeading[state.store][state.lang];
     els.prevBtn.textContent = UI_TEXT.prevButton[state.lang];
@@ -219,6 +222,18 @@
     if (window.Community && typeof window.Community.setLang === "function") {
       window.Community.setLang(lang);
     }
+  }
+
+  function openLangMenu() {
+    if (!els.langSelect || !els.langToggleBtn) return;
+    els.langSelect.hidden = false;
+    els.langToggleBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeLangMenu() {
+    if (!els.langSelect || !els.langToggleBtn) return;
+    els.langSelect.hidden = true;
+    els.langToggleBtn.setAttribute("aria-expanded", "false");
   }
 
   function changeGroup(delta) {
@@ -621,6 +636,10 @@
 
   function init() {
     els.siteTitle = qs("siteTitle");
+    els.siteLogo = qs("siteLogo");
+    els.langToggleBtn = qs("langToggleBtn");
+    els.langToggleLabel = qs("langToggleLabel");
+    els.langSelect = qs("langSelect");
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
     els.menuGrid = qs("menuGrid");
@@ -707,8 +726,37 @@
     Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
       var lang = btn.getAttribute("data-lang");
       els.langButtons[lang] = btn;
-      btn.addEventListener("click", function () { setLang(lang); });
+      btn.addEventListener("click", function () {
+        setLang(lang);
+        closeLangMenu();
+      });
     });
+
+    // 로고 파일이 아직 없으면(placeholder) 깨진 이미지 아이콘 없이 자동으로 숨깁니다.
+    // 나중에 images/icon/site-logo.png 파일을 올리기만 하면 코드 수정 없이 보입니다.
+    if (els.siteLogo) {
+      var hideBrokenLogo = function () {
+        if (els.siteLogo.complete && els.siteLogo.naturalWidth === 0) els.siteLogo.hidden = true;
+      };
+      els.siteLogo.addEventListener("error", hideBrokenLogo, { once: true });
+      // init() 실행 전에 이미 로드가 끝나버렸을 수도 있어(로컬/캐시처럼
+      // 아주 빠른 응답) 즉시 한 번 더 확인합니다.
+      hideBrokenLogo();
+    }
+
+    // 모바일에서는 7개 언어를 한 줄로 나열하지 않고, 현재 언어 버튼을
+    // 누르면 목록이 펼쳐지는 방식으로 바꿨습니다(기존 언어 선택 로직 재사용).
+    if (els.langToggleBtn && els.langSelect) {
+      els.langToggleBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (els.langSelect.hidden) openLangMenu(); else closeLangMenu();
+      });
+      document.addEventListener("click", function (e) {
+        if (els.langSelect.hidden) return;
+        if (els.langToggleBtn.contains(e.target) || els.langSelect.contains(e.target)) return;
+        closeLangMenu();
+      });
+    }
 
     els.prevBtn.addEventListener("click", function () { changeGroup(-1); });
     els.nextBtn.addEventListener("click", function () { changeGroup(1); });

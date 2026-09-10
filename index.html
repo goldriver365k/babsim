@@ -86,36 +86,99 @@ button {
   margin: 0 auto 12px;
 }
 
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* 로고 placeholder — images/icon/site-logo.png 파일이 없으면 js/app.js가
+   자동으로 hidden 처리합니다(임의 로고 제작 없이 자리만 마련). */
+.site-logo {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.site-logo[hidden] { display: none; }
+
 .site-title {
   font-size: 22px;
   font-weight: 800;
   color: var(--blue);
   margin: 0;
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 
-.lang-select {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  max-width: 100%;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
+/* ---------------- 언어 선택 (모바일: 현재 언어 버튼 → 드롭다운) ---------------- */
 
-.lang-btn,
-.lang-sep {
+.lang-toggle-wrap {
+  position: relative;
   flex: 0 0 auto;
 }
 
+.lang-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.lang-toggle-btn:hover,
+.lang-toggle-btn:focus-visible {
+  color: var(--blue);
+  border-color: var(--blue);
+  outline: none;
+}
+
+.lang-toggle-label { white-space: nowrap; }
+
+.lang-toggle-icon {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-mid);
+}
+
+.lang-select {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(18, 52, 91, 0.14);
+  padding: 6px;
+}
+
+.lang-select[hidden] { display: none; }
+
 .lang-btn {
+  flex: 0 0 auto;
+  width: 100%;
   background: none;
   border: none;
-  padding: 6px 4px;
+  padding: 10px 12px;
   min-height: 44px;
   font-size: 15px;
+  text-align: left;
   color: var(--text-mid);
   border-radius: var(--radius-sm);
 }
@@ -124,16 +187,12 @@ button {
 .lang-btn:focus-visible {
   color: var(--blue);
   outline: 2px solid var(--blue);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .lang-btn.active {
   color: var(--blue);
   font-weight: 700;
-}
-
-.lang-sep {
-  color: var(--border-gray);
 }
 
 .store-tabs {
@@ -1862,21 +1921,28 @@ main {
 
 <header class="site-header">
   <div class="header-top">
-    <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
-    <div class="lang-select" role="group" aria-label="언어 선택" id="langSelect">
-      <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+    <div class="site-brand">
+      <!-- 로고 placeholder — 이 경로(images/icon/site-logo.png)에 이미지
+           파일 하나만 올리면 코드 수정 없이 사이트 전체 헤더에 자동
+           적용됩니다. 파일이 없는 동안은 js/app.js가 자동으로 숨겨서
+           깨진 이미지 아이콘이 보이지 않습니다(임의 로고 제작 금지). -->
+      <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.png" alt="">
+      <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
+    </div>
+    <div class="lang-toggle-wrap">
+      <button type="button" class="lang-toggle-btn" id="langToggleBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langSelect">
+        <span class="lang-toggle-label" id="langToggleLabel">한국어</span>
+        <span class="lang-toggle-icon" aria-hidden="true">&#9776;</span>
+      </button>
+      <div class="lang-select" role="menu" aria-label="언어 선택" id="langSelect" hidden>
+        <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
+        <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
+        <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
+        <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+        <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+        <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+      </div>
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
@@ -6960,6 +7026,9 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.classList.toggle("active", lang === state.lang);
       btn.setAttribute("aria-pressed", lang === state.lang ? "true" : "false");
     });
+    if (els.langToggleLabel && els.langButtons[state.lang]) {
+      els.langToggleLabel.textContent = els.langButtons[state.lang].textContent;
+    }
 
     els.storeHeading.textContent = UI_TEXT.storeHeading[state.store][state.lang];
     els.prevBtn.textContent = UI_TEXT.prevButton[state.lang];
@@ -7009,6 +7078,18 @@ document.addEventListener("DOMContentLoaded", function () {
     if (window.Community && typeof window.Community.setLang === "function") {
       window.Community.setLang(lang);
     }
+  }
+
+  function openLangMenu() {
+    if (!els.langSelect || !els.langToggleBtn) return;
+    els.langSelect.hidden = false;
+    els.langToggleBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeLangMenu() {
+    if (!els.langSelect || !els.langToggleBtn) return;
+    els.langSelect.hidden = true;
+    els.langToggleBtn.setAttribute("aria-expanded", "false");
   }
 
   function changeGroup(delta) {
@@ -7411,6 +7492,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function init() {
     els.siteTitle = qs("siteTitle");
+    els.siteLogo = qs("siteLogo");
+    els.langToggleBtn = qs("langToggleBtn");
+    els.langToggleLabel = qs("langToggleLabel");
+    els.langSelect = qs("langSelect");
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
     els.menuGrid = qs("menuGrid");
@@ -7497,8 +7582,37 @@ document.addEventListener("DOMContentLoaded", function () {
     Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
       var lang = btn.getAttribute("data-lang");
       els.langButtons[lang] = btn;
-      btn.addEventListener("click", function () { setLang(lang); });
+      btn.addEventListener("click", function () {
+        setLang(lang);
+        closeLangMenu();
+      });
     });
+
+    // 로고 파일이 아직 없으면(placeholder) 깨진 이미지 아이콘 없이 자동으로 숨깁니다.
+    // 나중에 images/icon/site-logo.png 파일을 올리기만 하면 코드 수정 없이 보입니다.
+    if (els.siteLogo) {
+      var hideBrokenLogo = function () {
+        if (els.siteLogo.complete && els.siteLogo.naturalWidth === 0) els.siteLogo.hidden = true;
+      };
+      els.siteLogo.addEventListener("error", hideBrokenLogo, { once: true });
+      // init() 실행 전에 이미 로드가 끝나버렸을 수도 있어(로컬/캐시처럼
+      // 아주 빠른 응답) 즉시 한 번 더 확인합니다.
+      hideBrokenLogo();
+    }
+
+    // 모바일에서는 7개 언어를 한 줄로 나열하지 않고, 현재 언어 버튼을
+    // 누르면 목록이 펼쳐지는 방식으로 바꿨습니다(기존 언어 선택 로직 재사용).
+    if (els.langToggleBtn && els.langSelect) {
+      els.langToggleBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (els.langSelect.hidden) openLangMenu(); else closeLangMenu();
+      });
+      document.addEventListener("click", function (e) {
+        if (els.langSelect.hidden) return;
+        if (els.langToggleBtn.contains(e.target) || els.langSelect.contains(e.target)) return;
+        closeLangMenu();
+      });
+    }
 
     els.prevBtn.addEventListener("click", function () { changeGroup(-1); });
     els.nextBtn.addEventListener("click", function () { changeGroup(1); });
