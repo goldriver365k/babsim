@@ -842,6 +842,18 @@ button {
 
 .home-service-icon { font-size: 28px; line-height: 1; }
 
+/* 공식 로고 이미지(10단계) — 후루룩찹찹/만권화밥/밥심. 이모지 아이콘과
+   비슷한 시각적 크기를 유지하되, 원본 비율은 왜곡하지 않습니다
+   (height 기준, width: auto). 파일이 없으면 js/app.js가 자동 숨김. */
+.home-service-icon-img {
+  height: 32px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+.home-service-icon-img[hidden] { display: none; }
+
 .home-service-name {
   font-size: 15px;
   font-weight: 700;

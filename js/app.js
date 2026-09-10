@@ -1047,6 +1047,16 @@
       hideBrokenLogo();
     }
 
+    // 핵심 서비스 카드의 공식 로고 이미지(10단계)도 같은 방식으로
+    // 파일이 없으면 자동 숨김 처리합니다(임의 로고 제작 없이 자리만 마련).
+    Array.prototype.forEach.call(document.querySelectorAll(".home-service-icon-img"), function (img) {
+      var hideBrokenIcon = function () {
+        if (img.complete && img.naturalWidth === 0) img.hidden = true;
+      };
+      img.addEventListener("error", hideBrokenIcon, { once: true });
+      hideBrokenIcon();
+    });
+
     // 모바일에서는 7개 언어를 한 줄로 나열하지 않고, 현재 언어 버튼을
     // 누르면 목록이 펼쳐지는 방식으로 바꿨습니다(기존 언어 선택 로직 재사용).
     if (els.langToggleBtn && els.langSelect) {

@@ -149,7 +149,10 @@ def build():
     <!-- 모바일 UI 개선 6단계: 서비스 노출 순서 확정 — 1.천원의 아침밥
          2.유학생 커뮤니티 3.후루룩찹찹 4.만권화밥 5.밥심. 천원의 아침밥은
          새 페이지가 아니라 기존 밥심 내부 화면(data-store="bapsim")을
-         그대로 재사용합니다(밥심 카드와 같은 곳으로 이동, 조금 더 강조만). -->
+         그대로 재사용합니다(밥심 카드와 같은 곳으로 이동, 조금 더 강조만).
+         10단계: 후루룩찹찹/만권화밥/밥심은 사용자 제공 공식 로고
+         이미지(images/icon/logo-*.png, 원본 그대로)로 교체. 천원의
+         아침밥/유학생 커뮤니티는 제공된 로고가 없어 기존 이모지 유지. -->
     <button type="button" class="home-service-card home-service-card-featured" id="homeCardBreakfast">
       <span class="home-service-icon" aria-hidden="true">🍳</span>
       <span class="home-service-name" id="homeCardBreakfastName"></span>
@@ -160,17 +163,17 @@ def build():
       <span class="home-service-name" id="homeCardCommunityName"></span>
     </button>
     <button type="button" class="home-service-card" data-store="hururuk">
-      <span class="home-service-icon" aria-hidden="true">🍜</span>
+      <img class="home-service-icon-img" src="/images/icon/logo-hururuk.png" alt="">
       <span class="home-service-name">후루룩찹찹</span>
       <span class="home-service-loc" id="homeCardHururukLoc"></span>
     </button>
     <button type="button" class="home-service-card" data-store="mangwon">
-      <span class="home-service-icon" aria-hidden="true">🍲</span>
+      <img class="home-service-icon-img" src="/images/icon/logo-mangwon.png" alt="">
       <span class="home-service-name">만권화밥</span>
       <span class="home-service-loc" id="homeCardMangwonLoc"></span>
     </button>
     <button type="button" class="home-service-card" data-store="bapsim">
-      <span class="home-service-icon" aria-hidden="true">🍚</span>
+      <img class="home-service-icon-img" src="/images/icon/logo-bapsim.png" alt="">
       <span class="home-service-name">밥심</span>
       <span class="home-service-loc" id="homeCardBapsimLoc"></span>
     </button>
