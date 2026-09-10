@@ -17,6 +17,15 @@ css/style.css, js/translations.js, js/menu-data.js, js/app.js 등의 원본
   js/firebase-config.js, js/breakfast-rating.js, js/hellokorean-stats.js,
   js/pwa.js, css/admin.css, js/admin.js
 
+  유학생 커뮤니티 기능은 js/community-translations.js(5개 언어 문구,
+  국가 목록), js/community.js(라우팅·회원가입/로그인·게시글/댓글·신고·
+  번역 요청)에 있습니다. 번역 API 호출은 브라우저가 아니라
+  netlify/functions/community-translate.js에서만 이뤄집니다(기존
+  OPENAI_API_KEY 환경변수를 그대로 재사용, 새 환경변수 없음). index.html
+  은 이제 커뮤니티 회원가입/로그인/이미지 업로드를 위해 Firebase
+  Auth·Storage SDK도 함께 불러옵니다(admin.html과 동일한 SDK,
+  프로젝트는 그대로 babsim-46284).
+
   service-worker.js와 manifest.webmanifest는 index.html에 합쳐지지 않고
   저장소 루트에 그대로 배포되는 독립 파일입니다(서비스 워커는 브라우저가
   별도 URL로 직접 받아야 하므로 inline 스크립트로 넣을 수 없습니다).
@@ -51,6 +60,8 @@ def build():
     weekly_menu_sync = read("js/weekly-menu-sync.js")
     hellokorean_stats = read("js/hellokorean-stats.js")
     pwa = read("js/pwa.js")
+    community_translations = read("js/community-translations.js")
+    community = read("js/community.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -63,9 +74,9 @@ def build():
 
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="./images/icon/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./images/icon/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./images/icon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/icon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/icon/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/icon/apple-touch-icon.png">
 <meta name="theme-color" content="#1957d6">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -93,14 +104,21 @@ def build():
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
+    <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="유학생 커뮤니티">
+      <span class="community-tab-line1"></span><span class="community-tab-line2"></span>
+    </button>
     <button type="button" class="store-tab" data-store="bapsim">밥심<br>1층</button>
     <button type="button" class="store-tab" data-store="mangwon">만권화밥<br>1층</button>
     <button type="button" class="store-tab" data-store="hururuk">후루룩찹찹<br>2층</button>
   </nav>
 </header>
 
+<!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
+     때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->
+<div class="community-root" id="communityRoot" hidden></div>
+
 <div class="cola-banner" id="colaBanner" hidden>
-  <img class="cola-banner-icon" src="images/bapsim/cola.jpg" alt="" aria-hidden="true">
+  <img class="cola-banner-icon" src="/images/bapsim/cola.jpg" alt="" aria-hidden="true">
   <div class="cola-banner-text">
     <p class="cola-banner-title" id="colaBannerTitle">🎁 무료 콜라 쿠폰</p>
     <p class="cola-banner-subtitle" id="colaBannerSubtitle">음식 주문하고 콜라 1캔 무료로 받으세요!</p>
@@ -271,11 +289,14 @@ def build():
 """ + weekly_menu + """
 </script>
 
-<!-- "오늘의 메뉴 평가" 기능이 사용하는 Firestore(DB) SDK.
-     js/firebase-config.js에 실제 프로젝트 값을 넣기 전까지는 평가 데이터가
-     각 학생의 기기에만 저장되며, 이 화면의 다른 기능에는 영향을 주지 않습니다. -->
+<!-- "오늘의 메뉴 평가" 기능과 유학생 커뮤니티(회원가입/로그인/이미지 업로드)가
+     함께 사용하는 Firebase SDK. js/firebase-config.js에 실제 프로젝트 값을
+     넣기 전까지는 평가 데이터가 각 학생의 기기에만 저장되며, 이 화면의
+     다른 기능에는 영향을 주지 않습니다. -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script>
 """ + firebase_config + """
 </script>
@@ -293,6 +314,12 @@ def build():
 </script>
 <script>
 """ + pwa + """
+</script>
+<script>
+""" + community_translations + """
+</script>
+<script>
+""" + community + """
 </script>
 <script>
 """ + app + """
@@ -314,7 +341,9 @@ def build_admin():
     문제를 근본적으로 피하기 위함)"""
     admin_css = read("css/admin.css")
     firebase_config = read("js/firebase-config.js")
+    community_translations = read("js/community-translations.js")
     admin_js = read("js/admin.js")
+    admin_community = read("js/admin-community.js")
 
     html = """<!DOCTYPE html>
 <html lang="ko">
@@ -349,6 +378,7 @@ def build_admin():
       <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
       <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
     </nav>
   </header>
 
@@ -654,6 +684,48 @@ def build_admin():
         </div>
       </div>
     </section>
+
+    <!-- ================= 유학생 커뮤니티 관리 ================= -->
+    <section class="admin-page" id="pageCommunity" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">이 화면의 "숨김/공개/삭제/정지" 등 작업은 위 "주간메뉴 관리"에서
+          로그인한 계정으로 실행됩니다. 그 계정의 커뮤니티 회원 문서(role)가 "admin"이 아니면
+          Firestore 보안 규칙이 저장을 거부합니다 — 회원가입을 먼저 마친 뒤 Firebase 콘솔에서
+          해당 계정의 communityUsers 문서 role을 "admin"으로 바꿔주세요.</p>
+        <nav class="filter-bar" id="commAdminSubNav">
+          <button type="button" class="filter-btn active" id="commAdminTabStats">통계</button>
+          <button type="button" class="filter-btn" id="commAdminTabPosts">게시글 관리</button>
+          <button type="button" class="filter-btn" id="commAdminTabUsers">회원관리</button>
+          <button type="button" class="filter-btn" id="commAdminTabTranslations">번역관리</button>
+        </nav>
+      </div>
+
+      <div class="admin-card" id="commAdminPageStats">
+        <h2>커뮤니티 통계</h2>
+        <div class="filter-bar" id="commAdminStatsPeriodBar">
+          <button type="button" class="filter-btn active" data-period="today">오늘</button>
+          <button type="button" class="filter-btn" data-period="7d">최근 7일</button>
+          <button type="button" class="filter-btn" data-period="30d">최근 30일</button>
+          <button type="button" class="filter-btn" data-period="all">전체</button>
+        </div>
+        <div id="commAdminStatsBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPagePosts" hidden>
+        <h2>게시글 관리</h2>
+        <div class="table-scroll" id="commAdminPostsBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPageUsers" hidden>
+        <h2>회원관리</h2>
+        <div class="table-scroll" id="commAdminUsersBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPageTranslations" hidden>
+        <h2>번역관리(번역 실패한 게시글)</h2>
+        <div id="commAdminTranslationsBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -665,7 +737,13 @@ def build_admin():
 """ + firebase_config + """
 </script>
 <script>
+""" + community_translations + """
+</script>
+<script>
 """ + admin_js + """
+</script>
+<script>
+""" + admin_community + """
 </script>
 </body>
 </html>

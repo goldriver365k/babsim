@@ -862,6 +862,7 @@ table.results-table {
       <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
       <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
     </nav>
   </header>
 
@@ -1167,6 +1168,48 @@ table.results-table {
         </div>
       </div>
     </section>
+
+    <!-- ================= 유학생 커뮤니티 관리 ================= -->
+    <section class="admin-page" id="pageCommunity" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">이 화면의 "숨김/공개/삭제/정지" 등 작업은 위 "주간메뉴 관리"에서
+          로그인한 계정으로 실행됩니다. 그 계정의 커뮤니티 회원 문서(role)가 "admin"이 아니면
+          Firestore 보안 규칙이 저장을 거부합니다 — 회원가입을 먼저 마친 뒤 Firebase 콘솔에서
+          해당 계정의 communityUsers 문서 role을 "admin"으로 바꿔주세요.</p>
+        <nav class="filter-bar" id="commAdminSubNav">
+          <button type="button" class="filter-btn active" id="commAdminTabStats">통계</button>
+          <button type="button" class="filter-btn" id="commAdminTabPosts">게시글 관리</button>
+          <button type="button" class="filter-btn" id="commAdminTabUsers">회원관리</button>
+          <button type="button" class="filter-btn" id="commAdminTabTranslations">번역관리</button>
+        </nav>
+      </div>
+
+      <div class="admin-card" id="commAdminPageStats">
+        <h2>커뮤니티 통계</h2>
+        <div class="filter-bar" id="commAdminStatsPeriodBar">
+          <button type="button" class="filter-btn active" data-period="today">오늘</button>
+          <button type="button" class="filter-btn" data-period="7d">최근 7일</button>
+          <button type="button" class="filter-btn" data-period="30d">최근 30일</button>
+          <button type="button" class="filter-btn" data-period="all">전체</button>
+        </div>
+        <div id="commAdminStatsBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPagePosts" hidden>
+        <h2>게시글 관리</h2>
+        <div class="table-scroll" id="commAdminPostsBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPageUsers" hidden>
+        <h2>회원관리</h2>
+        <div class="table-scroll" id="commAdminUsersBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPageTranslations" hidden>
+        <h2>번역관리(번역 실패한 게시글)</h2>
+        <div id="commAdminTranslationsBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -1181,8 +1224,11 @@ table.results-table {
    - Firestore(DB)는 학생 화면(천원의 아침밥 평가, 언어 통계, 주간메뉴)과
      관리자 페이지가 함께 사용합니다.
    - Firebase Authentication과 Storage는 관리자 페이지의 "주간메뉴 관리"
-     (이미지 업로드, 직접 입력 저장/수정/삭제)에서만 사용합니다.
-     학생 화면(index.html)은 이 둘을 전혀 불러오지 않습니다(가벼운 상태 유지).
+     (이미지 업로드, 직접 입력 저장/수정/삭제)와, 학생 화면(index.html)의
+     유학생 커뮤니티 회원가입·로그인·이메일 인증·게시글 사진 업로드에서
+     사용합니다(2026-09-10 커뮤니티 기능 추가로 학생 화면도 이 두 SDK를
+     불러오기 시작했습니다 — 커뮤니티를 쓰지 않는 방문자에게는 추가
+     네트워크 요청 몇 개 외에 다른 영향이 없습니다).
 
    ⚠ Firestore 보안 규칙 — 아래 규칙 전체를 Firebase 콘솔의
    Firestore Database → "규칙" 탭에 그대로 붙여넣어야 합니다.
@@ -1252,10 +1298,86 @@ table.results-table {
             allow read: if true;   // 관리자 페이지 통계 조회용
             allow update, delete: if false;
           }
+
+          // ---------------- 유학생 커뮤니티 (2026-09-10 추가) ----------------
+          function isSignedIn() { return request.auth != null; }
+          function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+          function myProfile() { return get(/databases/$(database)/documents/communityUsers/$(request.auth.uid)).data; }
+          function isActiveMember() { return isVerified() && myProfile().status == 'active'; }
+          function isAdmin() { return isVerified() && myProfile().role == 'admin'; }
+
+          // 회원 정보 — 이메일 노출 방지를 위해 본인 또는 관리자만 문서를
+          // 읽을 수 있습니다(다른 회원의 이름·국적은 게시글/댓글에 저장된
+          // 스냅샷 필드로만 공개됩니다 — 아래 communityPosts 참고).
+          match /communityUsers/{uid} {
+            allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+            // role은 반드시 'user'로만 가입할 수 있습니다(가입 시 스스로
+            // 'admin'을 적어 넣는 권한 상승을 막기 위함) — 관리자 지정은
+            // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다.
+            allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
+            allow update: if (isSignedIn() && request.auth.uid == uid
+                && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
+              || isAdmin();
+            allow delete: if false; // 탈퇴는 status:'withdrawn'으로만 처리
+          }
+
+          // 게시글 — 비회원·이메일 미인증·정지 회원은 전혀 접근 불가.
+          // 작성자 본인/관리자는 모든 필드를 수정할 수 있고, 그 외 로그인
+          // 회원은 신고 시 reportCount를 1씩만 늘리고 3회가 되면 status를
+          // hidden으로 바꾸는 것만 허용합니다(신고 누적 자동 숨김).
+          match /communityPosts/{postId} {
+            allow read: if resource.data.status == 'visible'
+              || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+              || (isActiveMember()
+                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
+                  && request.resource.data.reportCount == resource.data.reportCount + 1
+                  && (request.resource.data.status == resource.data.status
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')));
+            allow delete: if false; // 삭제는 status:'deleted'로만(관리자가 복구 가능하도록)
+          }
+
+          // 댓글 — 게시글과 같은 원칙 + 번역 캐시(translations 필드)만
+          // 별도로 채워 넣는 것은 로그인한 회원 누구나 할 수 있게 허용합니다
+          // ("번역 보기"를 처음 누른 회원이 결과를 저장해 재사용).
+          match /communityComments/{commentId} {
+            allow read: if resource.data.status == 'visible'
+              || (isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin()));
+            allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+            allow update: if (isActiveMember() && (request.auth.uid == resource.data.authorId || isAdmin()))
+              || (isActiveMember()
+                  && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'status'])
+                  && request.resource.data.reportCount == resource.data.reportCount + 1
+                  && (request.resource.data.status == resource.data.status
+                      || (request.resource.data.reportCount >= 3 && request.resource.data.status == 'hidden')))
+              || (isActiveMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['translations']));
+            allow delete: if false;
+          }
+
+          // 신고 — 문서 ID를 "대상종류_대상ID_신고자ID"로 고정해 같은
+          // 회원이 같은 대상을 두 번 신고해도 덮어쓰지 못하게 막습니다
+          // (allow update가 없으므로 이미 존재하면 재작성 자체가 거부됨).
+          // 신고자 목록은 본인과 관리자만 볼 수 있습니다(다른 회원에게 비공개).
+          match /communityReports/{reportId} {
+            allow create: if isActiveMember()
+              && request.resource.data.reporterId == request.auth.uid
+              && reportId == request.resource.data.targetType + '_' + request.resource.data.targetId + '_' + request.auth.uid;
+            allow read: if isSignedIn() && (request.auth.uid == resource.data.reporterId || isAdmin());
+            allow update, delete: if isAdmin();
+          }
+
+          // 저장한 글(내 정보 > 저장한 글) — 본인 것만 읽고 쓸 수 있습니다.
+          match /communitySaves/{saveId} {
+            allow read, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+          }
         }
       }
 
-   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"에 필요합니다.
+   ⚠ Firebase Storage 보안 규칙 — "주간메뉴 이미지 업로드"와 "커뮤니티
+   게시글 사진 업로드"에 필요합니다.
    Firebase 콘솔 → Storage → "규칙" 탭에 아래를 붙여넣으세요.
    (Storage를 아직 한 번도 안 켰다면 "시작하기"부터 눌러 생성해야 합니다.)
 
@@ -1268,6 +1390,16 @@ table.results-table {
               && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
+          // 커뮤니티 게시글 사진(게시글당 최대 3장, 브라우저에서 이미
+          // 압축된 상태로 올라오므로 5MB면 충분히 넉넉합니다). 로그인한
+          // 회원만 올릴 수 있고, 누구나 볼 수 있습니다(게시글 자체의
+          // Firestore 읽기 규칙이 이미 비회원/미인증 회원을 막습니다).
+          match /communityImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 5 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
         }
       }
 
@@ -1278,6 +1410,13 @@ table.results-table {
    주간메뉴를 등록·수정·삭제하고 이미지를 업로드할 수 있습니다.
    (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
    별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
+
+   ⚠ 유학생 커뮤니티 회원가입/이메일 인증은 "이메일/비밀번호" 제공업체가
+   켜져 있기만 하면 별도 설정 없이 바로 동작합니다(위 항목에서 이미
+   켜둔 것과 같은 설정). 인증메일 발신 주소·문구를 바꾸고 싶다면 Firebase
+   콘솔 → Authentication → Templates 탭에서 수정할 수 있습니다(선택 사항).
+   커뮤니티 번역(netlify/functions/community-translate.js)은 새 환경변수
+   없이 기존 OPENAI_API_KEY를 그대로 재사용합니다.
 
    ⚠ Netlify 환경변수 OPENAI_API_KEY — 주간메뉴 이미지 자동인식/번역에
    필요합니다(netlify/functions/parse-weekly-menu.js). Netlify 대시보드
@@ -1359,6 +1498,235 @@ function getFirebaseStorage() {
     return null;
   }
 }
+
+</script>
+<script>
+/* ==========================================================================
+   유학생 커뮤니티 다국어 문구 (js/community-translations.js)
+   - js/translations.js와 같은 패턴({ko,zh,vi,en,mn})을 그대로 따릅니다.
+   - babsim.store에서 선택한 언어(js/app.js state.lang, localStorage
+     "foodhall_lang")를 커뮤니티 화면에도 그대로 사용합니다.
+   ========================================================================== */
+
+/* 상단 커뮤니티 버튼(두 줄) */
+var COMMUNITY_NAV = {
+  line1: { ko: "유학생", zh: "留学生", vi: "Cộng đồng", en: "International", mn: "Олон улсын" },
+  line2: { ko: "커뮤니티", zh: "社区", vi: "Du học sinh", en: "Community", mn: "Оюутнууд" }
+};
+
+/* 게시판 5개 카테고리 */
+var COMMUNITY_CATEGORIES = {
+  friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох" },
+  market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа" },
+  help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх" },
+  together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох" },
+  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл" }
+};
+var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "life"];
+
+/* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
+var COMMUNITY_AUTH = {
+  loginTitle: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх" },
+  signupTitle: { ko: "회원가입", zh: "注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх" },
+  emailLabel: { ko: "이메일", zh: "邮箱", vi: "Email", en: "Email", mn: "И-мэйл" },
+  passwordLabel: { ko: "비밀번호", zh: "密码", vi: "Mật khẩu", en: "Password", mn: "Нууц үг" },
+  passwordConfirmLabel: { ko: "비밀번호 확인", zh: "确认密码", vi: "Xác nhận mật khẩu", en: "Confirm Password", mn: "Нууц үг баталгаажуулах" },
+  nameLabel: { ko: "이름", zh: "姓名", vi: "Họ tên", en: "Name", mn: "Нэр" },
+  nationalityLabel: { ko: "국적", zh: "国籍", vi: "Quốc tịch", en: "Nationality", mn: "Иргэншил" },
+  nationalitySearchPlaceholder: { ko: "국가 검색", zh: "搜索国家", vi: "Tìm quốc gia", en: "Search country", mn: "Улс хайх" },
+  langLabel: { ko: "사용할 언어", zh: "使用语言", vi: "Ngôn ngữ sử dụng", en: "Preferred Language", mn: "Ашиглах хэл" },
+  privacyAgree: { ko: "개인정보 수집에 동의합니다", zh: "同意收集个人信息", vi: "Tôi đồng ý thu thập thông tin cá nhân", en: "I agree to the collection of personal information", mn: "Хувийн мэдээлэл цуглуулахыг зөвшөөрч байна" },
+  rulesAgree: { ko: "커뮤니티 이용규칙에 동의합니다", zh: "同意社区使用规则", vi: "Tôi đồng ý với quy tắc cộng đồng", en: "I agree to the community rules", mn: "Нийгэмлэгийн дүрэмтэй зөвшөөрч байна" },
+  viewText: { ko: "보기", zh: "查看", vi: "Xem", en: "View", mn: "Харах" },
+  submitSignup: { ko: "가입하기", zh: "注册", vi: "Đăng ký", en: "Create Account", mn: "Бүртгүүлэх" },
+  submitLogin: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх" },
+  keepLoggedIn: { ko: "로그인 상태 유지", zh: "保持登录", vi: "Duy trì đăng nhập", en: "Keep me logged in", mn: "Нэвтэрсэн хэвээр байх" },
+  forgotPassword: { ko: "비밀번호 찾기", zh: "忘记密码", vi: "Quên mật khẩu", en: "Forgot Password", mn: "Нууц үг сэргээх" },
+  goSignup: { ko: "회원가입", zh: "去注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх" },
+  goLogin: { ko: "이미 계정이 있나요? 로그인", zh: "已有账号？登录", vi: "Đã có tài khoản? Đăng nhập", en: "Already have an account? Log in", mn: "Бүртгэлтэй юу? Нэвтрэх" },
+  resendVerification: { ko: "인증메일 다시 보내기", zh: "重新发送验证邮件", vi: "Gửi lại email xác nhận", en: "Resend verification email", mn: "Баталгаажуулах имэйлийг дахин илгээх" },
+  verifyNotice: { ko: "이메일 인증을 완료해 주세요.", zh: "请完成邮箱验证。", vi: "Vui lòng hoàn tất xác nhận email.", en: "Please verify your email.", mn: "И-мэйлээ баталгаажуулна уу." },
+  logout: { ko: "로그아웃", zh: "登出", vi: "Đăng xuất", en: "Log Out", mn: "Гарах" },
+  resetSent: { ko: "비밀번호 재설정 메일을 보냈습니다.", zh: "已发送密码重置邮件。", vi: "Đã gửi email đặt lại mật khẩu.", en: "Password reset email sent.", mn: "Нууц үг сэргээх и-мэйл илгээгдлээ." },
+  verificationSent: { ko: "인증메일을 다시 보냈습니다.", zh: "已重新发送验证邮件。", vi: "Đã gửi lại email xác nhận.", en: "Verification email resent.", mn: "Баталгаажуулах имэйлийг дахин илгээлээ." },
+  loginRequiredTitle: { ko: "로그인이 필요합니다", zh: "需要登录", vi: "Cần đăng nhập", en: "Login Required", mn: "Нэвтрэх шаардлагатай" },
+  loginRequiredDesc: { ko: "유학생 커뮤니티는 회원가입과 이메일 인증을 완료한 회원만 이용할 수 있습니다.", zh: "留学生社区仅限完成注册及邮箱验证的会员使用。", vi: "Cộng đồng du học sinh chỉ dành cho thành viên đã đăng ký và xác nhận email.", en: "The community is available only to members who have signed up and verified their email.", mn: "Олон улсын оюутнуудын нийгэмлэг нь бүртгэл болон и-мэйл баталгаажуулалтыг дуусгасан гишүүдэд л нээлттэй." },
+  suspendedNotice: { ko: "이용이 정지된 계정입니다.", zh: "该账号已被停用。", vi: "Tài khoản đã bị đình chỉ.", en: "This account has been suspended.", mn: "Энэ бүртгэл түдгэлзүүлэгдсэн байна." }
+};
+
+/* 회원 메뉴/내 정보 */
+var COMMUNITY_MY = {
+  myPageTitle: { ko: "내 정보", zh: "我的信息", vi: "Thông tin của tôi", en: "My Info", mn: "Миний мэдээлэл" },
+  myPosts: { ko: "내가 작성한 글", zh: "我写的帖子", vi: "Bài viết của tôi", en: "My Posts", mn: "Миний бичсэн зурвас" },
+  myComments: { ko: "내가 작성한 댓글", zh: "我写的评论", vi: "Bình luận của tôi", en: "My Comments", mn: "Миний сэтгэгдэл" },
+  savedPosts: { ko: "저장한 글", zh: "已保存的帖子", vi: "Bài đã lưu", en: "Saved Posts", mn: "Хадгалсан зурвас" },
+  editName: { ko: "이름 수정", zh: "修改姓名", vi: "Sửa họ tên", en: "Edit Name", mn: "Нэр засах" },
+  editNationality: { ko: "국적 수정", zh: "修改国籍", vi: "Sửa quốc tịch", en: "Edit Nationality", mn: "Иргэншил засах" },
+  editLang: { ko: "선택 언어 변경", zh: "更改语言", vi: "Đổi ngôn ngữ", en: "Change Language", mn: "Хэл солих" },
+  editPassword: { ko: "비밀번호 변경", zh: "修改密码", vi: "Đổi mật khẩu", en: "Change Password", mn: "Нууц үг солих" },
+  withdraw: { ko: "회원 탈퇴", zh: "注销账号", vi: "Xóa tài khoản", en: "Delete Account", mn: "Гишүүнчлэл цуцлах" },
+  withdrawConfirm: { ko: "정말 탈퇴하시겠습니까? 되돌릴 수 없습니다.", zh: "确定要注销吗？此操作无法撤销。", vi: "Bạn có chắc muốn xóa tài khoản? Không thể hoàn tác.", en: "Are you sure you want to delete your account? This cannot be undone.", mn: "Та гишүүнчлэлээ цуцлахдаа итгэлтэй байна уу? Буцаах боломжгүй." },
+  save: { ko: "저장", zh: "保存", vi: "Lưu", en: "Save", mn: "Хадгалах" }
+};
+
+/* 게시글/댓글 작성, 상세, 목록, 검색 */
+var COMMUNITY_POST = {
+  writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих" },
+  categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал" },
+  titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг" },
+  contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга" },
+  originalLangLabel: { ko: "원문 언어", zh: "原文语言", vi: "Ngôn ngữ gốc", en: "Original Language", mn: "Эх хэл" },
+  photoLabel: { ko: "사진 (최대 3장)", zh: "照片（最多3张）", vi: "Ảnh (tối đa 3 ảnh)", en: "Photos (up to 3)", mn: "Зураг (хамгийн ихдээ 3)" },
+  submitPost: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх" },
+  editPost: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах" },
+  deletePost: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах" },
+  deleteConfirm: { ko: "정말 삭제하시겠습니까?", zh: "确定要删除吗？", vi: "Bạn có chắc muốn xóa?", en: "Are you sure you want to delete this?", mn: "Устгахдаа итгэлтэй байна уу?" },
+  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах" },
+  viewTranslated: { ko: "선택 언어로 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translated", mn: "Орчуулгыг харах" },
+  aiNotice: { ko: "AI로 번역된 내용입니다.", zh: "本内容由AI翻译。", vi: "Nội dung này được dịch bằng AI.", en: "This content was translated by AI.", mn: "Энэ агуулгыг AI орчуулсан." },
+  noPosts: { ko: "게시글이 없습니다.", zh: "暂无帖子。", vi: "Không có bài viết.", en: "No posts yet.", mn: "Зурвас алга байна." },
+  loading: { ko: "불러오는 중...", zh: "加载中...", vi: "Đang tải...", en: "Loading...", mn: "Ачааллаж байна..." },
+  searchPlaceholder: { ko: "제목·본문 검색", zh: "搜索标题·内容", vi: "Tìm tiêu đề, nội dung", en: "Search title/content", mn: "Гарчиг, агуулга хайх" },
+  sortLatest: { ko: "최신순", zh: "最新", vi: "Mới nhất", en: "Latest", mn: "Хамгийн сүүлийн" },
+  sortComments: { ko: "댓글 많은 순", zh: "评论最多", vi: "Nhiều bình luận nhất", en: "Most Commented", mn: "Хамгийн олон сэтгэгдэлтэй" },
+  commentCount: { ko: "댓글", zh: "评论", vi: "Bình luận", en: "Comments", mn: "Сэтгэгдэл" },
+  saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах" },
+  unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах" },
+  kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой." },
+  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат" }
+};
+
+/* 중고거래 */
+var COMMUNITY_MARKET = {
+  dealTypeSell: { ko: "판매", zh: "出售", vi: "Bán", en: "Sell", mn: "Зарах" },
+  dealTypeBuy: { ko: "구매", zh: "求购", vi: "Mua", en: "Buy", mn: "Худалдан авах" },
+  priceLabel: { ko: "가격", zh: "价格", vi: "Giá", en: "Price", mn: "Үнэ" },
+  freeShare: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free Giveaway", mn: "Үнэгүй хуваалцах" },
+  locationLabel: { ko: "거래 희망 장소", zh: "交易地点", vi: "Địa điểm giao dịch", en: "Preferred Location", mn: "Худалдааны байршил" },
+  conditionLabel: { ko: "물품 상태", zh: "物品状态", vi: "Tình trạng đồ", en: "Item Condition", mn: "Барааны байдал" },
+  statusLabel: { ko: "거래 상태", zh: "交易状态", vi: "Trạng thái giao dịch", en: "Deal Status", mn: "Худалдааны төлөв" },
+  statusSelling: { ko: "판매 중", zh: "出售中", vi: "Đang bán", en: "Selling", mn: "Зарж байна" },
+  statusReserved: { ko: "예약 중", zh: "已预订", vi: "Đã đặt trước", en: "Reserved", mn: "Захиалагдсан" },
+  statusDone: { ko: "거래 완료", zh: "交易完成", vi: "Đã giao dịch", en: "Sold", mn: "Худалдаа дууссан" },
+  statusFree: { ko: "무료 나눔", zh: "免费赠送", vi: "Tặng miễn phí", en: "Free", mn: "Үнэгүй" },
+  hideDone: { ko: "거래 완료 게시물 숨기기", zh: "隐藏已完成交易", vi: "Ẩn bài đã giao dịch", en: "Hide completed deals", mn: "Дууссан худалдааг нуух" },
+  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах" },
+  safetyNotice: { ko: "학교 안의 공개된 장소에서 만나고 송금 전에 물건을 직접 확인하세요.", zh: "请在学校内的公开场所见面，转账前请务必确认物品。", vi: "Hãy gặp ở nơi công cộng trong trường và kiểm tra hàng trước khi chuyển khoản.", en: "Meet in a public place on campus and check the item before paying.", mn: "Сургуулийн нээлттэй газарт уулзаж, мөнгө шилжүүлэхийн өмнө барааг өөрөө шалгаарай." }
+};
+
+/* 도움 요청 */
+var COMMUNITY_HELP = {
+  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв" },
+  statusNeeded: { ko: "도움 필요", zh: "需要帮助", vi: "Cần giúp đỡ", en: "Help Needed", mn: "Тусламж хэрэгтэй" },
+  statusInProgress: { ko: "해결 중", zh: "处理中", vi: "Đang xử lý", en: "In Progress", mn: "Шийдвэрлэж байна" },
+  statusResolved: { ko: "해결 완료", zh: "已解决", vi: "Đã giải quyết", en: "Resolved", mn: "Шийдэгдсэн" },
+  typeLabel: { ko: "분류", zh: "分类", vi: "Phân loại", en: "Type", mn: "Төрөл" },
+  typeSchool: { ko: "학교생활", zh: "校园生活", vi: "Đời sống học đường", en: "School Life", mn: "Сургуулийн амьдрал" },
+  typeKorean: { ko: "한국어", zh: "韩语", vi: "Tiếng Hàn", en: "Korean Language", mn: "Солонгос хэл" },
+  typeHospital: { ko: "병원", zh: "医院", vi: "Bệnh viện", en: "Hospital", mn: "Эмнэлэг" },
+  typeTransport: { ko: "교통", zh: "交通", vi: "Giao thông", en: "Transportation", mn: "Тээвэр" },
+  typeAdmin: { ko: "행정", zh: "行政", vi: "Hành chính", en: "Administration", mn: "Захиргаа" },
+  typeLost: { ko: "분실물", zh: "失物招领", vi: "Đồ thất lạc", en: "Lost & Found", mn: "Алдагдсан зүйл" },
+  typeLife: { ko: "생활 도움", zh: "生活帮助", vi: "Hỗ trợ sinh hoạt", en: "Daily Help", mn: "Амьдралын тусламж" },
+  typeEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
+  emergencyNotice: { ko: "긴급하거나 위험한 상황은 경찰, 학교 담당 부서 등 공식 기관에 연락하세요.", zh: "紧急或危险情况请联系警察或学校相关部门等官方机构。", vi: "Trường hợp khẩn cấp hoặc nguy hiểm, hãy liên hệ công an hoặc bộ phận phụ trách của trường.", en: "For urgent or dangerous situations, contact the police or your school's official office.", mn: "Яаралтай, аюултай тохиолдолд цагдаа, сургуулийн албан ёсны газарт хандана уу." }
+};
+
+/* 댓글 */
+var COMMUNITY_COMMENT = {
+  writeLabel: { ko: "댓글 작성", zh: "写评论", vi: "Viết bình luận", en: "Write a Comment", mn: "Сэтгэгдэл бичих" },
+  submitComment: { ko: "등록", zh: "发布", vi: "Đăng", en: "Post", mn: "Нийтлэх" },
+  replyLabel: { ko: "답글", zh: "回复", vi: "Trả lời", en: "Reply", mn: "Хариулах" },
+  editComment: { ko: "수정", zh: "编辑", vi: "Sửa", en: "Edit", mn: "Засах" },
+  deleteComment: { ko: "삭제", zh: "删除", vi: "Xóa", en: "Delete", mn: "Устгах" },
+  viewOriginal: { ko: "원문 보기", zh: "查看原文", vi: "Xem bản gốc", en: "View Original", mn: "Эх хувийг харах" },
+  viewTranslated: { ko: "번역 보기", zh: "查看翻译", vi: "Xem bản dịch", en: "View Translation", mn: "Орчуулга харах" },
+  translating: { ko: "번역 중...", zh: "翻译中...", vi: "Đang dịch...", en: "Translating...", mn: "Орчуулж байна..." },
+  noComments: { ko: "댓글이 없습니다.", zh: "暂无评论。", vi: "Chưa có bình luận.", en: "No comments yet.", mn: "Сэтгэгдэл алга." }
+};
+
+/* 신고 */
+var COMMUNITY_REPORT = {
+  reportBtn: { ko: "신고하기", zh: "举报", vi: "Báo cáo", en: "Report", mn: "Мэдээлэх" },
+  reportTitle: { ko: "신고 사유 선택", zh: "选择举报原因", vi: "Chọn lý do báo cáo", en: "Select Report Reason", mn: "Мэдээлэх шалтгаанаа сонгоно уу" },
+  reasonScam: { ko: "사기 의심", zh: "疑似诈骗", vi: "Nghi ngờ lừa đảo", en: "Suspected Scam", mn: "Залилан гэж сэжиглэгдэж байна" },
+  reasonAbuse: { ko: "욕설·괴롭힘", zh: "辱骂·骚扰", vi: "Lăng mạ/quấy rối", en: "Abuse/Harassment", mn: "Доромжлол/дарамт" },
+  reasonPrivacy: { ko: "개인정보 노출", zh: "个人信息泄露", vi: "Lộ thông tin cá nhân", en: "Privacy Exposure", mn: "Хувийн мэдээлэл ил гарсан" },
+  reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа" },
+  reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам" },
+  reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт" },
+  reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
+  submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх" },
+  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа." },
+  alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна." },
+  hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа." }
+};
+
+/* 개인정보 동의 / 이용규칙 화면 */
+var COMMUNITY_CONSENT = {
+  privacyTitle: { ko: "개인정보처리방침", zh: "隐私政策", vi: "Chính sách bảo mật", en: "Privacy Policy", mn: "Хувийн мэдээллийн бодлого" },
+  rulesTitle: { ko: "커뮤니티 이용규칙", zh: "社区使用规则", vi: "Quy tắc cộng đồng", en: "Community Rules", mn: "Нийгэмлэгийн дүрэм" },
+  collectItems: { ko: "수집정보: 이름, 국적, 이메일, 선택 언어", zh: "收集信息：姓名、国籍、邮箱、使用语言", vi: "Thông tin thu thập: Họ tên, quốc tịch, email, ngôn ngữ sử dụng", en: "Collected: Name, Nationality, Email, Preferred Language", mn: "Цуглуулах мэдээлэл: Нэр, иргэншил, и-мэйл, ашиглах хэл" },
+  purpose: { ko: "이용목적: 회원 확인, 커뮤니티 운영, 다국어 서비스 제공, 신고 처리, 부정 이용 방지", zh: "使用目的：会员确认、社区运营、多语言服务、举报处理、防止滥用", vi: "Mục đích: Xác thực thành viên, vận hành cộng đồng, dịch vụ đa ngôn ngữ, xử lý báo cáo, ngăn chặn lạm dụng", en: "Purpose: Member verification, community operation, multilingual service, report handling, abuse prevention", mn: "Зорилго: Гишүүнчлэл баталгаажуулах, нийгэмлэг ажиллуулах, олон хэлний үйлчилгээ, гомдол шийдвэрлэх, буруу ашиглалтаас сэргийлэх" },
+  retention: { ko: "보유기간: 회원 탈퇴 시까지(관계 법령상 보관 의무가 있는 경우 해당 기간)", zh: "保留期限：至注销为止（如法律要求保存的情况按相关期限）", vi: "Thời hạn lưu trữ: Đến khi xóa tài khoản (theo quy định pháp luật nếu có)", en: "Retention: Until account deletion (or as required by applicable law)", mn: "Хадгалах хугацаа: Гишүүнчлэл цуцлах хүртэл (хууль тогтоомжийн дагуу хадгалах шаардлагатай бол тухайн хугацаагаар)" }
+};
+
+/* 공통 오류/완료 메시지 */
+var COMMUNITY_MSG = {
+  errRequired: { ko: "필수 항목을 모두 입력해 주세요.", zh: "请填写所有必填项。", vi: "Vui lòng điền đầy đủ thông tin bắt buộc.", en: "Please fill in all required fields.", mn: "Заавал бөглөх бүх талбарыг бөглөнө үү." },
+  errPasswordMismatch: { ko: "비밀번호가 일치하지 않습니다.", zh: "两次输入的密码不一致。", vi: "Mật khẩu xác nhận không khớp.", en: "Passwords do not match.", mn: "Нууц үг таарахгүй байна." },
+  errEmailInUse: { ko: "이미 사용 중인 이메일입니다.", zh: "该邮箱已被使用。", vi: "Email này đã được sử dụng.", en: "This email is already in use.", mn: "Энэ и-мэйл хаяг аль хэдийн ашиглагдаж байна." },
+  errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна." },
+  errPhotoLimit: { ko: "사진은 최대 3장까지 첨부할 수 있습니다.", zh: "最多只能上传3张照片。", vi: "Chỉ có thể đính kèm tối đa 3 ảnh.", en: "You can attach up to 3 photos.", mn: "Хамгийн ихдээ 3 зураг хавсаргах боломжтой." },
+  errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу." },
+  doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа." },
+  doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа." }
+};
+
+/* 관리자 번역 상태 표시(관리자 페이지 번역관리 탭) */
+var COMMUNITY_TRANSLATION_STATUS = {
+  pending: { ko: "번역 전", zh: "待翻译", vi: "Chưa dịch", en: "Not translated", mn: "Орчуулаагүй" },
+  inProgress: { ko: "번역 중", zh: "翻译中", vi: "Đang dịch", en: "Translating", mn: "Орчуулж байна" },
+  done: { ko: "번역 완료", zh: "翻译完成", vi: "Đã dịch", en: "Translated", mn: "Орчуулсан" },
+  failed: { ko: "번역 실패", zh: "翻译失败", vi: "Dịch thất bại", en: "Translation failed", mn: "Орчуулга амжилтгүй" },
+  adminEdited: { ko: "관리자 수정", zh: "管理员已修改", vi: "Quản trị viên đã sửa", en: "Edited by admin", mn: "Админ засварласан" }
+};
+
+/* 회원가입 국적 선택용 국가 목록(검색 가능한 <datalist>용, 영문 표기).
+   국제학생 다수인 국가를 우선 배치하지 않고 알파벳순으로 정렬해
+   특정 국가를 우대하지 않습니다. */
+var COUNTRY_LIST = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina",
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh",
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso",
+  "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic",
+  "Chad", "Chile", "China", "Colombia", "Comoros", "Congo",
+  "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
+  "Djibouti", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia",
+  "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon",
+  "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Guatemala",
+  "Guinea", "Haiti", "Honduras", "Hong Kong", "Hungary", "Iceland",
+  "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+  "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan",
+  "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
+  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein",
+  "Lithuania", "Luxembourg", "Macau", "Madagascar", "Malawi", "Malaysia",
+  "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico",
+  "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+  "Myanmar", "Namibia", "Nepal", "Netherlands", "New Zealand", "Nicaragua",
+  "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman",
+  "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay",
+  "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+  "Russia", "Rwanda", "Saudi Arabia", "Senegal", "Serbia", "Sierra Leone",
+  "Singapore", "Slovakia", "Slovenia", "Somalia", "South Africa", "South Korea",
+  "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden",
+  "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand",
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey",
+  "Turkmenistan", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
+  "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+  "Yemen", "Zambia", "Zimbabwe"
+];
 
 </script>
 <script>
@@ -1772,7 +2140,7 @@ function getFirebaseStorage() {
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -1794,6 +2162,7 @@ function getFirebaseStorage() {
     else if (page === "language") initLanguagePage();
     else if (page === "hellokorean") initHelloKoreanPage();
     else if (page === "weeklymenu") initWeeklyMenuPage();
+    else if (page === "community") { if (window.AdminCommunity) AdminCommunity.init(); }
   }
 
   /* ================================================================
@@ -3244,6 +3613,427 @@ function getFirebaseStorage() {
   }
 
   document.addEventListener("DOMContentLoaded", initGate);
+})();
+
+</script>
+<script>
+/* ==========================================================================
+   관리자 페이지 - 유학생 커뮤니티 관리 (js/admin-community.js)
+   - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
+     "커뮤니티" 탭 하나를 추가합니다(새 관리자 사이트 아님).
+   - 관리자 판정은 Firestore 보안 규칙(js/firebase-config.js 문서 참고)이
+     하며, 이 화면은 "주간메뉴 관리"에서 이미 로그인한 Firebase 계정을
+     그대로 사용합니다. 그 계정의 communityUsers 문서 role이 'admin'이
+     아니면 서버(Firestore 규칙)가 쓰기를 거부합니다 — 화면에서도 안내합니다.
+   ========================================================================== */
+
+var AdminCommunity = (function () {
+  "use strict";
+
+  var els = {};
+  var currentTab = "stats";
+  var currentPeriod = "today";
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+  function currentAdminUser() {
+    var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
+    return auth && auth.currentUser ? auth.currentUser : null;
+  }
+
+  function fmtDate(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : (typeof ts === "string" ? new Date(ts) : null);
+    if (!d || isNaN(d.getTime())) return "-";
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function periodStartDate(period) {
+    var now = new Date();
+    if (period === "today") return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (period === "7d") return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    if (period === "30d") return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return null; // 전체
+  }
+
+  function tsToDate(ts) {
+    if (!ts) return null;
+    if (typeof ts.toDate === "function") return ts.toDate();
+    if (typeof ts === "string") return new Date(ts);
+    return null;
+  }
+
+  /* ---------------- 탭 전환 ---------------- */
+
+  function showTab(tab) {
+    currentTab = tab;
+    Object.keys(els.subTabs).forEach(function (key) {
+      els.subTabs[key].classList.toggle("active", key === tab);
+    });
+    Object.keys(els.subPages).forEach(function (key) {
+      els.subPages[key].hidden = key !== tab;
+    });
+    if (tab === "stats") loadStats();
+    else if (tab === "posts") loadPosts();
+    else if (tab === "users") loadUsers();
+    else if (tab === "translations") loadTranslations();
+  }
+
+  /* ---------------- 통계 ---------------- */
+
+  function loadStats() {
+    var d = db();
+    var body = els.statsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    Promise.all([
+      d.collection("communityUsers").get(),
+      d.collection("communityPosts").get()
+    ]).then(function (results) {
+      var users = [];
+      results[0].forEach(function (doc) { users.push(doc.data()); });
+      var posts = [];
+      results[1].forEach(function (doc) { posts.push(doc.data()); });
+
+      var start = periodStartDate(currentPeriod);
+      function inPeriod(ts) {
+        if (!start) return true;
+        var d2 = tsToDate(ts);
+        return d2 && d2 >= start;
+      }
+
+      var newUsers = users.filter(function (u) { return inPeriod(u.createdAt); }).length;
+      var newPosts = posts.filter(function (p) { return inPeriod(p.createdAt); }).length;
+      var byCategory = {};
+      COMMUNITY_CATEGORY_ORDER.forEach(function (c) { byCategory[c] = 0; });
+      posts.filter(function (p) { return inPeriod(p.createdAt); }).forEach(function (p) {
+        if (byCategory[p.category] !== undefined) byCategory[p.category]++;
+      });
+      var reportedCount = posts.filter(function (p) { return (p.reportCount || 0) > 0; }).length;
+      var hiddenCount = posts.filter(function (p) { return p.status === "hidden"; }).length;
+      var failedTranslations = posts.filter(function (p) { return p.translationStatus === "failed"; }).length;
+      var marketDone = posts.filter(function (p) { return p.category === "market" && p.dealStatus === "done"; }).length;
+      var helpResolved = posts.filter(function (p) { return p.category === "help" && p.helpStatus === "resolved"; }).length;
+
+      var natCount = {};
+      users.forEach(function (u) { var n = u.nationality || "-"; natCount[n] = (natCount[n] || 0) + 1; });
+      var langCount = {};
+      users.forEach(function (u) { var l = u.preferredLanguage || "-"; langCount[l] = (langCount[l] || 0) + 1; });
+
+      body.innerHTML = "";
+      var tiles = [
+        ["신규 가입자", newUsers], ["전체 회원", users.length], ["신규 게시글", newPosts],
+        ["신고된 게시글", reportedCount], ["숨김 처리됨", hiddenCount], ["번역 실패", failedTranslations],
+        ["중고거래 완료", marketDone], ["도움요청 해결", helpResolved]
+      ];
+      var grid = document.createElement("div");
+      grid.className = "stat-grid";
+      tiles.forEach(function (t) {
+        var box = document.createElement("div");
+        box.className = "stat-box";
+        box.innerHTML = "<p class=\"stat-label\"></p><p class=\"stat-value\"></p>";
+        box.querySelector(".stat-label").textContent = t[0];
+        box.querySelector(".stat-value").textContent = t[1];
+        grid.appendChild(box);
+      });
+      body.appendChild(grid);
+
+      var catTitle = document.createElement("h3");
+      catTitle.textContent = "카테고리별 게시글 수(선택 기간)";
+      body.appendChild(catTitle);
+      var catList = document.createElement("div");
+      catList.className = "dist-list";
+      COMMUNITY_CATEGORY_ORDER.forEach(function (c) {
+        var row = document.createElement("div");
+        row.className = "dist-row";
+        row.textContent = (COMMUNITY_CATEGORIES[c] ? COMMUNITY_CATEGORIES[c].ko : c) + ": " + byCategory[c];
+        catList.appendChild(row);
+      });
+      body.appendChild(catList);
+
+      var natTitle = document.createElement("h3");
+      natTitle.textContent = "국적별 회원 수";
+      body.appendChild(natTitle);
+      var natList = document.createElement("div");
+      natList.className = "dist-list";
+      Object.keys(natCount).sort(function (a, b) { return natCount[b] - natCount[a]; }).forEach(function (n) {
+        var row = document.createElement("div");
+        row.className = "dist-row";
+        row.textContent = n + ": " + natCount[n];
+        natList.appendChild(row);
+      });
+      body.appendChild(natList);
+
+      var langTitle = document.createElement("h3");
+      langTitle.textContent = "선택 언어별 회원 수";
+      body.appendChild(langTitle);
+      var langList = document.createElement("div");
+      langList.className = "dist-list";
+      Object.keys(langCount).forEach(function (l) {
+        var row = document.createElement("div");
+        row.className = "dist-row";
+        row.textContent = l + ": " + langCount[l];
+        langList.appendChild(row);
+      });
+      body.appendChild(langList);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  /* ---------------- 게시글 관리 ---------------- */
+
+  function loadPosts() {
+    var d = db();
+    var body = els.postsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityPosts").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">게시글이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>작성자</th><th>상태</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      snap.forEach(function (doc) {
+        var p = doc.data();
+        var tr = document.createElement("tr");
+
+        var tdCat = document.createElement("td");
+        tdCat.textContent = (COMMUNITY_CATEGORIES[p.category] ? COMMUNITY_CATEGORIES[p.category].ko : p.category);
+        tr.appendChild(tdCat);
+
+        var tdTitle = document.createElement("td");
+        tdTitle.textContent = p.originalTitle || "";
+        tr.appendChild(tdTitle);
+
+        var tdAuthor = document.createElement("td");
+        tdAuthor.textContent = p.authorNameMasked || "";
+        tr.appendChild(tdAuthor);
+
+        var tdStatus = document.createElement("td");
+        tdStatus.textContent = p.status || "";
+        tr.appendChild(tdStatus);
+
+        var tdReport = document.createElement("td");
+        tdReport.textContent = String(p.reportCount || 0);
+        tr.appendChild(tdReport);
+
+        var tdDate = document.createElement("td");
+        tdDate.textContent = fmtDate(p.createdAt);
+        tr.appendChild(tdDate);
+
+        var tdActions = document.createElement("td");
+        var showBtn = document.createElement("button");
+        showBtn.type = "button";
+        showBtn.textContent = "다시 공개";
+        showBtn.addEventListener("click", function () { updatePostStatus(doc.id, "visible", showBtn); });
+        tdActions.appendChild(showBtn);
+
+        var hideBtn = document.createElement("button");
+        hideBtn.type = "button";
+        hideBtn.textContent = "숨김";
+        hideBtn.addEventListener("click", function () { updatePostStatus(doc.id, "hidden", hideBtn); });
+        tdActions.appendChild(hideBtn);
+
+        var delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", function () {
+          if (!window.confirm("정말 삭제하시겠습니까?")) return;
+          updatePostStatus(doc.id, "deleted", delBtn);
+        });
+        tdActions.appendChild(delBtn);
+
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function updatePostStatus(postId, status, btn) {
+    var d = db();
+    if (!d) return;
+    btn.disabled = true;
+    d.collection("communityPosts").doc(postId).update({ status: status }).then(function () {
+      loadPosts();
+    }).catch(function (err) {
+      window.alert("변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
+  /* ---------------- 회원 관리 ---------------- */
+
+  function loadUsers() {
+    var d = db();
+    var body = els.usersBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityUsers").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">회원이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>가입일</th><th>이름</th><th>국적</th><th>이메일</th><th>언어</th><th>인증</th><th>상태</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      snap.forEach(function (doc) {
+        var u = doc.data();
+        var tr = document.createElement("tr");
+        [fmtDate(u.createdAt), u.name || "", u.nationality || "", u.email || "", u.preferredLanguage || "",
+          (u.emailVerified ? "완료" : "미완료"), u.status || ""].forEach(function (v) {
+          var td = document.createElement("td");
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+
+        var tdActions = document.createElement("td");
+        var suspendBtn = document.createElement("button");
+        suspendBtn.type = "button";
+        suspendBtn.textContent = "이용 정지";
+        suspendBtn.addEventListener("click", function () { updateUserStatus(doc.id, "suspended", suspendBtn); });
+        tdActions.appendChild(suspendBtn);
+
+        var restoreBtn = document.createElement("button");
+        restoreBtn.type = "button";
+        restoreBtn.textContent = "정지 해제";
+        restoreBtn.addEventListener("click", function () { updateUserStatus(doc.id, "active", restoreBtn); });
+        tdActions.appendChild(restoreBtn);
+
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function updateUserStatus(uid, status, btn) {
+    var d = db();
+    if (!d) return;
+    btn.disabled = true;
+    d.collection("communityUsers").doc(uid).update({ status: status }).then(function () {
+      loadUsers();
+    }).catch(function (err) {
+      window.alert("변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
+  /* ---------------- 번역 관리 ---------------- */
+
+  function loadTranslations() {
+    var d = db();
+    var body = els.translationsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityPosts").where("translationStatus", "==", "failed").limit(100).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">번역 실패한 게시글이 없습니다.</p>"; return; }
+
+      snap.forEach(function (doc) {
+        var p = doc.data();
+        var card = document.createElement("div");
+        card.className = "admin-card";
+        var title = document.createElement("h3");
+        title.textContent = "[" + (COMMUNITY_CATEGORIES[p.category] ? COMMUNITY_CATEGORIES[p.category].ko : p.category) + "] " + p.originalTitle;
+        card.appendChild(title);
+        var meta = document.createElement("p");
+        meta.className = "empty-note";
+        meta.textContent = "원문 언어: " + p.originalLanguage + " · 번역 상태: 번역 실패";
+        card.appendChild(meta);
+
+        var retryBtn = document.createElement("button");
+        retryBtn.type = "button";
+        retryBtn.className = "filter-apply-btn";
+        retryBtn.textContent = "이 게시글 다시 번역";
+        retryBtn.addEventListener("click", function () { retryTranslation(doc.id, p, retryBtn); });
+        card.appendChild(retryBtn);
+
+        body.appendChild(card);
+      });
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function retryTranslation(postId, post, btn) {
+    var user = currentAdminUser();
+    if (!user) { window.alert("먼저 관리자 계정으로 로그인해주세요."); return; }
+    btn.disabled = true;
+    btn.textContent = "번역 중...";
+    var targets = ["ko", "zh", "vi", "en", "mn"].filter(function (l) { return l !== post.originalLanguage; });
+    user.getIdToken().then(function (idToken) {
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
+          title: post.originalTitle, content: post.originalContent, targetLanguages: targets
+        })
+      });
+    }).then(function (res) { return res.json(); }).then(function (data) {
+      var update = { translations: data.translations || {} };
+      update.translationStatus = (data.failedLanguages && data.failedLanguages.length) ? "failed" : "done";
+      return db().collection("communityPosts").doc(postId).update(update);
+    }).then(function () {
+      loadTranslations();
+    }).catch(function () {
+      btn.disabled = false;
+      btn.textContent = "이 게시글 다시 번역";
+      window.alert("재번역에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    });
+  }
+
+  /* ---------------- 초기화 ---------------- */
+
+  function init() {
+    els.subTabs = {
+      stats: qs("commAdminTabStats"), posts: qs("commAdminTabPosts"),
+      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations")
+    };
+    els.subPages = {
+      stats: qs("commAdminPageStats"), posts: qs("commAdminPagePosts"),
+      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations")
+    };
+    if (!els.subTabs.stats) return; // 커뮤니티 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+
+    els.statsBody = qs("commAdminStatsBody");
+    els.postsBody = qs("commAdminPostsBody");
+    els.usersBody = qs("commAdminUsersBody");
+    els.translationsBody = qs("commAdminTranslationsBody");
+
+    Object.keys(els.subTabs).forEach(function (key) {
+      els.subTabs[key].addEventListener("click", function () { showTab(key); });
+    });
+
+    var periodBar = qs("commAdminStatsPeriodBar");
+    if (periodBar) {
+      Array.prototype.forEach.call(periodBar.querySelectorAll("button"), function (btn) {
+        btn.addEventListener("click", function () {
+          Array.prototype.forEach.call(periodBar.querySelectorAll("button"), function (b) { b.classList.remove("active"); });
+          btn.classList.add("active");
+          currentPeriod = btn.getAttribute("data-period");
+          loadStats();
+        });
+      });
+    }
+
+    showTab("stats");
+  }
+
+  return { init: init, refresh: function () { showTab(currentTab); } };
 })();
 
 </script>

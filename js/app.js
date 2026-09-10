@@ -216,6 +216,9 @@
     if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
       window.PwaManager.setLang(lang);
     }
+    if (window.Community && typeof window.Community.setLang === "function") {
+      window.Community.setLang(lang);
+    }
   }
 
   function changeGroup(delta) {
@@ -693,7 +696,8 @@
     els.helloKoreanUrl = qs("helloKoreanUrl");
 
     els.storeTabButtons = {};
-    Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab"), function (btn) {
+    // 커뮤니티 버튼(.community-tab, data-store 없음)은 매장이 아니므로 제외합니다.
+    Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab[data-store]"), function (btn) {
       var store = btn.getAttribute("data-store");
       els.storeTabButtons[store] = btn;
       btn.addEventListener("click", function () { setStore(store); });
@@ -752,6 +756,10 @@
     // PWA 업데이트/설치 배너 문구도 처음부터 저장된 언어에 맞춰 둡니다.
     if (window.PwaManager && typeof window.PwaManager.setLang === "function") {
       window.PwaManager.setLang(state.lang);
+    }
+    // 커뮤니티 상단 버튼 문구도 처음부터 저장된 언어에 맞춰 둡니다.
+    if (window.Community && typeof window.Community.setLang === "function") {
+      window.Community.setLang(state.lang);
     }
 
     /* 관리자 페이지에서 등록한 주간메뉴로 동기화 (없으면 정적 데이터 유지) */
