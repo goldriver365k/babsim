@@ -308,9 +308,12 @@ var Community = (function () {
     }
     if (btn) btn.disabled = true;
     var provider = new firebase.auth.GoogleAuthProvider();
-    a.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
-      return a.signInWithPopup(provider);
-    }).then(function (result) {
+    // signInWithPopup은 클릭 이벤트 처리 중 곧바로(비동기 대기 없이)
+    // 호출해야 합니다 — 한 박자라도 늦게(예: setPersistence를 먼저
+    // await) 호출하면 일부 브라우저(특히 사파리/아이폰)가 "사용자가
+    // 직접 누른 동작"으로 인식하지 못해 팝업을 조용히 막아버립니다.
+    // (기본 지속성이 이미 LOCAL이라 별도 setPersistence 호출도 불필요.)
+    a.signInWithPopup(provider).then(function (result) {
       return db().collection("communityUsers").doc(result.user.uid).get();
     }).then(function (doc) {
       if (doc.exists) {
