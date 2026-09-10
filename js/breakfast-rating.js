@@ -3,9 +3,10 @@
    - 캐릭터 하나를 터치하면 별도 버튼 없이 즉시 저장됩니다.
    - 같은 기기에서는 같은 날짜(KST 기준)에 1회만 평가할 수 있습니다.
    - 문구는 BREAKFAST_RATING_TEXT(js/translations.js)의 번역을 그대로 사용합니다.
-   - app.js의 renderBreakfastArea()에서 window.BreakfastRating.render(...)를
-     호출하는 방식으로 연결되며, 이 스크립트가 없어도 기존 화면은 그대로
-     동작합니다(선택적 연동).
+   - app.js의 openBreakfastPopup()에서 window.BreakfastRating.render(...)를
+     호출하는 방식으로 연결되며(평가 UI 수정 단계부터 본문이 아닌 당일
+     첫 방문 팝업 안에서만 렌더링됩니다), 이 스크립트가 없어도 기존
+     화면은 그대로 동작합니다(선택적 연동).
    ========================================================================== */
 
 var BreakfastRating = (function () {
@@ -18,6 +19,7 @@ var BreakfastRating = (function () {
   var els = null;
   var busy = false;
   var justRatedDateKey = null; // 이번 화면 방문 중 방금 평가를 마친 날짜(감사 문구용)
+  var onRatedCallback = null; // 평가 저장 성공 직후 호출자(app.js)에게 알리는 선택적 콜백
 
   function qs(id) { return document.getElementById(id); }
 
@@ -203,10 +205,13 @@ var BreakfastRating = (function () {
     });
 
     saveRating(score, dateKey, lang, menuText, menuNames, mealType).then(function () {
+      // 저장이 실제로 성공한 뒤에만(DB 응답 확인 후) 완료 처리합니다 —
+      // 실패 시에는 이 블록에 도달하지 않으므로 아래 콜백도 호출되지 않습니다.
       setRatedToday(dateKey, score);
       justRatedDateKey = dateKey;
       busy = false;
       showCompletedOrThanks(lang, dateKey);
+      if (typeof onRatedCallback === "function") onRatedCallback(dateKey, score);
     }).catch(function (err) {
       console.error("아침밥 평가 저장 오류:", err);
       showErrorKeepOptions(lang);
@@ -220,9 +225,12 @@ var BreakfastRating = (function () {
    * @param {string} menuText 오늘의 대표 메뉴(한국어) - 관리자 통계 표시용
    * @param {string[]} [menuNames] 오늘 제공된 메뉴 전체 목록(한국어) - 평가 데이터에 함께 저장
    * @param {string} [mealType] "regular" | "simple" - menuNames가 어느 쪽 메뉴인지
+   * @param {function} [onRated] 평가 저장이 성공한 직후 호출되는 선택적 콜백(dateKey, score)
+   *   — 평가 팝업(app.js)이 "오늘 평가 완료" 상태 저장 + 팝업 닫기에 사용합니다.
    */
-  function render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType) {
+  function render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType, onRated) {
     ensureEls();
+    onRatedCallback = onRated || null;
     if (!els.wrap) return;
 
     if (!hasTodayMenu || typeof BREAKFAST_RATING_TEXT === "undefined") {

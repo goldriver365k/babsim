@@ -979,6 +979,7 @@ button {
 .breakfast-popup-overlay[hidden] { display: none; }
 
 .breakfast-popup-sheet {
+  position: relative;
   width: 100%;
   max-width: 480px;
   background: #ffffff;
@@ -987,40 +988,30 @@ button {
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.14);
 }
 
-.breakfast-popup-title {
-  margin: 0 0 16px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-dark);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.breakfast-popup-actions {
+/* 평가하지 않고 닫기(X) — 평가 완료로 처리하지 않고, 이번 세션에서만 닫습니다 */
+.breakfast-popup-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.breakfast-popup-btn-primary {
-  min-height: 48px;
-  padding: 10px 16px;
+  align-items: center;
+  justify-content: center;
+  background: none;
   border: none;
-  border-radius: var(--radius-sm);
-  background: var(--blue);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 50%;
+  color: var(--text-mid);
+  font-size: 20px;
+  line-height: 1;
 }
 
-.breakfast-popup-btn-secondary {
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid var(--border-gray);
-  border-radius: var(--radius-sm);
-  background: #ffffff;
-  color: var(--text-mid);
-  font-size: 14px;
+.breakfast-popup-close-btn::before { content: "\2715"; }
+
+.breakfast-popup-close-btn:hover,
+.breakfast-popup-close-btn:focus-visible {
+  background: #f2f4f7;
+  outline: none;
 }
 
 /* ---------------- 본문 ---------------- */
@@ -1330,17 +1321,17 @@ main {
 
 /* ---- 오늘의 메뉴 평가 (천원의 아침밥) ---- */
 
+/* 평가 UI 수정 단계: 본문이 아니라 당일 첫 방문 팝업(.breakfast-popup-sheet)
+   안에서만 쓰이므로, 더 이상 아래쪽 콘텐츠와 구분하는 테두리가 필요 없습니다. */
 .ba-rating {
   max-width: 480px;
-  margin: 0 auto 20px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border-gray);
+  margin: 0 auto;
 }
 
 .ba-rating[hidden] { display: none; }
 
 .ba-rating-title {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   font-size: 17px;
   font-weight: 800;
   color: var(--text-dark);
@@ -1349,17 +1340,20 @@ main {
 
 .ba-rating-title[hidden] { display: none; }
 
+/* 평가 UI 수정 단계: 5개를 한 줄에 억지로 욱여넣지 않고, 좁은 화면에서는
+   자연스럽게 줄바꿈되도록 합니다(각 버튼 최소 크기 확보). */
 .ba-rating-options {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .ba-rating-options[hidden] { display: none; }
 
 .ba-rating-option {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 1 76px;
+  min-width: 64px;
   min-height: 76px;
   display: flex;
   flex-direction: column;
@@ -1369,7 +1363,7 @@ main {
   background: #ffffff;
   border: 1px solid var(--border-gray);
   border-radius: var(--radius-sm);
-  padding: 8px 2px;
+  padding: 8px 4px;
 }
 
 .ba-rating-option:hover:not(:disabled),

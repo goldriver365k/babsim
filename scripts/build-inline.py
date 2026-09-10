@@ -212,15 +212,19 @@ def build():
   </button>
 </nav>
 
-<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계).
-     localStorage만 사용하고 별도 Firebase 조회는 하지 않습니다
-     (js/app.js의 maybeShowBreakfastPopup). -->
+<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계, 평가 UI
+     수정 단계에서 본문 평가 영역을 이 팝업 안으로 이동). 평가 완료 여부
+     확인에는 localStorage만 쓰고 별도 Firebase 조회는 하지 않습니다
+     (js/app.js의 maybeShowBreakfastPopup). 평가 위젯 자체(#baRating 이하)는
+     js/breakfast-rating.js가 기존 로직 그대로 채웁니다 — 새 평가
+     시스템이 아니라 같은 위젯을 화면 본문에서 팝업으로 옮긴 것입니다. -->
 <div class="breakfast-popup-overlay" id="breakfastPopupOverlay" hidden>
-  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="breakfastPopupTitle">
-    <p class="breakfast-popup-title" id="breakfastPopupTitle"></p>
-    <div class="breakfast-popup-actions">
-      <button type="button" class="breakfast-popup-btn-primary" id="breakfastPopupRateBtn"></button>
-      <button type="button" class="breakfast-popup-btn-secondary" id="breakfastPopupDismissBtn"></button>
+  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="baRatingTitle">
+    <button type="button" class="breakfast-popup-close-btn" id="breakfastPopupCloseBtn"></button>
+    <div class="ba-rating" id="baRating" hidden>
+      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
+      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
+      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
     </div>
   </div>
 </div>
@@ -253,11 +257,9 @@ def build():
     <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
     <p class="ba-price" id="baPriceValue">1,000원</p>
 
-    <div class="ba-rating" id="baRating" hidden>
-      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
-      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
-      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
-    </div>
+    <!-- 평가 위젯은 더 이상 이 화면 본문에 표시하지 않습니다(평가 UI
+         수정 단계) — 당일 첫 방문 팝업(#breakfastPopupOverlay)에서만
+         보여줍니다. -->
 
     <div class="ba-meal-cards">
       <div class="ba-meal-card ba-meal-card-today">

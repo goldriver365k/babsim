@@ -517,7 +517,9 @@
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
     renderMealList(els.todayMealList, lang, 0, info.todayClosedMessage[lang] || info.todayClosedMessage.ko);
-    renderBreakfastRating(lang);
+    // 평가 위젯은 더 이상 이 화면(본문)에 렌더링하지 않습니다 — 이제
+    // openBreakfastPopup()에서 팝업이 열릴 때만 renderBreakfastRating을
+    // 호출합니다(평가 UI 수정 단계: 본문에서 팝업으로 이동).
 
     els.baTomorrowMenuTitle.textContent = info.tomorrowMenuTitle[lang];
     els.baTomorrowDateValue.textContent = formatSeoulDateDisplay(lang, 1);
@@ -585,29 +587,55 @@
         menuNames = [menuText];
       }
     }
-    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType);
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType, handleBreakfastRatingSaved);
   }
 
-  /* ---------------- 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업 ----------------
-     Firebase read/write 없이 localStorage만 사용합니다(비용 최소화 지시).
-     같은 기기/브라우저에서 하루(KST 기준) 최초 방문에만 1회 표시하고,
-     이미 오늘 평가를 마친 경우에도 다시 표시하지 않습니다(기존
-     BreakfastRating 모듈의 저장값을 그대로 재사용 — 새 평가 시스템 없음). */
-  var BREAKFAST_POPUP_KEY = "breakfastRatingPopupDate";
+  /* ---------------- 천원의 아침밥 평가 팝업 (모바일 UI 개선 6단계, 평가 UI
+     수정 단계에서 본문 평가 영역을 팝업 안으로 이동) ----------------
+     Firebase read/write 없이 localStorage/sessionStorage만 사용합니다
+     (비용 최소화 지시). 두 상태를 분리해서 관리합니다:
+       - breakfastRatingCompletedDate(localStorage): 실제로 평가를 저장
+         완료한 날짜(KST). 이 날짜가 오늘이면 다음날까지 팝업을 다시
+         띄우지 않습니다. 반드시 기존 평가 저장(BreakfastRating 모듈)이
+         성공한 뒤에만 기록합니다.
+       - breakfastRatingPopupDismissed(sessionStorage): 평가하지 않고
+         X로 닫기만 한 경우. 같은 세션(탭)에서는 다시 띄우지 않지만,
+         다음 방문/새 세션에서는 (완료 기록이 없다면) 다시 표시됩니다. */
+  var BREAKFAST_COMPLETED_KEY = "breakfastRatingCompletedDate";
+  var BREAKFAST_DISMISSED_SESSION_KEY = "breakfastRatingPopupDismissed";
 
-  function markBreakfastPopupShownToday() {
-    try { localStorage.setItem(BREAKFAST_POPUP_KEY, getSeoulDateKey(0)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  function markBreakfastRatingCompletedToday() {
+    try { localStorage.setItem(BREAKFAST_COMPLETED_KEY, getSeoulDateKey(0)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  }
+
+  function isBreakfastRatingCompletedToday() {
+    try { return localStorage.getItem(BREAKFAST_COMPLETED_KEY) === getSeoulDateKey(0); } catch (e) { return false; }
+  }
+
+  function markBreakfastPopupDismissedThisSession() {
+    try { sessionStorage.setItem(BREAKFAST_DISMISSED_SESSION_KEY, "true"); } catch (e) { /* sessionStorage 미지원 시 무시 */ }
+  }
+
+  function isBreakfastPopupDismissedThisSession() {
+    try { return sessionStorage.getItem(BREAKFAST_DISMISSED_SESSION_KEY) === "true"; } catch (e) { return false; }
   }
 
   function closeBreakfastPopup() {
     if (els.breakfastPopupOverlay) els.breakfastPopupOverlay.hidden = true;
   }
 
+  // 평가 저장이 실제로 성공한 뒤에만(BreakfastRating 모듈이 호출) 완료
+  // 상태를 기록하고 팝업을 닫습니다 — 저장 실패 시에는 호출되지 않으므로
+  // 완료 처리도 되지 않습니다.
+  function handleBreakfastRatingSaved() {
+    markBreakfastRatingCompletedToday();
+    closeBreakfastPopup();
+  }
+
   function openBreakfastPopup() {
     if (!els.breakfastPopupOverlay) return;
-    if (els.breakfastPopupTitle) els.breakfastPopupTitle.textContent = BREAKFAST_RATING_TEXT.title[state.lang];
-    if (els.breakfastPopupRateBtn) els.breakfastPopupRateBtn.textContent = BREAKFAST_RATING_TEXT.popupRateBtn[state.lang];
-    if (els.breakfastPopupDismissBtn) els.breakfastPopupDismissBtn.textContent = BREAKFAST_RATING_TEXT.popupDismissBtn[state.lang];
+    if (els.breakfastPopupCloseBtn) els.breakfastPopupCloseBtn.setAttribute("aria-label", BREAKFAST_RATING_TEXT.close[state.lang]);
+    renderBreakfastRating(state.lang); // 평가 위젯(#baRating)을 팝업 안에서 새로 렌더링
     els.breakfastPopupOverlay.hidden = false;
   }
 
@@ -616,13 +644,12 @@
     // 커뮤니티 화면으로 바로 들어온 경우(딥링크)에는 메인 화면 전용
     // 팝업을 띄우지 않습니다.
     if (window.Community && window.Community.isCommunityPath(location.pathname)) return;
+    if (isBreakfastRatingCompletedToday()) return;
+    if (isBreakfastPopupDismissedThisSession()) return;
+    if (!hasTodayBreakfastMenu()) return;
     var todayKey = getSeoulDateKey(0);
-    var alreadyShownToday;
-    try { alreadyShownToday = localStorage.getItem(BREAKFAST_POPUP_KEY) === todayKey; } catch (e) { alreadyShownToday = true; }
-    if (alreadyShownToday) return;
-    if (!hasTodayBreakfastMenu()) { markBreakfastPopupShownToday(); return; }
     if (window.BreakfastRating && typeof window.BreakfastRating.isRatedToday === "function" && window.BreakfastRating.isRatedToday(todayKey)) {
-      markBreakfastPopupShownToday();
+      markBreakfastRatingCompletedToday(); // 기존 평가 모듈 기록만 있던 경우 새 키로도 보강
       return;
     }
     openBreakfastPopup();
@@ -820,9 +847,7 @@
     els.bottomNavMyBtn = qs("bottomNavMyBtn");
 
     els.breakfastPopupOverlay = qs("breakfastPopupOverlay");
-    els.breakfastPopupTitle = qs("breakfastPopupTitle");
-    els.breakfastPopupRateBtn = qs("breakfastPopupRateBtn");
-    els.breakfastPopupDismissBtn = qs("breakfastPopupDismissBtn");
+    els.breakfastPopupCloseBtn = qs("breakfastPopupCloseBtn");
 
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
@@ -1004,24 +1029,17 @@
       }
     };
 
-    // 당일 첫 방문 평가 팝업(모바일 UI 개선 6단계)
-    if (els.breakfastPopupRateBtn) {
-      els.breakfastPopupRateBtn.addEventListener("click", function () {
-        markBreakfastPopupShownToday();
-        closeBreakfastPopup();
-        state.bapsimView = "breakfast";
-        goToStore("bapsim"); // 기존 천원의 아침밥 화면(밥심 내부)을 그대로 재사용
-      });
-    }
-    if (els.breakfastPopupDismissBtn) {
-      els.breakfastPopupDismissBtn.addEventListener("click", function () {
-        markBreakfastPopupShownToday();
+    // 당일 첫 방문 평가 팝업 — X로 닫기는 "평가완료"가 아니라 "이번
+    // 세션에서만 닫기"입니다(평가 UI 수정 단계 5번 요구사항).
+    if (els.breakfastPopupCloseBtn) {
+      els.breakfastPopupCloseBtn.addEventListener("click", function () {
+        markBreakfastPopupDismissedThisSession();
         closeBreakfastPopup();
       });
     }
     if (els.breakfastPopupOverlay) {
       els.breakfastPopupOverlay.addEventListener("click", function (e) {
-        if (e.target === els.breakfastPopupOverlay) { markBreakfastPopupShownToday(); closeBreakfastPopup(); }
+        if (e.target === els.breakfastPopupOverlay) { markBreakfastPopupDismissedThisSession(); closeBreakfastPopup(); }
       });
     }
 

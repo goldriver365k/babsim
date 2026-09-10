@@ -1004,6 +1004,7 @@ button {
 .breakfast-popup-overlay[hidden] { display: none; }
 
 .breakfast-popup-sheet {
+  position: relative;
   width: 100%;
   max-width: 480px;
   background: #ffffff;
@@ -1012,40 +1013,30 @@ button {
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.14);
 }
 
-.breakfast-popup-title {
-  margin: 0 0 16px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-dark);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.breakfast-popup-actions {
+/* 평가하지 않고 닫기(X) — 평가 완료로 처리하지 않고, 이번 세션에서만 닫습니다 */
+.breakfast-popup-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.breakfast-popup-btn-primary {
-  min-height: 48px;
-  padding: 10px 16px;
+  align-items: center;
+  justify-content: center;
+  background: none;
   border: none;
-  border-radius: var(--radius-sm);
-  background: var(--blue);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 50%;
+  color: var(--text-mid);
+  font-size: 20px;
+  line-height: 1;
 }
 
-.breakfast-popup-btn-secondary {
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid var(--border-gray);
-  border-radius: var(--radius-sm);
-  background: #ffffff;
-  color: var(--text-mid);
-  font-size: 14px;
+.breakfast-popup-close-btn::before { content: "\2715"; }
+
+.breakfast-popup-close-btn:hover,
+.breakfast-popup-close-btn:focus-visible {
+  background: #f2f4f7;
+  outline: none;
 }
 
 /* ---------------- 본문 ---------------- */
@@ -1355,17 +1346,17 @@ main {
 
 /* ---- 오늘의 메뉴 평가 (천원의 아침밥) ---- */
 
+/* 평가 UI 수정 단계: 본문이 아니라 당일 첫 방문 팝업(.breakfast-popup-sheet)
+   안에서만 쓰이므로, 더 이상 아래쪽 콘텐츠와 구분하는 테두리가 필요 없습니다. */
 .ba-rating {
   max-width: 480px;
-  margin: 0 auto 20px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border-gray);
+  margin: 0 auto;
 }
 
 .ba-rating[hidden] { display: none; }
 
 .ba-rating-title {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   font-size: 17px;
   font-weight: 800;
   color: var(--text-dark);
@@ -1374,17 +1365,20 @@ main {
 
 .ba-rating-title[hidden] { display: none; }
 
+/* 평가 UI 수정 단계: 5개를 한 줄에 억지로 욱여넣지 않고, 좁은 화면에서는
+   자연스럽게 줄바꿈되도록 합니다(각 버튼 최소 크기 확보). */
 .ba-rating-options {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .ba-rating-options[hidden] { display: none; }
 
 .ba-rating-option {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 1 76px;
+  min-width: 64px;
   min-height: 76px;
   display: flex;
   flex-direction: column;
@@ -1394,7 +1388,7 @@ main {
   background: #ffffff;
   border: 1px solid var(--border-gray);
   border-radius: var(--radius-sm);
-  padding: 8px 2px;
+  padding: 8px 4px;
 }
 
 .ba-rating-option:hover:not(:disabled),
@@ -2324,15 +2318,19 @@ main {
   </button>
 </nav>
 
-<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계).
-     localStorage만 사용하고 별도 Firebase 조회는 하지 않습니다
-     (js/app.js의 maybeShowBreakfastPopup). -->
+<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계, 평가 UI
+     수정 단계에서 본문 평가 영역을 이 팝업 안으로 이동). 평가 완료 여부
+     확인에는 localStorage만 쓰고 별도 Firebase 조회는 하지 않습니다
+     (js/app.js의 maybeShowBreakfastPopup). 평가 위젯 자체(#baRating 이하)는
+     js/breakfast-rating.js가 기존 로직 그대로 채웁니다 — 새 평가
+     시스템이 아니라 같은 위젯을 화면 본문에서 팝업으로 옮긴 것입니다. -->
 <div class="breakfast-popup-overlay" id="breakfastPopupOverlay" hidden>
-  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="breakfastPopupTitle">
-    <p class="breakfast-popup-title" id="breakfastPopupTitle"></p>
-    <div class="breakfast-popup-actions">
-      <button type="button" class="breakfast-popup-btn-primary" id="breakfastPopupRateBtn"></button>
-      <button type="button" class="breakfast-popup-btn-secondary" id="breakfastPopupDismissBtn"></button>
+  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="baRatingTitle">
+    <button type="button" class="breakfast-popup-close-btn" id="breakfastPopupCloseBtn"></button>
+    <div class="ba-rating" id="baRating" hidden>
+      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
+      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
+      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
     </div>
   </div>
 </div>
@@ -2365,11 +2363,9 @@ main {
     <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
     <p class="ba-price" id="baPriceValue">1,000원</p>
 
-    <div class="ba-rating" id="baRating" hidden>
-      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
-      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
-      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
-    </div>
+    <!-- 평가 위젯은 더 이상 이 화면 본문에 표시하지 않습니다(평가 UI
+         수정 단계) — 당일 첫 방문 팝업(#breakfastPopupOverlay)에서만
+         보여줍니다. -->
 
     <div class="ba-meal-cards">
       <div class="ba-meal-card ba-meal-card-today">
@@ -2630,9 +2626,8 @@ const BREAKFAST_RATING_TEXT = {
     bn: "সংরক্ষণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
     my: "သိမ်းဆည်းမှုမအောင်မြင်ပါ။ ထပ်မံကြိုးစားပါ။"
   },
-  /* 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업(버튼 2개) */
-  popupRateBtn: { ko: "평가하기", en: "Rate now", zh: "去评价", vi: "Đánh giá ngay", mn: "Үнэлэх", bn: "মূল্যায়ন করুন", my: "အကဲဖြတ်ရန်" },
-  popupDismissBtn: { ko: "오늘은 닫기", en: "Not today", zh: "今天不用了", vi: "Hôm nay bỏ qua", mn: "Өнөөдөр хаах", bn: "আজ বন্ধ করুন", my: "ယနေ့ပိတ်ရန်" }
+  /* 평가 UI 수정 단계: 팝업 X 닫기 버튼의 접근성 라벨(aria-label) */
+  close: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" }
 };
 
 /* ==========================================================================
@@ -3879,9 +3874,10 @@ function getFirebaseStorage() {
    - 캐릭터 하나를 터치하면 별도 버튼 없이 즉시 저장됩니다.
    - 같은 기기에서는 같은 날짜(KST 기준)에 1회만 평가할 수 있습니다.
    - 문구는 BREAKFAST_RATING_TEXT(js/translations.js)의 번역을 그대로 사용합니다.
-   - app.js의 renderBreakfastArea()에서 window.BreakfastRating.render(...)를
-     호출하는 방식으로 연결되며, 이 스크립트가 없어도 기존 화면은 그대로
-     동작합니다(선택적 연동).
+   - app.js의 openBreakfastPopup()에서 window.BreakfastRating.render(...)를
+     호출하는 방식으로 연결되며(평가 UI 수정 단계부터 본문이 아닌 당일
+     첫 방문 팝업 안에서만 렌더링됩니다), 이 스크립트가 없어도 기존
+     화면은 그대로 동작합니다(선택적 연동).
    ========================================================================== */
 
 var BreakfastRating = (function () {
@@ -3894,6 +3890,7 @@ var BreakfastRating = (function () {
   var els = null;
   var busy = false;
   var justRatedDateKey = null; // 이번 화면 방문 중 방금 평가를 마친 날짜(감사 문구용)
+  var onRatedCallback = null; // 평가 저장 성공 직후 호출자(app.js)에게 알리는 선택적 콜백
 
   function qs(id) { return document.getElementById(id); }
 
@@ -4079,10 +4076,13 @@ var BreakfastRating = (function () {
     });
 
     saveRating(score, dateKey, lang, menuText, menuNames, mealType).then(function () {
+      // 저장이 실제로 성공한 뒤에만(DB 응답 확인 후) 완료 처리합니다 —
+      // 실패 시에는 이 블록에 도달하지 않으므로 아래 콜백도 호출되지 않습니다.
       setRatedToday(dateKey, score);
       justRatedDateKey = dateKey;
       busy = false;
       showCompletedOrThanks(lang, dateKey);
+      if (typeof onRatedCallback === "function") onRatedCallback(dateKey, score);
     }).catch(function (err) {
       console.error("아침밥 평가 저장 오류:", err);
       showErrorKeepOptions(lang);
@@ -4096,9 +4096,12 @@ var BreakfastRating = (function () {
    * @param {string} menuText 오늘의 대표 메뉴(한국어) - 관리자 통계 표시용
    * @param {string[]} [menuNames] 오늘 제공된 메뉴 전체 목록(한국어) - 평가 데이터에 함께 저장
    * @param {string} [mealType] "regular" | "simple" - menuNames가 어느 쪽 메뉴인지
+   * @param {function} [onRated] 평가 저장이 성공한 직후 호출되는 선택적 콜백(dateKey, score)
+   *   — 평가 팝업(app.js)이 "오늘 평가 완료" 상태 저장 + 팝업 닫기에 사용합니다.
    */
-  function render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType) {
+  function render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType, onRated) {
     ensureEls();
+    onRatedCallback = onRated || null;
     if (!els.wrap) return;
 
     if (!hasTodayMenu || typeof BREAKFAST_RATING_TEXT === "undefined") {
@@ -7877,7 +7880,9 @@ document.addEventListener("DOMContentLoaded", function () {
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
     renderMealList(els.todayMealList, lang, 0, info.todayClosedMessage[lang] || info.todayClosedMessage.ko);
-    renderBreakfastRating(lang);
+    // 평가 위젯은 더 이상 이 화면(본문)에 렌더링하지 않습니다 — 이제
+    // openBreakfastPopup()에서 팝업이 열릴 때만 renderBreakfastRating을
+    // 호출합니다(평가 UI 수정 단계: 본문에서 팝업으로 이동).
 
     els.baTomorrowMenuTitle.textContent = info.tomorrowMenuTitle[lang];
     els.baTomorrowDateValue.textContent = formatSeoulDateDisplay(lang, 1);
@@ -7945,29 +7950,55 @@ document.addEventListener("DOMContentLoaded", function () {
         menuNames = [menuText];
       }
     }
-    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType);
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType, handleBreakfastRatingSaved);
   }
 
-  /* ---------------- 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업 ----------------
-     Firebase read/write 없이 localStorage만 사용합니다(비용 최소화 지시).
-     같은 기기/브라우저에서 하루(KST 기준) 최초 방문에만 1회 표시하고,
-     이미 오늘 평가를 마친 경우에도 다시 표시하지 않습니다(기존
-     BreakfastRating 모듈의 저장값을 그대로 재사용 — 새 평가 시스템 없음). */
-  var BREAKFAST_POPUP_KEY = "breakfastRatingPopupDate";
+  /* ---------------- 천원의 아침밥 평가 팝업 (모바일 UI 개선 6단계, 평가 UI
+     수정 단계에서 본문 평가 영역을 팝업 안으로 이동) ----------------
+     Firebase read/write 없이 localStorage/sessionStorage만 사용합니다
+     (비용 최소화 지시). 두 상태를 분리해서 관리합니다:
+       - breakfastRatingCompletedDate(localStorage): 실제로 평가를 저장
+         완료한 날짜(KST). 이 날짜가 오늘이면 다음날까지 팝업을 다시
+         띄우지 않습니다. 반드시 기존 평가 저장(BreakfastRating 모듈)이
+         성공한 뒤에만 기록합니다.
+       - breakfastRatingPopupDismissed(sessionStorage): 평가하지 않고
+         X로 닫기만 한 경우. 같은 세션(탭)에서는 다시 띄우지 않지만,
+         다음 방문/새 세션에서는 (완료 기록이 없다면) 다시 표시됩니다. */
+  var BREAKFAST_COMPLETED_KEY = "breakfastRatingCompletedDate";
+  var BREAKFAST_DISMISSED_SESSION_KEY = "breakfastRatingPopupDismissed";
 
-  function markBreakfastPopupShownToday() {
-    try { localStorage.setItem(BREAKFAST_POPUP_KEY, getSeoulDateKey(0)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  function markBreakfastRatingCompletedToday() {
+    try { localStorage.setItem(BREAKFAST_COMPLETED_KEY, getSeoulDateKey(0)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  }
+
+  function isBreakfastRatingCompletedToday() {
+    try { return localStorage.getItem(BREAKFAST_COMPLETED_KEY) === getSeoulDateKey(0); } catch (e) { return false; }
+  }
+
+  function markBreakfastPopupDismissedThisSession() {
+    try { sessionStorage.setItem(BREAKFAST_DISMISSED_SESSION_KEY, "true"); } catch (e) { /* sessionStorage 미지원 시 무시 */ }
+  }
+
+  function isBreakfastPopupDismissedThisSession() {
+    try { return sessionStorage.getItem(BREAKFAST_DISMISSED_SESSION_KEY) === "true"; } catch (e) { return false; }
   }
 
   function closeBreakfastPopup() {
     if (els.breakfastPopupOverlay) els.breakfastPopupOverlay.hidden = true;
   }
 
+  // 평가 저장이 실제로 성공한 뒤에만(BreakfastRating 모듈이 호출) 완료
+  // 상태를 기록하고 팝업을 닫습니다 — 저장 실패 시에는 호출되지 않으므로
+  // 완료 처리도 되지 않습니다.
+  function handleBreakfastRatingSaved() {
+    markBreakfastRatingCompletedToday();
+    closeBreakfastPopup();
+  }
+
   function openBreakfastPopup() {
     if (!els.breakfastPopupOverlay) return;
-    if (els.breakfastPopupTitle) els.breakfastPopupTitle.textContent = BREAKFAST_RATING_TEXT.title[state.lang];
-    if (els.breakfastPopupRateBtn) els.breakfastPopupRateBtn.textContent = BREAKFAST_RATING_TEXT.popupRateBtn[state.lang];
-    if (els.breakfastPopupDismissBtn) els.breakfastPopupDismissBtn.textContent = BREAKFAST_RATING_TEXT.popupDismissBtn[state.lang];
+    if (els.breakfastPopupCloseBtn) els.breakfastPopupCloseBtn.setAttribute("aria-label", BREAKFAST_RATING_TEXT.close[state.lang]);
+    renderBreakfastRating(state.lang); // 평가 위젯(#baRating)을 팝업 안에서 새로 렌더링
     els.breakfastPopupOverlay.hidden = false;
   }
 
@@ -7976,13 +8007,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // 커뮤니티 화면으로 바로 들어온 경우(딥링크)에는 메인 화면 전용
     // 팝업을 띄우지 않습니다.
     if (window.Community && window.Community.isCommunityPath(location.pathname)) return;
+    if (isBreakfastRatingCompletedToday()) return;
+    if (isBreakfastPopupDismissedThisSession()) return;
+    if (!hasTodayBreakfastMenu()) return;
     var todayKey = getSeoulDateKey(0);
-    var alreadyShownToday;
-    try { alreadyShownToday = localStorage.getItem(BREAKFAST_POPUP_KEY) === todayKey; } catch (e) { alreadyShownToday = true; }
-    if (alreadyShownToday) return;
-    if (!hasTodayBreakfastMenu()) { markBreakfastPopupShownToday(); return; }
     if (window.BreakfastRating && typeof window.BreakfastRating.isRatedToday === "function" && window.BreakfastRating.isRatedToday(todayKey)) {
-      markBreakfastPopupShownToday();
+      markBreakfastRatingCompletedToday(); // 기존 평가 모듈 기록만 있던 경우 새 키로도 보강
       return;
     }
     openBreakfastPopup();
@@ -8180,9 +8210,7 @@ document.addEventListener("DOMContentLoaded", function () {
     els.bottomNavMyBtn = qs("bottomNavMyBtn");
 
     els.breakfastPopupOverlay = qs("breakfastPopupOverlay");
-    els.breakfastPopupTitle = qs("breakfastPopupTitle");
-    els.breakfastPopupRateBtn = qs("breakfastPopupRateBtn");
-    els.breakfastPopupDismissBtn = qs("breakfastPopupDismissBtn");
+    els.breakfastPopupCloseBtn = qs("breakfastPopupCloseBtn");
 
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
@@ -8364,24 +8392,17 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     };
 
-    // 당일 첫 방문 평가 팝업(모바일 UI 개선 6단계)
-    if (els.breakfastPopupRateBtn) {
-      els.breakfastPopupRateBtn.addEventListener("click", function () {
-        markBreakfastPopupShownToday();
-        closeBreakfastPopup();
-        state.bapsimView = "breakfast";
-        goToStore("bapsim"); // 기존 천원의 아침밥 화면(밥심 내부)을 그대로 재사용
-      });
-    }
-    if (els.breakfastPopupDismissBtn) {
-      els.breakfastPopupDismissBtn.addEventListener("click", function () {
-        markBreakfastPopupShownToday();
+    // 당일 첫 방문 평가 팝업 — X로 닫기는 "평가완료"가 아니라 "이번
+    // 세션에서만 닫기"입니다(평가 UI 수정 단계 5번 요구사항).
+    if (els.breakfastPopupCloseBtn) {
+      els.breakfastPopupCloseBtn.addEventListener("click", function () {
+        markBreakfastPopupDismissedThisSession();
         closeBreakfastPopup();
       });
     }
     if (els.breakfastPopupOverlay) {
       els.breakfastPopupOverlay.addEventListener("click", function (e) {
-        if (e.target === els.breakfastPopupOverlay) { markBreakfastPopupShownToday(); closeBreakfastPopup(); }
+        if (e.target === els.breakfastPopupOverlay) { markBreakfastPopupDismissedThisSession(); closeBreakfastPopup(); }
       });
     }
 
