@@ -79,12 +79,12 @@
             allow update, delete: if false;
           }
 
-          // ---------------- 유학생 커뮤니티 (2026-09-10 추가) ----------------
+          // ---------------- 유학생 커뮤니티 (2026-09-10 추가, 2026-09-11
+          // 이메일 인증 요구 제거 + Google 로그인 지원으로 수정) ----------------
           function isSignedIn() { return request.auth != null; }
-          function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
           function myProfile() { return get(/databases/$(database)/documents/communityUsers/$(request.auth.uid)).data; }
-          function isActiveMember() { return isVerified() && myProfile().status == 'active'; }
-          function isAdmin() { return isVerified() && myProfile().role == 'admin'; }
+          function isActiveMember() { return isSignedIn() && myProfile().status == 'active'; }
+          function isAdmin() { return isSignedIn() && myProfile().role == 'admin'; }
 
           // 회원 정보 — 이메일 노출 방지를 위해 본인 또는 관리자만 문서를
           // 읽을 수 있습니다(다른 회원의 이름·국적은 게시글/댓글에 저장된
@@ -191,10 +191,17 @@
    (관리자 페이지 상단의 "관리자 로그인" 버튼으로 통계를 보는 것과는
    별개입니다 — 통계 열람은 기존 암호로, 주간메뉴 쓰기는 이 계정으로.)
 
-   ⚠ 유학생 커뮤니티 회원가입/이메일 인증은 "이메일/비밀번호" 제공업체가
+   ⚠ 유학생 커뮤니티 이메일/비밀번호 회원가입은 "이메일/비밀번호" 제공업체가
    켜져 있기만 하면 별도 설정 없이 바로 동작합니다(위 항목에서 이미
-   켜둔 것과 같은 설정). 인증메일 발신 주소·문구를 바꾸고 싶다면 Firebase
-   콘솔 → Authentication → Templates 탭에서 수정할 수 있습니다(선택 사항).
+   켜둔 것과 같은 설정). 가입 시 이메일 인증메일을 보내지 않으며, 이메일
+   인증 여부를 접근 조건으로 쓰지 않습니다(가입 즉시 이용 가능).
+
+   ⚠ 유학생 커뮤니티 "Google로 계속하기" 로그인 — Firebase 콘솔 →
+   Authentication → "Sign-in method" 탭 → "Google" 제공업체를 사용 설정
+   해야 합니다(프로젝트 지원 이메일 지정 필요). 켜두지 않으면 Google
+   버튼을 눌렀을 때 오류가 뜨고, 이메일/비밀번호 가입·로그인에는 영향이
+   없습니다.
+
    커뮤니티 번역(netlify/functions/community-translate.js)은 새 환경변수
    없이 기존 OPENAI_API_KEY를 그대로 재사용합니다.
 

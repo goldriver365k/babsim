@@ -25,6 +25,7 @@ var Community = (function () {
   var els = {};
   var authUser = null;      // firebase.auth().currentUser
   var profile = null;       // communityUsers/{uid} 문서 데이터
+  var pendingProfileUser = null; // 로그인은 했지만 회원 정보 문서가 아직 없는 사용자(Google 첫 가입 등)
   var currentRoute = { path: "/", postId: null };
   var postCache = {};       // postId -> 마지막으로 불러온 게시글 문서(상세 화면 재사용)
 
@@ -133,15 +134,17 @@ var Community = (function () {
     if (currentRoute.name === "privacy") { renderStaticDoc(COMMUNITY_CONSENT.privacyTitle, communityPrivacyBody()); return; }
 
     var user = authUser;
-    var verified = !!(user && user.emailVerified);
 
     if (currentRoute.name === "login") { renderLogin(); return; }
     if (currentRoute.name === "signup") { renderSignup(); return; }
 
-    if (!user || !verified) {
+    if (!user) {
       renderLoginGate();
       return;
     }
+    // 소셜 로그인(Google) 첫 가입이거나, 어떤 이유로든 회원 정보 문서가
+    // 아직 없는 계정은 국적·언어·약관 동의를 받는 화면부터 보여줍니다.
+    if (pendingProfileUser) { renderCompleteProfile(); return; }
     if (profile && profile.status === "suspended") { renderSuspended(); return; }
 
     if (currentRoute.name === "my") { renderMyPage(); return; }
@@ -183,24 +186,17 @@ var Community = (function () {
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginRequiredTitle)));
     wrap.appendChild(el("p", "community-gate-desc", t(COMMUNITY_AUTH.loginRequiredDesc)));
 
-    if (authUser && !authUser.emailVerified) {
-      wrap.appendChild(el("p", "community-verify-notice", t(COMMUNITY_AUTH.verifyNotice)));
-      var resendBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.resendVerification));
-      resendBtn.type = "button";
-      resendBtn.addEventListener("click", function () { resendVerification(resendBtn); });
-      wrap.appendChild(resendBtn);
-    } else {
-      var actions = el("div", "community-gate-actions");
-      var loginBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.loginTitle));
-      loginBtn.type = "button";
-      loginBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
-      var signupBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
-      signupBtn.type = "button";
-      signupBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
-      actions.appendChild(loginBtn);
-      actions.appendChild(signupBtn);
-      wrap.appendChild(actions);
-    }
+    var actions = el("div", "community-gate-actions");
+    var loginBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.loginTitle));
+    loginBtn.type = "button";
+    loginBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
+    var signupBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
+    signupBtn.type = "button";
+    signupBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
+    actions.appendChild(loginBtn);
+    actions.appendChild(signupBtn);
+    wrap.appendChild(actions);
+
     els.root.appendChild(wrap);
   }
 
@@ -209,19 +205,6 @@ var Community = (function () {
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginRequiredTitle)));
     wrap.appendChild(el("p", "community-gate-desc", t(COMMUNITY_AUTH.suspendedNotice)));
     els.root.appendChild(wrap);
-  }
-
-  async function resendVerification(btn) {
-    if (!authUser) return;
-    btn.disabled = true;
-    try {
-      await authUser.sendEmailVerification();
-      showToast(t(COMMUNITY_AUTH.verificationSent));
-    } catch (e) {
-      showToast(t(COMMUNITY_MSG.errGeneric));
-    } finally {
-      btn.disabled = false;
-    }
   }
 
   /* ---------------- 로그인 / 회원가입 ---------------- */
@@ -240,6 +223,11 @@ var Community = (function () {
   function renderLogin() {
     var wrap = el("div", "community-page community-auth");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginTitle)));
+
+    var googleErrorP = el("p", "community-form-error");
+    wrap.appendChild(buildGoogleButton(googleErrorP));
+    wrap.appendChild(googleErrorP);
+    wrap.appendChild(el("p", "community-or-divider", t(COMMUNITY_AUTH.orDivider)));
 
     var form = el("form", "community-form");
     var emailInput = el("input"); emailInput.type = "email"; emailInput.autocomplete = "username"; emailInput.required = true;
@@ -270,6 +258,7 @@ var Community = (function () {
       a.setPersistence(persistence).then(function () {
         return a.signInWithEmailAndPassword(emailInput.value.trim(), pwInput.value);
       }).then(function () {
+        pendingProfileUser = null;
         navigate(ROUTE_PREFIX);
       }).catch(function () {
         errorP.textContent = t(COMMUNITY_MSG.errLogin);
@@ -302,9 +291,133 @@ var Community = (function () {
     });
   }
 
+  /* ---------------- Google 로그인 ---------------- */
+
+  function buildGoogleButton(errorP) {
+    var btn = el("button", "community-btn-secondary community-google-btn", t(COMMUNITY_AUTH.googleContinue));
+    btn.type = "button";
+    btn.addEventListener("click", function () { handleGoogleSignIn(btn, errorP); });
+    return btn;
+  }
+
+  function handleGoogleSignIn(btn, errorP) {
+    var a = auth();
+    if (!a || typeof firebase === "undefined" || !firebase.auth || !firebase.auth.GoogleAuthProvider) {
+      if (errorP) errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+      return;
+    }
+    if (btn) btn.disabled = true;
+    var provider = new firebase.auth.GoogleAuthProvider();
+    a.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
+      return a.signInWithPopup(provider);
+    }).then(function (result) {
+      return db().collection("communityUsers").doc(result.user.uid).get();
+    }).then(function (doc) {
+      if (doc.exists) {
+        pendingProfileUser = null;
+        navigate(ROUTE_PREFIX);
+      } else {
+        pendingProfileUser = a.currentUser;
+        navigate(ROUTE_PREFIX);
+      }
+    }).catch(function (err) {
+      if (errorP && err && err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+        errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+      }
+    }).finally(function () { if (btn) btn.disabled = false; });
+  }
+
+  /* Google로 처음 로그인한 회원의 국적/언어/약관 동의를 받는 화면.
+     이름은 Google 계정 이름을 기본값으로 채워주고 수정할 수 있게 합니다. */
+  function renderCompleteProfile() {
+    var user = pendingProfileUser;
+    var wrap = el("div", "community-page community-auth");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.completeProfileTitle)));
+    wrap.appendChild(el("p", "community-gate-desc", t(COMMUNITY_AUTH.completeProfileDesc)));
+
+    var form = el("form", "community-form");
+    var nameInput = el("input"); nameInput.type = "text"; nameInput.required = true; nameInput.maxLength = 40;
+    nameInput.value = (user && user.displayName) || "";
+    var natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList3");
+    natInput.placeholder = t(COMMUNITY_AUTH.nationalitySearchPlaceholder); natInput.required = true;
+    var datalist = el("datalist"); datalist.id = "communityNationalityList3";
+    COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+
+    var langSelect = el("select");
+    SUPPORTED_LANGS.forEach(function (code) {
+      var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол" }[code]);
+      opt.value = code;
+      if (code === lang) opt.selected = true;
+      langSelect.appendChild(opt);
+    });
+
+    form.appendChild(formField(COMMUNITY_AUTH.nameLabel, nameInput));
+    form.appendChild(formField(COMMUNITY_AUTH.nationalityLabel, natInput));
+    form.appendChild(datalist);
+    form.appendChild(formField(COMMUNITY_AUTH.langLabel, langSelect));
+
+    var privacyRow = el("label", "community-checkbox-row");
+    var privacyInput = el("input"); privacyInput.type = "checkbox"; privacyInput.required = true;
+    privacyRow.appendChild(privacyInput);
+    privacyRow.appendChild(document.createTextNode(" " + t(COMMUNITY_AUTH.privacyAgree)));
+    form.appendChild(privacyRow);
+
+    var rulesRow = el("label", "community-checkbox-row");
+    var rulesInput = el("input"); rulesInput.type = "checkbox"; rulesInput.required = true;
+    rulesRow.appendChild(rulesInput);
+    rulesRow.appendChild(document.createTextNode(" " + t(COMMUNITY_AUTH.rulesAgree)));
+    form.appendChild(rulesRow);
+
+    var errorP = el("p", "community-form-error");
+    form.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.submitSignup));
+    submitBtn.type = "submit";
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!nameInput.value.trim() || !natInput.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      var d = db();
+      if (!d || !user) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
+      submitBtn.disabled = true;
+      var now = firebase.firestore.FieldValue.serverTimestamp();
+      d.collection("communityUsers").doc(user.uid).set({
+        name: nameInput.value.trim(),
+        nationality: natInput.value.trim(),
+        email: user.email || "",
+        preferredLanguage: langSelect.value,
+        emailVerified: true, // Google 계정은 이미 검증된 이메일입니다
+        role: "user",
+        status: "active",
+        createdAt: now,
+        lastLoginAt: now,
+        termsAgreedAt: now,
+        privacyAgreedAt: now
+      }).then(function () {
+        return loadProfile(user.uid);
+      }).then(function () {
+        pendingProfileUser = null;
+        setLang(langSelect.value);
+        navigate(ROUTE_PREFIX);
+      }).catch(function () {
+        errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+        submitBtn.disabled = false;
+      });
+    });
+
+    wrap.appendChild(form);
+    els.root.appendChild(wrap);
+  }
+
   function renderSignup() {
     var wrap = el("div", "community-page community-auth");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.signupTitle)));
+
+    var googleErrorP = el("p", "community-form-error");
+    wrap.appendChild(buildGoogleButton(googleErrorP));
+    wrap.appendChild(googleErrorP);
+    wrap.appendChild(el("p", "community-or-divider", t(COMMUNITY_AUTH.orDivider)));
 
     var form = el("form", "community-form");
     var nameInput = el("input"); nameInput.type = "text"; nameInput.required = true; nameInput.maxLength = 40;
@@ -375,20 +488,23 @@ var Community = (function () {
       submitBtn.disabled = true;
       var now = firebase.firestore.FieldValue.serverTimestamp();
       a.createUserWithEmailAndPassword(emailInput.value.trim(), pwInput.value).then(function (cred) {
+        // 이메일 인증 절차 없이 바로 가입을 완료합니다(인증메일을 보내지
+        // 않고, 이메일 인증 여부를 접근 조건으로 쓰지 않습니다).
         return d.collection("communityUsers").doc(cred.user.uid).set({
           name: nameInput.value.trim(),
           nationality: natInput.value.trim(),
           email: emailInput.value.trim(),
           preferredLanguage: langSelect.value,
-          emailVerified: false,
+          emailVerified: true,
           role: "user",
           status: "active",
           createdAt: now,
           lastLoginAt: now,
           termsAgreedAt: now,
           privacyAgreedAt: now
-        }).then(function () { return cred.user.sendEmailVerification(); });
+        }).then(function () { return loadProfile(cred.user.uid); });
       }).then(function () {
+        pendingProfileUser = null;
         setLang(langSelect.value);
         navigate(ROUTE_PREFIX);
       }).catch(function (err) {
@@ -1418,14 +1534,23 @@ var Community = (function () {
         authUser = user;
         if (user) {
           loadProfile(user.uid).then(function () {
+            if (!profile) {
+              // 로그인은 되어 있지만 회원 정보 문서가 없는 계정입니다
+              // (Google 첫 로그인, 또는 예전에 가입 도중 문제가 있었던
+              // 계정) — 국적/언어/약관 동의부터 받는 화면으로 보냅니다.
+              pendingProfileUser = user;
+              if (isCommunityPath(location.pathname)) render();
+              return;
+            }
+            pendingProfileUser = null;
             if (db()) db().collection("communityUsers").doc(user.uid).update({
-              lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-              emailVerified: !!user.emailVerified
+              lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(function () {});
             if (isCommunityPath(location.pathname)) render();
           });
         } else {
           profile = null;
+          pendingProfileUser = null;
           if (isCommunityPath(location.pathname)) render();
         }
       });
