@@ -1617,6 +1617,12 @@ main {
 .community-badge-help-needed { background: var(--comm-help); }
 .community-badge-help-inProgress { background: #F0A93A; }
 .community-badge-help-resolved { background: var(--comm-free); }
+.community-badge-job-hiring { background: var(--comm-blue); }
+.community-badge-job-seeking { background: #7C3AED; }
+.community-badge-jobstatus-open { background: var(--comm-free); }
+.community-badge-jobstatus-closed { background: var(--comm-done); }
+.community-badge-jobstatus-seeking { background: var(--comm-free); }
+.community-badge-jobstatus-done { background: var(--comm-done); }
 
 /* 게시글 상세 */
 .community-detail-head { margin-bottom: 10px; }
@@ -1714,9 +1720,15 @@ main {
 .community-photo-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--comm-border); }
 
 .community-market-fields,
-.community-help-fields { display: flex; flex-direction: column; gap: 14px; }
+.community-help-fields,
+.community-job-fields,
+.community-job-hiring-fields,
+.community-job-seeking-fields { display: flex; flex-direction: column; gap: 14px; }
 .community-market-fields[hidden],
-.community-help-fields[hidden] { display: none; }
+.community-help-fields[hidden],
+.community-job-fields[hidden],
+.community-job-hiring-fields[hidden],
+.community-job-seeking-fields[hidden] { display: none; }
 
 /* 문서(규칙/개인정보) 화면 */
 .community-doc-body { font-size: 14px; line-height: 1.7; }

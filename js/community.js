@@ -727,6 +727,35 @@ var Community = (function () {
       wrap.appendChild(hideDoneRow);
     }
 
+    if (state_category === "job") {
+      var jobFilterBar = el("div", "community-toolbar");
+      var jobTypeFilter = el("select", "community-sort-select");
+      [["all", COMMUNITY_JOB.filterAll], ["hiring", COMMUNITY_JOB.typeHiring], ["seeking", COMMUNITY_JOB.typeSeeking]].forEach(function (p) {
+        var o = el("option", null, t(p[1])); o.value = p[0]; if (p[0] === state_jobType) o.selected = true;
+        jobTypeFilter.appendChild(o);
+      });
+      jobTypeFilter.addEventListener("change", function () { state_jobType = jobTypeFilter.value; renderPostList(listArea); });
+      jobFilterBar.appendChild(jobTypeFilter);
+
+      var industryFilter = el("input", "community-search-input"); industryFilter.type = "search";
+      industryFilter.placeholder = t(COMMUNITY_JOB.industryFilterPlaceholder); industryFilter.value = state_jobIndustry;
+      industryFilter.addEventListener("input", function () { state_jobIndustry = industryFilter.value; renderPostList(listArea); });
+      jobFilterBar.appendChild(industryFilter);
+
+      var locationFilter = el("input", "community-search-input"); locationFilter.type = "search";
+      locationFilter.placeholder = t(COMMUNITY_JOB.locationFilterPlaceholder); locationFilter.value = state_jobLocation;
+      locationFilter.addEventListener("input", function () { state_jobLocation = locationFilter.value; renderPostList(listArea); });
+      jobFilterBar.appendChild(locationFilter);
+      wrap.appendChild(jobFilterBar);
+
+      var openOnlyRow = el("label", "community-checkbox-row");
+      var openOnlyInput = el("input"); openOnlyInput.type = "checkbox"; openOnlyInput.checked = state_jobOpenOnly;
+      openOnlyRow.appendChild(openOnlyInput);
+      openOnlyRow.appendChild(document.createTextNode(" " + t(COMMUNITY_JOB.openOnlyLabel)));
+      openOnlyInput.addEventListener("change", function () { state_jobOpenOnly = openOnlyInput.checked; renderPostList(listArea); });
+      wrap.appendChild(openOnlyRow);
+    }
+
     var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
     writeBtn.type = "button";
     writeBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write"); });
@@ -750,6 +779,10 @@ var Community = (function () {
   var state_search = "";
   var state_sort = "latest";
   var state_hideDone = false;
+  var state_jobType = "all";
+  var state_jobIndustry = "";
+  var state_jobLocation = "";
+  var state_jobOpenOnly = false;
 
   function renderPostList(container) {
     container.innerHTML = "";
@@ -776,6 +809,23 @@ var Community = (function () {
         }
         if (state_category === "market" && state_hideDone) {
           posts = posts.filter(function (p) { return p.dealStatus !== "done"; });
+        }
+        if (state_category === "job") {
+          if (state_jobType !== "all") posts = posts.filter(function (p) { return p.jobType === state_jobType; });
+          if (state_jobIndustry.trim()) {
+            var iq = state_jobIndustry.trim().toLowerCase();
+            posts = posts.filter(function (p) { return ((p.industry || p.desiredIndustry || "")).toLowerCase().indexOf(iq) !== -1; });
+          }
+          if (state_jobLocation.trim()) {
+            var lq = state_jobLocation.trim().toLowerCase();
+            posts = posts.filter(function (p) { return ((p.workLocation || p.desiredLocation || "")).toLowerCase().indexOf(lq) !== -1; });
+          }
+          if (state_jobOpenOnly) {
+            posts = posts.filter(function (p) {
+              if (p.jobType === "hiring") return p.jobStatus === "open" && !isJobDeadlinePassed(p);
+              return p.jobStatus === "seeking";
+            });
+          }
         }
         if (state_sort === "comments") {
           posts.sort(function (a, b) { return (b.commentCount || 0) - (a.commentCount || 0); });
@@ -813,6 +863,14 @@ var Community = (function () {
       var helpMap = { needed: COMMUNITY_HELP.statusNeeded, inProgress: COMMUNITY_HELP.statusInProgress, resolved: COMMUNITY_HELP.statusResolved };
       var hbadge = el("span", "community-badge community-badge-help-" + post.helpStatus, t(helpMap[post.helpStatus]));
       card.appendChild(hbadge);
+    }
+    if (post.category === "job") {
+      var jTypeMap = { hiring: COMMUNITY_JOB.typeHiring, seeking: COMMUNITY_JOB.typeSeeking };
+      card.appendChild(el("span", "community-badge community-badge-job-" + post.jobType, t(jTypeMap[post.jobType])));
+      var jEffectiveStatus = post.jobStatus;
+      if (post.jobType === "hiring" && isJobDeadlinePassed(post) && post.jobStatus === "open") jEffectiveStatus = "closed";
+      var jStatusMap = { open: COMMUNITY_JOB.statusOpen, closed: COMMUNITY_JOB.statusClosed, seeking: COMMUNITY_JOB.statusSeeking, done: COMMUNITY_JOB.statusDone };
+      if (jEffectiveStatus) card.appendChild(el("span", "community-badge community-badge-jobstatus-" + jEffectiveStatus, t(jStatusMap[jEffectiveStatus])));
     }
 
     card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
@@ -895,6 +953,7 @@ var Community = (function () {
 
     if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
     if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
+    if (post.category === "job") wrap.appendChild(buildJobPanel(post));
 
     if (post.kakaoLink) {
       var kakaoWrap = el("div", "community-kakao-wrap");
@@ -1022,6 +1081,68 @@ var Community = (function () {
         db().collection("communityPosts").doc(post.id).update({ helpStatus: statusSelect.value });
       });
       panel.appendChild(statusSelect);
+    }
+    return panel;
+  }
+
+  function isJobDeadlinePassed(post) {
+    if (!post.deadline) return false;
+    var today = new Date();
+    var todayKey = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+    return post.deadline < todayKey;
+  }
+
+  function buildJobPanel(post) {
+    var panel = el("div", "community-help-panel");
+    var isHiring = post.jobType === "hiring";
+    panel.appendChild(el("p", null, t(COMMUNITY_JOB.typeLabel) + ": " + t(isHiring ? COMMUNITY_JOB.typeHiring : COMMUNITY_JOB.typeSeeking)));
+
+    if (isHiring) {
+      [[COMMUNITY_JOB.industryLabel, post.industry], [COMMUNITY_JOB.workLocationLabel, post.workLocation],
+       [COMMUNITY_JOB.jobDescriptionLabel, post.jobDescription], [COMMUNITY_JOB.workDaysLabel, post.workDays],
+       [COMMUNITY_JOB.workHoursLabel, post.workHours], [COMMUNITY_JOB.salaryLabel, post.salary],
+       [COMMUNITY_JOB.deadlineLabel, post.deadline], [COMMUNITY_JOB.contactMethodLabel, post.contactMethod],
+       [COMMUNITY_JOB.koreanLevelLabel, post.koreanLevel], [COMMUNITY_JOB.experienceLabel, post.experience]]
+        .forEach(function (pair) { if (pair[1]) panel.appendChild(el("p", null, t(pair[0]) + ": " + pair[1])); });
+    } else {
+      [[COMMUNITY_JOB.desiredIndustryLabel, post.desiredIndustry], [COMMUNITY_JOB.availableDaysLabel, post.availableDays],
+       [COMMUNITY_JOB.availableHoursLabel, post.availableHours], [COMMUNITY_JOB.desiredLocationLabel, post.desiredLocation],
+       [COMMUNITY_JOB.availableLanguagesLabel, post.availableLanguages], [COMMUNITY_JOB.contactMethodLabel, post.contactMethod],
+       [COMMUNITY_JOB.experienceLabel, post.experience], [COMMUNITY_JOB.koreanLevelLabel, post.koreanLevel]]
+        .forEach(function (pair) { if (pair[1]) panel.appendChild(el("p", null, t(pair[0]) + ": " + pair[1])); });
+    }
+
+    var effectiveStatus = post.jobStatus;
+    if (isHiring && isJobDeadlinePassed(post) && post.jobStatus === "open") effectiveStatus = "closed";
+    var statusLabelMap = { open: COMMUNITY_JOB.statusOpen, closed: COMMUNITY_JOB.statusClosed, seeking: COMMUNITY_JOB.statusSeeking, done: COMMUNITY_JOB.statusDone };
+    panel.appendChild(el("p", null, t(COMMUNITY_JOB.statusLabel) + ": " + t(statusLabelMap[effectiveStatus])));
+    panel.appendChild(el("p", "community-safety-notice", t(COMMUNITY_JOB.safetyNotice)));
+
+    if (authUser && post.authorId === authUser.uid) {
+      var statusSelect = el("select");
+      var options = isHiring
+        ? [["open", COMMUNITY_JOB.statusOpen], ["closed", COMMUNITY_JOB.statusClosed]]
+        : [["seeking", COMMUNITY_JOB.statusSeeking], ["done", COMMUNITY_JOB.statusDone]];
+      options.forEach(function (pair) {
+        var o = el("option", null, t(pair[1])); o.value = pair[0];
+        if (post.jobStatus === pair[0]) o.selected = true;
+        statusSelect.appendChild(o);
+      });
+      statusSelect.addEventListener("change", function () {
+        db().collection("communityPosts").doc(post.id).update({ jobStatus: statusSelect.value });
+      });
+      panel.appendChild(statusSelect);
+
+      var extendBtn = el("button", "community-btn-secondary", t(COMMUNITY_JOB.extend));
+      extendBtn.type = "button";
+      extendBtn.addEventListener("click", function () {
+        var newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        db().collection("communityPosts").doc(post.id).update({
+          expiresAt: firebase.firestore.Timestamp.fromDate(newExpiry),
+          extendedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function () { showToast(t(COMMUNITY_MSG.doneSaved)); });
+      });
+      panel.appendChild(extendBtn);
     }
     return panel;
   }
@@ -1276,6 +1397,38 @@ var Community = (function () {
 
   var editPostId = null;
 
+  /* ---------------- 구인·구직 게시글 사전 검사(가벼운 키워드/패턴 검사만,
+     AI 호출 없음 — 비용 절감을 위해 모든 게시글을 AI로 검사하지 않고
+     의심스러운 게시물은 신고 기능으로 관리자가 확인합니다) ---------------- */
+
+  var PERSONAL_INFO_PATTERNS = [
+    /01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/,        // 휴대폰 번호
+    /\b\d{2,4}[-.\s]\d{3,4}[-.\s]\d{4}\b/,          // 일반 전화번호
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/, // 이메일
+    /\b\d{6}[-\s]?[1-4]\d{6}\b/,                    // 주민등록번호/외국인등록번호 형식
+    /\b[a-zA-Z]{1,2}\d{7,9}\b/,                     // 여권번호 형식
+    /\d{2,6}동\s*\d{1,4}호/,                        // 상세주소(동·호수)
+    /\d+\s*번지/,                                   // 상세주소(번지)
+    /\b\d{10,16}\b/                                 // 긴 숫자열(계좌번호 등으로 추정)
+  ];
+
+  function containsPersonalInfo(text) {
+    return PERSONAL_INFO_PATTERNS.some(function (re) { return re.test(text); });
+  }
+
+  var BANNED_JOB_KEYWORDS = [
+    "선입금", "가입비", "교육비 선납", "보증금 먼저", "수수료 선입금",
+    "통장 양도", "통장양도", "통장 판매", "신분증 양도", "체크카드 양도",
+    "외국인등록증 사본", "등록증 보내", "여권 보관", "여권 맡기", "여권 제출",
+    "고수익 보장", "단순업무 고소득", "조건만남", "성매매", "유흥업소 도우미", "룸싸롱", "노래방 도우미",
+    "대리시험", "대리출석", "다단계", "피라미드", "밀수"
+  ];
+
+  function containsBannedJobContent(text) {
+    var lower = text.toLowerCase();
+    return BANNED_JOB_KEYWORDS.some(function (kw) { return lower.indexOf(kw.toLowerCase()) !== -1; });
+  }
+
   function renderWrite() {
     var wrap = el("div", "community-page community-write");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_POST.writeTitle)));
@@ -1331,12 +1484,67 @@ var Community = (function () {
     helpFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HELP.emergencyNotice)));
     form.appendChild(helpFields);
 
-    function toggleCategoryFields() {
-      marketFields.hidden = catSelect.value !== "market";
-      helpFields.hidden = catSelect.value !== "help";
+    /* 구인·구직 */
+    var jobFields = el("div", "community-job-fields");
+    var jobTypeSelect = el("select");
+    [["hiring", COMMUNITY_JOB.typeHiring], ["seeking", COMMUNITY_JOB.typeSeeking]].forEach(function (p) {
+      var o = el("option", null, t(p[1])); o.value = p[0]; jobTypeSelect.appendChild(o);
+    });
+    jobFields.appendChild(formField(COMMUNITY_JOB.typeLabel, jobTypeSelect));
+
+    var jobHiringFields = el("div", "community-job-hiring-fields");
+    var jIndustry = el("input"); jIndustry.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.industryLabel, jIndustry));
+    var jWorkLocation = el("input"); jWorkLocation.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.workLocationLabel, jWorkLocation));
+    var jJobDescription = el("textarea");
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.jobDescriptionLabel, jJobDescription));
+    var jWorkDays = el("input"); jWorkDays.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.workDaysLabel, jWorkDays));
+    var jWorkHours = el("input"); jWorkHours.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.workHoursLabel, jWorkHours));
+    var jSalary = el("input"); jSalary.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.salaryLabel, jSalary));
+    var jDeadline = el("input"); jDeadline.type = "date";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.deadlineLabel, jDeadline));
+    var jHiringContact = el("input"); jHiringContact.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.contactMethodLabel, jHiringContact));
+    var jHiringKorean = el("input"); jHiringKorean.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.koreanLevelLabel, jHiringKorean));
+    var jHiringExperience = el("input"); jHiringExperience.type = "text";
+    jobHiringFields.appendChild(formField(COMMUNITY_JOB.experienceLabel, jHiringExperience));
+    jobFields.appendChild(jobHiringFields);
+
+    var jobSeekingFields = el("div", "community-job-seeking-fields");
+    var jDesiredIndustry = el("input"); jDesiredIndustry.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.desiredIndustryLabel, jDesiredIndustry));
+    var jAvailableDays = el("input"); jAvailableDays.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.availableDaysLabel, jAvailableDays));
+    var jAvailableHours = el("input"); jAvailableHours.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.availableHoursLabel, jAvailableHours));
+    var jDesiredLocation = el("input"); jDesiredLocation.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.desiredLocationLabel, jDesiredLocation));
+    var jAvailableLanguages = el("input"); jAvailableLanguages.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.availableLanguagesLabel, jAvailableLanguages));
+    var jSeekingContact = el("input"); jSeekingContact.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.contactMethodLabel, jSeekingContact));
+    var jSeekingExperience = el("input"); jSeekingExperience.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.experienceLabel, jSeekingExperience));
+    var jSeekingKorean = el("input"); jSeekingKorean.type = "text";
+    jobSeekingFields.appendChild(formField(COMMUNITY_JOB.koreanLevelLabel, jSeekingKorean));
+    jobFields.appendChild(jobSeekingFields);
+
+    jobFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_JOB.safetyNotice)));
+    var jobWarningP = el("p", "community-form-error");
+    jobFields.appendChild(jobWarningP);
+    form.appendChild(jobFields);
+
+    function toggleJobTypeFields() {
+      jobHiringFields.hidden = jobTypeSelect.value !== "hiring";
+      jobSeekingFields.hidden = jobTypeSelect.value !== "seeking";
     }
-    catSelect.addEventListener("change", toggleCategoryFields);
-    toggleCategoryFields();
+    jobTypeSelect.addEventListener("change", toggleJobTypeFields);
+    toggleJobTypeFields();
 
     var kakaoInput = el("input"); kakaoInput.type = "url"; kakaoInput.placeholder = "https://open.kakao.com/...";
     form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)" }, kakaoInput));
@@ -1350,9 +1558,10 @@ var Community = (function () {
     var pendingFiles = [];
     photoInput.addEventListener("change", function () {
       var files = Array.prototype.slice.call(photoInput.files || []);
-      if (pendingFiles.length + files.length > MAX_PHOTOS) {
+      var maxNow = currentMaxPhotos();
+      if (pendingFiles.length + files.length > maxNow) {
         errorP.textContent = t(COMMUNITY_MSG.errPhotoLimit);
-        files = files.slice(0, MAX_PHOTOS - pendingFiles.length);
+        files = files.slice(0, maxNow - pendingFiles.length);
       }
       files.forEach(function (f) {
         pendingFiles.push(f);
@@ -1362,6 +1571,21 @@ var Community = (function () {
       });
       photoInput.value = "";
     });
+
+    function currentMaxPhotos() { return catSelect.value === "job" ? 1 : MAX_PHOTOS; }
+
+    function toggleCategoryFields() {
+      marketFields.hidden = catSelect.value !== "market";
+      helpFields.hidden = catSelect.value !== "help";
+      jobFields.hidden = catSelect.value !== "job";
+      // 구인·구직은 사진을 1장까지만 허용합니다(그 외 카테고리는 3장).
+      while (pendingFiles.length > currentMaxPhotos()) {
+        pendingFiles.pop();
+        if (photoPreview.lastChild) photoPreview.removeChild(photoPreview.lastChild);
+      }
+    }
+    catSelect.addEventListener("change", toggleCategoryFields);
+    toggleCategoryFields();
 
     var errorP = el("p", "community-form-error");
     form.appendChild(errorP);
@@ -1373,8 +1597,8 @@ var Community = (function () {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       errorP.textContent = "";
+      jobWarningP.textContent = "";
       if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
-      submitBtn.disabled = true;
 
       var extra = {};
       if (catSelect.value === "market") {
@@ -1386,8 +1610,50 @@ var Community = (function () {
         };
       } else if (catSelect.value === "help") {
         extra = { helpType: helpTypeSelect.value, helpStatus: "needed" };
+      } else if (catSelect.value === "job") {
+        if (jobTypeSelect.value === "hiring") {
+          if (!jIndustry.value.trim() || !jWorkLocation.value.trim() || !jJobDescription.value.trim() ||
+              !jWorkDays.value.trim() || !jWorkHours.value.trim() || !jSalary.value.trim() ||
+              !jDeadline.value || !jHiringContact.value.trim()) {
+            errorP.textContent = t(COMMUNITY_MSG.errRequired);
+            return;
+          }
+          extra = {
+            jobType: "hiring", jobStatus: "open",
+            industry: jIndustry.value.trim(), workLocation: jWorkLocation.value.trim(),
+            jobDescription: jJobDescription.value.trim(), workDays: jWorkDays.value.trim(),
+            workHours: jWorkHours.value.trim(), salary: jSalary.value.trim(),
+            deadline: jDeadline.value, contactMethod: jHiringContact.value.trim(),
+            koreanLevel: jHiringKorean.value.trim() || null, experience: jHiringExperience.value.trim() || null,
+            expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+          };
+        } else {
+          if (!jDesiredIndustry.value.trim() || !jAvailableDays.value.trim() || !jAvailableHours.value.trim() ||
+              !jDesiredLocation.value.trim() || !jAvailableLanguages.value.trim() || !jSeekingContact.value.trim()) {
+            errorP.textContent = t(COMMUNITY_MSG.errRequired);
+            return;
+          }
+          extra = {
+            jobType: "seeking", jobStatus: "seeking",
+            desiredIndustry: jDesiredIndustry.value.trim(), availableDays: jAvailableDays.value.trim(),
+            availableHours: jAvailableHours.value.trim(), desiredLocation: jDesiredLocation.value.trim(),
+            availableLanguages: jAvailableLanguages.value.trim(), contactMethod: jSeekingContact.value.trim(),
+            experience: jSeekingExperience.value.trim() || null, koreanLevel: jSeekingKorean.value.trim() || null,
+            expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+          };
+        }
+
+        var scanText = [titleInput.value, contentArea.value, jHiringContact.value, jSeekingContact.value].join(" ");
+        if (containsBannedJobContent(scanText)) {
+          jobWarningP.textContent = t(COMMUNITY_JOB.bannedContentError);
+          return;
+        }
+        if (containsPersonalInfo(scanText) && !window.confirm(t(COMMUNITY_JOB.personalInfoWarning))) {
+          return;
+        }
       }
 
+      submitBtn.disabled = true;
       createOrUpdatePost({
         category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
         originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null, extra: extra,

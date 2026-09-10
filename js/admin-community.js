@@ -95,6 +95,18 @@ var AdminCommunity = (function () {
       var failedTranslations = posts.filter(function (p) { return p.translationStatus === "failed"; }).length;
       var marketDone = posts.filter(function (p) { return p.category === "market" && p.dealStatus === "done"; }).length;
       var helpResolved = posts.filter(function (p) { return p.category === "help" && p.helpStatus === "resolved"; }).length;
+      var jobPosts = posts.filter(function (p) { return p.category === "job"; });
+      var hiringPosts = jobPosts.filter(function (p) { return p.jobType === "hiring"; }).length;
+      var seekingPosts = jobPosts.filter(function (p) { return p.jobType === "seeking"; }).length;
+      var todayKeyStr = new Date().toISOString().slice(0, 10);
+      var hiringOpen = jobPosts.filter(function (p) {
+        return p.jobType === "hiring" && p.jobStatus === "open" && !(p.deadline && p.deadline < todayKeyStr);
+      }).length;
+      var hiringClosed = jobPosts.filter(function (p) {
+        return p.jobType === "hiring" && (p.jobStatus === "closed" || (p.deadline && p.deadline < todayKeyStr));
+      }).length;
+      var jobReported = jobPosts.filter(function (p) { return (p.reportCount || 0) > 0; }).length;
+      var legacyLifeCount = posts.filter(function (p) { return p.category === "life"; }).length;
 
       var natCount = {};
       users.forEach(function (u) { var n = u.nationality || "-"; natCount[n] = (natCount[n] || 0) + 1; });
@@ -105,8 +117,14 @@ var AdminCommunity = (function () {
       var tiles = [
         ["신규 가입자", newUsers], ["전체 회원", users.length], ["신규 게시글", newPosts],
         ["신고된 게시글", reportedCount], ["숨김 처리됨", hiddenCount], ["번역 실패", failedTranslations],
-        ["중고거래 완료", marketDone], ["도움요청 해결", helpResolved]
+        ["중고거래 완료", marketDone], ["도움요청 해결", helpResolved],
+        ["구인 게시글 수", hiringPosts], ["구직 게시글 수", seekingPosts],
+        ["모집 중 게시글 수", hiringOpen], ["모집 마감 게시글 수", hiringClosed],
+        ["신고된 구인·구직 게시글 수", jobReported]
       ];
+      if (legacyLifeCount > 0) {
+        tiles.push(["이전 '생활정보' 게시글(이동 필요)", legacyLifeCount]);
+      }
       var grid = document.createElement("div");
       grid.className = "stat-grid";
       tiles.forEach(function (t) {
@@ -228,6 +246,28 @@ var AdminCommunity = (function () {
         });
         tdActions.appendChild(delBtn);
 
+        // 카테고리 변경(예전 "생활정보" 게시글을 구인·구직이나 다른
+        // 카테고리로 옮기거나, 일반적인 카테고리 재분류에도 사용합니다).
+        var catSelect = document.createElement("select");
+        COMMUNITY_CATEGORY_ORDER.forEach(function (c) {
+          var o = document.createElement("option");
+          o.value = c; o.textContent = COMMUNITY_CATEGORIES[c].ko;
+          if (c === p.category) o.selected = true;
+          catSelect.appendChild(o);
+        });
+        if (COMMUNITY_CATEGORY_ORDER.indexOf(p.category) === -1) {
+          // 지금은 선택 목록에 없는 카테고리(예: 예전 "생활정보")에 속한
+          // 게시글은 맨 위에 원래 이름으로 표시해, 관리자가 무엇을
+          // 옮기는지 알 수 있게 합니다.
+          var legacyOpt = document.createElement("option");
+          legacyOpt.value = p.category;
+          legacyOpt.textContent = (COMMUNITY_CATEGORIES[p.category] ? COMMUNITY_CATEGORIES[p.category].ko : p.category) + "(예전)";
+          legacyOpt.selected = true;
+          catSelect.insertBefore(legacyOpt, catSelect.firstChild);
+        }
+        catSelect.addEventListener("change", function () { updatePostCategory(doc.id, catSelect.value, catSelect); });
+        tdActions.appendChild(catSelect);
+
         tr.appendChild(tdActions);
         tbody.appendChild(tr);
       });
@@ -247,6 +287,18 @@ var AdminCommunity = (function () {
     }).catch(function (err) {
       window.alert("변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
       btn.disabled = false;
+    });
+  }
+
+  function updatePostCategory(postId, category, selectEl) {
+    var d = db();
+    if (!d) return;
+    selectEl.disabled = true;
+    d.collection("communityPosts").doc(postId).update({ category: category }).then(function () {
+      loadPosts();
+    }).catch(function (err) {
+      window.alert("카테고리 변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      selectEl.disabled = false;
     });
   }
 

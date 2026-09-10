@@ -11,15 +11,18 @@ var COMMUNITY_NAV = {
   line2: { ko: "커뮤니티", zh: "社区", vi: "Du học sinh", en: "Community", mn: "Оюутнууд" }
 };
 
-/* 게시판 5개 카테고리 */
+/* 게시판 5개 카테고리 — "생활정보"는 2026-09-10에 "구인·구직"으로
+   교체되었습니다. life는 예전 게시글 표시(관리자 이동 전까지)를 위해
+   번역만 남겨두고 선택 목록(COMMUNITY_CATEGORY_ORDER)에서는 뺐습니다. */
 var COMMUNITY_CATEGORIES = {
   friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох" },
   market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа" },
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх" },
   together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох" },
+  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх" },
   life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл" }
 };
-var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "life"];
+var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job"];
 
 /* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
 var COMMUNITY_AUTH = {
@@ -131,6 +134,45 @@ var COMMUNITY_HELP = {
   typeLife: { ko: "생활 도움", zh: "生活帮助", vi: "Hỗ trợ sinh hoạt", en: "Daily Help", mn: "Амьдралын тусламж" },
   typeEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад" },
   emergencyNotice: { ko: "긴급하거나 위험한 상황은 경찰, 학교 담당 부서 등 공식 기관에 연락하세요.", zh: "紧急或危险情况请联系警察或学校相关部门等官方机构。", vi: "Trường hợp khẩn cấp hoặc nguy hiểm, hãy liên hệ công an hoặc bộ phận phụ trách của trường.", en: "For urgent or dangerous situations, contact the police or your school's official office.", mn: "Яаралтай, аюултай тохиолдолд цагдаа, сургуулийн албан ёсны газарт хандана уу." }
+};
+
+/* 구인·구직 (2026-09-10, "생활정보" 카테고리를 대체) */
+var COMMUNITY_JOB = {
+  typeLabel: { ko: "구분", zh: "类型", vi: "Loại", en: "Type", mn: "Төрөл" },
+  typeHiring: { ko: "구인", zh: "招聘", vi: "Tuyển dụng", en: "Hiring", mn: "Ажилтан авах" },
+  typeSeeking: { ko: "구직", zh: "求职", vi: "Tìm việc", en: "Looking for Work", mn: "Ажил хайх" },
+  statusLabel: { ko: "상태", zh: "状态", vi: "Trạng thái", en: "Status", mn: "Төлөв" },
+  statusOpen: { ko: "모집 중", zh: "招聘中", vi: "Đang tuyển", en: "Open", mn: "Авч байна" },
+  statusClosed: { ko: "모집 마감", zh: "招聘已结束", vi: "Đã ngừng tuyển", en: "Closed", mn: "Дууссан" },
+  statusSeeking: { ko: "구직 중", zh: "求职中", vi: "Đang tìm việc", en: "Seeking", mn: "Ажил хайж байна" },
+  statusDone: { ko: "구직 완료", zh: "已找到工作", vi: "Đã tìm được việc", en: "Found a job", mn: "Ажил олдсон" },
+
+  industryLabel: { ko: "업종", zh: "行业", vi: "Ngành nghề", en: "Industry", mn: "Салбар" },
+  workLocationLabel: { ko: "근무 장소", zh: "工作地点", vi: "Địa điểm làm việc", en: "Work Location", mn: "Ажлын байршил" },
+  jobDescriptionLabel: { ko: "업무 내용", zh: "工作内容", vi: "Nội dung công việc", en: "Job Description", mn: "Ажлын агуулга" },
+  workDaysLabel: { ko: "근무 요일", zh: "工作日", vi: "Ngày làm việc", en: "Work Days", mn: "Ажиллах өдөр" },
+  workHoursLabel: { ko: "근무시간", zh: "工作时间", vi: "Giờ làm việc", en: "Work Hours", mn: "Ажиллах цаг" },
+  salaryLabel: { ko: "급여", zh: "薪资", vi: "Lương", en: "Salary", mn: "Цалин" },
+  deadlineLabel: { ko: "모집 마감일", zh: "招聘截止日期", vi: "Hạn tuyển dụng", en: "Application Deadline", mn: "Өргөдлийн эцсийн хугацаа" },
+  contactMethodLabel: { ko: "연락방법", zh: "联系方式", vi: "Cách liên hệ", en: "Contact Method", mn: "Холбоо барих арга" },
+  koreanLevelLabel: { ko: "한국어 능력", zh: "韩语水平", vi: "Trình độ tiếng Hàn", en: "Korean Level", mn: "Солонгос хэлний түвшин" },
+  experienceLabel: { ko: "경력", zh: "工作经验", vi: "Kinh nghiệm", en: "Experience", mn: "Туршлага" },
+
+  desiredIndustryLabel: { ko: "희망 업종", zh: "希望从事的行业", vi: "Ngành nghề mong muốn", en: "Desired Industry", mn: "Хүссэн салбар" },
+  availableDaysLabel: { ko: "가능한 요일", zh: "可工作日", vi: "Ngày có thể làm", en: "Available Days", mn: "Ажиллах боломжтой өдөр" },
+  availableHoursLabel: { ko: "가능한 시간", zh: "可工作时间", vi: "Giờ có thể làm", en: "Available Hours", mn: "Ажиллах боломжтой цаг" },
+  desiredLocationLabel: { ko: "희망 근무지역", zh: "希望工作地区", vi: "Khu vực mong muốn làm việc", en: "Desired Work Area", mn: "Хүссэн ажлын байршил" },
+  availableLanguagesLabel: { ko: "사용 가능한 언어", zh: "可使用的语言", vi: "Ngôn ngữ có thể sử dụng", en: "Languages Spoken", mn: "Ашиглаж чадах хэл" },
+
+  extend: { ko: "30일 연장", zh: "延长30天", vi: "Gia hạn 30 ngày", en: "Extend 30 days", mn: "30 хоногоор сунгах" },
+  safetyNotice: { ko: "근무 전 사업장과 근로조건을 직접 확인하세요. 취업을 대가로 돈이나 개인정보를 요구하는 게시글에 주의하세요.", zh: "上班前请亲自确认工作单位和劳动条件。请警惕以就业为由索要钱财或个人信息的帖子。", vi: "Hãy tự xác nhận nơi làm việc và điều kiện lao động trước khi bắt đầu. Cẩn thận với các bài đăng yêu cầu tiền hoặc thông tin cá nhân để đổi lấy việc làm.", en: "Check the workplace and working conditions yourself before starting. Be cautious of posts asking for money or personal information in exchange for a job.", mn: "Ажилдаа орохын өмнө ажлын байр, нөхцөлийг өөрөө шалгаарай. Ажилд оруулах нэрээр мөнгө, хувийн мэдээлэл шаардсан зурвасаас болгоомжлоорой." },
+  personalInfoWarning: { ko: "전화번호, 이메일, 계좌번호, 외국인등록번호, 여권번호, 상세주소 같은 개인정보가 포함된 것 같습니다. 다시 확인해 주세요.", zh: "内容中似乎包含电话号码、邮箱、账户、外国人登录证号、护照号、详细地址等个人信息，请再次确认。", vi: "Nội dung có vẻ chứa thông tin cá nhân như số điện thoại, email, số tài khoản, số đăng ký người nước ngoài, số hộ chiếu, địa chỉ chi tiết. Vui lòng kiểm tra lại.", en: "Your post seems to contain personal information such as a phone number, email, bank account, registration number, passport number, or detailed address. Please double-check.", mn: "Таны зурвас утасны дугаар, и-мэйл, дансны дугаар, гадаадын иргэний бүртгэлийн дугаар, паспортын дугаар, дэлгэрэнгүй хаяг зэрэг хувийн мэдээлэл агуулж байж болзошгүй байна. Дахин шалгана уу." },
+  bannedContentError: { ko: "취업 관련 금지된 내용이 포함되어 있어 등록할 수 없습니다(금전 요구, 신분증·통장 양도, 외국인등록번호·여권 보관 요구 등).", zh: "内容包含被禁止的求职相关信息（如索要钱财、转让身份证/账户、要求保管外国人登录证或护照等），无法发布。", vi: "Không thể đăng vì nội dung chứa thông tin bị cấm liên quan đến việc làm (yêu cầu tiền, chuyển nhượng CMND/tài khoản, giữ số đăng ký người nước ngoài/hộ chiếu, v.v.).", en: "This cannot be posted because it contains prohibited job-related content (requests for money, ID/bank account transfer, holding registration cards or passports, etc.).", mn: "Мөнгө шаардах, иргэний үнэмлэх/дансаа шилжүүлэх, гадаадын иргэний бүртгэл/паспортоо хадгалуулах гэх мэт хориотой ажлын агуулга орсон тул нийтлэх боломжгүй." },
+
+  filterAll: { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд" },
+  openOnlyLabel: { ko: "모집 중만 보기", zh: "只看招聘中", vi: "Chỉ xem đang tuyển", en: "Show open only", mn: "Зөвхөн авч байгааг харах" },
+  industryFilterPlaceholder: { ko: "업종 검색", zh: "搜索行业", vi: "Tìm ngành nghề", en: "Search industry", mn: "Салбар хайх" },
+  locationFilterPlaceholder: { ko: "근무지역 검색", zh: "搜索工作地区", vi: "Tìm khu vực làm việc", en: "Search location", mn: "Байршил хайх" }
 };
 
 /* 댓글 */
