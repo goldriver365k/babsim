@@ -97,11 +97,13 @@ def build():
 <header class="site-header">
   <div class="header-top">
     <div class="site-brand">
-      <!-- 로고 placeholder — 이 경로(images/icon/site-logo.png)에 이미지
-           파일 하나만 올리면 코드 수정 없이 사이트 전체 헤더에 자동
-           적용됩니다. 파일이 없는 동안은 js/app.js가 자동으로 숨겨서
-           깨진 이미지 아이콘이 보이지 않습니다(임의 로고 제작 금지). -->
-      <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.png" alt="">
+      <!-- 공식 로고(모바일 UI 개선 10단계: 사용자 제공 인제대학교 공식
+           마크, images/icon/site-logo.jpg) — 원본 그대로 사용, 비율
+           왜곡 없이 height 기준으로만 표시합니다. 클릭 시 기존 홈
+           라우팅(goHome)을 재사용해 메인 홈으로 이동합니다. -->
+      <button type="button" class="site-logo-btn" id="siteLogoBtn" aria-label="인제대학교 — 홈으로 이동">
+        <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.jpg" alt="인제대학교">
+      </button>
       <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
     </div>
     <div class="lang-toggle-wrap">

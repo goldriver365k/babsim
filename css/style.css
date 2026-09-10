@@ -68,14 +68,32 @@ button {
   min-width: 0;
 }
 
-/* 로고 placeholder — images/icon/site-logo.png 파일이 없으면 js/app.js가
-   자동으로 hidden 처리합니다(임의 로고 제작 없이 자리만 마련). */
-.site-logo {
-  width: 28px;
-  height: 28px;
+/* 공식 로고 버튼(모바일 UI 개선 10단계) — 클릭 시 홈 이동, 로고 주변에
+   여백만 살짝 두고 다른 헤더 버튼보다 크게 보이지 않도록 합니다. */
+.site-logo-btn {
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
+  padding: 4px;
+  background: none;
+  border: none;
   border-radius: var(--radius-sm);
-  object-fit: cover;
+  line-height: 0;
+}
+
+.site-logo-btn:hover,
+.site-logo-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* 공식 로고 이미지 — images/icon/site-logo.jpg 파일이 없으면 js/app.js가
+   자동으로 hidden 처리합니다. 비율 왜곡을 막기 위해 height 기준으로만
+   크기를 맞추고 width는 auto로 둡니다(가로/세로 강제 고정 금지). */
+.site-logo {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .site-logo[hidden] { display: none; }

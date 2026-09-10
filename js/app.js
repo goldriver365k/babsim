@@ -789,6 +789,7 @@
   function init() {
     els.siteTitle = qs("siteTitle");
     els.siteLogo = qs("siteLogo");
+    els.siteLogoBtn = qs("siteLogoBtn");
     els.langToggleBtn = qs("langToggleBtn");
     els.langToggleLabel = qs("langToggleLabel");
     els.langSelect = qs("langSelect");
@@ -930,6 +931,12 @@
       var store = card.getAttribute("data-store");
       card.addEventListener("click", function () { goToStore(store); });
     });
+
+    // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
+    // 라우팅(goHome)을 그대로 재사용합니다.
+    if (els.siteLogoBtn) {
+      els.siteLogoBtn.addEventListener("click", goHome);
+    }
 
     // 하단 내비게이션(홈/검색/글쓰기/알림/MY, 모바일 UI 개선 8단계) —
     // 전부 기존 커뮤니티 라우팅·안내창 로직을 그대로 재사용합니다.
