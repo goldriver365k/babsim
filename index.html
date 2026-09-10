@@ -5165,8 +5165,12 @@ var Community = (function () {
         snap.forEach(function (doc) { state_loadedPosts.push(Object.assign({ id: doc.id }, doc.data())); });
         renderLoadedPosts();
       })
-      .catch(function () {
+      .catch(function (err) {
         state_postListLoading = false;
+        // 원인을 화면에서 바로 알 수 있도록 콘솔에 그대로 남깁니다(예:
+        // Firestore 복합 색인 누락은 "requires an index" 문구와 함께
+        // 색인을 바로 만들 수 있는 링크가 여기 찍힙니다).
+        console.error("게시글 목록 불러오기 실패:", err);
         if (isFirstPage && container) {
           container.innerHTML = "";
           container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
@@ -5296,7 +5300,8 @@ var Community = (function () {
       var post = Object.assign({ id: doc.id }, doc.data());
       postCache[postId] = post;
       renderPostDetailBody(wrap, post);
-    }).catch(function () {
+    }).catch(function (err) {
+      console.error("게시글 상세 불러오기 실패:", err);
       wrap.innerHTML = "";
       wrap.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
     });
@@ -5778,8 +5783,9 @@ var Community = (function () {
       if (snap.size) state_lastCommentDoc = snap.docs[snap.docs.length - 1];
       snap.forEach(function (doc) { state_loadedComments.push(Object.assign({ id: doc.id }, doc.data())); });
       renderLoadedComments();
-    }).catch(function () {
+    }).catch(function (err) {
       state_commentListLoading = false;
+      console.error("댓글 목록 불러오기 실패:", err);
       if (isFirstPage && container) {
         container.innerHTML = "";
         container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
