@@ -239,5 +239,10 @@ var BreakfastRating = (function () {
     showOptions(lang, dateKey, menuText, menuNames, mealType);
   }
 
-  return { render: render };
+  // 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업이 "이미 평가했는지"
+  // 확인할 때 새 저장소를 또 만들지 않고 이 모듈의 기존 저장 값을
+  // 그대로 재사용하기 위한 조회 전용 함수입니다.
+  function isRatedToday(dateKey) { return !!getRatedToday(dateKey); }
+
+  return { render: render, isRatedToday: isRatedToday };
 })();

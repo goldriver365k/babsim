@@ -144,24 +144,33 @@ def build():
 
   <h2 class="home-section-title" id="homeServicesTitle"></h2>
   <div class="home-service-grid" id="homeServiceGrid">
+    <!-- 모바일 UI 개선 6단계: 서비스 노출 순서 확정 — 1.천원의 아침밥
+         2.유학생 커뮤니티 3.후루룩찹찹 4.만권화밥 5.밥심. 천원의 아침밥은
+         새 페이지가 아니라 기존 밥심 내부 화면(data-store="bapsim")을
+         그대로 재사용합니다(밥심 카드와 같은 곳으로 이동, 조금 더 강조만). -->
+    <button type="button" class="home-service-card home-service-card-featured" id="homeCardBreakfast">
+      <span class="home-service-icon" aria-hidden="true">🍳</span>
+      <span class="home-service-name" id="homeCardBreakfastName"></span>
+      <span class="home-service-loc" id="homeCardBreakfastLoc"></span>
+    </button>
     <button type="button" class="home-service-card" id="homeCardCommunity">
       <span class="home-service-icon" aria-hidden="true">💬</span>
       <span class="home-service-name" id="homeCardCommunityName"></span>
     </button>
-    <button type="button" class="home-service-card" data-store="bapsim">
-      <span class="home-service-icon" aria-hidden="true">🍚</span>
-      <span class="home-service-name">밥심</span>
-      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
+    <button type="button" class="home-service-card" data-store="hururuk">
+      <span class="home-service-icon" aria-hidden="true">🍜</span>
+      <span class="home-service-name">후루룩찹찹</span>
+      <span class="home-service-loc" id="homeCardHururukLoc"></span>
     </button>
     <button type="button" class="home-service-card" data-store="mangwon">
       <span class="home-service-icon" aria-hidden="true">🍲</span>
       <span class="home-service-name">만권화밥</span>
       <span class="home-service-loc" id="homeCardMangwonLoc"></span>
     </button>
-    <button type="button" class="home-service-card" data-store="hururuk">
-      <span class="home-service-icon" aria-hidden="true">🍜</span>
-      <span class="home-service-name">후루룩찹찹</span>
-      <span class="home-service-loc" id="homeCardHururukLoc"></span>
+    <button type="button" class="home-service-card" data-store="bapsim">
+      <span class="home-service-icon" aria-hidden="true">🍚</span>
+      <span class="home-service-name">밥심</span>
+      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
     </button>
   </div>
 
@@ -181,6 +190,19 @@ def build():
     <span class="bottom-nav-label" id="bottomNavCommunityLabel"></span>
   </button>
 </nav>
+
+<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계).
+     localStorage만 사용하고 별도 Firebase 조회는 하지 않습니다
+     (js/app.js의 maybeShowBreakfastPopup). -->
+<div class="breakfast-popup-overlay" id="breakfastPopupOverlay" hidden>
+  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="breakfastPopupTitle">
+    <p class="breakfast-popup-title" id="breakfastPopupTitle"></p>
+    <div class="breakfast-popup-actions">
+      <button type="button" class="breakfast-popup-btn-primary" id="breakfastPopupRateBtn"></button>
+      <button type="button" class="breakfast-popup-btn-secondary" id="breakfastPopupDismissBtn"></button>
+    </div>
+  </div>
+</div>
 
 <!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
      때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->

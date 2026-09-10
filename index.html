@@ -925,6 +925,70 @@ button {
 
 .bottom-nav-label { font-size: 12px; }
 
+/* 천원의 아침밥 카드 — 다른 서비스 카드보다 살짝만 강조(큰 배너 아님) */
+.home-service-card-featured .home-service-icon { font-size: 34px; }
+.home-service-card-featured .home-service-name { font-size: 17px; }
+.home-service-card-featured { border-color: var(--blue); }
+
+/* ---------------- 천원의 아침밥 평가 팝업(당일 첫 방문 1회, 모바일 UI 개선 6단계) ---------------- */
+
+.breakfast-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.breakfast-popup-overlay[hidden] { display: none; }
+
+.breakfast-popup-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.14);
+}
+
+.breakfast-popup-title {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.breakfast-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakfast-popup-btn-primary {
+  min-height: 48px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.breakfast-popup-btn-secondary {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: var(--text-mid);
+  font-size: 14px;
+}
+
 /* ---------------- 본문 ---------------- */
 
 main {
@@ -2129,24 +2193,33 @@ main {
 
   <h2 class="home-section-title" id="homeServicesTitle"></h2>
   <div class="home-service-grid" id="homeServiceGrid">
+    <!-- 모바일 UI 개선 6단계: 서비스 노출 순서 확정 — 1.천원의 아침밥
+         2.유학생 커뮤니티 3.후루룩찹찹 4.만권화밥 5.밥심. 천원의 아침밥은
+         새 페이지가 아니라 기존 밥심 내부 화면(data-store="bapsim")을
+         그대로 재사용합니다(밥심 카드와 같은 곳으로 이동, 조금 더 강조만). -->
+    <button type="button" class="home-service-card home-service-card-featured" id="homeCardBreakfast">
+      <span class="home-service-icon" aria-hidden="true">🍳</span>
+      <span class="home-service-name" id="homeCardBreakfastName"></span>
+      <span class="home-service-loc" id="homeCardBreakfastLoc"></span>
+    </button>
     <button type="button" class="home-service-card" id="homeCardCommunity">
       <span class="home-service-icon" aria-hidden="true">💬</span>
       <span class="home-service-name" id="homeCardCommunityName"></span>
     </button>
-    <button type="button" class="home-service-card" data-store="bapsim">
-      <span class="home-service-icon" aria-hidden="true">🍚</span>
-      <span class="home-service-name">밥심</span>
-      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
+    <button type="button" class="home-service-card" data-store="hururuk">
+      <span class="home-service-icon" aria-hidden="true">🍜</span>
+      <span class="home-service-name">후루룩찹찹</span>
+      <span class="home-service-loc" id="homeCardHururukLoc"></span>
     </button>
     <button type="button" class="home-service-card" data-store="mangwon">
       <span class="home-service-icon" aria-hidden="true">🍲</span>
       <span class="home-service-name">만권화밥</span>
       <span class="home-service-loc" id="homeCardMangwonLoc"></span>
     </button>
-    <button type="button" class="home-service-card" data-store="hururuk">
-      <span class="home-service-icon" aria-hidden="true">🍜</span>
-      <span class="home-service-name">후루룩찹찹</span>
-      <span class="home-service-loc" id="homeCardHururukLoc"></span>
+    <button type="button" class="home-service-card" data-store="bapsim">
+      <span class="home-service-icon" aria-hidden="true">🍚</span>
+      <span class="home-service-name">밥심</span>
+      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
     </button>
   </div>
 
@@ -2166,6 +2239,19 @@ main {
     <span class="bottom-nav-label" id="bottomNavCommunityLabel"></span>
   </button>
 </nav>
+
+<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계).
+     localStorage만 사용하고 별도 Firebase 조회는 하지 않습니다
+     (js/app.js의 maybeShowBreakfastPopup). -->
+<div class="breakfast-popup-overlay" id="breakfastPopupOverlay" hidden>
+  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="breakfastPopupTitle">
+    <p class="breakfast-popup-title" id="breakfastPopupTitle"></p>
+    <div class="breakfast-popup-actions">
+      <button type="button" class="breakfast-popup-btn-primary" id="breakfastPopupRateBtn"></button>
+      <button type="button" class="breakfast-popup-btn-secondary" id="breakfastPopupDismissBtn"></button>
+    </div>
+  </div>
+</div>
 
 <!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
      때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->
@@ -2447,7 +2533,10 @@ const BREAKFAST_RATING_TEXT = {
     mn: "Хадгалахад алдаа гарлаа. Дахин оролдоно уу.",
     bn: "সংরক্ষণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
     my: "သိမ်းဆည်းမှုမအောင်မြင်ပါ။ ထပ်မံကြိုးစားပါ။"
-  }
+  },
+  /* 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업(버튼 2개) */
+  popupRateBtn: { ko: "평가하기", en: "Rate now", zh: "去评价", vi: "Đánh giá ngay", mn: "Үнэлэх", bn: "মূল্যায়ন করুন", my: "အကဲဖြတ်ရန်" },
+  popupDismissBtn: { ko: "오늘은 닫기", en: "Not today", zh: "今天不用了", vi: "Hôm nay bỏ qua", mn: "Өнөөдөр хаах", bn: "আজ বন্ধ করুন", my: "ယနေ့ပိတ်ရန်" }
 };
 
 /* ==========================================================================
@@ -3930,7 +4019,12 @@ var BreakfastRating = (function () {
     showOptions(lang, dateKey, menuText, menuNames, mealType);
   }
 
-  return { render: render };
+  // 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업이 "이미 평가했는지"
+  // 확인할 때 새 저장소를 또 만들지 않고 이 모듈의 기존 저장 값을
+  // 그대로 재사용하기 위한 조회 전용 함수입니다.
+  function isRatedToday(dateKey) { return !!getRatedToday(dateKey); }
+
+  return { render: render, isRatedToday: isRatedToday };
 })();
 
 </script>
@@ -7472,6 +7566,11 @@ document.addEventListener("DOMContentLoaded", function () {
       els.homeCardCommunityName.textContent = window.COMMUNITY_HOME.title[state.lang];
     }
     var moinPrefix = { ko: "모인관 ", en: "Moin-gwan ", zh: "摩茵馆 ", vi: "Moin-gwan ", mn: "Моин-гван ", bn: "মোইন-গোয়ান ", my: "မိုအင်ဂွမ် " };
+    // 천원의 아침밥 카드 — 새 화면이 아니라 밥심 내부 화면을 그대로
+    // 재사용하므로(위치도 밥심과 동일), 기존 BREAKFAST_INFO.title 문구를
+    // 그대로 씁니다(새 번역 없음).
+    if (els.homeCardBreakfastName) els.homeCardBreakfastName.textContent = BREAKFAST_INFO.title[state.lang];
+    if (els.homeCardBreakfastLoc) els.homeCardBreakfastLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
     if (els.homeCardBapsimLoc) els.homeCardBapsimLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
     if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
     if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
@@ -7488,6 +7587,7 @@ document.addEventListener("DOMContentLoaded", function () {
     renderHome();
     if (!els.colaDetailOverlay.hidden) renderColaDetail();
     if (!els.staffShowOverlay.hidden) renderStaffShow();
+    if (els.breakfastPopupOverlay && !els.breakfastPopupOverlay.hidden) openBreakfastPopup(); // 열려 있으면 문구만 새 언어로 갱신
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
       window.LanguageStats.record(lang);
     }
@@ -7718,13 +7818,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* "오늘의 메뉴 평가" 위젯 연동 (js/breakfast-rating.js, 선택적 모듈) */
+  // 오늘 아침 메뉴가 실제로 있는지(주말/휴무/데이터 없음이면 false) —
+  // 아침밥 평가 영역과 6단계의 평가 팝업이 같은 판단 기준을 씁니다.
+  function todayBreakfastDay() {
+    var dateKey = getSeoulDateKey(0);
+    return BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+  }
+
+  function hasTodayBreakfastMenu() {
+    var day = todayBreakfastDay();
+    var isExplicitlyClosed = !!(day && day.isOpen === false);
+    return !isSeoulWeekend(0) && !isExplicitlyClosed && dayHasDirectData(day);
+  }
+
   function renderBreakfastRating(lang) {
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
-    var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var isExplicitlyClosed = !!(day && day.isOpen === false);
-    var hasText = !isExplicitlyClosed && dayHasDirectData(day);
-    var hasTodayMenu = !isSeoulWeekend(0) && hasText;
+    var day = todayBreakfastDay();
+    var hasTodayMenu = hasTodayBreakfastMenu();
 
     var menuText = "";
     var menuNames = [];
@@ -7749,6 +7860,46 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
     window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType);
+  }
+
+  /* ---------------- 모바일 UI 개선 6단계: 당일 첫 방문 평가 팝업 ----------------
+     Firebase read/write 없이 localStorage만 사용합니다(비용 최소화 지시).
+     같은 기기/브라우저에서 하루(KST 기준) 최초 방문에만 1회 표시하고,
+     이미 오늘 평가를 마친 경우에도 다시 표시하지 않습니다(기존
+     BreakfastRating 모듈의 저장값을 그대로 재사용 — 새 평가 시스템 없음). */
+  var BREAKFAST_POPUP_KEY = "breakfastRatingPopupDate";
+
+  function markBreakfastPopupShownToday() {
+    try { localStorage.setItem(BREAKFAST_POPUP_KEY, getSeoulDateKey(0)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  }
+
+  function closeBreakfastPopup() {
+    if (els.breakfastPopupOverlay) els.breakfastPopupOverlay.hidden = true;
+  }
+
+  function openBreakfastPopup() {
+    if (!els.breakfastPopupOverlay) return;
+    if (els.breakfastPopupTitle) els.breakfastPopupTitle.textContent = BREAKFAST_RATING_TEXT.title[state.lang];
+    if (els.breakfastPopupRateBtn) els.breakfastPopupRateBtn.textContent = BREAKFAST_RATING_TEXT.popupRateBtn[state.lang];
+    if (els.breakfastPopupDismissBtn) els.breakfastPopupDismissBtn.textContent = BREAKFAST_RATING_TEXT.popupDismissBtn[state.lang];
+    els.breakfastPopupOverlay.hidden = false;
+  }
+
+  function maybeShowBreakfastPopup() {
+    if (!els.breakfastPopupOverlay) return;
+    // 커뮤니티 화면으로 바로 들어온 경우(딥링크)에는 메인 화면 전용
+    // 팝업을 띄우지 않습니다.
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) return;
+    var todayKey = getSeoulDateKey(0);
+    var alreadyShownToday;
+    try { alreadyShownToday = localStorage.getItem(BREAKFAST_POPUP_KEY) === todayKey; } catch (e) { alreadyShownToday = true; }
+    if (alreadyShownToday) return;
+    if (!hasTodayBreakfastMenu()) { markBreakfastPopupShownToday(); return; }
+    if (window.BreakfastRating && typeof window.BreakfastRating.isRatedToday === "function" && window.BreakfastRating.isRatedToday(todayKey)) {
+      markBreakfastPopupShownToday();
+      return;
+    }
+    openBreakfastPopup();
   }
 
   /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */
@@ -7922,6 +8073,9 @@ document.addEventListener("DOMContentLoaded", function () {
     els.homeServicesTitle = qs("homeServicesTitle");
     els.homeCardCommunity = qs("homeCardCommunity");
     els.homeCardCommunityName = qs("homeCardCommunityName");
+    els.homeCardBreakfast = qs("homeCardBreakfast");
+    els.homeCardBreakfastName = qs("homeCardBreakfastName");
+    els.homeCardBreakfastLoc = qs("homeCardBreakfastLoc");
     els.homeCardBapsimLoc = qs("homeCardBapsimLoc");
     els.homeCardMangwonLoc = qs("homeCardMangwonLoc");
     els.homeCardHururukLoc = qs("homeCardHururukLoc");
@@ -7932,6 +8086,11 @@ document.addEventListener("DOMContentLoaded", function () {
     els.bottomNavHomeLabel = qs("bottomNavHomeLabel");
     els.bottomNavCommunityBtn = qs("bottomNavCommunityBtn");
     els.bottomNavCommunityLabel = qs("bottomNavCommunityLabel");
+
+    els.breakfastPopupOverlay = qs("breakfastPopupOverlay");
+    els.breakfastPopupTitle = qs("breakfastPopupTitle");
+    els.breakfastPopupRateBtn = qs("breakfastPopupRateBtn");
+    els.breakfastPopupDismissBtn = qs("breakfastPopupDismissBtn");
 
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
@@ -8017,12 +8176,23 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.addEventListener("click", function () { goToStore(store); });
     });
 
-    // 홈 화면의 핵심 서비스 카드 4개(유학생 커뮤니티 + 매장 3개) — 기존
-    // 헤더 탭과 같은 동작을 재사용합니다(새 라우팅 로직을 따로 만들지 않음).
+    // 홈 화면의 핵심 서비스 카드 — 기존 헤더 탭과 같은 동작을 재사용합니다
+    // (새 라우팅 로직·새 페이지를 따로 만들지 않음).
     if (els.homeCardCommunity && els.storeTabs) {
       els.homeCardCommunity.addEventListener("click", function () {
         var communityTabBtn = els.storeTabs.querySelector(".community-tab");
         if (communityTabBtn) communityTabBtn.click();
+      });
+    }
+    // 천원의 아침밥 카드 — 새 화면 없이 기존 밥심 내부의 천원의 아침밥
+    // 화면으로 바로 이동합니다. 이미 밥심의 "일반 메뉴" 탭에 있던
+    // 상태여도 이 카드는 항상 아침밥 화면으로 보내야 하므로, 매장이
+    // 이미 밥심이라 goToStore()가 화면을 새로 그리지 않는 경우까지
+    // 대비해 bapsimView를 먼저 breakfast로 맞춰둡니다.
+    if (els.homeCardBreakfast) {
+      els.homeCardBreakfast.addEventListener("click", function () {
+        state.bapsimView = "breakfast";
+        goToStore("bapsim");
       });
     }
     Array.prototype.forEach.call(document.querySelectorAll(".home-service-card[data-store]"), function (card) {
@@ -8053,6 +8223,27 @@ document.addEventListener("DOMContentLoaded", function () {
     // js/community.js가 커뮤니티 화면에서 빠져나올 때 홈/매장 중 무엇을
     // 다시 보여줄지 이 함수를 통해 물어봅니다.
     window.AppHome = { applyView: applyViewVisibility };
+
+    // 당일 첫 방문 평가 팝업(모바일 UI 개선 6단계)
+    if (els.breakfastPopupRateBtn) {
+      els.breakfastPopupRateBtn.addEventListener("click", function () {
+        markBreakfastPopupShownToday();
+        closeBreakfastPopup();
+        state.bapsimView = "breakfast";
+        goToStore("bapsim"); // 기존 천원의 아침밥 화면(밥심 내부)을 그대로 재사용
+      });
+    }
+    if (els.breakfastPopupDismissBtn) {
+      els.breakfastPopupDismissBtn.addEventListener("click", function () {
+        markBreakfastPopupShownToday();
+        closeBreakfastPopup();
+      });
+    }
+    if (els.breakfastPopupOverlay) {
+      els.breakfastPopupOverlay.addEventListener("click", function (e) {
+        if (e.target === els.breakfastPopupOverlay) { markBreakfastPopupShownToday(); closeBreakfastPopup(); }
+      });
+    }
 
     els.langButtons = {};
     Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
@@ -8154,6 +8345,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
       });
     }
+
+    // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
+    // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음).
+    setTimeout(maybeShowBreakfastPopup, 1000);
   }
 
   if (document.readyState === "loading") {

@@ -900,6 +900,70 @@ button {
 
 .bottom-nav-label { font-size: 12px; }
 
+/* 천원의 아침밥 카드 — 다른 서비스 카드보다 살짝만 강조(큰 배너 아님) */
+.home-service-card-featured .home-service-icon { font-size: 34px; }
+.home-service-card-featured .home-service-name { font-size: 17px; }
+.home-service-card-featured { border-color: var(--blue); }
+
+/* ---------------- 천원의 아침밥 평가 팝업(당일 첫 방문 1회, 모바일 UI 개선 6단계) ---------------- */
+
+.breakfast-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.breakfast-popup-overlay[hidden] { display: none; }
+
+.breakfast-popup-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.14);
+}
+
+.breakfast-popup-title {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.breakfast-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakfast-popup-btn-primary {
+  min-height: 48px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.breakfast-popup-btn-secondary {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: var(--text-mid);
+  font-size: 14px;
+}
+
 /* ---------------- 본문 ---------------- */
 
 main {
