@@ -4677,7 +4677,10 @@ var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job", 
 var COMMUNITY_TABS = {
   all: { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд", bn: "সব", my: "အားလုံး" },
   job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
-  schoolLife: { ko: "학교생활", zh: "校园生活", vi: "Đời sống học đường", en: "School Life", mn: "Сургуулийн амьдрал", bn: "স্কুল জীবন", my: "ကျောင်းဘဝ" },
+  // "학교생활" → "친구 만들기"로 변경(글쓰기 카테고리 COMMUNITY_CATEGORIES.friends와
+  // 동일한 번역 재사용 — 새 문구 없음). 탭 내부 키(schoolLife)와 분류 대상
+  // 카테고리(friends+together)는 변경하지 않습니다.
+  schoolLife: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
   lifeInfo: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
   free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
