@@ -1323,9 +1323,19 @@ table.results-table {
             // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다. 이름·국적은
             // Google 로그인으로 가입하더라도(이메일/비밀번호 없이도) 반드시
             // 채워야만 문서가 만들어지도록 서버(규칙)에서도 검사합니다.
+            // 비회원(익명, Firebase Anonymous Auth)은 회원가입 절차 없이
+            // 자동 생성된 nickname(name 필드 재사용)만으로 문서를 만들 수
+            // 있습니다 — request.auth.token.firebase.sign_in_provider는
+            // 서버가 검증한 값이라 클라이언트가 위조할 수 없습니다.
             allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user'
-              && request.resource.data.name is string && request.resource.data.name.size() > 0
-              && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0;
+              && (
+                (request.resource.data.name is string && request.resource.data.name.size() > 0
+                  && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0)
+                ||
+                (request.auth.token.firebase.sign_in_provider == 'anonymous'
+                  && request.resource.data.isAnonymous == true
+                  && request.resource.data.name is string && request.resource.data.name.size() > 0)
+              );
             allow update: if (isSignedIn() && request.auth.uid == uid
                 && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
               || isAdmin();
