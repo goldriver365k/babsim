@@ -167,6 +167,32 @@ var Community = (function () {
     return adj + noun + num;
   }
 
+  /* ---------------- 가입회원 닉네임(2026-09-11 4단계 지시서) ----------------
+     가입회원도 커뮤니티에서는 실명(profile.name, 회원가입 필수 항목)이
+     아니라 닉네임(profile.nickname, 새 필드 하나만 추가)으로 활동합니다.
+     닉네임을 직접 정하지 않은 회원은 커뮤니티를 처음 쓸 때 자동으로
+     1회만 생성해 프로필에 저장합니다(강제 팝업 없음, 기존 회원도 이
+     흐름을 그대로 타면 자동으로 채워짐). 기존 프로필 문서 구조·회원가입
+     화면은 손대지 않고 필드 하나만 재사용 추가합니다. */
+  function ensureMemberNickname(uid) {
+    if (!profile || profile.isAnonymous || profile.nickname) return Promise.resolve(profile);
+    var nickname = generateGuestNickname();
+    var d = db();
+    if (!d) { profile.nickname = nickname; return Promise.resolve(profile); }
+    return d.collection("communityUsers").doc(uid).update({ nickname: nickname }).then(function () {
+      profile.nickname = nickname;
+      return profile;
+    }).catch(function () { return profile; }); // 실패해도 글쓰기 자체를 막지 않음(다음 기회에 다시 시도)
+  }
+
+  // 게시글/댓글 작성 시 표시할 이름을 정합니다 — 비회원은 자동 닉네임
+  // (profile.name, 3단계에서 만든 구조 재사용), 가입회원은 위에서 만든
+  // profile.nickname을 사용합니다. 실명(profile.name)은 절대 쓰지 않음.
+  function currentDisplayNickname() {
+    if (!profile) return "";
+    return profile.isAnonymous ? (profile.name || "") : (profile.nickname || "");
+  }
+
   // profile.name을 그대로 재사용해(기존 게시글/댓글 작성 코드 무수정)
   // 닉네임을 저장합니다 — authorIsAnonymous만 함께 저장해 두어, 실명이
   // 아니라 닉네임이므로 화면에서 마스킹하지 않도록 구분합니다.
@@ -688,12 +714,15 @@ var Community = (function () {
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_MY.myPageTitle)));
 
     var info = el("div", "community-my-info");
-    info.appendChild(el("p", null, (profile && profile.name) || ""));
+    info.appendChild(el("p", null, (profile && profile.nickname) || ""));
     info.appendChild(el("p", "community-my-sub", (profile && profile.nationality) || ""));
     info.appendChild(el("p", "community-my-sub", (authUser && authUser.email) || ""));
     wrap.appendChild(info);
 
     var editForm = el("form", "community-form");
+    // 커뮤니티 게시글·댓글에는 이 닉네임만 표시됩니다(실명 비공개).
+    var nicknameInput = el("input"); nicknameInput.type = "text"; nicknameInput.maxLength = 20;
+    nicknameInput.value = (profile && profile.nickname) || "";
     var nameInput = el("input"); nameInput.type = "text"; nameInput.value = (profile && profile.name) || "";
     var natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList2");
     natInput.value = (profile && profile.nationality) || "";
@@ -706,6 +735,7 @@ var Community = (function () {
       if (code === ((profile && profile.preferredLanguage) || lang)) opt.selected = true;
       langSelect.appendChild(opt);
     });
+    editForm.appendChild(formField(COMMUNITY_MY.editNickname, nicknameInput));
     editForm.appendChild(formField(COMMUNITY_MY.editName, nameInput));
     editForm.appendChild(formField(COMMUNITY_MY.editNationality, natInput));
     editForm.appendChild(datalist);
@@ -717,11 +747,17 @@ var Community = (function () {
       e.preventDefault();
       var d = db();
       if (!d || !authUser) return;
+      // 닉네임을 바꿔도 게시글/댓글의 authorId(작성자 UID)는 그대로라
+      // 소유권·신고·차단 기록에는 영향이 없습니다(과거 글에 남은
+      // 닉네임 표시만 예전 값 그대로 남고, 새 글부터 새 닉네임 적용).
+      var newNickname = nicknameInput.value.trim() || (profile && profile.nickname) || "";
       d.collection("communityUsers").doc(authUser.uid).update({
+        nickname: newNickname,
         name: nameInput.value.trim(),
         nationality: natInput.value.trim(),
         preferredLanguage: langSelect.value
       }).then(function () {
+        profile.nickname = newNickname;
         profile.name = nameInput.value.trim();
         profile.nationality = natInput.value.trim();
         profile.preferredLanguage = langSelect.value;
@@ -1129,7 +1165,9 @@ var Community = (function () {
         return {
           id: post.id,
           title: localizedTitle(post),
-          authorMasked: post.authorNameMasked || "",
+          // 닉네임(비회원/가입회원)은 그대로, 이 필드가 생기기 전(구 게시글)의
+          // 실명만 마스킹해서 홈 미리보기 카드로 내보냅니다.
+          authorMasked: (post.authorIsAnonymous || post.authorNameIsNickname) ? (post.authorNameMasked || "") : maskName(post.authorNameMasked),
           nationality: post.authorNationality || "",
           dateText: formatDate(post.createdAt),
           category: post.category
@@ -1711,7 +1749,8 @@ var Community = (function () {
       postId: postId,
       parentCommentId: parentId || null,
       authorId: authUser.uid,
-      authorNameMasked: (profile && profile.name) || "",
+      authorNameMasked: currentDisplayNickname(),
+      authorNameIsNickname: true, // 실명이 아니라 닉네임임을 표시(구 댓글과 구분해 마스킹 처리)
       authorNationality: (profile && profile.nationality) || "",
       authorIsAnonymous: !!(profile && profile.isAnonymous),
       originalLanguage: lang,
@@ -1808,7 +1847,9 @@ var Community = (function () {
   function buildCommentNode(c, postId, listContainer) {
     var node = el("div", "community-comment");
     // 자동 생성된 비회원 닉네임은 실명이 아니므로 마스킹하지 않고 그대로 보여줍니다.
-    var displayName = c.authorIsAnonymous ? (c.authorNameMasked || "") : maskName(c.authorNameMasked);
+    // 닉네임(비회원 자동 닉네임/가입회원 닉네임)은 그대로 보여주고,
+    // 이 필드가 생기기 전(구 댓글)에 저장된 실명만 마스킹합니다.
+    var displayName = (c.authorIsAnonymous || c.authorNameIsNickname) ? (c.authorNameMasked || "") : maskName(c.authorNameMasked);
     var metaText = [displayName, c.authorNationality, formatDate(c.createdAt)].filter(Boolean).join(" · ");
     var meta = el("p", "community-comment-meta", metaText);
     node.appendChild(meta);
@@ -2333,7 +2374,8 @@ var Community = (function () {
         originalContent: fields.content,
         kakaoLink: fields.kakaoLink,
         authorId: authUser.uid,
-        authorNameMasked: (profile && profile.name) || "",
+        authorNameMasked: currentDisplayNickname(),
+        authorNameIsNickname: true, // 실명이 아니라 닉네임임을 표시(구 게시글과 구분해 마스킹 처리)
         authorNationality: (profile && profile.nationality) || "",
         authorIsAnonymous: !!(profile && profile.isAnonymous),
         status: "visible",
@@ -2379,7 +2421,7 @@ var Community = (function () {
         // 최초 진입 시 회원이 저장해둔 언어를 존중(이미 로컬에 언어가
         // 없을 때만) — 기존 저장방식(LANG_KEY)을 그대로 사용합니다.
       }
-      return profile;
+      return ensureMemberNickname(uid);
     }).catch(function () { profile = null; return null; });
   }
 
