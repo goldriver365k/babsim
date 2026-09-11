@@ -120,7 +120,7 @@ def build():
     <button type="button" class="lang-bar-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
-    <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="유학생 커뮤니티">
+    <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="밥심 커뮤니티">
       <span class="community-tab-line1"></span><span class="community-tab-line2"></span>
     </button>
     <button type="button" class="store-tab" data-store="bapsim">밥심<br>1층</button>
