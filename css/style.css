@@ -107,89 +107,41 @@ button {
   overflow-wrap: anywhere;
 }
 
-/* ---------------- 언어 선택 (모바일: 현재 언어 버튼 → 드롭다운) ---------------- */
-
-.lang-toggle-wrap {
-  position: relative;
-  flex: 0 0 auto;
-  /* 모바일 UI 개선 9단계: 긴 언어명(예: Tiếng Việt) 때문에 header-top이
-     줄바꿈될 때도 언어 버튼이 항상 그 줄의 오른쪽 끝에 붙도록 고정 —
-     .lang-select의 right:0 기준점이 화면 밖으로 밀려나지 않게 함 */
-  margin-left: auto;
-}
-
-.lang-toggle-btn {
+/* ---------------- 언어 선택 (7개 버튼 항상 표시, 드롭다운/팝업 없음) ----------------
+   PC: 한 줄, 균등 간격, 화면 중앙 정렬. 모바일: 숨기거나 드롭다운으로
+   바꾸지 않고, 화면 너비에 맞춰 자연스럽게 줄바꿈(기본 4+3)합니다. */
+.lang-bar {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 8px 12px;
-  background: #ffffff;
-  border: 1px solid var(--border-gray);
-  border-radius: var(--radius-sm);
-  color: var(--text-dark);
-  font-size: 14px;
-  font-weight: 700;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 1200px;
+  margin: 0 auto 12px;
 }
 
-.lang-toggle-btn:hover,
-.lang-toggle-btn:focus-visible {
-  color: var(--blue);
-  border-color: var(--blue);
+.lang-bar-btn {
+  flex: 1 1 auto;
+  min-height: 42px;
+  padding: 8px 14px;
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lang-bar-btn:hover,
+.lang-bar-btn:focus-visible {
+  border-color: #1559D6;
   outline: none;
 }
 
-.lang-toggle-label { white-space: nowrap; }
-
-.lang-toggle-icon {
-  font-size: 15px;
-  line-height: 1;
-  color: var(--text-mid);
-}
-
-.lang-select {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 160px;
-  max-height: 60vh;
-  overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid var(--border-gray);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(18, 52, 91, 0.14);
-  padding: 6px;
-}
-
-.lang-select[hidden] { display: none; }
-
-.lang-btn {
-  flex: 0 0 auto;
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 10px 12px;
-  min-height: 44px;
-  font-size: 15px;
-  text-align: left;
-  color: var(--text-mid);
-  border-radius: var(--radius-sm);
-}
-
-.lang-btn:hover,
-.lang-btn:focus-visible {
-  color: var(--blue);
-  outline: 2px solid var(--blue);
-  outline-offset: -2px;
-}
-
-.lang-btn.active {
-  color: var(--blue);
-  font-weight: 700;
+.lang-bar-btn.active {
+  background: #1559D6;
+  color: #FFFFFF;
+  border-color: #1559D6;
 }
 
 .store-tabs {

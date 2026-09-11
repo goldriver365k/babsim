@@ -106,21 +106,18 @@ def build():
       </button>
       <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
     </div>
-    <div class="lang-toggle-wrap">
-      <button type="button" class="lang-toggle-btn" id="langToggleBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langSelect">
-        <span class="lang-toggle-label" id="langToggleLabel">한국어</span>
-        <span class="lang-toggle-icon" aria-hidden="true">&#9776;</span>
-      </button>
-      <div class="lang-select" role="menu" aria-label="언어 선택" id="langSelect" hidden>
-        <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
-        <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
-        <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
-        <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
-        <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
-        <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
-        <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
-      </div>
-    </div>
+  </div>
+  <!-- 언어 선택 위치/표시 방식 변경: 드롭다운·팝업 없이 7개 언어 버튼을
+       항상 표시합니다(모인관·인제대학교 바로 아래, 식당/커뮤니티 선택
+       메뉴 바로 위). 국기 이미지·"언어 선택" 제목 없이 언어명만 나열. -->
+  <div class="lang-bar" id="langBar" role="group" aria-label="언어 선택">
+    <button type="button" class="lang-bar-btn" data-lang="ko" aria-label="한국어">한국어</button>
+    <button type="button" class="lang-bar-btn" data-lang="zh" aria-label="中文">中文</button>
+    <button type="button" class="lang-bar-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
+    <button type="button" class="lang-bar-btn" data-lang="en" aria-label="English">English</button>
+    <button type="button" class="lang-bar-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+    <button type="button" class="lang-bar-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+    <button type="button" class="lang-bar-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
     <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="유학생 커뮤니티">
