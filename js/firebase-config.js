@@ -57,6 +57,14 @@
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
 
+          // 홈 팝업(관리자 등록, 팝업 기능 1단계) — "주간메뉴 관리"와 같은
+          // 관리자 로그인을 그대로 재사용합니다. 학생 화면에 실제로
+          // 띄우는 기능은 다음 단계에서 이 컬렉션을 읽어 연결합니다.
+          match /sitePopups/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
           // 메뉴 번역 사전(문서 ID = 한글 메뉴명). 같은 메뉴를 매주 다시
           // 번역하지 않기 위한 캐시입니다. parse-weekly-menu 함수가 읽고,
           // 관리자 게시 시 클라이언트가 새로 번역된 항목만 씁니다.
@@ -270,6 +278,14 @@
       service firebase.storage {
         match /b/{bucket}/o {
           match /weeklyMenuImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
+          // 홈 팝업 이미지(관리자 등록, 팝업 기능 1단계) — weeklyMenuImages와
+          // 같은 조건(관리자 로그인 필요, 10MB 이하 이미지)을 그대로 재사용.
+          match /sitePopupImages/{allPaths=**} {
             allow read: if true;
             allow write: if request.auth != null
               && request.resource.size < 10 * 1024 * 1024

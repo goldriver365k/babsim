@@ -455,6 +455,7 @@ def build_admin():
     community_translations = read("js/community-translations.js")
     admin_js = read("js/admin.js")
     admin_community = read("js/admin-community.js")
+    admin_popup = read("js/admin-popup.js")
 
     html = """<!DOCTYPE html>
 <html lang="ko">
@@ -495,6 +496,7 @@ def build_admin():
       <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
       <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
+      <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
     </nav>
   </header>
 
@@ -842,6 +844,54 @@ def build_admin():
         <div id="commAdminTranslationsBody"></div>
       </div>
     </section>
+
+    <!-- ================= 팝업 관리 ================= -->
+    <section class="admin-page" id="pagePopup" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">팝업을 등록·수정·삭제하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이 단계는 팝업을
+          등록해 두는 화면까지만이며, 학생 화면에 실제로 팝업을 띄우는 기능은 다음 단계에서 연결합니다.</p>
+      </div>
+
+      <div class="admin-card">
+        <h2 id="popupFormTitle">팝업 등록</h2>
+        <form class="weekly-auth-box" id="popupForm" style="max-width:420px;">
+          <label for="popupTitleInput">팝업 제목</label>
+          <input type="text" id="popupTitleInput" maxlength="60">
+
+          <label for="popupImageInput">팝업 이미지</label>
+          <div class="image-upload-box">
+            <div class="image-upload-row">
+              <input type="file" id="popupImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+            </div>
+            <div class="image-preview-wrap" id="popupImagePreviewWrap" hidden>
+              <img id="popupImagePreviewImg" alt="팝업 이미지 미리보기">
+            </div>
+            <p class="form-error" id="popupImageError"></p>
+          </div>
+
+          <label for="popupLinkInput">링크 URL(선택)</label>
+          <input type="url" id="popupLinkInput" placeholder="https://...">
+
+          <label class="week-open-toggle"><input type="checkbox" id="popupActiveInput" checked> 사용함(ON)</label>
+
+          <label for="popupStartInput">시작일시(선택)</label>
+          <input type="datetime-local" id="popupStartInput">
+
+          <label for="popupEndInput">종료일시(선택)</label>
+          <input type="datetime-local" id="popupEndInput">
+
+          <button type="submit" id="popupSaveBtn">등록</button>
+          <button type="button" id="popupCancelEditBtn" hidden>새로 등록으로 취소</button>
+        </form>
+        <p class="publish-status" id="popupFormStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>등록된 팝업</h2>
+        <div class="table-scroll" id="popupListBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -860,6 +910,9 @@ def build_admin():
 </script>
 <script>
 """ + admin_community + """
+</script>
+<script>
+""" + admin_popup + """
 </script>
 </body>
 </html>

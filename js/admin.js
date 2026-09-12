@@ -408,7 +408,7 @@
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -431,6 +431,7 @@
     else if (page === "hellokorean") initHelloKoreanPage();
     else if (page === "weeklymenu") initWeeklyMenuPage();
     else if (page === "community") { if (window.AdminCommunity) AdminCommunity.init(); }
+    else if (page === "popup") { if (window.AdminPopup) AdminPopup.init(); }
   }
 
   /* ================================================================
