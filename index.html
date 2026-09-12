@@ -4800,7 +4800,11 @@ var COMMUNITY_POST = {
   saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах", bn: "সংরক্ষণ", my: "သိမ်းဆည်းရန်" },
   unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах", bn: "সংরক্ষণ বাতিল", my: "သိမ်းဆည်းမှုပယ်ဖျက်ရန်" },
   kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой.", bn: "ব্যক্তিগত তথ্য প্রকাশ এবং অফলাইন সাক্ষাতে সতর্ক থাকুন।", my: "ကိုယ်ရေးအချက်အလက်ဖော်ပြခြင်းနှင့် အော့ဖ်လိုင်းတွေ့ဆုံခြင်းတွင် သတိထားပါ။" },
-  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" }
+  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" },
+  // "카카오톡 문의 연결" — 홈페이지 "사장님께 말해요"(OWNER_CHAT) 링크를
+  // 그대로 재사용하는 체크박스/버튼 문구(게시글마다 새 링크 없음).
+  ownerKakaoCheckbox: { ko: "카카오톡 문의 연결", zh: "连接KakaoTalk咨询", vi: "Kết nối hỏi đáp qua KakaoTalk", en: "Connect KakaoTalk inquiry", mn: "KakaoTalk-аар лавлагаа холбох", bn: "কাকাওটক জিজ্ঞাসা সংযুক্ত করুন", my: "KakaoTalk မေးမြန်းမှု ချိတ်ဆက်ရန်" },
+  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" }
 };
 
 /* 중고거래 */
@@ -6467,6 +6471,18 @@ var Community = (function () {
       wrap.appendChild(kakaoWrap);
     }
 
+    // 게시글 작성자가 "카카오톡 문의 연결"을 체크한 경우에만 표시합니다.
+    // 게시글에는 boolean(contactViaOwnerKakao)만 저장하고, 실제 이동 링크는
+    // 홈페이지 "사장님께 말해요"(OWNER_CHAT.url, js/menu-data.js)를 그대로
+    // 재사용합니다 — 새 링크를 만들거나 게시글마다 URL을 저장하지 않습니다.
+    if (post.contactViaOwnerKakao && typeof OWNER_CHAT !== "undefined") {
+      var ownerKakaoBtn = el("a", "community-btn-secondary", t(COMMUNITY_POST.ownerKakaoBtn));
+      ownerKakaoBtn.href = OWNER_CHAT.url;
+      ownerKakaoBtn.target = "_blank";
+      ownerKakaoBtn.rel = "noopener noreferrer";
+      wrap.appendChild(ownerKakaoBtn);
+    }
+
     var actions = el("div", "community-detail-actions");
     var saveBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.saveBtn));
     saveBtn.type = "button";
@@ -7282,6 +7298,15 @@ var Community = (function () {
     var kakaoInput = el("input"); kakaoInput.type = "url"; kakaoInput.placeholder = "https://open.kakao.com/...";
     form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)", bn: "কাকাওটক ওপেন চ্যাট লিংক (ঐচ্ছিক)", my: "KakaoTalk Open Chat လင့်ခ် (ရွေးချယ်ခွင့်)" }, kakaoInput));
 
+    // "사장님께 말해요"(OWNER_CHAT.url, js/menu-data.js)에 이미 연결된
+    // 카카오톡 오픈채팅 링크를 그대로 재사용합니다 — 여기서는 게시글에
+    // 연결 여부(boolean)만 저장하고, 새 링크는 만들지 않습니다.
+    var ownerKakaoRow = el("label", "community-checkbox-row");
+    var ownerKakaoInput = el("input"); ownerKakaoInput.type = "checkbox";
+    ownerKakaoRow.appendChild(ownerKakaoInput);
+    ownerKakaoRow.appendChild(document.createTextNode(" " + t(COMMUNITY_POST.ownerKakaoCheckbox)));
+    form.appendChild(ownerKakaoRow);
+
     var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
     form.appendChild(photoLabel);
     var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.multiple = true;
@@ -7301,6 +7326,7 @@ var Community = (function () {
       contentArea.value = editingPost.originalContent || "";
       langSelect.value = editingPost.originalLanguage || lang;
       kakaoInput.value = editingPost.kakaoLink || "";
+      ownerKakaoInput.checked = !!editingPost.contactViaOwnerKakao;
 
       if (editingPost.category === "market") {
         dealTypeSelect.value = editingPost.dealType || "sell";
@@ -7450,7 +7476,8 @@ var Community = (function () {
       submitBtn.disabled = true;
       createOrUpdatePost({
         category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
-        originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null, extra: extra,
+        originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null,
+        contactViaOwnerKakao: ownerKakaoInput.checked, extra: extra,
         photoFiles: pendingFiles
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
@@ -7560,6 +7587,7 @@ var Community = (function () {
         originalTitle: fields.title,
         originalContent: fields.content,
         kakaoLink: fields.kakaoLink,
+        contactViaOwnerKakao: !!fields.contactViaOwnerKakao,
         // 수정 시 authorId/작성자 소유권은 절대 건드리지 않습니다
         // (undefined는 아래에서 base 키 자체를 지워 update() 대상에서
         // 제외 — createdAt과 동일한 기존 패턴 재사용).

@@ -144,7 +144,11 @@ var COMMUNITY_POST = {
   saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах", bn: "সংরক্ষণ", my: "သိမ်းဆည်းရန်" },
   unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах", bn: "সংরক্ষণ বাতিল", my: "သိမ်းဆည်းမှုပယ်ဖျက်ရန်" },
   kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой.", bn: "ব্যক্তিগত তথ্য প্রকাশ এবং অফলাইন সাক্ষাতে সতর্ক থাকুন।", my: "ကိုယ်ရေးအချက်အလက်ဖော်ပြခြင်းနှင့် အော့ဖ်လိုင်းတွေ့ဆုံခြင်းတွင် သတိထားပါ။" },
-  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" }
+  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" },
+  // "카카오톡 문의 연결" — 홈페이지 "사장님께 말해요"(OWNER_CHAT) 링크를
+  // 그대로 재사용하는 체크박스/버튼 문구(게시글마다 새 링크 없음).
+  ownerKakaoCheckbox: { ko: "카카오톡 문의 연결", zh: "连接KakaoTalk咨询", vi: "Kết nối hỏi đáp qua KakaoTalk", en: "Connect KakaoTalk inquiry", mn: "KakaoTalk-аар лавлагаа холбох", bn: "কাকাওটক জিজ্ঞাসা সংযুক্ত করুন", my: "KakaoTalk မေးမြန်းမှု ချိတ်ဆက်ရန်" },
+  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" }
 };
 
 /* 중고거래 */
