@@ -1512,7 +1512,12 @@ var Community = (function () {
     if (authUser && post.authorId === authUser.uid) {
       var editBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.editPost));
       editBtn.type = "button";
-      editBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write?edit=" + post.id); editPostId = post.id; render(); });
+      // postId는 URL 쿼리(?edit=)로 전달합니다 — 새 라우트를 만들지
+      // 않고 기존 "/write" 글쓰기 화면을 그대로 재사용합니다.
+      // renderWrite()가 location.search에서 직접 읽으므로(아래),
+      // navigate() 이후 별도로 editPostId를 대입/재렌더링할 필요가 없고
+      // "값을 나중에 대입해 첫 렌더가 옛 값으로 실행되는" 문제도 없습니다.
+      editBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write?edit=" + post.id); });
       actions.appendChild(editBtn);
 
       var delBtn = el("button", "community-btn-danger", t(COMMUNITY_POST.deletePost));
@@ -2152,8 +2157,25 @@ var Community = (function () {
   }
 
   function renderWrite() {
+    // 수정 모드 여부는 URL 쿼리(?edit=POST_ID)에서 직접 읽습니다(새
+    // 라우트/파싱 로직 추가 없음). navigate()가 history.pushState로
+    // 쿼리까지 반영한 뒤 동기적으로 render()를 호출하므로, editPostId를
+    // 뒤늦게 대입하던 예전 방식과 달리 첫 렌더부터 항상 최신 값입니다.
+    // "글쓰기" 버튼처럼 쿼리 없이 들어오면 자동으로 새 글 모드가 됩니다.
+    var editMatch = /[?&]edit=([^&]+)/.exec(location.search);
+    editPostId = editMatch ? decodeURIComponent(editMatch[1]) : null;
+    var isEdit = !!editPostId;
+    // 상세 화면에서 이미 불러와 둔 postCache를 재사용합니다(새 Firestore
+    // 조회 없음 — 비용 최소화). 캐시가 없거나(직접 URL 접근 등) 본인
+    // 글이 아니면 안전하게 새 글 모드로 되돌립니다(닉네임이 아닌
+    // UID 기준 확인 — Firestore 규칙에서도 동일하게 재확인됨).
+    var editingPost = isEdit ? postCache[editPostId] : null;
+    if (isEdit && (!editingPost || !authUser || editingPost.authorId !== authUser.uid)) {
+      isEdit = false; editPostId = null; editingPost = null;
+    }
+
     var wrap = el("div", "community-page community-write");
-    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_POST.writeTitle)));
+    wrap.appendChild(el("h2", "community-page-title", isEdit ? t(COMMUNITY_POST.editPostTitle) : t(COMMUNITY_POST.writeTitle)));
 
     var form = el("form", "community-form");
     var catSelect = el("select");
@@ -2287,6 +2309,67 @@ var Community = (function () {
     var photoPreview = el("div", "community-photo-preview");
     form.appendChild(photoPreview);
     var pendingFiles = [];
+
+    // 수정 모드: 기존 게시글 값을 폼에 채웁니다(제목/본문/카테고리/기타
+    // 필드). 사진은 그대로 두면(pendingFiles 비어있음) 저장 시
+    // createOrUpdatePost가 photos 필드를 아예 보내지 않아 기존 이미지
+    // URL이 그대로 유지됩니다 — 새 파일을 고를 때만 기존 업로드
+    // 로직(uploadPhotos)이 실행됩니다.
+    if (isEdit && editingPost) {
+      catSelect.value = editingPost.category || "market";
+      titleInput.value = editingPost.originalTitle || "";
+      contentArea.value = editingPost.originalContent || "";
+      langSelect.value = editingPost.originalLanguage || lang;
+      kakaoInput.value = editingPost.kakaoLink || "";
+
+      if (editingPost.category === "market") {
+        dealTypeSelect.value = editingPost.dealType || "sell";
+        priceInput.value = (editingPost.price !== null && editingPost.price !== undefined) ? editingPost.price : "";
+        freeInput.checked = !!editingPost.isFree;
+        locationInput.value = editingPost.dealLocation || "";
+        conditionInput.value = editingPost.itemCondition || "";
+      } else if (editingPost.category === "help") {
+        helpTypeSelect.value = editingPost.helpType || "etc";
+      } else if (editingPost.category === "job") {
+        jobTypeSelect.value = editingPost.jobType || "hiring";
+        if (editingPost.jobType === "seeking") {
+          jDesiredIndustry.value = editingPost.desiredIndustry || "";
+          jAvailableDays.value = editingPost.availableDays || "";
+          jAvailableHours.value = editingPost.availableHours || "";
+          jDesiredLocation.value = editingPost.desiredLocation || "";
+          jAvailableLanguages.value = editingPost.availableLanguages || "";
+          jSeekingContact.value = editingPost.contactMethod || "";
+          jSeekingExperience.value = editingPost.experience || "";
+          jSeekingKorean.value = editingPost.koreanLevel || "";
+        } else {
+          jIndustry.value = editingPost.industry || "";
+          jWorkLocation.value = editingPost.workLocation || "";
+          jJobDescription.value = editingPost.jobDescription || "";
+          jWorkDays.value = editingPost.workDays || "";
+          jWorkHours.value = editingPost.workHours || "";
+          jSalary.value = editingPost.salary || "";
+          jDeadline.value = editingPost.deadline || "";
+          jHiringContact.value = editingPost.contactMethod || "";
+          jHiringKorean.value = editingPost.koreanLevel || "";
+          jHiringExperience.value = editingPost.experience || "";
+        }
+      }
+
+      if (editingPost.photos && editingPost.photos.length) {
+        editingPost.photos.forEach(function (url) {
+          var existingImg = document.createElement("img");
+          existingImg.src = url; existingImg.alt = "";
+          photoPreview.appendChild(existingImg);
+        });
+      }
+
+      // 위에서 바꾼 catSelect/jobTypeSelect 값에 맞춰 숨김 영역과 글자
+      // 수 제한을 다시 계산합니다(두 함수 모두 이 시점에 이미
+      // 선언되어 있음 — 함수 선언 호이스팅).
+      toggleJobTypeFields();
+      toggleCategoryFields();
+    }
+
     photoInput.addEventListener("change", function () {
       var files = Array.prototype.slice.call(photoInput.files || []);
       var maxNow = currentMaxPhotos();
@@ -2480,6 +2563,13 @@ var Community = (function () {
   function createOrUpdatePost(fields) {
     var d = db();
     var isEdit = !!editPostId;
+    // 수정 권한은 Firestore 규칙(request.auth.uid == resource.data.authorId)
+    // 에서 이미 강제되지만, 잘못된 요청을 애초에 보내지 않도록
+    // 클라이언트에서도 postCache(닉네임이 아닌 authorId=UID)로 한 번 더
+    // 확인합니다 — 새 조회 없이 기존 캐시만 사용(비용 최소화).
+    if (isEdit && (!postCache[editPostId] || !authUser || postCache[editPostId].authorId !== authUser.uid)) {
+      return Promise.reject(new Error("FORBIDDEN"));
+    }
     var ref = isEdit ? d.collection("communityPosts").doc(editPostId) : d.collection("communityPosts").doc();
     var postId = ref.id;
 
@@ -2490,7 +2580,10 @@ var Community = (function () {
         originalTitle: fields.title,
         originalContent: fields.content,
         kakaoLink: fields.kakaoLink,
-        authorId: authUser.uid,
+        // 수정 시 authorId/작성자 소유권은 절대 건드리지 않습니다
+        // (undefined는 아래에서 base 키 자체를 지워 update() 대상에서
+        // 제외 — createdAt과 동일한 기존 패턴 재사용).
+        authorId: isEdit ? undefined : authUser.uid,
         authorNameMasked: currentDisplayNickname(),
         authorNameIsNickname: true, // 실명이 아니라 닉네임임을 표시(구 게시글과 구분해 마스킹 처리)
         authorNationality: (profile && profile.nationality) || "",

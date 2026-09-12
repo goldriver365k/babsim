@@ -117,6 +117,7 @@ var COMMUNITY_MY = {
 /* 게시글/댓글 작성, 상세, 목록, 검색 */
 var COMMUNITY_POST = {
   writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих", bn: "পোস্ট লিখুন", my: "ပို့စ်ရေးရန်" },
+  editPostTitle: { ko: "게시글 수정", zh: "编辑帖子", vi: "Sửa bài viết", en: "Edit Post", mn: "Нийтлэлийг засах", bn: "পোস্ট সম্পাদনা", my: "ပို့စ်ကို ပြင်ဆင်ရန်" },
   categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал", bn: "বিভাগ", my: "အမျိုးအစား" },
   titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг", bn: "শিরোনাম", my: "ခေါင်းစဉ်" },
   contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга", bn: "বিষয়বস্তু", my: "အကြောင်းအရာ" },
