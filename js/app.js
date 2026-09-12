@@ -1121,8 +1121,17 @@
     }
 
     // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
-    // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음).
-    setTimeout(maybeShowBreakfastPopup, 1000);
+    // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음). 관리자가 등록한
+    // 일반 팝업(팝업 기능 2단계)과 천원의 아침밥 평가 팝업이 동시에
+    // 뜨지 않도록, 일반 팝업을 먼저 보여주고(없거나 닫히면) 그 다음에만
+    // 평가 팝업을 띄웁니다.
+    setTimeout(function () {
+      if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
+        window.SitePopup.maybeShow(maybeShowBreakfastPopup);
+      } else {
+        maybeShowBreakfastPopup();
+      }
+    }, 1000);
   }
 
   if (document.readyState === "loading") {

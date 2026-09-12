@@ -62,6 +62,7 @@ def build():
     pwa = read("js/pwa.js")
     community_translations = read("js/community-translations.js")
     community = read("js/community.js")
+    site_popup = read("js/site-popup.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -431,6 +432,9 @@ def build():
 </script>
 <script>
 """ + community + """
+</script>
+<script>
+""" + site_popup + """
 </script>
 <script>
 """ + app + """

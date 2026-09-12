@@ -1602,6 +1602,20 @@ main {
   margin: 0 0 10px;
 }
 
+/* ---------------- 홈 팝업(관리자 등록, 팝업 기능 2단계) ----------------
+   껍데기(.modal-overlay/.modal)와 닫기 버튼(.community-btn-secondary)은
+   기존 스타일을 그대로 재사용하고, 이미지 표시만 최소한으로 추가합니다. */
+.site-popup-image {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+}
+
+.site-popup-image-linked { cursor: pointer; }
+
+.site-popup-close-btn { width: 100%; }
+
 .modal-desc {
   font-size: 15px;
   color: var(--text-dark);
