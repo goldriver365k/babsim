@@ -7803,6 +7803,7 @@ var SitePopup = (function () {
   };
 
   var els = {};
+  var breakfastViewTracked = false; // GA4 breakfast_view(6단계) 중복 방지 — 페이지 세션당 1회만
 
   function qs(id) { return document.getElementById(id); }
 
@@ -8286,6 +8287,12 @@ var SitePopup = (function () {
 
   function renderBreakfastArea() {
     if (state.store !== "bapsim" || state.bapsimView !== "breakfast") return;
+    // GA4 breakfast_view(6단계) — 언어 전환·자정 갱신 등으로 이 화면이
+    // 다시 그려질 때마다 보내지 않도록 페이지 세션당 1회만 전송합니다.
+    if (!breakfastViewTracked) {
+      breakfastViewTracked = true;
+      if (typeof gtag === "function") gtag("event", "breakfast_view");
+    }
     var lang = state.lang;
     var info = BREAKFAST_INFO;
     var labels = info.fieldLabels;
@@ -8406,9 +8413,12 @@ var SitePopup = (function () {
   // 평가 저장이 실제로 성공한 뒤에만(BreakfastRating 모듈이 호출) 완료
   // 상태를 기록하고 팝업을 닫습니다 — 저장 실패 시에는 호출되지 않으므로
   // 완료 처리도 되지 않습니다.
-  function handleBreakfastRatingSaved() {
+  // GA4 breakfast_rating_complete(6단계)도 같은 이유로 여기서만 전송하고,
+  // rating(1~5)만 보낼 뿐 UID·이메일·닉네임 등 개인 식별정보는 넣지 않습니다.
+  function handleBreakfastRatingSaved(dateKey, score) {
     markBreakfastRatingCompletedToday();
     closeBreakfastPopup();
+    if (typeof gtag === "function") gtag("event", "breakfast_rating_complete", { rating: score });
   }
 
   function openBreakfastPopup() {
