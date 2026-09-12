@@ -312,6 +312,9 @@
 
   function setLang(lang) {
     if (SUPPORTED_LANGS.indexOf(lang) === -1 || state.lang === lang) return;
+    // GA4 언어 선택 분석(4단계) — 실제로 언어가 바뀔 때만(위 가드 통과 후)
+    // 언어 코드 한 값만 보냅니다(개인정보 없음).
+    if (typeof gtag === "function") gtag("event", "language_select", { language: lang });
     state.lang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* localStorage 미지원 시 무시 */ }
     renderAll();
