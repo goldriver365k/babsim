@@ -1236,7 +1236,7 @@ table.results-table {
             <div class="image-upload-row">
               <input type="file" id="popupImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
             </div>
-            <p class="image-upload-caption">권장 이미지 크기 800 × 1000px (4:5) · JPG · PNG · WebP · 빠른 로딩을 위해 500KB 이하 권장</p>
+            <p class="image-upload-caption">권장 800×1000px · 500KB 이하 · WebP/JPG 권장</p>
             <div class="image-preview-wrap" id="popupImagePreviewWrap" hidden>
               <img id="popupImagePreviewImg" alt="팝업 이미지 미리보기">
             </div>
@@ -4421,6 +4421,14 @@ var AdminPopup = (function () {
   var els = {};
   var editingId = null;      // null=새로 등록, 값이 있으면 그 문서를 수정 중
   var editingImageUrl = "";  // 수정 중인 팝업의 기존 이미지(새 파일을 안 고르면 유지)
+  var pendingCompressPromise = null; // 방금 고른 파일의 압축 결과(Promise<Blob|null>)
+
+  // 팝업 이미지 속도 2단계: 업로드 전 브라우저에서 800×1000 이내로 축소
+  // 합니다(원본 비율 유지). 4:5(800×1000) 권장 규격과 맞춘 값입니다.
+  var POPUP_MAX_WIDTH = 800;
+  var POPUP_MAX_HEIGHT = 1000;
+  var POPUP_PHOTO_QUALITY = 0.8; // 사진 계열(투명 없음) 압축 품질
+  var POPUP_WARN_BYTES = 500 * 1024; // 이 이상이면 업로드는 막지 않고 경고만
 
   function qs(id) { return document.getElementById(id); }
   function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
@@ -4461,6 +4469,7 @@ var AdminPopup = (function () {
   function resetForm() {
     editingId = null;
     editingImageUrl = "";
+    pendingCompressPromise = null;
     els.form.reset();
     els.activeInput.checked = true;
     els.imagePreviewWrap.hidden = true;
@@ -4474,6 +4483,7 @@ var AdminPopup = (function () {
   function startEdit(id, p) {
     editingId = id;
     editingImageUrl = p.imageUrl || "";
+    pendingCompressPromise = null;
     els.titleInput.value = p.title || "";
     els.linkInput.value = p.linkUrl || "";
     els.activeInput.checked = !!p.isActive;
@@ -4493,17 +4503,88 @@ var AdminPopup = (function () {
     els.form.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function uploadPopupImage(file) {
+  // 업로드 전 이미지 로딩(커뮤니티 게시글 사진 압축, js/community.js
+  // compressImage와 같은 Canvas API 방식 재사용 — 새 라이브러리 없음).
+  function loadPopupImageSource(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: "from-image" }).catch(function () {
+        return loadPopupImageViaTag(file);
+      });
+    }
+    return loadPopupImageViaTag(file);
+  }
+  function loadPopupImageViaTag(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("IMAGE_LOAD_FAILED")); };
+      img.src = url;
+    });
+  }
+
+  // 캔버스에 투명 픽셀이 하나라도 있으면 PNG로 유지(무조건 JPEG로 바꿔
+  // 투명 배경을 깨뜨리지 않기 위함). 확인 자체가 실패하면 안전하게
+  // 투명으로 간주합니다.
+  function popupCanvasHasAlpha(canvas) {
+    try {
+      var data = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+      for (var i = 3; i < data.length; i += 4) { if (data[i] < 255) return true; }
+      return false;
+    } catch (e) { return true; }
+  }
+
+  // 업로드 전 브라우저에서 800×1000 이내로 축소(원본 비율 유지) + 압축합니다.
+  // 투명 배경이 있으면 PNG로, 없으면 WebP 품질 0.8로 저장합니다. 실패하면
+  // null을 돌려주고 호출부에서 원본 파일을 그대로 올립니다(업로드를
+  // 막지 않음 — 구조가 복잡해지거나 위험하면 압축을 강행하지 않음).
+  function compressPopupImage(file) {
+    return loadPopupImageSource(file).then(function (source) {
+      var srcW = source.width, srcH = source.height;
+      var scale = Math.min(1, POPUP_MAX_WIDTH / srcW, POPUP_MAX_HEIGHT / srcH);
+      var w = Math.max(1, Math.round(srcW * scale));
+      var h = Math.max(1, Math.round(srcH * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+      if (source && typeof source.close === "function") source.close();
+
+      var keepPng = popupCanvasHasAlpha(canvas);
+      return new Promise(function (resolve, reject) {
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob); else reject(new Error("COMPRESS_FAILED"));
+        }, keepPng ? "image/png" : "image/webp", keepPng ? undefined : POPUP_PHOTO_QUALITY);
+      });
+    }).catch(function () { return null; });
+  }
+
+  function extFromBlob(blob, fallbackName) {
+    if (blob) {
+      if (blob.type === "image/webp") return "webp";
+      if (blob.type === "image/png") return "png";
+      if (blob.type === "image/jpeg") return "jpg";
+    }
+    return (fallbackName && fallbackName.split(".").pop()) || "jpg";
+  }
+
+  function uploadPopupImage(blob, fallbackName) {
     var st = storage();
-    if (!st || !file) return Promise.resolve(null);
-    var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    if (!st || !blob) return Promise.resolve(null);
+    var ext = extFromBlob(blob, fallbackName);
     var ref = st.ref().child("sitePopupImages/popup_" + Date.now() + "." + ext);
-    return ref.put(file).then(function () { return ref.getDownloadURL(); });
+    return ref.put(blob).then(function () { return ref.getDownloadURL(); });
+  }
+
+  function warnIfLarge(size) {
+    els.imageError.textContent = (typeof size === "number" && size > POPUP_WARN_BYTES)
+      ? "이미지 용량이 커서 팝업 표시가 느려질 수 있습니다."
+      : "";
   }
 
   function handleImagePick() {
     var file = els.imageInput.files[0];
     els.imageError.textContent = "";
+    pendingCompressPromise = null;
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function () {
@@ -4511,6 +4592,11 @@ var AdminPopup = (function () {
       els.imagePreviewWrap.hidden = false;
     };
     reader.readAsDataURL(file);
+
+    pendingCompressPromise = compressPopupImage(file).then(function (blob) {
+      warnIfLarge(blob ? blob.size : file.size);
+      return blob;
+    });
   }
 
   function handleSave(e) {
@@ -4525,7 +4611,13 @@ var AdminPopup = (function () {
     setStatus("저장 중...", false);
 
     var file = els.imageInput.files[0];
-    Promise.resolve(file ? uploadPopupImage(file) : null).then(function (newUrl) {
+    var uploadPromise = !file
+      ? Promise.resolve(null)
+      : Promise.resolve(pendingCompressPromise || compressPopupImage(file)).then(function (blob) {
+          return uploadPopupImage(blob || file, file.name);
+        });
+
+    uploadPromise.then(function (newUrl) {
       var imageUrl = newUrl || editingImageUrl;
       if (!imageUrl) throw new Error("IMAGE_REQUIRED");
       var data = {
