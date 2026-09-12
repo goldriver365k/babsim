@@ -150,6 +150,44 @@ var Community = (function () {
     document.body.appendChild(overlay);
   }
 
+  /* ---------------- 회원가입 유도 안내(2026-09-12 5단계 지시서) ----------------
+     "가입해야 쓸 수 있는" 안내창(showAuthGateModal)과 달리, 이 안내는
+     MY 등 계정이 있으면 더 좋은 기능에 들어갔을 때만 가볍게 띄우고
+     [나중에]를 누르면(또는 바깥을 클릭하면) 그냥 닫히고 비회원(익명)
+     상태로 기본 커뮤니티 이용을 계속할 수 있습니다(가입 강제 아님). */
+  function closeSignupInviteModal() {
+    var existing = qs("communitySignupInviteOverlay");
+    if (existing) existing.remove();
+  }
+
+  function showSignupInviteModal(redirectPath) {
+    if (qs("communitySignupInviteOverlay")) return; // 이미 떠 있으면 중복 표시 안 함
+    closeAuthGateModal();
+    var overlay = el("div", "modal-overlay");
+    overlay.id = "communitySignupInviteOverlay";
+    var modal = el("div", "modal");
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_AUTH.signupInviteDesc)));
+
+    var actions = el("div", "community-auth-gate-actions");
+    var signupBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.signupInviteAccept));
+    signupBtn.type = "button";
+    signupBtn.addEventListener("click", function () {
+      saveRedirectTarget(redirectPath);
+      closeSignupInviteModal();
+      navigate(ROUTE_PREFIX + "/signup");
+    });
+    var laterBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupInviteLater));
+    laterBtn.type = "button";
+    laterBtn.addEventListener("click", function () { closeSignupInviteModal(); });
+
+    actions.appendChild(signupBtn);
+    actions.appendChild(laterBtn);
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeSignupInviteModal(); });
+    document.body.appendChild(overlay);
+  }
+
   /* ---------------- 비회원(익명) 참여 — 기존 Firebase Anonymous Auth 재사용 ----------------
      회원가입 없이 글쓰기/댓글/저장/신고를 할 수 있도록, 참여 버튼을 처음
      누른 시점에만 조용히 signInAnonymously()로 로그인하고(화면 전체를
@@ -312,6 +350,7 @@ var Community = (function () {
   function render() {
     if (!els.root) return;
     closeAuthGateModal();
+    closeSignupInviteModal();
     els.root.innerHTML = "";
     els.root.hidden = false;
 
@@ -334,7 +373,7 @@ var Community = (function () {
     // 직접 열면 일단 목록을 보여주면서 조용히 익명 로그인을 마친 뒤 실제
     // 화면으로 넘어갑니다(화면 전체를 로그인창으로 덮지 않음). 아주 드물게
     // 익명 로그인 자체가 실패하면(네트워크 등) 그때만 안내창을 띄웁니다.
-    var AUTH_REQUIRED_ROUTES = ["my", "write"];
+    var AUTH_REQUIRED_ROUTES = ["write"]; // "my"는 가입 유도가 필요해 아래에서 따로 처리
     if (!user && AUTH_REQUIRED_ROUTES.indexOf(currentRoute.name) !== -1) {
       renderList();
       ensureAuth().then(function () {
@@ -343,7 +382,24 @@ var Community = (function () {
       return;
     }
 
-    if (currentRoute.name === "my") { renderMyPage(); return; }
+    // MY는 "가입해야만 쓸 수 있는" 기능이 아니라 "가입하면 더 좋은"
+    // 기능입니다(5단계 지시서) — 비회원도 그대로 볼 수 있게 하되, 계정이
+    // 있으면 활동을 계속 보관할 수 있다는 가벼운 안내만 띄웁니다. [나중에]를
+    // 누르면 안내만 닫히고 MY 화면은 비회원(익명) 상태로 계속 씁니다.
+    if (currentRoute.name === "my") {
+      if (!user) {
+        // 아직 아무 활동도 없는 완전 신규 방문자는 MY에서 보여줄 것이
+        // 없으므로, 굳이 익명 로그인까지 만들지 않고 목록 + 가입 유도
+        // 안내만 보여줍니다(로그아웃 직후 등 일시적으로 user가 비어있는
+        // 순간에 불필요한 익명 세션이 새로 생기는 것도 함께 막아줍니다).
+        renderList();
+        showSignupInviteModal(location.pathname);
+        return;
+      }
+      renderMyPage();
+      if (profile && profile.isAnonymous) showSignupInviteModal(location.pathname);
+      return;
+    }
     if (currentRoute.name === "write") { renderWrite(); return; }
     if (currentRoute.name === "post") { renderPostDetail(currentRoute.postId); return; }
     renderList();
@@ -485,15 +541,20 @@ var Community = (function () {
     }
     if (btn) btn.disabled = true;
     var provider = new firebase.auth.GoogleAuthProvider();
-    // signInWithPopup은 클릭 이벤트 처리 중 곧바로(비동기 대기 없이)
-    // 호출해야 합니다 — 한 박자라도 늦게(예: setPersistence를 먼저
-    // await) 호출하면 일부 브라우저(특히 사파리/아이폰)가 "사용자가
-    // 직접 누른 동작"으로 인식하지 못해 팝업을 조용히 막아버립니다.
-    // (기본 지속성이 이미 LOCAL이라 별도 setPersistence 호출도 불필요.)
-    a.signInWithPopup(provider).then(function (result) {
+    // 비회원(익명)으로 이미 활동 중이었다면 linkWithPopup으로 같은 UID에
+    // Google 계정만 연결합니다(Anonymous Account Linking) — UID가 그대로라
+    // 기존 게시글·댓글의 authorId가 바뀌지 않습니다. signInWithPopup처럼
+    // 클릭 이벤트 처리 중 곧바로(비동기 대기 없이) 호출해야 팝업이 막히지
+    // 않습니다(사파리/아이폰).
+    var wasAnonymous = !!(a.currentUser && a.currentUser.isAnonymous);
+    var popupPromise = wasAnonymous ? a.currentUser.linkWithPopup(provider) : a.signInWithPopup(provider);
+    popupPromise.then(function (result) {
       return db().collection("communityUsers").doc(result.user.uid).get();
     }).then(function (doc) {
-      if (doc.exists) {
+      // isAnonymous:true로 남아있는 문서(=아직 국적/약관 동의를 받기 전인
+      // 익명 프로필)는 "가입 완료된 회원"으로 치지 않고 마저 정보를
+      // 받습니다. 완전히 새 문서가 없는 경우도 마찬가지입니다.
+      if (doc.exists && doc.data() && doc.data().isAnonymous !== true) {
         pendingProfileUser = null;
         navigateAfterAuth();
       } else {
@@ -504,7 +565,8 @@ var Community = (function () {
       }
     }).catch(function (err) {
       if (errorP && err && err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
-        errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+        errorP.textContent = (err && err.code === "auth/credential-already-in-use")
+          ? t(COMMUNITY_MSG.errEmailInUse) : t(COMMUNITY_MSG.errGeneric);
       }
     }).finally(function () { if (btn) btn.disabled = false; });
   }
@@ -564,7 +626,11 @@ var Community = (function () {
       if (!d || !user) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
       submitBtn.disabled = true;
       var now = firebase.firestore.FieldValue.serverTimestamp();
-      d.collection("communityUsers").doc(user.uid).set({
+      // 익명이었을 때의 닉네임은 name 필드에 있었습니다(3단계) — Google로
+      // 승계 가입해도 그대로 새 nickname 필드로 옮겨 유지합니다.
+      var wasAnonymous = !!(profile && profile.isAnonymous);
+      var priorNickname = wasAnonymous ? currentDisplayNickname() : "";
+      var profileData = {
         name: nameInput.value.trim(),
         nationality: natInput.value.trim(),
         email: user.email || "",
@@ -572,11 +638,14 @@ var Community = (function () {
         emailVerified: true, // Google 계정은 이미 검증된 이메일입니다
         role: "user",
         status: "active",
+        isAnonymous: false,
         createdAt: now,
         lastLoginAt: now,
         termsAgreedAt: now,
         privacyAgreedAt: now
-      }).then(function () {
+      };
+      if (priorNickname) profileData.nickname = priorNickname;
+      d.collection("communityUsers").doc(user.uid).set(profileData, { merge: true }).then(function () {
         return loadProfile(user.uid);
       }).then(function () {
         pendingProfileUser = null;
@@ -669,10 +738,23 @@ var Community = (function () {
       if (!a || !d) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
       submitBtn.disabled = true;
       var now = firebase.firestore.FieldValue.serverTimestamp();
-      a.createUserWithEmailAndPassword(emailInput.value.trim(), pwInput.value).then(function (cred) {
+      // 비회원(익명)으로 이미 활동 중이었다면 새 계정을 만들지 않고
+      // linkWithCredential로 같은 UID에 이메일/비밀번호만 연결합니다
+      // (Anonymous Account Linking) — UID가 그대로라 기존 게시글·댓글의
+      // authorId, 신고/차단 기록이 전혀 바뀌지 않습니다. 처음부터
+      // 회원가입 화면으로 바로 들어온 경우(활동 이력 없음)에만 새 계정을
+      // 만듭니다.
+      var wasAnonymous = !!(a.currentUser && a.currentUser.isAnonymous);
+      // 익명일 때의 닉네임은 name 필드에 있었습니다(3단계) — 승계 시
+      // 그대로 새 nickname 필드로 옮겨 유지합니다(재생성 아님).
+      var priorNickname = wasAnonymous ? currentDisplayNickname() : "";
+      var authPromise = wasAnonymous
+        ? a.currentUser.linkWithCredential(firebase.auth.EmailAuthProvider.credential(emailInput.value.trim(), pwInput.value))
+        : a.createUserWithEmailAndPassword(emailInput.value.trim(), pwInput.value);
+      authPromise.then(function (cred) {
         // 이메일 인증 절차 없이 바로 가입을 완료합니다(인증메일을 보내지
         // 않고, 이메일 인증 여부를 접근 조건으로 쓰지 않습니다).
-        return d.collection("communityUsers").doc(cred.user.uid).set({
+        var profileData = {
           name: nameInput.value.trim(),
           nationality: natInput.value.trim(),
           email: emailInput.value.trim(),
@@ -680,17 +762,20 @@ var Community = (function () {
           emailVerified: true,
           role: "user",
           status: "active",
+          isAnonymous: false,
           createdAt: now,
           lastLoginAt: now,
           termsAgreedAt: now,
           privacyAgreedAt: now
-        }).then(function () { return loadProfile(cred.user.uid); });
+        };
+        if (priorNickname) profileData.nickname = priorNickname;
+        return d.collection("communityUsers").doc(cred.user.uid).set(profileData, { merge: true }).then(function () { return loadProfile(cred.user.uid); });
       }).then(function () {
         pendingProfileUser = null;
         setLang(langSelect.value);
         navigateAfterAuth();
       }).catch(function (err) {
-        errorP.textContent = (err && err.code === "auth/email-already-in-use")
+        errorP.textContent = (err && (err.code === "auth/email-already-in-use" || err.code === "auth/credential-already-in-use"))
           ? t(COMMUNITY_MSG.errEmailInUse) : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
@@ -713,21 +798,32 @@ var Community = (function () {
     var wrap = el("div", "community-page community-my");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_MY.myPageTitle)));
 
+    var isAnon = !!(profile && profile.isAnonymous);
     var info = el("div", "community-my-info");
-    info.appendChild(el("p", null, (profile && profile.nickname) || ""));
-    info.appendChild(el("p", "community-my-sub", (profile && profile.nationality) || ""));
+    info.appendChild(el("p", null, currentDisplayNickname()));
+    if (!isAnon) info.appendChild(el("p", "community-my-sub", (profile && profile.nationality) || ""));
     info.appendChild(el("p", "community-my-sub", (authUser && authUser.email) || ""));
     wrap.appendChild(info);
 
     var editForm = el("form", "community-form");
-    // 커뮤니티 게시글·댓글에는 이 닉네임만 표시됩니다(실명 비공개).
+    // 커뮤니티 게시글·댓글에는 이 닉네임만 표시됩니다(실명 비공개). 비회원
+    // (익명)은 실명·국적 자체가 없으므로(3단계 자동 닉네임만 있음) 그
+    // 입력칸은 아예 보여주지 않습니다.
     var nicknameInput = el("input"); nicknameInput.type = "text"; nicknameInput.maxLength = 20;
-    nicknameInput.value = (profile && profile.nickname) || "";
-    var nameInput = el("input"); nameInput.type = "text"; nameInput.value = (profile && profile.name) || "";
-    var natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList2");
-    natInput.value = (profile && profile.nationality) || "";
-    var datalist = el("datalist"); datalist.id = "communityNationalityList2";
-    COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+    nicknameInput.value = currentDisplayNickname();
+    editForm.appendChild(formField(COMMUNITY_MY.editNickname, nicknameInput));
+
+    var nameInput, natInput, datalist;
+    if (!isAnon) {
+      nameInput = el("input"); nameInput.type = "text"; nameInput.value = (profile && profile.name) || "";
+      natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList2");
+      natInput.value = (profile && profile.nationality) || "";
+      datalist = el("datalist"); datalist.id = "communityNationalityList2";
+      COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+      editForm.appendChild(formField(COMMUNITY_MY.editName, nameInput));
+      editForm.appendChild(formField(COMMUNITY_MY.editNationality, natInput));
+      editForm.appendChild(datalist);
+    }
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
       var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
@@ -735,10 +831,6 @@ var Community = (function () {
       if (code === ((profile && profile.preferredLanguage) || lang)) opt.selected = true;
       langSelect.appendChild(opt);
     });
-    editForm.appendChild(formField(COMMUNITY_MY.editNickname, nicknameInput));
-    editForm.appendChild(formField(COMMUNITY_MY.editName, nameInput));
-    editForm.appendChild(formField(COMMUNITY_MY.editNationality, natInput));
-    editForm.appendChild(datalist);
     editForm.appendChild(formField(COMMUNITY_MY.editLang, langSelect));
     var saveBtn = el("button", "community-btn-primary", t(COMMUNITY_MY.save));
     saveBtn.type = "submit";
@@ -750,16 +842,20 @@ var Community = (function () {
       // 닉네임을 바꿔도 게시글/댓글의 authorId(작성자 UID)는 그대로라
       // 소유권·신고·차단 기록에는 영향이 없습니다(과거 글에 남은
       // 닉네임 표시만 예전 값 그대로 남고, 새 글부터 새 닉네임 적용).
-      var newNickname = nicknameInput.value.trim() || (profile && profile.nickname) || "";
-      d.collection("communityUsers").doc(authUser.uid).update({
-        nickname: newNickname,
-        name: nameInput.value.trim(),
-        nationality: natInput.value.trim(),
-        preferredLanguage: langSelect.value
-      }).then(function () {
-        profile.nickname = newNickname;
-        profile.name = nameInput.value.trim();
-        profile.nationality = natInput.value.trim();
+      var newNickname = nicknameInput.value.trim() || currentDisplayNickname();
+      // 비회원(익명)은 name 필드 자체가 화면에 쓰는 닉네임이므로 거기에
+      // 저장하고, 가입회원은 별도 nickname 필드에 저장합니다(실명 필드는
+      // 그대로 유지).
+      var payload = { preferredLanguage: langSelect.value };
+      if (isAnon) {
+        payload.name = newNickname;
+      } else {
+        payload.nickname = newNickname;
+        payload.name = nameInput.value.trim();
+        payload.nationality = natInput.value.trim();
+      }
+      d.collection("communityUsers").doc(authUser.uid).update(payload).then(function () {
+        if (isAnon) { profile.name = newNickname; } else { profile.nickname = newNickname; profile.name = nameInput.value.trim(); profile.nationality = natInput.value.trim(); }
         profile.preferredLanguage = langSelect.value;
         setLang(langSelect.value);
         showToast(t(COMMUNITY_MSG.doneSaved));
@@ -2456,7 +2552,13 @@ var Community = (function () {
         authUser = user;
         if (user) {
           loadProfile(user.uid).then(function () {
-            if (!profile) {
+            // profile.isAnonymous인데 실제 Firebase Auth 사용자는 이미
+            // isAnonymous가 아닌 경우 = 방금 linkWithPopup/linkWithCredential로
+            // 계정을 연결(승계)했지만 국적/약관 동의는 아직 못 받은 상태
+            // (5단계, Anonymous Account Linking) — 문서가 없는 것과 똑같이
+            // 취급해 국적/약관 동의 화면(renderCompleteProfile)으로 보냅니다.
+            var needsCompletion = !profile || (profile.isAnonymous && !user.isAnonymous);
+            if (needsCompletion) {
               // 비회원(익명) 세션인데 아직 프로필 문서가 없으면 이름/국적
               // 입력 없이 자동 닉네임 프로필을 바로 만듭니다(가입 화면 없음).
               if (user.isAnonymous) {
