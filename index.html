@@ -8007,6 +8007,14 @@ var SitePopup = (function () {
     }
   }
 
+  // GA4 홈 서비스 카드 클릭 분석(3단계) — 화면 언어와 무관하게 영문 고정값만
+  // 보냅니다. 기존 이동 동작(goToStore/커뮤니티 탭 클릭)은 그대로 두고
+  // 클릭 시점에 이벤트만 추가로 보냅니다.
+  var HOME_SERVICE_GA_NAME = { bapsim: "babsim", mangwon: "mangwon", hururuk: "hururuk" };
+  function trackServiceClick(serviceName) {
+    if (typeof gtag === "function") gtag("event", "service_click", { service_name: serviceName });
+  }
+
   function renderHomeLatestPosts() {
     if (!els.homeCommunityLatest) return;
     if (!(window.Community && typeof window.Community.fetchLatestPosts === "function")) return;
@@ -8687,6 +8695,7 @@ var SitePopup = (function () {
     // (새 라우팅 로직·새 페이지를 따로 만들지 않음).
     if (els.homeCardCommunity && els.storeTabs) {
       els.homeCardCommunity.addEventListener("click", function () {
+        trackServiceClick("community");
         var communityTabBtn = els.storeTabs.querySelector(".community-tab");
         if (communityTabBtn) communityTabBtn.click();
       });
@@ -8698,13 +8707,17 @@ var SitePopup = (function () {
     // 대비해 bapsimView를 먼저 breakfast로 맞춰둡니다.
     if (els.homeCardBreakfast) {
       els.homeCardBreakfast.addEventListener("click", function () {
+        trackServiceClick("breakfast");
         state.bapsimView = "breakfast";
         goToStore("bapsim");
       });
     }
     Array.prototype.forEach.call(document.querySelectorAll(".home-service-card[data-store]"), function (card) {
       var store = card.getAttribute("data-store");
-      card.addEventListener("click", function () { goToStore(store); });
+      card.addEventListener("click", function () {
+        trackServiceClick(HOME_SERVICE_GA_NAME[store] || store);
+        goToStore(store);
+      });
     });
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
