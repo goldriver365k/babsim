@@ -60,48 +60,11 @@ var BreakfastRating = (function () {
     try { localStorage.setItem(RATED_KEY_PREFIX + dateKey, String(score)); } catch (e) { /* localStorage 미지원 시 무시 */ }
   }
 
-  /* ---------------- 캐릭터 얼굴 SVG (동일 캐릭터, 표정만 5단계로 변화) ---------------- */
-
-  var FACE_SPEC = {
-    5: { mouth: "M27,54 Q50,80 73,54 Q50,67 27,54 Z", fill: true, browTilt: 4, eye: "happy" },
-    4: { mouth: "M30,56 Q50,70 70,56", fill: false, browTilt: 2, eye: "normal" },
-    3: { mouth: "M33,61 L67,61", fill: false, browTilt: 0, eye: "normal" },
-    2: { mouth: "M30,68 Q50,58 70,68", fill: false, browTilt: -2, eye: "normal" },
-    1: { mouth: "M27,71 Q50,52 73,71", fill: false, browTilt: -4, eye: "sad" }
-  };
-
-  function buildFaceSvg(score) {
-    var spec = FACE_SPEC[score];
-    var browY = 34 - spec.browTilt;
-
-    var eyesSvg;
-    if (spec.eye === "happy") {
-      eyesSvg =
-        '<path d="M23,41 Q31,31 39,41" fill="none" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>' +
-        '<path d="M61,41 Q69,31 77,41" fill="none" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>';
-    } else if (spec.eye === "sad") {
-      eyesSvg =
-        '<circle cx="31" cy="40" r="4.5" fill="#1f2328"/>' +
-        '<circle cx="69" cy="40" r="4.5" fill="#1f2328"/>';
-    } else {
-      eyesSvg =
-        '<circle cx="31" cy="39" r="5" fill="#1f2328"/>' +
-        '<circle cx="69" cy="39" r="5" fill="#1f2328"/>';
-    }
-
-    var mouthSvg = spec.fill
-      ? '<path d="' + spec.mouth + '" fill="#a13a2f"/>'
-      : '<path d="' + spec.mouth + '" fill="none" stroke="#1f2328" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>';
-
-    return (
-      '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
-      '<circle cx="50" cy="50" r="46" fill="#ffd166" stroke="#1f2328" stroke-width="3"/>' +
-      '<path d="M17,' + browY + ' L39,' + (browY - 3) + '" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>' +
-      '<path d="M61,' + (browY - 3) + ' L83,' + browY + '" stroke="#1f2328" stroke-width="4" stroke-linecap="round"/>' +
-      eyesSvg +
-      mouthSvg +
-      '</svg>'
-    );
+  /* ---------------- 평가 이모티콘 이미지 (2026-09-12 이모티콘 교체) ----------------
+     기존 인라인 SVG 캐릭터 대신, 업로드받은 5단계 표정 이미지를 그대로
+     씁니다(images/breakfast/rating-{score}.png, score가 클수록 좋은 평가). */
+  function faceImageSrc(score) {
+    return "images/breakfast/rating-" + score + ".png";
   }
 
   /* ---------------- 저장 (Firestore 우선, 미설정 시 기기 저장만) ---------------- */
@@ -149,10 +112,12 @@ var BreakfastRating = (function () {
       btn.className = "ba-rating-option";
       btn.setAttribute("aria-label", label);
 
-      var faceWrap = document.createElement("span");
-      faceWrap.className = "ba-rating-face";
-      faceWrap.innerHTML = buildFaceSvg(score);
-      btn.appendChild(faceWrap);
+      var faceImg = document.createElement("img");
+      faceImg.className = "ba-rating-face";
+      faceImg.src = faceImageSrc(score);
+      faceImg.alt = "";
+      faceImg.setAttribute("aria-hidden", "true");
+      btn.appendChild(faceImg);
 
       var labelEl = document.createElement("span");
       labelEl.className = "ba-rating-label";
