@@ -1604,17 +1604,28 @@ main {
 
 /* ---------------- 홈 팝업(관리자 등록, 팝업 기능 2단계) ----------------
    껍데기(.modal-overlay/.modal)와 닫기 버튼(.community-btn-secondary)은
-   기존 스타일을 그대로 재사용하고, 이미지 표시만 최소한으로 추가합니다. */
+   기존 스타일을 그대로 재사용하고, 이미지 표시만 최소한으로 추가합니다.
+   .modal의 기존 max-width:420px(PC/태블릿에서도 과도하게 커지지 않음)는
+   이미 공용 규칙이라 그대로 두고, 화면 높이 초과 방지만 이 팝업에만
+   덧붙입니다(이미지 규격 최적화 지시서). */
+#sitePopupOverlay .modal { max-height: 85dvh; }
+
 .site-popup-image {
   display: block;
   width: 100%;
+  height: auto;
+  /* 이미지+닫기 버튼+여백이 화면 높이를 넘지 않도록, 버튼·여백 몫을 뺀
+     만큼만 이미지에 남겨둡니다 — 비율은 유지된 채(object-fit: contain)
+     자동으로 줄어듭니다. */
+  max-height: calc(85dvh - 120px);
+  object-fit: contain;
   border-radius: var(--radius-sm);
-  margin-bottom: 14px;
+  margin: 0 auto 14px;
 }
 
 .site-popup-image-linked { cursor: pointer; }
 
-.site-popup-close-btn { width: 100%; }
+.site-popup-close-btn { width: 100%; min-height: 48px; }
 
 .modal-desc {
   font-size: 15px;

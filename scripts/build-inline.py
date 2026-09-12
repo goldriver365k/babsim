@@ -868,6 +868,7 @@ def build_admin():
             <div class="image-upload-row">
               <input type="file" id="popupImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
             </div>
+            <p class="image-upload-caption">권장 이미지 크기 800 × 1000px (4:5) · JPG · PNG · WebP · 빠른 로딩을 위해 500KB 이하 권장</p>
             <div class="image-preview-wrap" id="popupImagePreviewWrap" hidden>
               <img id="popupImagePreviewImg" alt="팝업 이미지 미리보기">
             </div>
