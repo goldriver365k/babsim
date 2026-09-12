@@ -6,6 +6,21 @@
 <title>모인관(인제대학교)</title>
 <meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
 
+<!-- Google Analytics 4 (GA 2단계: 기본 방문자/세션/페이지뷰만).
+     자동 page_view는 꺼두고(send_page_view: false), 실제 page_view 전송은
+     js/community.js의 route()에서 경로가 바뀔 때만 한 번씩 보냅니다
+     (최초 진입 포함 — init()도 route()를 거칩니다). 이렇게 해야 SPA에서
+     페이지 이동 시 중복 전송 없이 정확한 경로로 집계됩니다. Measurement
+     ID는 js/firebase-config.js의 FIREBASE_CONFIG.measurementId와 동일한
+     값입니다. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6YN63KKXNW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-6YN63KKXNW', { send_page_view: false });
+</script>
+
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/icon/favicon-32.png">
@@ -5017,6 +5032,7 @@ var Community = (function () {
   var pendingProfileUser = null; // 로그인은 했지만 회원 정보 문서가 아직 없는 사용자(Google 첫 가입 등)
   var currentRoute = { path: "/", postId: null };
   var postCache = {};       // postId -> 마지막으로 불러온 게시글 문서(상세 화면 재사용)
+  var lastTrackedGaPath = null; // GA4 page_view 중복 전송 방지(같은 경로면 다시 안 보냄)
 
   function qs(id) { return document.getElementById(id); }
   function t(dict) { return (dict && (dict[lang] || dict.ko)) || ""; }
@@ -5060,6 +5076,21 @@ var Community = (function () {
   }
 
   window.addEventListener("popstate", function () { route(); });
+
+  /* GA4 page_view — index.html 머리말에서 gtag config에 send_page_view:
+     false를 줬으므로, 실제 경로가 바뀔 때만 여기서 직접 보냅니다.
+     route()가 최초 진입(init)·pushState 이동·뒤로/앞으로가기(popstate)
+     경로를 전부 거치므로 이 한 곳만 호출하면 중복 없이 커버됩니다. */
+  function trackGaPageView(path) {
+    if (path === lastTrackedGaPath) return; // 같은 경로로 route()가 다시 불려도 중복 전송 안 함
+    lastTrackedGaPath = path;
+    if (typeof gtag !== "function") return;
+    gtag("event", "page_view", {
+      page_location: location.href,
+      page_path: path,
+      page_title: document.title
+    });
+  }
 
   /* ---------------- 로그인/가입 후 원래 화면으로 돌아가기 ----------------
      비회원이 게시글·글쓰기·댓글 등을 누르면 로그인/가입 안내창을 띄우고,
@@ -5257,6 +5288,7 @@ var Community = (function () {
 
   function route() {
     var path = location.pathname;
+    trackGaPageView(path);
     var inCommunity = isCommunityPath(path);
     toggleStoreChrome(!inCommunity);
     if (els.communityTabBtn) {

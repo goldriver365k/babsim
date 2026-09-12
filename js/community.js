@@ -38,6 +38,7 @@ var Community = (function () {
   var pendingProfileUser = null; // 로그인은 했지만 회원 정보 문서가 아직 없는 사용자(Google 첫 가입 등)
   var currentRoute = { path: "/", postId: null };
   var postCache = {};       // postId -> 마지막으로 불러온 게시글 문서(상세 화면 재사용)
+  var lastTrackedGaPath = null; // GA4 page_view 중복 전송 방지(같은 경로면 다시 안 보냄)
 
   function qs(id) { return document.getElementById(id); }
   function t(dict) { return (dict && (dict[lang] || dict.ko)) || ""; }
@@ -81,6 +82,21 @@ var Community = (function () {
   }
 
   window.addEventListener("popstate", function () { route(); });
+
+  /* GA4 page_view — index.html 머리말에서 gtag config에 send_page_view:
+     false를 줬으므로, 실제 경로가 바뀔 때만 여기서 직접 보냅니다.
+     route()가 최초 진입(init)·pushState 이동·뒤로/앞으로가기(popstate)
+     경로를 전부 거치므로 이 한 곳만 호출하면 중복 없이 커버됩니다. */
+  function trackGaPageView(path) {
+    if (path === lastTrackedGaPath) return; // 같은 경로로 route()가 다시 불려도 중복 전송 안 함
+    lastTrackedGaPath = path;
+    if (typeof gtag !== "function") return;
+    gtag("event", "page_view", {
+      page_location: location.href,
+      page_path: path,
+      page_title: document.title
+    });
+  }
 
   /* ---------------- 로그인/가입 후 원래 화면으로 돌아가기 ----------------
      비회원이 게시글·글쓰기·댓글 등을 누르면 로그인/가입 안내창을 띄우고,
@@ -278,6 +294,7 @@ var Community = (function () {
 
   function route() {
     var path = location.pathname;
+    trackGaPageView(path);
     var inCommunity = isCommunityPath(path);
     toggleStoreChrome(!inCommunity);
     if (els.communityTabBtn) {

@@ -73,6 +73,21 @@ def build():
 <title>모인관(인제대학교)</title>
 <meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
 
+<!-- Google Analytics 4 (GA 2단계: 기본 방문자/세션/페이지뷰만).
+     자동 page_view는 꺼두고(send_page_view: false), 실제 page_view 전송은
+     js/community.js의 route()에서 경로가 바뀔 때만 한 번씩 보냅니다
+     (최초 진입 포함 — init()도 route()를 거칩니다). 이렇게 해야 SPA에서
+     페이지 이동 시 중복 전송 없이 정확한 경로로 집계됩니다. Measurement
+     ID는 js/firebase-config.js의 FIREBASE_CONFIG.measurementId와 동일한
+     값입니다. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6YN63KKXNW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-6YN63KKXNW', { send_page_view: false });
+</script>
+
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/icon/favicon-32.png">
