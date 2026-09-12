@@ -176,6 +176,13 @@
           // 초기화됩니다(별도 초기화 스케줄 불필요).
           function rlPrev(field) { return resource != null && field in resource.data ? resource.data[field] : 0; }
           function rlNext(field) { return field in request.resource.data ? request.resource.data[field] : 0; }
+          // 짧은 시간 반복 글쓰기/댓글 도배 방지(2026-09-12 6단계 지시서) —
+          // 새 컬렉션·서비스 없이 이 문서에 마지막 작성 시각만 더 기록해
+          // 재사용합니다. 그 날의 첫 글/댓글(=이전 시각 없음)은 항상 허용.
+          function tooSoon(field, seconds) {
+            return resource != null && field in resource.data
+              && request.time < resource.data[field] + duration.value(seconds, 's');
+          }
           match /communityRateLimits/{docId} {
             allow read: if isSignedIn() && docId.matches(request.auth.uid + '_.*');
             allow write: if isActiveMember() && docId.matches(request.auth.uid + '_.*')
@@ -188,11 +195,13 @@
               && (
                 (rlNext('postCount') == rlPrev('postCount') + 1
                   && rlNext('commentCount') == rlPrev('commentCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastPostAt', 10))
                 ||
                 (rlNext('commentCount') == rlPrev('commentCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastCommentAt', 5))
                 ||
                 (rlNext('translationCount') == rlPrev('translationCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')

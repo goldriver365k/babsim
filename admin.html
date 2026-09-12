@@ -1401,6 +1401,13 @@ table.results-table {
           // 초기화됩니다(별도 초기화 스케줄 불필요).
           function rlPrev(field) { return resource != null && field in resource.data ? resource.data[field] : 0; }
           function rlNext(field) { return field in request.resource.data ? request.resource.data[field] : 0; }
+          // 짧은 시간 반복 글쓰기/댓글 도배 방지(2026-09-12 6단계 지시서) —
+          // 새 컬렉션·서비스 없이 이 문서에 마지막 작성 시각만 더 기록해
+          // 재사용합니다. 그 날의 첫 글/댓글(=이전 시각 없음)은 항상 허용.
+          function tooSoon(field, seconds) {
+            return resource != null && field in resource.data
+              && request.time < resource.data[field] + duration.value(seconds, 's');
+          }
           match /communityRateLimits/{docId} {
             allow read: if isSignedIn() && docId.matches(request.auth.uid + '_.*');
             allow write: if isActiveMember() && docId.matches(request.auth.uid + '_.*')
@@ -1413,11 +1420,13 @@ table.results-table {
               && (
                 (rlNext('postCount') == rlPrev('postCount') + 1
                   && rlNext('commentCount') == rlPrev('commentCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastPostAt', 10))
                 ||
                 (rlNext('commentCount') == rlPrev('commentCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastCommentAt', 5))
                 ||
                 (rlNext('translationCount') == rlPrev('translationCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
@@ -1880,6 +1889,7 @@ var COMMUNITY_MSG = {
   errPhotoLimit: { ko: "사진은 1장만 첨부할 수 있습니다.", zh: "只能上传1张照片。", vi: "Chỉ có thể đính kèm 1 ảnh.", en: "You can attach only 1 photo.", mn: "Зөвхөн 1 зураг хавсаргах боломжтой.", bn: "শুধুমাত্র ১টি ছবি সংযুক্ত করা যাবে।", my: "ဓာတ်ပုံ ၁ ပုံသာ ပူးတွဲနိုင်ပါသည်။" },
   errPhotoTooLarge: { ko: "사진 용량이 너무 커서 압축 후에도 등록할 수 없습니다. 다른 사진을 선택해 주세요.", zh: "照片文件过大，压缩后仍无法上传，请选择其他照片。", vi: "Ảnh quá lớn, sau khi nén vẫn không thể đăng. Vui lòng chọn ảnh khác.", en: "This photo is too large to upload even after compression. Please choose a different photo.", mn: "Зургийн хэмжээ хэт том тул шахсны дараа ч оруулах боломжгүй байна. Өөр зураг сонгоно уу.", bn: "ছবির আকার অনেক বড় হওয়ায় কম্প্রেস করার পরও আপলোড করা যাচ্ছে না। অন্য ছবি বেছে নিন।", my: "ဓာတ်ပုံအရွယ်အစားကြီးလွန်းသောကြောင့် ချုံ့ပြီးနောက်တွင်ပင် တင်၍မရပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
   errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу.", bn: "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।", my: "အမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ။" },
+  errTooSoon: { ko: "너무 빠르게 반복해서 작성할 수 없습니다. 잠시 후 다시 시도해 주세요.", zh: "发布过于频繁，请稍后再试。", vi: "Bạn đang đăng quá nhanh. Vui lòng thử lại sau ít phút.", en: "You're posting too quickly. Please wait a moment and try again.", mn: "Хэт хурдан дахин бичиж болохгүй. Түр хүлээгээд дахин оролдоно уу.", bn: "খুব দ্রুত বারবার লেখা যাবে না। একটু পর আবার চেষ্টা করুন।", my: "လျင်မြန်လွန်းစွာ ထပ်ခါထပ်ခါရေးနေပါသည်။ ခဏစောင့်ပြီးထပ်ကြိုးစားပါ။" },
   doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа.", bn: "সংরক্ষিত হয়েছে।", my: "သိမ်းဆည်းပြီးပါပြီ။" },
   doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа.", bn: "মুছে ফেলা হয়েছে।", my: "ဖျက်ပြီးပါပြီ။" }
 };

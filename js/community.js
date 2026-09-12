@@ -1784,6 +1784,8 @@ var Community = (function () {
         postComment(postId, textarea.value.trim(), null).then(function () {
           textarea.value = "";
           loadCommentList(postId, listEl);
+        }).catch(function (err) {
+          showToast((err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric));
         }).finally(function () { submitBtn.disabled = false; });
       });
       container.appendChild(form);
@@ -1819,6 +1821,14 @@ var Community = (function () {
     return db().collection("communityRateLimits").doc(authUser.uid + "_" + seoulDateKey());
   }
 
+  // 짧은 시간 반복 글쓰기/댓글 도배 방지(2026-09-12 6단계 지시서) — 새
+  // 보안 서비스 없이, 기존 하루 한도 카운터 문서(communityRateLimits)에
+  // 마지막 작성 시각만 추가로 기록해 재사용합니다. UID별 문서라 닉네임을
+  // 바꿔도 우회할 수 없습니다. 실제 차단은 Firestore 규칙에서도 같은
+  // 간격을 다시 확인합니다(클라이언트만 믿지 않음).
+  var POST_COOLDOWN_MS = 10 * 1000;
+  var COMMENT_COOLDOWN_MS = 5 * 1000;
+
   /* 게시글/댓글을 실제로 쓰는 것과 "하루 작성 한도" 카운터를 같은
      트랜잭션으로 묶어서, 한도를 넘으면 카운터 문서 쓰기 자체가
      보안 규칙에서 거부되어 게시글/댓글 쓰기까지 함께 취소되도록
@@ -1830,7 +1840,15 @@ var Community = (function () {
       return tx.get(rlRef).then(function (snap) {
         var cur = snap.exists ? snap.data() : { postCount: 0, commentCount: 0 };
         var next = { postCount: cur.postCount || 0, commentCount: cur.commentCount || 0 };
-        if (kind === "post") next.postCount += 1; else next.commentCount += 1;
+        if (kind === "post") {
+          if (Date.now() - toMillisSafe(cur.lastPostAt) < POST_COOLDOWN_MS) throw new Error("TOO_SOON");
+          next.postCount += 1;
+          next.lastPostAt = firebase.firestore.FieldValue.serverTimestamp();
+        } else {
+          if (Date.now() - toMillisSafe(cur.lastCommentAt) < COMMENT_COOLDOWN_MS) throw new Error("TOO_SOON");
+          next.commentCount += 1;
+          next.lastCommentAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
         tx.set(rlRef, next, { merge: true });
         return writeFn(tx);
       });
@@ -2008,7 +2026,9 @@ var Community = (function () {
         replyBtn.addEventListener("click", function () {
           var content = window.prompt(t(COMMUNITY_COMMENT.replyLabel) + ":");
           if (content && content.trim()) {
-            postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); });
+            postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); }).catch(function (err) {
+              showToast((err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric));
+            });
           }
         });
         actions.appendChild(replyBtn);
@@ -2372,7 +2392,8 @@ var Community = (function () {
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
       }).catch(function (err) {
-        errorP.textContent = (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge) : t(COMMUNITY_MSG.errGeneric);
+        errorP.textContent = (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge)
+          : (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
 
