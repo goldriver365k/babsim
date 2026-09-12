@@ -54,6 +54,12 @@ var SitePopup = (function () {
     return null;
   }
 
+  // GA4 팝업 이벤트(7단계) — 개인정보(팝업 제목·이미지·링크·id 등) 없이
+  // 행동 여부만 기록합니다.
+  function trackPopupEvent(eventName) {
+    if (typeof gtag === "function") gtag("event", eventName);
+  }
+
   function renderPopup(popup, onClosed) {
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -69,6 +75,7 @@ var SitePopup = (function () {
     if (popup.data.linkUrl) {
       img.classList.add("site-popup-image-linked");
       img.addEventListener("click", function () {
+        trackPopupEvent("popup_click");
         window.open(popup.data.linkUrl, "_blank", "noopener");
       });
     }
@@ -79,6 +86,7 @@ var SitePopup = (function () {
     closeBtn.className = "community-btn-secondary site-popup-close-btn";
     closeBtn.textContent = "닫기";
     closeBtn.addEventListener("click", function () {
+      trackPopupEvent("popup_close");
       markDismissedThisSession(popup.id);
       overlay.remove();
       if (onClosed) onClosed();
@@ -88,12 +96,18 @@ var SitePopup = (function () {
     overlay.appendChild(modal);
     overlay.addEventListener("click", function (e) {
       if (e.target === overlay) {
+        trackPopupEvent("popup_close");
         markDismissedThisSession(popup.id);
         overlay.remove();
         if (onClosed) onClosed();
       }
     });
     document.body.appendChild(overlay);
+
+    // 이 함수는 maybeShow()가 실제로 보여줄 팝업을 고른 경우에만(pickPopup이
+    // null이 아닐 때) 딱 한 번 호출되므로, 여기서 한 번만 보내면
+    // 재렌더링으로 인한 중복 전송이 생기지 않습니다.
+    trackPopupEvent("popup_view");
   }
 
   // done은 반드시 호출됩니다(팝업을 안 띄우는 경우 즉시, 띄운 경우 닫힐
