@@ -54,7 +54,30 @@ var SitePopup = (function () {
     return null;
   }
 
-  function renderPopup(popup, onClosed) {
+  // 팝업 이미지는 첫 화면에서 바로 보이는 이미지라 loading="lazy"를 쓰지
+  // 않고, 같은 URL은 캐시된 Promise를 재사용해 중복 다운로드를 막습니다
+  // (팝업 이미지 속도 3단계). 로딩(또는 실패)이 너무 오래 걸려도 화면을
+  // 막지 않도록 PRELOAD_TIMEOUT_MS 이후에는 그대로 진행합니다.
+  var preloadedImages = {}; // imageUrl -> Promise<HTMLImageElement>
+  var PRELOAD_TIMEOUT_MS = 4000;
+
+  function preloadImage(url) {
+    if (preloadedImages[url]) return preloadedImages[url];
+    var p = new Promise(function (resolve) {
+      var img = new Image();
+      img.loading = "eager";
+      var settled = false;
+      function finish() { if (!settled) { settled = true; resolve(img); } }
+      img.onload = finish;
+      img.onerror = finish; // 실패해도 팝업(닫기 버튼 등)은 그대로 보여줌
+      img.src = url;
+      setTimeout(finish, PRELOAD_TIMEOUT_MS);
+    });
+    preloadedImages[url] = p;
+    return p;
+  }
+
+  function renderPopup(popup, img, onClosed) {
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.id = "sitePopupOverlay";
@@ -62,9 +85,9 @@ var SitePopup = (function () {
     var modal = document.createElement("div");
     modal.className = "modal";
 
-    var img = document.createElement("img");
+    // preloadImage()로 이미 로드해 둔 같은 <img> 엘리먼트를 그대로
+    // 붙여써서, 화면에 붙일 때 다시 다운로드하지 않습니다.
     img.className = "site-popup-image";
-    img.src = popup.data.imageUrl;
     img.alt = popup.data.title || "";
     if (popup.data.linkUrl) {
       img.classList.add("site-popup-image-linked");
@@ -114,7 +137,11 @@ var SitePopup = (function () {
       snap.forEach(function (doc) { docs.push({ id: doc.id, data: doc.data() }); });
       var chosen = pickPopup(docs);
       if (!chosen) { finish(); return; }
-      renderPopup(chosen, finish);
+      // 데이터 확인 → 이미지 preload → 이미지 준비 → 팝업 표시 순서로,
+      // 이미지가 깨진 채/빈 채로 잠깐 보이는 것을 막습니다.
+      preloadImage(chosen.data.imageUrl).then(function (img) {
+        renderPopup(chosen, img, finish);
+      });
     }).catch(function () { finish(); });
   }
 
