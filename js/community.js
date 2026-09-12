@@ -88,14 +88,23 @@ var Community = (function () {
      route()가 최초 진입(init)·pushState 이동·뒤로/앞으로가기(popstate)
      경로를 전부 거치므로 이 한 곳만 호출하면 중복 없이 커버됩니다. */
   function trackGaPageView(path) {
-    if (path === lastTrackedGaPath) return; // 같은 경로로 route()가 다시 불려도 중복 전송 안 함
+    if (path === lastTrackedGaPath) return false; // 같은 경로로 route()가 다시 불려도 중복 전송 안 함
     lastTrackedGaPath = path;
-    if (typeof gtag !== "function") return;
+    if (typeof gtag !== "function") return false;
     gtag("event", "page_view", {
       page_location: location.href,
       page_path: path,
       page_title: document.title
     });
+    return true;
+  }
+
+  /* GA4 커뮤니티 참여 이벤트(5단계) — 글 내용·댓글 내용·닉네임·이메일·UID
+     등 개인정보/컨텐츠는 절대 넣지 않고, 행동이 일어났다는 사실만
+     기록합니다. 항상 DB 저장(또는 커뮤니티 진입)이 성공한 뒤에만
+     호출합니다. */
+  function trackCommunityEvent(eventName) {
+    if (typeof gtag === "function") gtag("event", eventName);
   }
 
   /* ---------------- 로그인/가입 후 원래 화면으로 돌아가기 ----------------
@@ -294,8 +303,9 @@ var Community = (function () {
 
   function route() {
     var path = location.pathname;
-    trackGaPageView(path);
+    var isNewPath = trackGaPageView(path);
     var inCommunity = isCommunityPath(path);
+    if (inCommunity && isNewPath) trackCommunityEvent("community_view");
     toggleStoreChrome(!inCommunity);
     if (els.communityTabBtn) {
       els.communityTabBtn.classList.toggle("active", inCommunity);
@@ -1520,7 +1530,10 @@ var Community = (function () {
         return ref.get().then(function (doc) {
           if (doc.exists) return ref.delete().then(function () { saveBtn.textContent = t(COMMUNITY_POST.saveBtn); });
           return ref.set({ uid: authUser.uid, postId: post.id, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
-            .then(function () { saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn); });
+            .then(function () {
+              saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn);
+              trackCommunityEvent("community_like"); // DB 저장 성공 후에만, 취소가 아니라 새로 누를 때만
+            });
         });
       }).catch(function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
     });
@@ -1894,6 +1907,8 @@ var Community = (function () {
     return withRateLimit("comment", function (tx) {
       tx.set(ref, payload);
       tx.update(postRef, { commentCount: firebase.firestore.FieldValue.increment(1) });
+    }).then(function () {
+      trackCommunityEvent("community_comment_create"); // DB 저장(트랜잭션 커밋) 성공 후에만
     });
   }
 
@@ -2529,6 +2544,7 @@ var Community = (function () {
 
       var writeOp = isEdit ? ref.update(base) : withRateLimit("post", function (tx) { tx.set(ref, base); });
       return writeOp.then(function () {
+        if (!isEdit) trackCommunityEvent("community_post_create"); // DB 저장 성공 후에만, 새 글일 때만
         editPostId = null;
         return postId;
       });
