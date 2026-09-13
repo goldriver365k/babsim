@@ -37,25 +37,13 @@ var COMMUNITY_CATEGORIES = {
 };
 var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job", "free"];
 
-/* 모바일 UI 개선 5단계: 게시판 목록 탭(전체/구인·구직/학교생활/생활정보/
-   자유게시판) — 글쓰기 때 고르는 세부 카테고리(COMMUNITY_CATEGORIES)보다
-   적은 5개로 묶어서 보여줍니다. 기존 글의 category 값은 그대로 두고
-   목록에서만 묶어서 필터링합니다(데이터 구조 변경 없음). */
-var COMMUNITY_TABS = {
-  all: { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд", bn: "সব", my: "အားလုံး" },
-  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
-  // "학교생활" → "친구 만들기"로 변경(글쓰기 카테고리 COMMUNITY_CATEGORIES.friends와
-  // 동일한 번역 재사용 — 새 문구 없음). 탭 내부 키(schoolLife)와 분류 대상
-  // 카테고리(friends+together)는 변경하지 않습니다.
-  schoolLife: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
-  lifeInfo: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
-  free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
-};
-var COMMUNITY_TAB_ORDER = ["all", "job", "schoolLife", "lifeInfo", "free"];
-// 목록 탭 → 실제 글 category 값(들). "all"은 필터 없음(null).
-var COMMUNITY_TAB_CATEGORIES = { all: null, job: ["job"], schoolLife: ["friends", "together"], lifeInfo: ["market", "help"], free: ["free"] };
-// 카드에 보일 카테고리 배지용: 글의 category 값 → 소속 탭.
-var COMMUNITY_CATEGORY_TO_TAB = { job: "job", friends: "schoolLife", together: "schoolLife", market: "lifeInfo", help: "lifeInfo", free: "free" };
+/* 카테고리 통일(밥심 커뮤니티 카테고리 2단계): 목록 필터·글쓰기·게시글
+   수정이 전부 위 COMMUNITY_CATEGORIES(+COMMUNITY_CATEGORY_ORDER) 하나만
+   공통으로 씁니다. "전체"는 실제 글 category 값이 아니라 목록 필터
+   전용 표시값이라 별도로 둡니다(글쓰기/수정 선택지에는 없음, DB에
+   category="전체"로 저장되지 않음). */
+var COMMUNITY_CATEGORY_ALL = { ko: "전체", zh: "全部", vi: "Tất cả", en: "All", mn: "Бүгд", bn: "সব", my: "အားလုံး" };
+var COMMUNITY_FILTER_ORDER = ["all"].concat(COMMUNITY_CATEGORY_ORDER);
 
 /* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
 var COMMUNITY_AUTH = {

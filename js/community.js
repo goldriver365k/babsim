@@ -1004,10 +1004,11 @@ var Community = (function () {
     wrap.appendChild(homeHeader);
 
     var catTabs = el("div", "community-category-tabs");
-    COMMUNITY_TAB_ORDER.forEach(function (tabKey) {
-      var b = el("button", "community-category-tab" + (state_category === tabKey ? " active" : ""), t(COMMUNITY_TABS[tabKey]));
+    COMMUNITY_FILTER_ORDER.forEach(function (catKey) {
+      var label = catKey === "all" ? COMMUNITY_CATEGORY_ALL : COMMUNITY_CATEGORIES[catKey];
+      var b = el("button", "community-category-tab" + (state_category === catKey ? " active" : ""), t(label));
       b.type = "button";
-      b.addEventListener("click", function () { state_category = tabKey; render(); });
+      b.addEventListener("click", function () { state_category = catKey; render(); });
       catTabs.appendChild(b);
     });
     wrap.appendChild(catTabs);
@@ -1025,7 +1026,7 @@ var Community = (function () {
     toolbar.appendChild(sortSelect);
     wrap.appendChild(toolbar);
 
-    if (state_category === "lifeInfo") {
+    if (state_category === "market") {
       var hideDoneRow = el("label", "community-checkbox-row");
       var hideDoneInput = el("input"); hideDoneInput.type = "checkbox"; hideDoneInput.checked = state_hideDone;
       hideDoneRow.appendChild(hideDoneInput);
@@ -1086,7 +1087,7 @@ var Community = (function () {
     renderPostList(listArea);
   }
 
-  var state_category = "all"; // 모바일 UI 개선 5단계: 목록 탭 키("all"/"job"/"schoolLife"/"lifeInfo"/"free")
+  var state_category = "all"; // 카테고리 2단계: "all" 또는 COMMUNITY_CATEGORY_ORDER의 실제 category 값
   var state_search = "";
   var state_sort = "latest";
   var state_hideDone = false;
@@ -1125,7 +1126,7 @@ var Community = (function () {
     // 1개 이상을 in 연산자로 묶어 기존 category+status+createdAt 복합
     // 색인을 그대로 재사용합니다(Firestore in 연산자는 == 와 같은 색인을
     // 씁니다 — 새 색인 불필요).
-    var tabCategories = COMMUNITY_TAB_CATEGORIES[state_category];
+    var tabCategories = state_category === "all" ? null : [state_category];
     var q = d.collection("communityPosts");
     if (tabCategories) q = q.where("category", "in", tabCategories);
     q = q.where("status", "==", "visible")
@@ -1175,7 +1176,7 @@ var Community = (function () {
         return title.indexOf(q) !== -1 || content.indexOf(q) !== -1;
       });
     }
-    if (state_category === "lifeInfo" && state_hideDone) {
+    if (state_category === "market" && state_hideDone) {
       posts = posts.filter(function (p) { return p.dealStatus !== "done"; });
     }
     if (state_category === "job") {
@@ -1310,7 +1311,7 @@ var Community = (function () {
     var card = el("div", "community-post-card");
     card.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + post.id); });
 
-    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_TABS[COMMUNITY_CATEGORY_TO_TAB[post.category]] || COMMUNITY_TABS.free));
+    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category] || COMMUNITY_CATEGORIES.free));
     card.appendChild(catLine);
 
     if (post.category === "market" && post.dealStatus) {
