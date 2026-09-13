@@ -6386,6 +6386,7 @@ var Community = (function () {
     detailShowOriginal = false;
 
     var isOriginalLang = post.originalLanguage === lang;
+    var jobPanelEl = null; // "원문 보기" 토글 시 구인·구직 상세정보도 같이 갱신하기 위한 참조
     var head = el("div", "community-detail-head");
     head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
     var title = el("h2", "community-detail-title", "");
@@ -6411,6 +6412,11 @@ var Community = (function () {
           detailShowOriginal = !detailShowOriginal;
           toggleBtn.textContent = detailShowOriginal ? t(COMMUNITY_POST.viewTranslated) : t(COMMUNITY_POST.viewOriginal);
           fillDetailText(title, bodyText, aiNotice, post);
+          if (post.category === "job" && jobPanelEl) {
+            var refreshedPanel = buildJobPanel(post, isOriginalLang || detailShowOriginal);
+            jobPanelEl.replaceWith(refreshedPanel);
+            jobPanelEl = refreshedPanel;
+          }
         });
         body.appendChild(toggleBtn);
       } else if (trState && trState.status === "translating") {
@@ -6455,7 +6461,10 @@ var Community = (function () {
 
     if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
     if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
-    if (post.category === "job") wrap.appendChild(buildJobPanel(post));
+    if (post.category === "job") {
+      jobPanelEl = buildJobPanel(post, isOriginalLang || detailShowOriginal);
+      wrap.appendChild(jobPanelEl);
+    }
 
     if (post.kakaoLink) {
       var kakaoWrap = el("div", "community-kakao-wrap");
@@ -6627,24 +6636,45 @@ var Community = (function () {
     return post.deadline < todayKey;
   }
 
-  function buildJobPanel(post) {
+  // 구인·구직 상세정보 중 사용자가 직접 입력한 텍스트 필드 키 목록(제목/
+  // 본문과 같은 기존 번역 요청에 묶어서 보낼 대상). deadline은 날짜값이라
+  // 제외합니다. requestPostTranslation()과 buildJobPanel() 양쪽에서 같은
+  // 목록을 재사용해 요청/표시가 어긋나지 않게 합니다.
+  function jobDetailFieldKeys(post) {
+    return post.jobType === "seeking"
+      ? ["desiredIndustry", "availableDays", "availableHours", "desiredLocation", "availableLanguages", "contactMethod", "experience", "koreanLevel"]
+      : ["industry", "workLocation", "jobDescription", "workDays", "workHours", "salary", "contactMethod", "koreanLevel", "experience"];
+  }
+
+  // useOriginal이 false이고 해당 언어 번역 캐시(post.translations[lang].fields)에
+  // 값이 있으면 그 값을, 없으면(미번역/실패/같은 언어) 원문을 그대로 씁니다
+  // — 기존 제목/본문 fillDetailText()와 같은 원문 폴백 원칙.
+  function jobFieldValue(post, useOriginal, key) {
+    if (!useOriginal) {
+      var tr = post.translations && post.translations[lang];
+      if (tr && tr.fields && tr.fields[key]) return tr.fields[key];
+    }
+    return post[key];
+  }
+
+  function buildJobPanel(post, useOriginal) {
     var panel = el("div", "community-help-panel");
     var isHiring = post.jobType === "hiring";
     panel.appendChild(el("p", null, t(COMMUNITY_JOB.typeLabel) + ": " + t(isHiring ? COMMUNITY_JOB.typeHiring : COMMUNITY_JOB.typeSeeking)));
 
     if (isHiring) {
-      [[COMMUNITY_JOB.industryLabel, post.industry], [COMMUNITY_JOB.workLocationLabel, post.workLocation],
-       [COMMUNITY_JOB.jobDescriptionLabel, post.jobDescription], [COMMUNITY_JOB.workDaysLabel, post.workDays],
-       [COMMUNITY_JOB.workHoursLabel, post.workHours], [COMMUNITY_JOB.salaryLabel, post.salary],
-       [COMMUNITY_JOB.deadlineLabel, post.deadline], [COMMUNITY_JOB.contactMethodLabel, post.contactMethod],
-       [COMMUNITY_JOB.koreanLevelLabel, post.koreanLevel], [COMMUNITY_JOB.experienceLabel, post.experience]]
-        .forEach(function (pair) { if (pair[1]) panel.appendChild(el("p", null, t(pair[0]) + ": " + pair[1])); });
+      [[COMMUNITY_JOB.industryLabel, "industry"], [COMMUNITY_JOB.workLocationLabel, "workLocation"],
+       [COMMUNITY_JOB.jobDescriptionLabel, "jobDescription"], [COMMUNITY_JOB.workDaysLabel, "workDays"],
+       [COMMUNITY_JOB.workHoursLabel, "workHours"], [COMMUNITY_JOB.salaryLabel, "salary"],
+       [COMMUNITY_JOB.deadlineLabel, "deadline"], [COMMUNITY_JOB.contactMethodLabel, "contactMethod"],
+       [COMMUNITY_JOB.koreanLevelLabel, "koreanLevel"], [COMMUNITY_JOB.experienceLabel, "experience"]]
+        .forEach(function (pair) { var v = jobFieldValue(post, useOriginal, pair[1]); if (v) panel.appendChild(el("p", null, t(pair[0]) + ": " + v)); });
     } else {
-      [[COMMUNITY_JOB.desiredIndustryLabel, post.desiredIndustry], [COMMUNITY_JOB.availableDaysLabel, post.availableDays],
-       [COMMUNITY_JOB.availableHoursLabel, post.availableHours], [COMMUNITY_JOB.desiredLocationLabel, post.desiredLocation],
-       [COMMUNITY_JOB.availableLanguagesLabel, post.availableLanguages], [COMMUNITY_JOB.contactMethodLabel, post.contactMethod],
-       [COMMUNITY_JOB.experienceLabel, post.experience], [COMMUNITY_JOB.koreanLevelLabel, post.koreanLevel]]
-        .forEach(function (pair) { if (pair[1]) panel.appendChild(el("p", null, t(pair[0]) + ": " + pair[1])); });
+      [[COMMUNITY_JOB.desiredIndustryLabel, "desiredIndustry"], [COMMUNITY_JOB.availableDaysLabel, "availableDays"],
+       [COMMUNITY_JOB.availableHoursLabel, "availableHours"], [COMMUNITY_JOB.desiredLocationLabel, "desiredLocation"],
+       [COMMUNITY_JOB.availableLanguagesLabel, "availableLanguages"], [COMMUNITY_JOB.contactMethodLabel, "contactMethod"],
+       [COMMUNITY_JOB.experienceLabel, "experience"], [COMMUNITY_JOB.koreanLevelLabel, "koreanLevel"]]
+        .forEach(function (pair) { var v = jobFieldValue(post, useOriginal, pair[1]); if (v) panel.appendChild(el("p", null, t(pair[0]) + ": " + v)); });
     }
 
     var effectiveStatus = post.jobStatus;
@@ -7083,16 +7113,27 @@ var Community = (function () {
       return ref.update(field).catch(function () { /* 표시 갱신 실패해도 번역 결과 자체는 유효 */ });
     }
 
+    // 구인·구직 게시글의 상세정보(직접입력 필드)도 제목/본문과 같은 번역
+    // 요청 1번에 묶어서 보냅니다(API 호출 추가 없음, 비용 최소화).
+    var jobFields = null;
+    if (post.category === "job") {
+      jobFields = {};
+      jobDetailFieldKeys(post).forEach(function (k) { if (post[k]) jobFields[k] = post[k]; });
+      if (!Object.keys(jobFields).length) jobFields = null;
+    }
+
     return ref.update(claimField).catch(function () {}).then(function () {
       return authUser.getIdToken();
     }).then(function (idToken) {
+      var body = {
+        action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
+        title: post.originalTitle, content: post.originalContent, targetLanguages: [lang]
+      };
+      if (jobFields) body.fields = jobFields;
       return fetch("/.netlify/functions/community-translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
-          title: post.originalTitle, content: post.originalContent, targetLanguages: [lang]
-        })
+        body: JSON.stringify(body)
       });
     }).then(function (res) {
       if (res.status === 429) {
@@ -7101,10 +7142,12 @@ var Community = (function () {
       return res.json().then(function (data) {
         var tr = data && data.translations && data.translations[lang];
         if (tr && tr.title && tr.content) {
-          return setStatus("done", { title: tr.title, content: tr.content }).then(function () {
+          var doneExtra = { title: tr.title, content: tr.content };
+          if (tr.fields) doneExtra.fields = tr.fields;
+          return setStatus("done", doneExtra).then(function () {
             if (postCache[post.id]) {
               postCache[post.id].translations = postCache[post.id].translations || {};
-              postCache[post.id].translations[lang] = { status: "done", title: tr.title, content: tr.content };
+              postCache[post.id].translations[lang] = Object.assign({ status: "done" }, doneExtra);
             }
             return true;
           });
