@@ -73,6 +73,23 @@ def build():
 <title>모인관(인제대학교)</title>
 <meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
 
+<!-- Google Analytics 4(gtag.js, GA 2단계 최소 설치) — Firebase Analytics
+     SDK는 추가하지 않고 공식 gtag.js만 최소로 씁니다. Measurement ID는
+     js/firebase-config.js의 FIREBASE_CONFIG.measurementId와 같은 값을
+     그대로 옮겨 적었습니다(정적 사이트라 런타임에 JS 값을 다시 읽어오는
+     구조를 만들지 않고, 값이 바뀌면 두 곳을 함께 고치는 가장 단순한
+     방식을 씁니다). gtag('config', ...)가 첫 페이지 조회를 자동으로
+     1회만 보내므로, 별도의 수동 page_view 호출은 넣지 않습니다(중복
+     방지). 이벤트 추적(서비스 클릭/커뮤니티/팝업 등)은 이번 단계에
+     포함하지 않습니다. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6YN63KKXNW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-6YN63KKXNW');
+</script>
+
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/icon/favicon-32.png">
