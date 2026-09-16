@@ -40,6 +40,8 @@ css/style.css, js/translations.js, js/menu-data.js, js/app.js 등의 원본
    Netlify에는 이미 완성된 index.html·admin.html만 그대로 올리면 됩니다.)
 """
 import os
+import json
+from datetime import datetime, timezone
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -63,6 +65,7 @@ def build():
     community_translations = read("js/community-translations.js")
     community = read("js/community.js")
     site_popup = read("js/site-popup.js")
+    site_update = read("js/site-update.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -454,6 +457,9 @@ def build():
 </script>
 <script>
 """ + site_popup + """
+</script>
+<script>
+""" + site_update + """
 </script>
 <script>
 """ + app + """
@@ -948,6 +954,17 @@ def build_admin():
     print("admin.html 갱신 완료:", len(html), "바이트")
 
 
+def write_version_file():
+    # 새 버전 자동 업데이트(js/site-update.js)용 정적 파일 — DB/API 없이
+    # 빌드 시각만 담아 저장소 루트에 그대로 배포합니다.
+    version = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    path = os.path.join(BASE, "version.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"version": version}, f)
+    print("version.json 갱신 완료:", version)
+
+
 if __name__ == "__main__":
     build()
     build_admin()
+    write_version_file()
