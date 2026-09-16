@@ -1003,11 +1003,14 @@ var Community = (function () {
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
 
+    // 카테고리 4개 개편: 블록형(제목+짧은 설명) UI, 새 페이지 이동 없이
+    // 클릭하면 이 화면 아래 목록만 바뀝니다(기존 필터 로직 재사용).
     var catTabs = el("div", "community-category-tabs");
-    COMMUNITY_FILTER_ORDER.forEach(function (catKey) {
-      var label = catKey === "all" ? COMMUNITY_CATEGORY_ALL : COMMUNITY_CATEGORIES[catKey];
-      var b = el("button", "community-category-tab" + (state_category === catKey ? " active" : ""), t(label));
+    COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
+      var b = el("button", "community-category-tab community-category-block" + (state_category === catKey ? " active" : ""));
       b.type = "button";
+      b.appendChild(el("span", "community-category-block-title", t(COMMUNITY_CATEGORIES[catKey])));
+      b.appendChild(el("span", "community-category-block-desc", t(COMMUNITY_CATEGORY_DESC[catKey])));
       b.addEventListener("click", function () { state_category = catKey; render(); });
       catTabs.appendChild(b);
     });
@@ -1066,10 +1069,13 @@ var Community = (function () {
 
     var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
     writeBtn.type = "button";
+    // 카테고리 블록형 UI: 현재 선택된 카테고리를 글쓰기로 그대로 넘겨
+    // 자동 선택되게 합니다("이 카테고리에 글쓰기").
+    var writeTarget = ROUTE_PREFIX + "/write" + (COMMUNITY_CATEGORY_ORDER.indexOf(state_category) !== -1 ? "?cat=" + state_category : "");
     writeBtn.addEventListener("click", function () {
       ensureAuth().then(function () {
-        navigate(ROUTE_PREFIX + "/write");
-      }).catch(function () { showAuthGateModal(ROUTE_PREFIX + "/write"); });
+        navigate(writeTarget);
+      }).catch(function () { showAuthGateModal(writeTarget); });
     });
     wrap.appendChild(writeBtn);
 
@@ -1087,7 +1093,9 @@ var Community = (function () {
     renderPostList(listArea);
   }
 
-  var state_category = "all"; // 카테고리 2단계: "all" 또는 COMMUNITY_CATEGORY_ORDER의 실제 category 값
+  // 카테고리 4개 개편: "전체" 없이 항상 COMMUNITY_CATEGORY_ORDER의 실제
+  // category 값 중 하나(기본값=첫 블록인 "together"/김해맛집 추천).
+  var state_category = COMMUNITY_CATEGORY_ORDER[0];
   var state_search = "";
   var state_sort = "latest";
   var state_hideDone = false;
@@ -2252,6 +2260,14 @@ var Community = (function () {
       var o = el("option", null, t(COMMUNITY_CATEGORIES[cat])); o.value = cat;
       catSelect.appendChild(o);
     });
+    // 카테고리 블록의 "이 카테고리에 글쓰기"에서 넘어온 경우(?cat=)
+    // 새 글 모드에서만 해당 카테고리를 자동 선택합니다(수정 모드는
+    // 기존 게시글의 category를 그대로 씀 — 아래 editingPost 블록).
+    if (!isEdit) {
+      var catMatch = /[?&]cat=([^&]+)/.exec(location.search);
+      var catParam = catMatch ? decodeURIComponent(catMatch[1]) : null;
+      if (catParam && COMMUNITY_CATEGORY_ORDER.indexOf(catParam) !== -1) catSelect.value = catParam;
+    }
     form.appendChild(formField(COMMUNITY_POST.categoryLabel, catSelect));
 
     var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;

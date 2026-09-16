@@ -1895,17 +1895,20 @@ main {
 .community-verify-notice { color: var(--comm-help); font-weight: 700; margin-bottom: 12px; }
 .community-gate-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-/* 카테고리 탭 — 모바일에서는 가로 스크롤 */
+/* 카테고리 4개 개편: 블록형(제목+짧은 설명) 그리드 — 가로 스크롤 대신
+   모바일 2열×2줄, PC(720px~)는 4열로 최소 수정. */
 .community-category-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
   margin-bottom: 12px;
 }
 
+@media (min-width: 720px) {
+  .community-category-tabs { grid-template-columns: repeat(4, 1fr); }
+}
+
 .community-category-tab {
-  flex: 0 0 auto;
   min-height: 44px;
   padding: 8px 16px;
   border-radius: 999px;
@@ -1921,6 +1924,34 @@ main {
   background: var(--comm-blue);
   border-color: var(--comm-blue);
   color: #FFFFFF;
+}
+
+.community-category-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  white-space: normal;
+  text-align: left;
+}
+
+.community-category-block-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.community-category-block-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--comm-text);
+  opacity: 0.7;
+}
+
+.community-category-tab.active .community-category-block-desc {
+  color: #FFFFFF;
+  opacity: 0.9;
 }
 
 .community-toolbar {
