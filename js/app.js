@@ -279,7 +279,6 @@
 
   function renderHome() {
     if (!els.homeView) return;
-    if (els.homeHeroTagline) els.homeHeroTagline.textContent = UI_TEXT.homeHeroTagline[state.lang];
     if (els.homeServicesTitle) els.homeServicesTitle.textContent = UI_TEXT.homeServicesTitle[state.lang];
     if (els.homeCommunityLatestTitle) els.homeCommunityLatestTitle.textContent = UI_TEXT.homeCommunityLatestTitle[state.lang];
     if (els.homeCardCommunityName && window.COMMUNITY_HOME) {
@@ -806,7 +805,6 @@
 
     els.homeView = qs("homeView");
     els.homeHeroImg = qs("homeHeroImg");
-    els.homeHeroTagline = qs("homeHeroTagline");
     els.homeServicesTitle = qs("homeServicesTitle");
     els.homeCardCommunity = qs("homeCardCommunity");
     els.homeCardCommunityName = qs("homeCardCommunityName");

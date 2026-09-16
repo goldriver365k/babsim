@@ -139,8 +139,19 @@ def build():
          나중에 올리기만 하면 코드 수정 없이 적용됩니다. 파일이 없는
          동안은 js/app.js가 자동으로 숨깁니다(임의 이미지 제작 없음). -->
     <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
-    <p class="home-hero-tagline" id="homeHeroTagline"></p>
   </div>
+
+  <!-- 무료 한국어 공부 링크 2단계: "다양한 사람들이 함께하는 서비스" 문구
+       자리로 이동(기존 hellokorean-card를 그대로 재사용 — 새 컴포넌트/새
+       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). -->
+  <section class="hellokorean-card">
+    <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
+      <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
+      <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
+      <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
+      <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
+    </a>
+  </section>
 
   <h2 class="home-section-title" id="homeServicesTitle"></h2>
   <div class="home-service-grid" id="homeServiceGrid">
@@ -296,15 +307,6 @@ def build():
 
   <p class="fallback-msg" id="fallbackMsg" hidden></p>
 </main>
-
-<section class="hellokorean-card">
-  <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
-    <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
-    <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
-    <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
-    <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
-  </a>
-</section>
 
 <footer class="owner-chat-banner" id="ownerChatBanner">
   <h3 class="owner-chat-title" id="ownerChatTitle">사장님께 말해요</h3>
