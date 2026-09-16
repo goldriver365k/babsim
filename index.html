@@ -8597,7 +8597,48 @@ var MenuLikes = (function () {
     return { text: withComma + UI_TEXT.won[lang], tbd: false };
   }
 
+  // 관리자 메뉴관리(storeMenus)가 등록해 둔 매장은 그 데이터를 그대로
+  // 보여주고, 아직 관리자에서 하나도 등록하지 않았거나 조회에 실패한
+  // 매장은 기존 정적 MENU_DATA를 그대로 보여줍니다(둘을 섞지 않음 —
+  // 매장 단위로만 전환). storeMenus는 그룹 개념이 없어 한 그룹으로
+  // 취급합니다. 매장당 조회는 페이지당 한 번뿐이며(캐시), 메뉴별 조회나
+  // 실시간 listener는 만들지 않습니다.
+  var STORE_MENUS_GROUP = 1;
+  var storeMenusCache = {}; // store -> item[] | null(정적 데이터로 fallback)
+
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+
+  function loadStoreMenus(store) {
+    if (storeMenusCache[store] !== undefined) return;
+    var d = db();
+    if (!d) { storeMenusCache[store] = null; return; }
+    d.collection("storeMenus").where("store", "==", store).get().then(function (snap) {
+      var items = [];
+      snap.forEach(function (doc) {
+        var data = doc.data();
+        if (data.isActive === false) return; // 삭제(숨김)된 메뉴는 제외
+        items.push({
+          id: doc.id,
+          store: store,
+          group: STORE_MENUS_GROUP,
+          order: typeof data.order === "number" ? data.order : 0,
+          image: data.image || null,
+          name: data.name || { ko: "" },
+          price: typeof data.price === "number" ? data.price : null,
+          soldOut: !!data.soldOut,
+          needsReview: false
+        });
+      });
+      // 아직 하나도 등록되지 않은 매장(빈 목록)은 기존 정적 메뉴를 그대로 보여줍니다.
+      storeMenusCache[store] = items.length ? items : null;
+      if (storeMenusCache[store] && state.store === store) renderAll();
+    }).catch(function () {
+      storeMenusCache[store] = null; // 조회 실패 시 조용히 기존 정적 메뉴 유지
+    });
+  }
+
   function getGroupsForStore(store) {
+    if (storeMenusCache[store]) return [STORE_MENUS_GROUP];
     var groups = {};
     MENU_DATA.forEach(function (item) {
       if (item.store === store) groups[item.group] = true;
@@ -8606,6 +8647,8 @@ var MenuLikes = (function () {
   }
 
   function getItems(store, group) {
+    var live = storeMenusCache[store];
+    if (live) return live.slice().sort(function (a, b) { return a.order - b.order; });
     return MENU_DATA
       .filter(function (item) { return item.store === store && item.group === group; })
       .sort(function (a, b) { return a.order - b.order; });
@@ -8662,7 +8705,7 @@ var MenuLikes = (function () {
       img.onerror = function () {
         if (imgWrap.dataset.fallbackApplied) return;
         imgWrap.dataset.fallbackApplied = "1";
-        imgWrap.innerHTML = "";
+        img.remove(); // imgWrap 전체를 비우면 품절 배지도 함께 사라지므로 깨진 이미지만 제거합니다.
         var pending = document.createElement("span");
         pending.className = "image-pending";
         pending.textContent = UI_TEXT.imagePending[state.lang] || UI_TEXT.imagePending.ko;
@@ -9741,6 +9784,10 @@ var MenuLikes = (function () {
       window.MenuLikes.onChange(renderGrid);
       window.MenuLikes.init();
     }
+
+    /* 관리자 메뉴관리(storeMenus) — 매장마다 딱 1번씩만 조회합니다(실시간
+       listener 없음). 등록된 메뉴가 있는 매장만 도착 즉시 다시 그립니다. */
+    STORE_ORDER.forEach(function (store) { loadStoreMenus(store); });
 
     // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
     // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음). 관리자가 등록한
