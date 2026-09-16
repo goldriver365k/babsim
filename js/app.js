@@ -23,6 +23,21 @@
 
   function qs(id) { return document.getElementById(id); }
 
+  // GA4 화면 방문 기록 — 기존 window.gtag를 그대로 재사용합니다(js/community.js의
+  // 동일한 개념을 이 모듈에도 독립적으로 둡니다). 실제로 사용자가 이동해
+  // 다른 화면이 표시된 경우에만 호출하며, 직전과 같은 화면이면 다시
+  // 보내지 않습니다.
+  var gaLastVirtualPageKey = null;
+  function trackVirtualPage(pageName) {
+    if (gaLastVirtualPageKey === pageName) return;
+    gaLastVirtualPageKey = pageName;
+    try {
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "virtual_page_view", { page_name: pageName });
+      }
+    } catch (e) { /* GA 전송 실패해도 화면 전환은 계속 동작 */ }
+  }
+
   function formatPrice(price, lang) {
     if (price === null || typeof price === "undefined") {
       return { text: UI_TEXT.priceTBD[lang] || UI_TEXT.priceTBD.ko, tbd: true };
@@ -221,6 +236,9 @@
   }
 
   function goHome() {
+    // 이미 홈 화면(커뮤니티 밖)이었다면 실제 화면 전환이 아니므로(최초
+    // 접속 시 기본 page_view와 중복 전송 방지 포함) 기록하지 않습니다.
+    var wasHome = state.view === "home" && !(window.Community && window.Community.isCommunityPath(location.pathname));
     state.view = "home";
     if (window.Community && window.Community.isCommunityPath(location.pathname)) {
       window.Community.navigate("/"); // 커뮤니티 안에 있었다면 빠져나옵니다(빠져나오며 applyViewVisibility 재호출됨)
@@ -228,15 +246,21 @@
       applyViewVisibility();
     }
     renderHome();
+    if (!wasHome) trackVirtualPage("home");
   }
 
   function goToStore(store) {
+    var alreadyOnThisStore = state.view === "store" && state.store === store &&
+      !(window.Community && window.Community.isCommunityPath(location.pathname));
     state.view = "store";
     if (state.store !== store) setStore(store); else renderAll();
     if (window.Community && window.Community.isCommunityPath(location.pathname)) {
       window.Community.navigate("/");
     } else {
       applyViewVisibility();
+    }
+    if (!alreadyOnThisStore) {
+      trackVirtualPage(store === "bapsim" ? (state.bapsimView === "menu" ? "babsim" : "breakfast") : store);
     }
   }
 
@@ -385,6 +409,7 @@
     renderBapsimSubtabs();
     updateBapsimViewVisibility();
     if (view === "breakfast") renderBreakfastArea();
+    trackVirtualPage(view === "menu" ? "babsim" : "breakfast");
   }
 
   function updateBapsimViewVisibility() {

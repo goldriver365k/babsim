@@ -457,6 +457,7 @@ var Community = (function () {
   }
 
   function renderLogin() {
+    trackVirtualPage("login");
     var wrap = el("div", "community-page community-auth");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginTitle)));
 
@@ -665,6 +666,7 @@ var Community = (function () {
   }
 
   function renderSignup() {
+    trackVirtualPage("signup");
     var wrap = el("div", "community-page community-auth");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.signupTitle)));
 
@@ -798,6 +800,7 @@ var Community = (function () {
   /* ---------------- 내 정보 ---------------- */
 
   function renderMyPage() {
+    trackVirtualPage("my");
     var wrap = el("div", "community-page community-my");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_MY.myPageTitle)));
 
@@ -1009,10 +1012,6 @@ var Community = (function () {
     // 카테고리 4개 개편: 블록형(제목+짧은 설명) UI, 새 페이지 이동 없이
     // 클릭하면 이 화면 아래 목록만 바뀝니다(기존 필터 로직 재사용).
     var catTabs = el("div", "community-category-tabs");
-    // GA4 커뮤니티 카테고리 방문 기록용 — 내부 category 값(together/job)이
-    // GA에 쓰기로 한 값(gimhae_food/jobs)과 다른 2개만 최소 매핑하고,
-    // 나머지(hometown/friends)는 이미 안정적인 기존 값을 그대로 재사용.
-    var GA_COMMUNITY_CATEGORY_MAP = { together: "gimhae_food", hometown: "hometown", job: "jobs", friends: "friends" };
     COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
       var b = el("button", "community-category-tab community-category-block" + (state_category === catKey ? " active" : ""));
       b.type = "button";
@@ -1100,6 +1099,7 @@ var Community = (function () {
     var listArea = el("div", "community-post-list");
     wrap.appendChild(listArea);
     els.root.appendChild(wrap);
+    trackVirtualPage("community");
 
     var searchDebounce = null;
     searchInput.addEventListener("input", function () {
@@ -1109,6 +1109,29 @@ var Community = (function () {
     sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderLoadedPosts(); });
 
     renderPostList(listArea);
+  }
+
+  // GA4 커뮤니티 화면 방문 기록용 — 내부 category 값(together/job)이
+  // GA에 쓰기로 한 값(gimhae_food/jobs)과 다른 2개만 최소 매핑하고,
+  // 나머지(hometown/friends)는 이미 안정적인 기존 값을 그대로 재사용.
+  var GA_COMMUNITY_CATEGORY_MAP = { together: "gimhae_food", hometown: "hometown", job: "jobs", friends: "friends" };
+
+  // GA4 커뮤니티 화면 방문 기록 공통 헬퍼 — 실제 화면이 표시되는 시점에만
+  // 호출합니다. 직전에 기록한 화면과 같으면(단순 재렌더링) 다시 보내지
+  // 않고, 다른 화면을 거쳐 돌아오면 새로 기록합니다. dedupKey를 따로 주면
+  // (예: 게시글 postId) 같은 category라도 서로 다른 화면으로 구분합니다.
+  var gaLastVirtualPageKey = null;
+  function trackVirtualPage(pageName, category, dedupKey) {
+    var key = pageName + ":" + (dedupKey || category || "");
+    if (gaLastVirtualPageKey === key) return;
+    gaLastVirtualPageKey = key;
+    try {
+      if (typeof window.gtag === "function") {
+        var params = { page_name: pageName };
+        if (category) params.category = category;
+        window.gtag("event", "virtual_page_view", params);
+      }
+    } catch (e) { /* GA 전송 실패해도 커뮤니티 기능은 계속 동작 */ }
   }
 
   // 카테고리 4개 개편: "전체" 없이 항상 COMMUNITY_CATEGORY_ORDER의 실제
@@ -1434,6 +1457,7 @@ var Community = (function () {
      기존 상세 화면과 같은 클래스(community-detail-*, community-help-panel,
      community-btn-secondary)만 재사용해 카페 10곳을 카드로 보여줍니다. */
   function renderMzCafeDetail() {
+    trackVirtualPage("community_post", "gimhae_food", MZ_CAFE_POST_ID);
     var wrap = el("div", "community-page community-detail");
 
     var head = el("div", "community-detail-head");
@@ -1506,6 +1530,7 @@ var Community = (function () {
       // 등 참여 기능만 renderPostDetailBody 안에서 개별적으로
       // 로그인 안내창을 띄웁니다.
       postCache[postId] = post;
+      trackVirtualPage("community_post", GA_COMMUNITY_CATEGORY_MAP[post.category] || post.category, postId);
       renderPostDetailBody(wrap, post);
     }).catch(function (err) {
       console.error("게시글 상세 불러오기 실패:", err);
@@ -2375,6 +2400,13 @@ var Community = (function () {
       if (catParam && COMMUNITY_CATEGORY_ORDER.indexOf(catParam) !== -1) catSelect.value = catParam;
     }
     form.appendChild(formField(COMMUNITY_POST.categoryLabel, catSelect));
+
+    if (isEdit) {
+      trackVirtualPage("community_edit", null, editPostId);
+    } else {
+      var writeGaCat = catParam && COMMUNITY_CATEGORY_ORDER.indexOf(catParam) !== -1 ? (GA_COMMUNITY_CATEGORY_MAP[catParam] || catParam) : null;
+      trackVirtualPage("community_write", writeGaCat);
+    }
 
     var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
     form.appendChild(formField(COMMUNITY_POST.titleLabel, titleInput));
