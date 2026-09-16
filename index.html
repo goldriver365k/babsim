@@ -3839,6 +3839,18 @@ const BREAKFAST_WEEKLY_MENU = {
             allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
             allow update: if false;
           }
+
+          // ---------------- 매장 메뉴관리(js/admin-menu.js, 2026-09-16
+          // 추가) ---------------- 관리자가 후루룩찹찹/만권화밥/밥심 메뉴를
+          // 등록·수정·순서변경·품절·삭제(soft delete)하는 화면용. 문서 id가
+          // 그대로 menuId이며(js/menu-likes.js의 menuLikeCounts/menuLikeUsers
+          // 와 같은 값을 쓸 수 있음), 누구나 볼 수 있어야 하므로 읽기는
+          // 공개, 쓰기는 관리자 로그인(주간메뉴 관리와 같은 계정)만
+          // 가능합니다.
+          match /storeMenus/{menuId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
         }
       }
 
@@ -3872,6 +3884,15 @@ const BREAKFAST_WEEKLY_MENU = {
             allow read: if true;
             allow write: if request.auth != null
               && request.resource.size < 500 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
+          // 매장 메뉴 이미지(관리자 메뉴관리, 2026-09-16 추가) —
+          // weeklyMenuImages/sitePopupImages와 같은 조건(관리자 로그인
+          // 필요, 10MB 이하 이미지)을 그대로 재사용.
+          match /storeMenuImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
         }

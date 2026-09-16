@@ -408,7 +408,7 @@
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup", menu: "pageMenu" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -432,6 +432,7 @@
     else if (page === "weeklymenu") initWeeklyMenuPage();
     else if (page === "community") { if (window.AdminCommunity) AdminCommunity.init(); }
     else if (page === "popup") { if (window.AdminPopup) AdminPopup.init(); }
+    else if (page === "menu") { if (window.AdminMenu) AdminMenu.init(); }
   }
 
   /* ================================================================
@@ -1873,7 +1874,10 @@
 
   function initApp() {
     els.warnBanner = qs("adminFirebaseWarning");
-    els.navBtns = document.querySelectorAll(".admin-nav-btn");
+    // "메뉴 관리"의 매장 선택 버튼(#menuStoreNav)도 같은 admin-nav-btn
+    // 스타일을 재사용하므로, 페이지 탭 목록은 #adminNav로 범위를 좁혀
+    // 서로 섞이지 않게 합니다.
+    els.navBtns = document.querySelectorAll("#adminNav .admin-nav-btn");
 
     var configured = (typeof isFirebaseConfigured === "function") && isFirebaseConfigured();
     els.warnBanner.hidden = configured;

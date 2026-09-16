@@ -489,6 +489,7 @@ def build_admin():
     admin_js = read("js/admin.js")
     admin_community = read("js/admin-community.js")
     admin_popup = read("js/admin-popup.js")
+    admin_menu = read("js/admin-menu.js")
 
     html = """<!DOCTYPE html>
 <html lang="ko">
@@ -530,6 +531,7 @@ def build_admin():
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
       <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
       <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
     </nav>
   </header>
 
@@ -926,6 +928,55 @@ def build_admin():
         <div class="table-scroll" id="popupListBody"></div>
       </div>
     </section>
+
+    <section class="admin-page" id="pageMenu" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">메뉴를 등록·수정·삭제하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이 단계는 매장 메뉴를
+          등록해 두는 화면까지만이며, 학생 화면 반영은 다음 단계에서 연결합니다.</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>매장 선택</h2>
+        <nav class="admin-nav" id="menuStoreNav">
+          <button type="button" class="admin-nav-btn active" data-store="hururuk">후루룩찹찹</button>
+          <button type="button" class="admin-nav-btn" data-store="mangwon">만권화밥</button>
+          <button type="button" class="admin-nav-btn" data-store="bapsim">밥심</button>
+        </nav>
+      </div>
+
+      <div class="admin-card">
+        <h2 id="menuFormTitle">새 메뉴 등록</h2>
+        <form class="weekly-auth-box" id="menuForm" style="max-width:420px;">
+          <label for="menuNameInput">메뉴명</label>
+          <input type="text" id="menuNameInput" maxlength="60">
+
+          <label for="menuPriceInput">가격(원)</label>
+          <input type="number" id="menuPriceInput" min="0" step="100">
+
+          <label for="menuImageInput">메뉴 이미지</label>
+          <div class="image-upload-box">
+            <div class="image-upload-row">
+              <input type="file" id="menuImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+            </div>
+            <p class="image-upload-caption">권장 정사각형 · 500KB 이하 · WebP/JPG 권장</p>
+            <div class="image-preview-wrap" id="menuImagePreviewWrap" hidden>
+              <img id="menuImagePreviewImg" alt="메뉴 이미지 미리보기">
+            </div>
+            <p class="form-error" id="menuImageError"></p>
+          </div>
+
+          <button type="submit" id="menuSaveBtn">등록</button>
+          <button type="button" id="menuCancelEditBtn" hidden>새로 등록으로 취소</button>
+        </form>
+        <p class="publish-status" id="menuFormStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>등록된 메뉴</h2>
+        <div class="table-scroll" id="menuListBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -947,6 +998,9 @@ def build_admin():
 </script>
 <script>
 """ + admin_popup + """
+</script>
+<script>
+""" + admin_menu + """
 </script>
 </body>
 </html>
