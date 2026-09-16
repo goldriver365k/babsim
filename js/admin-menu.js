@@ -22,6 +22,7 @@ var AdminMenu = (function () {
   var currentStore = "hururuk";
   var editingId = null;
   var editingImageUrl = "";
+  var editingOriginalName = null; // 수정 중인 메뉴의 기존 name 객체(다국어 보존용)
   var pendingCompressPromise = null;
   var currentMenus = []; // 현재 매장의 메뉴 목록(순서대로) — 순서 이동 계산에 재사용
   var likeCounts = {};   // menuLikeCounts/all 문서 1회 캐시(menuId -> count)
@@ -51,6 +52,7 @@ var AdminMenu = (function () {
   function resetForm() {
     editingId = null;
     editingImageUrl = "";
+    editingOriginalName = null;
     pendingCompressPromise = null;
     els.form.reset();
     els.imagePreviewWrap.hidden = true;
@@ -64,6 +66,7 @@ var AdminMenu = (function () {
   function startEdit(id, m) {
     editingId = id;
     editingImageUrl = m.image || "";
+    editingOriginalName = m.name || null;
     pendingCompressPromise = null;
     els.nameInput.value = (m.name && m.name.ko) || "";
     els.priceInput.value = typeof m.price === "number" ? m.price : "";
@@ -191,8 +194,12 @@ var AdminMenu = (function () {
       if (!imageUrl) throw new Error("IMAGE_REQUIRED");
       // 수정: 기존 document를 UPDATE만 합니다(menuId/createdAt/좋아요 변경 없음).
       if (editingId) {
+        // 기존(다국어 번역이 있을 수 있는) name 객체에 한국어만 덮어써서
+        // 저장합니다 — 통째로 교체하면 기존 메뉴 연결로 들어온 다른
+        // 언어 번역이 사라집니다.
+        var nextName = Object.assign({}, editingOriginalName, { ko: name });
         return d.collection("storeMenus").doc(editingId).update({
-          name: { ko: name },
+          name: nextName,
           price: priceNum,
           image: imageUrl,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -351,6 +358,57 @@ var AdminMenu = (function () {
     tbody.appendChild(tr);
   }
 
+  // 기존 정적 메뉴(js/menu-data.js MENU_DATA)를 storeMenus에 1회만
+  // 안전하게 연결합니다. 문서 id는 기존 id를 그대로 써서(menuId 보존,
+  // 좋아요 연결 유지) 이미 연결된 항목은 건너뛰므로(idempotent) 화면을
+  // 다시 열어도 중복 생성되지 않습니다. 버튼 없이 목록 조회 시 조용히
+  // 한 번만 확인·보완합니다 — admin.html에 함께 실려 있는 MENU_DATA를
+  // 그대로 재사용하며 새 조회는 만들지 않습니다.
+  // allExistingIds는 삭제(숨김, isActive=false)된 문서까지 포함한 "이미
+  // storeMenus에 존재하는 모든 문서 id" 집합입니다 — 화면에 보이는 목록
+  // (existingMenus, 삭제된 항목 제외)만 기준으로 판단하면 삭제한 기존
+  // 메뉴가 "아직 연결 안 된 메뉴"로 오인되어 매번 되살아납니다.
+  function backfillLegacyMenus(store, existingMenus, allExistingIds) {
+    if (typeof MENU_DATA === "undefined") return Promise.resolve(existingMenus);
+    var d = db();
+    if (!d) return Promise.resolve(existingMenus);
+
+    // 기존 화면(js/app.js)이 보여주던 순서(그룹 → 그룹 내 순서)를 그대로
+    // 이어받아 sortOrder를 매깁니다.
+    var legacyItems = MENU_DATA
+      .filter(function (item) { return item.store === store && !allExistingIds[item.id]; })
+      .sort(function (a, b) { return (a.group - b.group) || (a.order - b.order); });
+    if (!legacyItems.length) return Promise.resolve(existingMenus);
+
+    var nextOrder = existingMenus.reduce(function (max, m) {
+      return Math.max(max, typeof m.order === "number" ? m.order : 0);
+    }, 0);
+
+    var batch = d.batch();
+    var added = [];
+    legacyItems.forEach(function (item) {
+      nextOrder += 1;
+      var data = {
+        store: store,
+        name: item.name, // 다국어 번역을 그대로 보존(한국어만 남기지 않음)
+        price: typeof item.price === "number" ? item.price : null,
+        image: item.image || null, // 기존 이미지 경로 그대로(재업로드 없음)
+        soldOut: !!item.soldOut,
+        isActive: true,
+        order: nextOrder,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      batch.set(d.collection("storeMenus").doc(item.id), data);
+      added.push(Object.assign({ id: item.id }, data));
+    });
+    return batch.commit().then(function () {
+      return existingMenus.concat(added);
+    }).catch(function () {
+      return existingMenus; // 실패해도 기존 목록은 그대로 보여주고, 다음 방문 때 다시 시도
+    });
+  }
+
   // 매장 하나를 선택하면 그 매장의 메뉴 목록을 한 번의 조회로 모두
   // 가져옵니다(메뉴별 개별 조회/실시간 listener 없음).
   function loadMenus() {
@@ -363,11 +421,15 @@ var AdminMenu = (function () {
       return d.collection("storeMenus").where("store", "==", currentStore).get();
     }).then(function (snap) {
       var menus = [];
+      var allExistingIds = {}; // 삭제(숨김)된 문서까지 포함 — 백필이 되살리지 않도록
       snap.forEach(function (doc) {
+        allExistingIds[doc.id] = true;
         var data = doc.data();
         if (data.isActive === false) return; // 삭제(숨김)된 메뉴는 관리 목록에도 표시하지 않음
         menus.push(Object.assign({ id: doc.id }, data));
       });
+      return backfillLegacyMenus(currentStore, menus, allExistingIds);
+    }).then(function (menus) {
       menus.sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
       currentMenus = menus;
 

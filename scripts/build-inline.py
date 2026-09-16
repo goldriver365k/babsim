@@ -486,6 +486,7 @@ def build_admin():
     admin_css = read("css/admin.css")
     firebase_config = read("js/firebase-config.js")
     community_translations = read("js/community-translations.js")
+    menu_data = read("js/menu-data.js")
     admin_js = read("js/admin.js")
     admin_community = read("js/admin-community.js")
     admin_popup = read("js/admin-popup.js")
@@ -989,6 +990,9 @@ def build_admin():
 </script>
 <script>
 """ + community_translations + """
+</script>
+<script>
+""" + menu_data + """
 </script>
 <script>
 """ + admin_js + """
