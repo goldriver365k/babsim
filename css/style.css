@@ -1468,11 +1468,46 @@ main {
   gap: 2px;
 }
 
+.card-name-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
 .card-name-ko {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-dark);
   overflow-wrap: anywhere;
+}
+
+.menu-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+
+.menu-like-btn.liked {
+  color: var(--red);
+}
+
+.menu-like-heart {
+  font-size: 14px;
+}
+
+.menu-like-count {
+  font-variant-numeric: tabular-nums;
 }
 
 .card-name-translated {

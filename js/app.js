@@ -60,6 +60,39 @@
       .sort(function (a, b) { return a.order - b.order; });
   }
 
+  // 메뉴명 옆 ♡/♥ + 누적 좋아요 숫자(js/menu-likes.js가 상태/Firestore
+  // 연동을 담당, 여기서는 버튼 DOM과 클릭 시 낙관적 화면 갱신만 처리).
+  function buildMenuLikeButton(item) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "menu-like-btn";
+
+    var heart = document.createElement("span");
+    heart.className = "menu-like-heart";
+    var count = document.createElement("span");
+    count.className = "menu-like-count";
+    btn.appendChild(heart);
+    btn.appendChild(count);
+
+    function paint() {
+      var likedNow = window.MenuLikes && window.MenuLikes.isLiked(item.id);
+      heart.textContent = likedNow ? "♥" : "♡";
+      btn.classList.toggle("liked", !!likedNow);
+      count.textContent = String(window.MenuLikes ? window.MenuLikes.getCount(item.id) : 0);
+    }
+    paint();
+
+    btn.addEventListener("click", function () {
+      if (!window.MenuLikes || btn.disabled) return;
+      btn.disabled = true;
+      var p = window.MenuLikes.toggle(item.id);
+      paint(); // toggle()이 동기적으로 반영한 낙관적 상태를 바로 그림
+      p.then(paint, paint).finally(function () { btn.disabled = false; });
+    });
+
+    return btn;
+  }
+
   function buildCard(item) {
     var card = document.createElement("div");
     card.className = "menu-card";
@@ -104,10 +137,15 @@
     var names = document.createElement("div");
     names.className = "card-names";
 
+    var nameRow = document.createElement("div");
+    nameRow.className = "card-name-row";
+
     var koName = document.createElement("p");
     koName.className = "card-name-ko";
     koName.textContent = item.name.ko;
-    names.appendChild(koName);
+    nameRow.appendChild(koName);
+    nameRow.appendChild(buildMenuLikeButton(item));
+    names.appendChild(nameRow);
 
     if (state.lang !== "ko") {
       var translated = document.createElement("p");
@@ -1141,6 +1179,13 @@
       window.WeeklyMenuSync.sync(function () {
         if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
       });
+    }
+
+    /* 메뉴 좋아요 — 전체 카운트/내 좋아요 목록을 1회씩만 읽어오고,
+       도착하면 현재 보이는 카드에 반영합니다(기존 renderGrid 재사용). */
+    if (window.MenuLikes && typeof window.MenuLikes.init === "function") {
+      window.MenuLikes.onChange(renderGrid);
+      window.MenuLikes.init();
     }
 
     // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을

@@ -1541,6 +1541,30 @@ table.results-table {
             allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
             allow update: if false;
           }
+
+          // ---------------- 메뉴 좋아요(js/menu-likes.js, 2026-09-16 추가)
+          // ---------------- 매장 메뉴명 옆 ♡/♥ + 누적 좋아요 숫자. 이후
+          // 밥심 커뮤니티 "인기 메뉴"도 menuLikeCounts를 그대로 재사용합니다.
+
+          // 메뉴별 누적 좋아요 수 — 문서 1개(id="all")에 { 메뉴id: 숫자 }
+          // 형태로 모아 두어, 메뉴가 몇 개든 읽기는 항상 1회입니다. 누구나
+          // 볼 수 있어야 하므로 읽기는 공개, 쓰기(증가/감소)는 로그인
+          // (비회원 포함 Anonymous Auth)한 사용자만 가능합니다.
+          match /menuLikeCounts/{docId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
+
+          // 사용자별 좋아요 표시(문서 id="{uid}_{menuId}") — 같은 사용자가
+          // 같은 메뉴를 중복으로 좋아요 하지 못하도록 존재 여부만 확인합니다.
+          // "내가 좋아요한 메뉴 목록"은 where(uid==내uid) 쿼리 1회로 가져오며,
+          // communitySaves와 같은 이유로 resource == null(아직 없는 문서를
+          // get()하는 경우)도 허용합니다.
+          match /menuLikeUsers/{likeId} {
+            allow read, delete: if isSignedIn() && (resource == null || request.auth.uid == resource.data.uid);
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+          }
         }
       }
 
