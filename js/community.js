@@ -1324,6 +1324,10 @@ var Community = (function () {
       var hbadge = el("span", "community-badge community-badge-help-" + post.helpStatus, t(helpMap[post.helpStatus]));
       card.appendChild(hbadge);
     }
+    if (post.category === "together" && post.spotType) {
+      var spotBadgeMap = { cafe: COMMUNITY_SPOT.typeCafe, restaurant: COMMUNITY_SPOT.typeRestaurant, tour: COMMUNITY_SPOT.typeTour };
+      card.appendChild(el("span", "community-badge community-badge-spot-" + post.spotType, t(spotBadgeMap[post.spotType])));
+    }
     if (post.category === "job") {
       var jTypeMap = { hiring: COMMUNITY_JOB.typeHiring, seeking: COMMUNITY_JOB.typeSeeking };
       card.appendChild(el("span", "community-badge community-badge-job-" + post.jobType, t(jTypeMap[post.jobType])));
@@ -1478,6 +1482,7 @@ var Community = (function () {
 
     if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
     if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
+    if (post.category === "together") wrap.appendChild(buildTogetherPanel(post));
     if (post.category === "job") {
       jobPanelEl = buildJobPanel(post, isOriginalLang || detailShowOriginal);
       wrap.appendChild(jobPanelEl);
@@ -1643,6 +1648,14 @@ var Community = (function () {
       });
       panel.appendChild(statusSelect);
     }
+    return panel;
+  }
+
+  /* "김해맛집 추천"(together) — 카페/음식점/관광지 분류만 표시(상태 없음). */
+  function buildTogetherPanel(post) {
+    var panel = el("div", "community-help-panel");
+    var spotMap = { cafe: COMMUNITY_SPOT.typeCafe, restaurant: COMMUNITY_SPOT.typeRestaurant, tour: COMMUNITY_SPOT.typeTour };
+    if (post.spotType) panel.appendChild(el("p", null, t(COMMUNITY_SPOT.typeLabel) + ": " + t(spotMap[post.spotType])));
     return panel;
   }
 
@@ -2284,6 +2297,15 @@ var Community = (function () {
     helpFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HELP.emergencyNotice)));
     form.appendChild(helpFields);
 
+    /* "김해맛집 추천"(together) — 카페/음식점/관광지 분류 */
+    var togetherFields = el("div", "community-together-fields");
+    var spotTypeSelect = el("select");
+    [["cafe", COMMUNITY_SPOT.typeCafe], ["restaurant", COMMUNITY_SPOT.typeRestaurant], ["tour", COMMUNITY_SPOT.typeTour]].forEach(function (p) {
+      var o = el("option", null, t(p[1])); o.value = p[0]; spotTypeSelect.appendChild(o);
+    });
+    togetherFields.appendChild(formField(COMMUNITY_SPOT.typeLabel, spotTypeSelect));
+    form.appendChild(togetherFields);
+
     /* 구인·구직 */
     var jobFields = el("div", "community-job-fields");
     var jobTypeSelect = el("select");
@@ -2396,6 +2418,8 @@ var Community = (function () {
         conditionInput.value = editingPost.itemCondition || "";
       } else if (editingPost.category === "help") {
         helpTypeSelect.value = editingPost.helpType || "etc";
+      } else if (editingPost.category === "together") {
+        spotTypeSelect.value = editingPost.spotType || "restaurant";
       } else if (editingPost.category === "job") {
         jobTypeSelect.value = editingPost.jobType || "hiring";
         if (editingPost.jobType === "seeking") {
@@ -2457,6 +2481,7 @@ var Community = (function () {
     function toggleCategoryFields() {
       marketFields.hidden = catSelect.value !== "market";
       helpFields.hidden = catSelect.value !== "help";
+      togetherFields.hidden = catSelect.value !== "together";
       jobFields.hidden = catSelect.value !== "job";
       updateContentMaxLength();
       while (pendingFiles.length > currentMaxPhotos()) {
@@ -2490,6 +2515,8 @@ var Community = (function () {
         };
       } else if (catSelect.value === "help") {
         extra = { helpType: helpTypeSelect.value, helpStatus: "needed" };
+      } else if (catSelect.value === "together") {
+        extra = { spotType: spotTypeSelect.value };
       } else if (catSelect.value === "job") {
         if (jobTypeSelect.value === "hiring") {
           if (!jIndustry.value.trim() || !jWorkLocation.value.trim() || !jJobDescription.value.trim() ||
