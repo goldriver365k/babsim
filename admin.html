@@ -1740,6 +1740,91 @@ var COMMUNITY_CATEGORY_DESC = {
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
 };
 
+/* ==========================================================================
+   "김해 MZ 추천 카페 10곳" — 밥심커뮤니티 > 김해맛집 추천(together) 카테고리
+   안의 고정 콘텐츠 블록입니다. 새 카테고리/새 Firestore 컬렉션 없이 목록에
+   항상 노출되고, 클릭하면 정적 상세 화면(js/community.js의
+   renderMzCafeDetail)이 렌더링됩니다 — 실제 게시글 문서가 아니므로
+   댓글/수정/삭제 기능은 없습니다.
+   주소는 검색으로 확인된 실제 주소를 씁니다(카페로무드/레베랑스과자점은
+   정확한 지번을 확인하지 못해 "지도 검색으로 확인"으로 안내). 대표메뉴·
+   장점·이동방법은 간단한 안내 문구이며, 정확한 버스 노선 번호는 저장하지
+   않고 "실시간 노선 확인" 버튼(카카오맵)으로 안내합니다.
+   ========================================================================== */
+var MZ_CAFE_POST_TITLE = { ko: "김해 MZ 추천 카페 10곳", zh: "金海MZ推荐咖啡厅10家", vi: "10 quán cà phê được giới trẻ Gimhae yêu thích", en: "10 MZ-Recommended Cafes in Gimhae", mn: "Гимхэйн MZ үеийнхний санал болгосон кафе 10", bn: "গিমহের এমজেড প্রজন্মের প্রিয় ১০টি ক্যাফে", my: "ဂျင်ဟေး MZ မျိုးဆက် နှစ်သက်ရာ ကော်ဖီဆိုင် ၁၀ခု" };
+var MZ_CAFE_INTRO = { ko: "인제대 학생들이 자주 찾는 김해 카페 10곳을 소개합니다.", zh: "为您介绍仁济大学学生常去的金海10家咖啡厅。", vi: "Giới thiệu 10 quán cà phê ở Gimhae được sinh viên ĐH Inje yêu thích.", en: "Introducing 10 Gimhae cafes popular with Inje University students.", mn: "Инже их сургуулийн оюутнууд их зорьдог Гимхэ хотын 10 кафег танилцуулж байна.", bn: "ইনজে বিশ্ববিদ্যালয়ের শিক্ষার্থীদের প্রিয় গিমহের ১০টি ক্যাফে পরিচিতি।", my: "အင်ဂျေတက္ကသိုလ်ကျောင်းသားများ နှစ်သက်ရာ ဂျင်ဟေး ကော်ဖီဆိုင် ၁၀ခုကို မိတ်ဆက်ပါသည်။" };
+var MZ_CAFE_PINNED_LABEL = { ko: "고정", zh: "置顶", vi: "Ghim", en: "Pinned", mn: "Бэхлэгдсэн", bn: "পিন করা", my: "ပင်ထိုးထား" };
+var MZ_CAFE_LIST_META = { ko: "카페 10곳 정보", zh: "10家咖啡厅信息", vi: "Thông tin 10 quán cà phê", en: "Info on 10 cafes", mn: "10 кафегийн мэдээлэл", bn: "১০টি ক্যাফের তথ্য", my: "ကော်ဖီဆိုင် ၁၀ခု၏ အချက်အလက်" };
+
+var MZ_CAFE_FIELD_LABELS = {
+  address: { ko: "주소", zh: "地址", vi: "Địa chỉ", en: "Address", mn: "Хаяг", bn: "ঠিকানা", my: "လိပ်စာ" },
+  menu: { ko: "대표메뉴", zh: "招牌菜单", vi: "Món đặc trưng", en: "Signature Menu", mn: "Онцлох цэс", bn: "সিগনেচার মেনু", my: "အထူးအစားအစာ" },
+  pros: { ko: "장점", zh: "特色", vi: "Điểm nổi bật", en: "Highlights", mn: "Давуу тал", bn: "বিশেষত্ব", my: "အားသာချက်" },
+  fromInje: { ko: "인제대에서 가는 방법", zh: "从仁济大学出发的方法", vi: "Cách đi từ ĐH Inje", en: "How to get there from Inje Univ.", mn: "Инже их сургуулиас хэрхэн явах", bn: "ইনজে বিশ্ববিদ্যালয় থেকে যাওয়ার উপায়", my: "အင်ဂျေတက္ကသိုလ်မှ သွားနည်း" },
+  transit: { ko: "버스·대중교통 이용방법", zh: "公交·大众交通方式", vi: "Cách đi xe buýt/phương tiện công cộng", en: "Bus / Public Transit", mn: "Автобус · нийтийн тээвэр", bn: "বাস · গণপরিবহন", my: "ဘတ်စ်ကား · အများသုံးသယ်ယူပို့ဆောင်ရေး" }
+};
+
+var MZ_CAFE_BUTTONS = {
+  viewOnMap: { ko: "지도에서 보기", zh: "在地图查看", vi: "Xem trên bản đồ", en: "View on Map", mn: "Газрын зураг дээр харах", bn: "ম্যাপে দেখুন", my: "မြေပုံတွင်ကြည့်ရန်" },
+  directionsFromInje: { ko: "인제대에서 길찾기", zh: "从仁济大学导航", vi: "Chỉ đường từ ĐH Inje", en: "Directions from Inje Univ.", mn: "Инже их сургуулиас чиглэл", bn: "ইনজে বিশ্ববিদ্যালয় থেকে দিকনির্দেশ", my: "အင်ဂျေတက္ကသိုလ်မှ လမ်းညွှန်" },
+  liveTransit: { ko: "실시간 노선 확인", zh: "查看实时路线", vi: "Xem lộ trình trực tiếp", en: "Check Live Route", mn: "Бодит цагийн чиглэл шалгах", bn: "লাইভ রুট দেখুন", my: "လက်ရှိလိုင်းစစ်ဆေးရန်" }
+};
+
+// 대표메뉴(10곳 중 겹치는 값은 같은 객체를 재사용)
+var MZ_M1 = { ko: "에스프레소, 드립커피", zh: "意式浓缩, 手冲咖啡", vi: "Espresso, cà phê pour-over", en: "Espresso, drip coffee", mn: "Эспрессо, дринк кофе", bn: "এসপ্রেসো, ড্রিপ কফি", my: "အက်စပရက်စို၊ ဒရစ်ပ်ကော်ဖီ" };
+var MZ_M2 = { ko: "커피, 디저트", zh: "咖啡, 甜点", vi: "Cà phê, bánh ngọt", en: "Coffee, dessert", mn: "Кофе, амттан", bn: "কফি, ডেজার্ট", my: "ကော်ဖီ၊ အချိုပွဲ" };
+var MZ_M3 = { ko: "커피, 베이커리", zh: "咖啡, 烘焙", vi: "Cà phê, bánh", en: "Coffee, bakery", mn: "Кофе, бэйкери", bn: "কফি, বেকারি", my: "ကော်ဖီ၊ ဘေကာရီ" };
+var MZ_M4 = { ko: "케이크, 디저트", zh: "蛋糕, 甜点", vi: "Bánh kem, bánh ngọt", en: "Cake, dessert", mn: "Бялуу, амттан", bn: "কেক, ডেজার্ট", my: "ကိတ်မုန့်၊ အချိုပွဲ" };
+var MZ_M5 = { ko: "브런치, 디저트", zh: "早午餐, 甜点", vi: "Brunch, bánh ngọt", en: "Brunch, dessert", mn: "Бранч, амттан", bn: "ব্রাঞ্চ, ডেজার্ট", my: "ဘရန်ချ်၊ အချိုပွဲ" };
+var MZ_M6 = { ko: "커피, 브런치", zh: "咖啡, 早午餐", vi: "Cà phê, brunch", en: "Coffee, brunch", mn: "Кофе, бранч", bn: "কফি, ব্রাঞ্চ", my: "ကော်ဖီ၊ ဘရန်ချ်" };
+var MZ_M7 = { ko: "커피, 음료", zh: "咖啡, 饮品", vi: "Cà phê, đồ uống", en: "Coffee, drinks", mn: "Кофе, ундаа", bn: "কফি, পানীয়", my: "ကော်ဖီ၊ သောက်စက်" };
+var MZ_M9 = { ko: "드립커피", zh: "手冲咖啡", vi: "Cà phê pour-over", en: "Drip coffee", mn: "Дринк кофе", bn: "ড্রিপ কফি", my: "ဒရစ်ပ်ကော်ဖီ" };
+var MZ_M10 = { ko: "수제 디저트", zh: "手工甜点", vi: "Bánh ngọt handmade", en: "Handmade dessert", mn: "Гар хийцийн амттан", bn: "হাতে তৈরি ডেজার্ট", my: "လက်လုပ်အချိုပွဲ" };
+
+// 장점(카페마다 고유)
+var MZ_P1 = { ko: "이색적인 에스프레소 바", zh: "独特风格的浓缩咖啡吧", vi: "Quầy espresso độc đáo", en: "Unique-concept espresso bar", mn: "Өвөрмөц концепт бүхий эспрессо бар", bn: "অনন্য কনসেপ্টের এসপ্রেসো বার", my: "ထူးခြားသောပုံစံ အက်စပရက်စိုဘား" };
+var MZ_P2 = { ko: "공사장 컨셉의 이색 인테리어", zh: "工地风格的独特装潮", vi: "Nội thất độc đáo phong cách công trường", en: "Construction-site concept interior", mn: "Барилгын талбай сэдэвтэй өвөрмөц дотоод засал", bn: "নির্মাণ সাইট থিমের অনন্য ইন্টেরিয়র", my: "အလုပ်ရုံပုံစံ ထူးခြားသောအတွင်းဆင်ဆောင်" };
+var MZ_P3 = { ko: "유러피안 빈티지 포토존", zh: "欧式复古拍照打卡点", vi: "Góc chụp ảnh vintage châu Âu", en: "European vintage photo spot", mn: "Европ ретро загварын зургийн булан", bn: "ইউরোপীয় ভিনটেজ ফটো স্পট", my: "ဥရောပ ဗင်တိတ်ဇ်ဓာတ်ပုံရိုက်ကွင်း" };
+var MZ_P4 = { ko: "디저트 전문 과자점", zh: "甜点专卖店", vi: "Tiệm bánh chuyên về bánh ngọt", en: "Dessert-specialty bakery", mn: "Амттан мэргэшсэн нарийн боовны газар", bn: "ডেজার্ট স্পেশালিটি বেকারি", my: "အချိုပွဲအထူးပြုမုန့်ဆိုင်" };
+var MZ_P5 = { ko: "인제대 인근 삼계동 브런치 카페", zh: "仁济大学附近三溪洞早午餐咖啡厅", vi: "Quán brunch ở Samgye-dong, gần ĐH Inje", en: "Brunch cafe in Samgye-dong, near Inje Univ.", mn: "Инже их сургуулийн ойролцоох Самгэ-донгийн бранч кафе", bn: "ইনজে বিশ্ববিদ্যালয়ের কাছে সামগে-ডং ব্রাঞ্চ ক্যাফে", my: "အင်ဂျေတက္ကသိုလ်အနီး ဆမ်ဂျေဒေါင်ရှိ ဘရန်ချ်ကော်ဖီဆိုင်" };
+var MZ_P6 = { ko: "국내 최대급 루프탑 카페", zh: "韩国最大规模的屋顶咖啡厅之一", vi: "Một trong những quán cà phê rooftop lớn nhất Hàn Quốc", en: "One of Korea's largest rooftop cafes", mn: "Солонгосын хамгийн том арын ирмэгийн кафенуудын нэг", bn: "কোরিয়ার অন্যতম বৃহত্তম রুফটপ ক্যাফে", my: "ကိုရီးယား၏အကြီးဆုံးအမိုးပေါ်ကော်ဖီဆိုင်များထဲမှတစ်ခု" };
+var MZ_P7 = { ko: "초록빛 식물원 카페", zh: "绿意盎然的植物园咖啡厅", vi: "Quán cà phê vườn thực vật xanh mát", en: "Green botanical-garden cafe", mn: "Ногоон ургамлын цэцэрлэгтэй кафе", bn: "সবুজ বোটানিক্যাল গার্ডেন ক্যাফে", my: "အစိမ်းရင့်ဥယျာဉ်ကော်ဖီဆိုင်" };
+var MZ_P8 = { ko: "식물원을 갖춘 대형 카페", zh: "设有植物园的大型咖啡厅", vi: "Quán cà phê lớn có vườn thực vật", en: "Large cafe with a botanical garden", mn: "Ургамлын цэцэрлэгтэй том хэмжээний кафе", bn: "বোটানিক্যাল গার্ডেনসহ বড় ক্যাফে", my: "ဥယျာဉ်ပါရှိသော ကြီးမားသည့်ကော်ဖီဆိုင်" };
+var MZ_P9 = { ko: "봉리단길 조용한 커피 맛집", zh: "凤里团街安静的咖啡名店", vi: "Quán cà phê ngon, yên tĩnh ở Bongridan-gil", en: "Quiet coffee spot in Bongridan-gil", mn: "Бонридан-гилийн тайван кофе газар", bn: "বংরিদান-গিলের শান্ত কফি স্পট", my: "ဘွန်ရီဒန်လမ်းရှိ တိတ်ဆိတ်သောကော်ဖီဆိုင်" };
+var MZ_P10 = { ko: "봉리단길 수제 디저트 카페", zh: "凤里团街手工甜点咖啡厅", vi: "Quán cà phê bánh ngọt handmade ở Bongridan-gil", en: "Handmade dessert cafe in Bongridan-gil", mn: "Бонридан-гил дэх гар хийцийн амттантай кафе", bn: "বংরিদান-গিলের হাতে তৈরি ডেজার্ট ক্যাফে", my: "ဘွန်ရီဒန်လမ်းရှိ လက်လုပ်အချိုပွဲကော်ဖီဆိုင်" };
+
+// 인제대에서 가는 방법(지역이 같으면 재사용)
+var MZ_WAY_A = { ko: "인제대 → 율하 방면 이동", zh: "仁济大学 → 往律下方向", vi: "ĐH Inje → hướng Yulha", en: "Inje Univ. → toward Yulha", mn: "Инже их сургууль → Юльха чиглэл", bn: "ইনজে বিশ্ববিদ্যালয় → ইউলহা দিকে", my: "အင်ဂျေတက္ကသိုလ် → ယူလဟာဘက်သို့" };
+var MZ_WAY_B = { ko: "인제대 → 인제대역 → 경전철 → 봉황역 → 도보", zh: "仁济大学 → 仁济大站 → 轻轨 → 凤凰站 → 步行", vi: "ĐH Inje → Ga Inje Univ. → tàu điện nhẹ → Ga Bonghwang → đi bộ", en: "Inje Univ. → Inje Univ. Stn. → light rail → Bonghwang Stn. → walk", mn: "Инже их сургууль → Инже станц → хөнгөн метро → Бонхуан станц → явган", bn: "ইনজে বিশ্ববিদ্যালয় → ইনজে স্টেশন → লাইট রেল → বংহোয়াং স্টেশন → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → အင်ဂျေဘူတာ → မြင်းရွန်းရထား → ဘွန်ဟွမ်းဘူတာ → လမ်းလျှောက်" };
+var MZ_WAY_C = { ko: "인제대 → 지도 검색으로 경로 확인", zh: "仁济大学 → 请用地图搜索路线", vi: "ĐH Inje → kiểm tra lộ trình bằng bản đồ", en: "Inje Univ. → check route via map search", mn: "Инже их сургууль → газрын зургаар чиглэл шалгах", bn: "ইনজে বিশ্ববিদ্যালয় → ম্যাপ সার্চে রুট দেখুন", my: "အင်ဂျေတက္ကသိုလ် → မြေပုံရှာဖွေမှုဖြင့်စစ်ဆေးပါ" };
+var MZ_WAY_D = { ko: "인제대 → 삼계동 도보·버스 이동", zh: "仁济大学 → 步行或乘车往三溪洞", vi: "ĐH Inje → đi bộ hoặc xe buýt đến Samgye-dong", en: "Inje Univ. → walk or bus to Samgye-dong", mn: "Инже их сургууль → Самгэ-донг руу алхах/автобус", bn: "ইনজে বিশ্ববিদ্যালয় → হেঁটে/বাসে সামগে-ডং", my: "အင်ဂျေတက္ကသိုလ် → ဆမ်ဂျေဒေါင်သို့ လမ်းလျှောက်/ဘတ်စ်" };
+var MZ_WAY_E = { ko: "인제대 → 인제대역 → 경전철 → 부원역 → 도보", zh: "仁济大学 → 仁济大站 → 轻轨 → 府院站 → 步行", vi: "ĐH Inje → Ga Inje Univ. → tàu điện nhẹ → Ga Buwon → đi bộ", en: "Inje Univ. → Inje Univ. Stn. → light rail → Buwon Stn. → walk", mn: "Инже их сургууль → Инже станц → хөнгөн метро → Буwon станц → явган", bn: "ইনজে বিশ্ববিদ্যালয় → ইনজে স্টেশন → লাইট রেল → বুওন স্টেশন → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → အင်ဂျေဘူတာ → မြင်းရွန်းရထား → ဘူဝမ်းဘူတာ → လမ်းလျှောက်" };
+var MZ_WAY_F = { ko: "인제대 → 대동면 방면 버스·택시 이동", zh: "仁济大学 → 乘公交/出租车往大东面", vi: "ĐH Inje → xe buýt/taxi đến Daedong-myeon", en: "Inje Univ. → bus/taxi to Daedong-myeon", mn: "Инже их сургууль → Даэдонг тосгон руу автобус/такси", bn: "ইনজে বিশ্ববিদ্যালয় → বাস/ট্যাক্সিতে দায়েদোং-মিয়ন", my: "အင်ဂျေတက္ကသိုလ် → ဒေဒွန်းမြိုနယ်သို့ ဘတ်စ်/တက္ကစီ" };
+
+// 버스·대중교통 이용방법("실시간 노선 확인" 버튼이 정확한 최신 정보를 보완)
+var MZ_BUS_A = { ko: "인제대 → 율하 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往律下方向公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Yulha → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Yulha → nearby stop → walk", mn: "Инже их сургууль → Юльха чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → ইউলহা দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ယူလဟာဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_B = { ko: "인제대 → 봉리단길 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往凤里团街公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Bongridan-gil → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Bongridan-gil → nearby stop → walk", mn: "Инже их сургууль → Бонридан-гил чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → বংরিদান-গিল দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ဘွန်ရီဒန်လမ်းဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_C = { ko: "인제대 → 지도 검색으로 노선 확인", zh: "仁济大学 → 请用地图搜索公交路线", vi: "ĐH Inje → kiểm tra tuyến bằng bản đồ", en: "Inje Univ. → check route via map search", mn: "Инже их сургууль → газрын зургаар чиглэл шалгах", bn: "ইনজে বিশ্ববিদ্যালয় → ম্যাপ সার্চে রুট দেখুন", my: "အင်ဂျေတက္ကသိုလ် → မြေပုံရှာဖွေမှုဖြင့်စစ်ဆေးပါ" };
+var MZ_BUS_D = { ko: "인제대 → 삼계동 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往三溪洞公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Samgye-dong → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Samgye-dong → nearby stop → walk", mn: "Инже их сургууль → Самгэ-донг чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → সামগে-ডং দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ဆမ်ဂျေဒေါင်ဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_E = { ko: "인제대 → 내외동 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往内外洞公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Naewoe-dong → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Naewoe-dong → nearby stop → walk", mn: "Инже их сургууль → Наэвэ-донг чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → নেওয়ে-ডং দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → နဲဝဲဒေါင်ဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_F = { ko: "인제대 → 대동면 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往大东面公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Daedong-myeon → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Daedong-myeon → nearby stop → walk", mn: "Инже их сургууль → Даэдонг чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → দায়েদোং-মিয়ন দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ဒေဒွန်းမြိုနယ်ဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+
+// 실제 검색으로 확인한 주소(2026-09 기준). 카페로무드/레베랑스과자점은
+// 정확한 지번을 확인하지 못해 시 단위로만 표기 — 지도 버튼은 상호명으로
+// 검색되어 정상 동작합니다.
+var MZ_CAFE_LIST = [
+  { name: "쿼크커피바", address: "경남 김해시 율하6로 55, 2층", menu: MZ_M1, pros: MZ_P1, fromInje: MZ_WAY_A, transit: MZ_BUS_A },
+  { name: "플럼버", address: "경남 김해시 김해대로2325번길 44, 1층", menu: MZ_M2, pros: MZ_P2, fromInje: MZ_WAY_B, transit: MZ_BUS_B },
+  { name: "카페로무드", address: "경남 김해시(정확한 주소는 지도에서 확인)", menu: MZ_M3, pros: MZ_P3, fromInje: MZ_WAY_C, transit: MZ_BUS_C },
+  { name: "레베랑스과자점", address: "경남 김해시(정확한 주소는 지도에서 확인)", menu: MZ_M4, pros: MZ_P4, fromInje: MZ_WAY_C, transit: MZ_BUS_C },
+  { name: "애월당", address: "경남 김해시 삼계로205번길 21, 1층", menu: MZ_M5, pros: MZ_P5, fromInje: MZ_WAY_D, transit: MZ_BUS_D },
+  { name: "헤이브", address: "경남 김해시 내외로77번길 12, 17~18층", menu: MZ_M6, pros: MZ_P6, fromInje: MZ_WAY_E, transit: MZ_BUS_E },
+  { name: "파우제앤숨", address: "경남 김해시 대동면 동남로41번길 94", menu: MZ_M7, pros: MZ_P7, fromInje: MZ_WAY_F, transit: MZ_BUS_F },
+  { name: "카페 알베로", address: "경남 김해시 대동면 동남로49번길 93-14", menu: MZ_M2, pros: MZ_P8, fromInje: MZ_WAY_F, transit: MZ_BUS_F },
+  { name: "퓨어오버", address: "경남 김해시 김해대로2301번길 11", menu: MZ_M9, pros: MZ_P9, fromInje: MZ_WAY_B, transit: MZ_BUS_B },
+  { name: "오프하우스", address: "경상남도 김해시 봉황대길 59", menu: MZ_M10, pros: MZ_P10, fromInje: MZ_WAY_B, transit: MZ_BUS_B }
+];
+
 /* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
 var COMMUNITY_AUTH = {
   loginTitle: { ko: "로그인", zh: "登录", vi: "Đăng nhập", en: "Log In", mn: "Нэвтрэх", bn: "লগইন", my: "ဝင်ရောက်ရန်" },

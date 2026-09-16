@@ -30,6 +30,9 @@ var Community = (function () {
   var COMMENT_MAX_LEN = 500;
   var SUMMARY_MAX_LEN = 100; // 비회원(및 목록 카드)에게 보이는 본문 요약 길이
   var REDIRECT_KEY = "communityRedirectAfterAuth"; // 로그인/가입 완료 후 돌아갈 경로(세션 동안만)
+  // "김해 MZ 추천 카페 10곳" — 실제 Firestore 게시글이 아니라 together
+  // 카테고리 목록에 항상 표시되는 고정 콘텐츠 블록의 id(라우팅용).
+  var MZ_CAFE_POST_ID = "mz-cafe-10-gimhae";
 
   var lang = "ko";
   var els = {};
@@ -1214,6 +1217,15 @@ var Community = (function () {
       posts.sort(function (a, b) { return (b.commentCount || 0) - (a.commentCount || 0); });
     }
 
+    // "김해 MZ 추천 카페 10곳" 고정 콘텐츠 블록 — 실제 Firestore 글이
+    // 아니라 목록 맨 위에 항상 붙여서 보여줍니다(검색어가 있으면 제목이
+    // 맞을 때만). 정렬 이후에 붙여 정렬 방식과 무관하게 항상 맨 위입니다.
+    if (state_category === "together") {
+      var mzTitle = t(MZ_CAFE_POST_TITLE);
+      var mzMatchesSearch = !state_search.trim() || mzTitle.toLowerCase().indexOf(state_search.trim().toLowerCase()) !== -1;
+      if (mzMatchesSearch) posts.unshift(buildMzCafePostStub());
+    }
+
     container.innerHTML = "";
     if (!posts.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts))); }
     else { posts.forEach(function (p) { container.appendChild(buildPostListItem(p)); }); }
@@ -1311,6 +1323,30 @@ var Community = (function () {
     return text.slice(0, SUMMARY_MAX_LEN) + "…";
   }
 
+  /* "김해 MZ 추천 카페 10곳" 고정 콘텐츠 블록 — 실제 게시글 카드
+     컴포넌트(buildPostListItem)를 그대로 재사용하기 위한 가짜(static)
+     post 객체입니다. Firestore에 저장하지 않으므로 새 DB 컬렉션이
+     생기지 않습니다. */
+  function buildMzCafePostStub() {
+    return {
+      id: MZ_CAFE_POST_ID,
+      category: "together",
+      isStaticContent: true,
+      originalTitle: t(MZ_CAFE_POST_TITLE),
+      originalContent: t(MZ_CAFE_INTRO)
+    };
+  }
+
+  // 새 지도 API 없이 카카오맵 외부 링크로 연결합니다(장소 검색/길찾기
+  // 모두 카카오맵의 기존 URL 파라미터만 사용 — sName/eName은 이름 기반
+  // 길찾기를 지원하는 카카오맵 공식 URL 방식입니다).
+  function mzCafeMapSearchUrl(cafe) {
+    return "https://map.kakao.com/?q=" + encodeURIComponent(cafe.name + " " + cafe.address);
+  }
+  function mzCafeDirectionsUrl(cafe) {
+    return "https://map.kakao.com/?sName=" + encodeURIComponent("인제대학교") + "&eName=" + encodeURIComponent(cafe.name);
+  }
+
   /* 모바일 UI 개선 5단계: 목록 카드에는 최소한의 정보만 표시합니다.
      표시 우선순위 1.카테고리 2.제목 3.핵심 정보(1줄) 4.선택적 썸네일 —
      긴 본문 미리보기·작성자/국적/댓글 수 같은 부가정보는 목록에서
@@ -1336,6 +1372,10 @@ var Community = (function () {
       var spotBadgeMap = { cafe: COMMUNITY_SPOT.typeCafe, restaurant: COMMUNITY_SPOT.typeRestaurant, tour: COMMUNITY_SPOT.typeTour };
       card.appendChild(el("span", "community-badge community-badge-spot-" + post.spotType, t(spotBadgeMap[post.spotType])));
     }
+    // "김해 MZ 추천 카페 10곳" 고정 콘텐츠 블록 카드 표시(실제 게시글 아님).
+    if (post.isStaticContent) {
+      card.appendChild(el("span", "community-badge", t(MZ_CAFE_PINNED_LABEL)));
+    }
     if (post.category === "job") {
       var jTypeMap = { hiring: COMMUNITY_JOB.typeHiring, seeking: COMMUNITY_JOB.typeSeeking };
       card.appendChild(el("span", "community-badge community-badge-job-" + post.jobType, t(jTypeMap[post.jobType])));
@@ -1348,7 +1388,7 @@ var Community = (function () {
     card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
 
     // 핵심 정보 1줄 — 구인·구직은 위치, 그 외에는 작성일만(부가정보 남발 금지).
-    var keyInfo = post.category === "job" ? (post.workLocation || post.desiredLocation || "") : "";
+    var keyInfo = post.category === "job" ? (post.workLocation || post.desiredLocation || "") : (post.isStaticContent ? t(MZ_CAFE_LIST_META) : "");
     if (!keyInfo) keyInfo = formatDate(post.createdAt);
     if (keyInfo) card.appendChild(el("p", "community-post-card-meta", keyInfo));
 
@@ -1374,7 +1414,58 @@ var Community = (function () {
 
   /* ---------------- 게시글 상세 ---------------- */
 
+  /* "김해 MZ 추천 카페 10곳" 상세 화면 — 실제 게시글이 아니라 사이트에
+     고정으로 들어있는 콘텐츠라 댓글/수정/삭제/신고 등 참여 기능은 없고,
+     기존 상세 화면과 같은 클래스(community-detail-*, community-help-panel,
+     community-btn-secondary)만 재사용해 카페 10곳을 카드로 보여줍니다. */
+  function renderMzCafeDetail() {
+    var wrap = el("div", "community-page community-detail");
+
+    var head = el("div", "community-detail-head");
+    head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES.together)));
+    head.appendChild(el("h2", "community-detail-title", t(MZ_CAFE_POST_TITLE)));
+    wrap.appendChild(head);
+
+    var body = el("div", "community-detail-body");
+    body.appendChild(el("p", "community-detail-content", t(MZ_CAFE_INTRO)));
+    wrap.appendChild(body);
+
+    MZ_CAFE_LIST.forEach(function (cafe) {
+      var panel = el("div", "community-help-panel");
+      panel.appendChild(el("h3", "community-post-card-title", cafe.name));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.address) + ": " + cafe.address));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.menu) + ": " + t(cafe.menu)));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.pros) + ": " + t(cafe.pros)));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.fromInje) + ": " + t(cafe.fromInje)));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.transit) + ": " + t(cafe.transit)));
+
+      // 새 지도 API 없이 카카오맵 외부 링크(장소 검색/이름 기반 길찾기)로
+      // 연결합니다. "실시간 노선 확인"도 같은 길찾기 링크를 열어, 그
+      // 자리에서 카카오맵이 제공하는 최신 버스/지하철 경로를 그대로
+      // 보여줍니다(버스 노선 번호를 DB에 저장하지 않음).
+      var actions = el("div", "community-detail-actions");
+      var mapBtn = el("a", "community-btn-secondary", t(MZ_CAFE_BUTTONS.viewOnMap));
+      mapBtn.href = mzCafeMapSearchUrl(cafe); mapBtn.target = "_blank"; mapBtn.rel = "noopener noreferrer";
+      actions.appendChild(mapBtn);
+      var dirBtn = el("a", "community-btn-secondary", t(MZ_CAFE_BUTTONS.directionsFromInje));
+      dirBtn.href = mzCafeDirectionsUrl(cafe); dirBtn.target = "_blank"; dirBtn.rel = "noopener noreferrer";
+      actions.appendChild(dirBtn);
+      var liveBtn = el("a", "community-btn-secondary", t(MZ_CAFE_BUTTONS.liveTransit));
+      liveBtn.href = mzCafeDirectionsUrl(cafe); liveBtn.target = "_blank"; liveBtn.rel = "noopener noreferrer";
+      actions.appendChild(liveBtn);
+      panel.appendChild(actions);
+
+      wrap.appendChild(panel);
+    });
+
+    els.root.appendChild(wrap);
+  }
+
   function renderPostDetail(postId) {
+    // "김해 MZ 추천 카페 10곳"은 실제 Firestore 문서가 아니므로 조회
+    // 없이 바로 정적 상세 화면을 그립니다.
+    if (postId === MZ_CAFE_POST_ID) { renderMzCafeDetail(); return; }
+
     var wrap = el("div", "community-page community-detail");
     wrap.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
     els.root.appendChild(wrap);
