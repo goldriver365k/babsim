@@ -1470,7 +1470,7 @@ main {
 
 .card-name-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 4px 6px;
@@ -1490,7 +1490,12 @@ main {
   flex-shrink: 0;
   border: none;
   background: none;
-  padding: 2px 4px;
+  /* 실제 터치 영역은 40~44px 정도로 넉넉하게 확보하되(padding), 그만큼
+     음수 margin으로 상쇄해 카드 레이아웃에서 차지하는 시각적 크기는
+     하트 그림 자체 크기 그대로 유지합니다(별도 배경 박스처럼 보이지
+     않음). */
+  padding: 9px 8px;
+  margin: -9px -8px;
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
@@ -1503,7 +1508,8 @@ main {
 }
 
 .menu-like-heart {
-  font-size: 14px;
+  font-size: 25px;
+  line-height: 1;
 }
 
 .menu-like-count {

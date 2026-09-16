@@ -79,6 +79,9 @@
       heart.textContent = likedNow ? "♥" : "♡";
       btn.classList.toggle("liked", !!likedNow);
       count.textContent = String(window.MenuLikes ? window.MenuLikes.getCount(item.id) : 0);
+      // 하트 그림만으로 기능을 알기 어려운 보조기기 사용자를 위한 안내.
+      btn.setAttribute("aria-label", likedNow ? "좋아요 취소" : "좋아요");
+      btn.setAttribute("aria-pressed", likedNow ? "true" : "false");
     }
     paint();
 
