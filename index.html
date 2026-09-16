@@ -6134,12 +6134,27 @@ var Community = (function () {
     // 카테고리 4개 개편: 블록형(제목+짧은 설명) UI, 새 페이지 이동 없이
     // 클릭하면 이 화면 아래 목록만 바뀝니다(기존 필터 로직 재사용).
     var catTabs = el("div", "community-category-tabs");
+    // GA4 커뮤니티 카테고리 방문 기록용 — 내부 category 값(together/job)이
+    // GA에 쓰기로 한 값(gimhae_food/jobs)과 다른 2개만 최소 매핑하고,
+    // 나머지(hometown/friends)는 이미 안정적인 기존 값을 그대로 재사용.
+    var GA_COMMUNITY_CATEGORY_MAP = { together: "gimhae_food", hometown: "hometown", job: "jobs", friends: "friends" };
     COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
       var b = el("button", "community-category-tab community-category-block" + (state_category === catKey ? " active" : ""));
       b.type = "button";
       b.appendChild(el("span", "community-category-block-title", t(COMMUNITY_CATEGORIES[catKey])));
       b.appendChild(el("span", "community-category-block-desc", t(COMMUNITY_CATEGORY_DESC[catKey])));
-      b.addEventListener("click", function () { state_category = catKey; render(); });
+      b.addEventListener("click", function () {
+        state_category = catKey; render();
+        // 실제 사용자가 카테고리 블록을 클릭해 게시판이 표시되는 시점에만
+        // 1회 전송(렌더링 시 전송 아님). gtag가 없어도(광고차단기 등)
+        // 커뮤니티 기능이 멈추지 않도록 존재 확인 + try/catch로 감싸고,
+        // 카테고리 식별값 외 개인정보는 전혀 보내지 않습니다.
+        try {
+          if (typeof window.gtag === "function") {
+            window.gtag("event", "community_category_view", { category: GA_COMMUNITY_CATEGORY_MAP[catKey] || catKey });
+          }
+        } catch (e) { /* GA 전송 실패해도 커뮤니티 기능은 계속 동작 */ }
+      });
       catTabs.appendChild(b);
     });
     wrap.appendChild(catTabs);
