@@ -65,6 +65,7 @@ def build():
     community_translations = read("js/community-translations.js")
     community = read("js/community.js")
     site_popup = read("js/site-popup.js")
+    hometown_popup = read("js/hometown-popup.js")
     site_update = read("js/site-update.js")
     menu_likes = read("js/menu-likes.js")
     app = read("js/app.js")
@@ -458,6 +459,9 @@ def build():
 </script>
 <script>
 """ + site_popup + """
+</script>
+<script>
+""" + hometown_popup + """
 </script>
 <script>
 """ + site_update + """

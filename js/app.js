@@ -1248,14 +1248,21 @@
 
     // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
     // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음). 관리자가 등록한
-    // 일반 팝업(팝업 기능 2단계)과 천원의 아침밥 평가 팝업이 동시에
-    // 뜨지 않도록, 일반 팝업을 먼저 보여주고(없거나 닫히면) 그 다음에만
-    // 평가 팝업을 띄웁니다.
-    setTimeout(function () {
-      if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
-        window.SitePopup.maybeShow(maybeShowBreakfastPopup);
+    // 일반 팝업(팝업 기능 2단계) → 「나의 고향 이야기」 이벤트 팝업 →
+    // 천원의 아침밥 평가 팝업 순서로, 앞 팝업이 없거나 닫힌 뒤에만 다음
+    // 팝업을 띄워 동시에 겹치지 않게 합니다.
+    function showHometownThenBreakfast() {
+      if (window.HometownPopup && typeof window.HometownPopup.maybeShow === "function") {
+        window.HometownPopup.maybeShow(maybeShowBreakfastPopup);
       } else {
         maybeShowBreakfastPopup();
+      }
+    }
+    setTimeout(function () {
+      if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
+        window.SitePopup.maybeShow(showHometownThenBreakfast);
+      } else {
+        showHometownThenBreakfast();
       }
     }, 1000);
   }

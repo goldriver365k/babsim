@@ -1674,6 +1674,50 @@ main {
 
 .site-popup-close-btn { width: 100%; min-height: 48px; }
 
+/* ---------------- 「나의 고향 이야기」 참여 이벤트 홈 팝업 ----------------
+   껍데기(.modal-overlay/.modal/.modal-close)와 이미지(.site-popup-image),
+   버튼(.community-btn-primary) 스타일을 그대로 재사용하고, 문구 배치와
+   "오늘 하루 보지 않기" 버튼만 최소한으로 덧붙입니다. */
+.hometown-popup-image {
+  max-height: 38vh; /* 모바일에서 이미지가 지나치게 크게 나오지 않도록 */
+}
+
+.hometown-popup-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.hometown-popup-line { margin-bottom: 10px; }
+
+.hometown-popup-reward {
+  font-weight: 700;
+  color: var(--blue-dark);
+}
+
+.hometown-popup-cta {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.hometown-popup-dismiss-today {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: none;
+  border: none;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-mid);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .modal-desc {
   font-size: 15px;
   color: var(--text-dark);
