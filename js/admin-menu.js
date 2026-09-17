@@ -317,6 +317,14 @@ var AdminMenu = (function () {
     tdName.textContent = (m.name && m.name.ko) || "";
     tr.appendChild(tdName);
 
+    var tdDesc = document.createElement("td");
+    tdDesc.className = "desc-cell";
+    var descClamp = document.createElement("span");
+    descClamp.className = "desc-clamp";
+    descClamp.textContent = m.description || "-";
+    tdDesc.appendChild(descClamp);
+    tr.appendChild(tdDesc);
+
     var tdPrice = document.createElement("td");
     tdPrice.textContent = typeof m.price === "number" ? m.price.toLocaleString("ko-KR") + "원" : "-";
     tr.appendChild(tdPrice);
@@ -445,7 +453,7 @@ var AdminMenu = (function () {
 
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>이미지</th><th>메뉴명</th><th>가격</th><th>좋아요</th><th>순서</th><th>상태</th><th>작업</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>이미지</th><th>메뉴명</th><th>메뉴 설명</th><th>가격</th><th>좋아요</th><th>순서</th><th>상태</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       menus.forEach(function (m) { renderMenuRow(tbody, m); });
       table.appendChild(tbody);

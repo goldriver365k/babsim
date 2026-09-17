@@ -290,6 +290,21 @@ table.results-table {
 
 .results-table td.menu-cell { text-align: left; white-space: normal; max-width: 220px; overflow-wrap: anywhere; }
 
+.results-table td.desc-cell {
+  text-align: left;
+  white-space: normal;
+  max-width: 180px;
+  overflow-wrap: anywhere;
+  color: var(--text-mid);
+}
+
+.results-table td.desc-cell .desc-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .results-table tbody tr { cursor: pointer; }
 .results-table tbody tr:hover { background: #f4f7fd; }
 .results-table tbody tr.selected { background: #eaf1fc; }
@@ -5985,6 +6000,14 @@ var AdminMenu = (function () {
     tdName.textContent = (m.name && m.name.ko) || "";
     tr.appendChild(tdName);
 
+    var tdDesc = document.createElement("td");
+    tdDesc.className = "desc-cell";
+    var descClamp = document.createElement("span");
+    descClamp.className = "desc-clamp";
+    descClamp.textContent = m.description || "-";
+    tdDesc.appendChild(descClamp);
+    tr.appendChild(tdDesc);
+
     var tdPrice = document.createElement("td");
     tdPrice.textContent = typeof m.price === "number" ? m.price.toLocaleString("ko-KR") + "원" : "-";
     tr.appendChild(tdPrice);
@@ -6113,7 +6136,7 @@ var AdminMenu = (function () {
 
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>이미지</th><th>메뉴명</th><th>가격</th><th>좋아요</th><th>순서</th><th>상태</th><th>작업</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>이미지</th><th>메뉴명</th><th>메뉴 설명</th><th>가격</th><th>좋아요</th><th>순서</th><th>상태</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       menus.forEach(function (m) { renderMenuRow(tbody, m); });
       table.appendChild(tbody);
