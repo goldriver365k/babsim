@@ -1674,12 +1674,28 @@ main {
 
 .site-popup-close-btn { width: 100%; min-height: 48px; }
 
-/* ---------------- 「나의 고향 이야기」 참여 이벤트 홈 팝업 ----------------
-   껍데기(.modal-overlay/.modal/.modal-close)와 이미지(.site-popup-image),
-   버튼(.community-btn-primary) 스타일을 그대로 재사용하고, 문구 배치와
-   "오늘 하루 보지 않기" 버튼만 최소한으로 덧붙입니다. */
+/* ---------------- 홈 이벤트 팝업(후루룩찹찹 주말 점심영업 안내) ----------------
+   껍데기(.modal-overlay/.modal/.modal-close)와 버튼(.community-btn-primary)
+   스타일을 그대로 재사용합니다. 포스터가 핵심이라 모바일에서 화면 대부분을
+   차지하도록 이 팝업(#hometownPopupOverlay)에만 크기를 덧붙입니다 — 공용
+   .modal-overlay/.modal 규칙(다른 팝업들이 쓰는)은 그대로 둡니다. */
+#hometownPopupOverlay { padding: 12px; }
+
+#hometownPopupOverlay .modal {
+  width: 94vw;
+  max-width: 520px;
+  max-height: 94dvh;
+  /* 위쪽만 넉넉히(.modal-close가 top:10px + 44px 높이라 56px 이상 필요) —
+     X 닫기가 포스터를 가리지 않도록 */
+  padding: 56px 8px 14px;
+}
+
 .hometown-popup-image {
-  max-height: 38vh; /* 모바일에서 이미지가 지나치게 크게 나오지 않도록 */
+  width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  margin: 0 0 10px;
 }
 
 .hometown-popup-title {

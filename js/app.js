@@ -355,6 +355,9 @@
       trackVirtualPage(store === "bapsim" ? (state.bapsimView === "menu" ? "babsim" : "breakfast") : store);
     }
   }
+  // 홈 서비스 카드/헤더 매장 탭과 똑같은 매장 이동 동작을, 팝업(js/hometown-popup.js)
+  // 등 다른 모듈에서도 새 라우팅/URL을 만들지 않고 그대로 재사용할 수 있게 노출합니다.
+  window.goToStore = goToStore;
 
   function renderHomeLatestPosts() {
     if (!els.homeCommunityLatest) return;

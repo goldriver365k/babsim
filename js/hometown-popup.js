@@ -1,11 +1,10 @@
 /* ==========================================================================
-   babsim.store 홈 이벤트 팝업 — 「나의 고향 이야기」 커뮤니티 참여 유도
+   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 주말(토·일) 점심영업 안내
    (js/hometown-popup.js)
    - 관리자 등록 팝업(js/site-popup.js)과 같은 방식(.modal-overlay/.modal,
-     새 팝업 라이브러리 없음)을 재사용합니다. 이미지는 정적 파일이고,
-     문구는 HOMETOWN_POPUP(js/translations.js) 번역 데이터를 그대로 읽어
-     현재 선택된 언어(localStorage "foodhall_lang", js/app.js와 동일한 키)로
-     보여줍니다.
+     새 팝업 라이브러리 없음)을 재사용합니다. 포스터 이미지 자체에 모든
+     안내 문구가 들어있어 별도 HTML 텍스트는 표시하지 않습니다(포스터+
+     [메뉴 확인] 버튼만).
    - 일반 관리자 팝업(SitePopup) → 이 팝업 → 천원의 아침밥 평가 팝업 순서로
      app.js가 순차 호출해 동시에 겹치지 않습니다(app.js의 체인에서 호출되는
      한 단계만 이 파일이 담당).
@@ -18,7 +17,6 @@ var HometownPopup = (function () {
   var SESSION_DISMISS_KEY = "hometownPopupDismissedSession";
   var TODAY_DISMISS_KEY = "hometownPopupDismissedDate";
   var LANG_KEY = "foodhall_lang"; // js/app.js LANG_KEY와 동일한 값(공용 저장소 재사용)
-  var WRITE_PATH = "/community/write?cat=hometown"; // 기존 "이 카테고리에 글쓰기" 딥링크와 동일한 방식
 
   function todayKey() {
     var d = new Date();
@@ -52,15 +50,10 @@ var HometownPopup = (function () {
     try { sessionStorage.setItem(SESSION_DISMISS_KEY, "true"); } catch (e) { /* sessionStorage 미지원 시 무시 */ }
   }
 
-  // 기존 밥심커뮤니티 "이 카테고리에 글쓰기" 버튼과 같은 방식(navigate만
-  // 호출) — 로그인이 필요하면 글쓰기 저장 시점에 커뮤니티 모듈이 이미
-  // 처리하는 기존 로그인/익명참여 로직을 그대로 따릅니다.
-  function goToWrite() {
-    if (window.Community && typeof window.Community.navigate === "function") {
-      window.Community.navigate(WRITE_PATH);
-    } else {
-      location.href = WRITE_PATH;
-    }
+  // 홈 서비스 카드/헤더 매장 탭이 쓰는 기존 매장 이동 함수(js/app.js
+  // goToStore)를 그대로 재사용합니다 — 새 라우팅/URL을 만들지 않습니다.
+  function goToHururuk() {
+    if (typeof window.goToStore === "function") window.goToStore("hururuk");
   }
 
   function renderPopup(onClosed) {
@@ -85,37 +78,30 @@ var HometownPopup = (function () {
     closeBtn.addEventListener("click", closeNow);
     modal.appendChild(closeBtn);
 
-    // 글자 없는 이미지(제공 이미지) — alt는 비워 두고 아래 HTML 문구가
-    // 실제 내용을 전달합니다(스크린리더 중복 방지).
+    // 안내 문구가 모두 포스터 안에 있으므로 별도 HTML 텍스트는 넣지
+    // 않습니다. alt만 버튼 문구와 같은 값으로 채워 스크린리더 사용자도
+    // 내용을 알 수 있게 합니다.
+    function goAndClose() {
+      markDismissedThisSession();
+      overlay.remove();
+      if (onClosed) onClosed();
+      goToHururuk();
+    }
+
     var img = document.createElement("img");
     img.className = "site-popup-image hometown-popup-image";
     img.src = IMAGE_SRC;
-    img.alt = "";
+    img.alt = t("button");
     img.loading = "eager";
+    img.style.cursor = "pointer";
+    img.addEventListener("click", goAndClose);
     modal.appendChild(img);
-
-    var title = document.createElement("p");
-    title.className = "modal-desc hometown-popup-title";
-    title.textContent = t("title");
-    modal.appendChild(title);
-
-    ["body1", "body2", "reward"].forEach(function (key) {
-      var p = document.createElement("p");
-      p.className = "modal-desc hometown-popup-line" + (key === "reward" ? " hometown-popup-reward" : "");
-      p.textContent = t(key);
-      modal.appendChild(p);
-    });
 
     var ctaBtn = document.createElement("button");
     ctaBtn.type = "button";
     ctaBtn.className = "community-btn-primary hometown-popup-cta";
     ctaBtn.textContent = t("button");
-    ctaBtn.addEventListener("click", function () {
-      markDismissedThisSession();
-      overlay.remove();
-      if (onClosed) onClosed();
-      goToWrite();
-    });
+    ctaBtn.addEventListener("click", goAndClose);
     modal.appendChild(ctaBtn);
 
     var dismissTodayBtn = document.createElement("button");
