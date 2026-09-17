@@ -73,6 +73,7 @@
           order: typeof data.order === "number" ? data.order : 0,
           image: data.image || null,
           name: data.name || { ko: "" },
+          description: data.description || null,
           price: typeof data.price === "number" ? data.price : null,
           soldOut: !!data.soldOut,
           needsReview: false
@@ -201,6 +202,13 @@
     }
 
     body.appendChild(names);
+
+    if (item.description) {
+      var descEl = document.createElement("p");
+      descEl.className = "card-description";
+      descEl.textContent = item.description;
+      body.appendChild(descEl);
+    }
 
     var priceInfo = formatPrice(item.price, state.lang);
     var priceEl = document.createElement("p");

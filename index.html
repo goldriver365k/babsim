@@ -1568,6 +1568,17 @@ main {
   overflow: hidden;
 }
 
+.card-description {
+  font-size: 12px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .card-price {
   font-size: 15px;
   font-weight: 700;
@@ -8624,6 +8635,7 @@ var MenuLikes = (function () {
           order: typeof data.order === "number" ? data.order : 0,
           image: data.image || null,
           name: data.name || { ko: "" },
+          description: data.description || null,
           price: typeof data.price === "number" ? data.price : null,
           soldOut: !!data.soldOut,
           needsReview: false
@@ -8752,6 +8764,13 @@ var MenuLikes = (function () {
     }
 
     body.appendChild(names);
+
+    if (item.description) {
+      var descEl = document.createElement("p");
+      descEl.className = "card-description";
+      descEl.textContent = item.description;
+      body.appendChild(descEl);
+    }
 
     var priceInfo = formatPrice(item.price, state.lang);
     var priceEl = document.createElement("p");

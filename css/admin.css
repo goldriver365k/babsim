@@ -320,12 +320,18 @@ table.results-table {
   max-width: 360px;
 }
 
-.weekly-auth-box input {
+.weekly-auth-box input,
+.weekly-auth-box textarea {
   min-height: 42px;
   padding: 8px 12px;
   border: 1px solid var(--border-gray);
   border-radius: var(--radius-sm);
   font-size: 14px;
+  font-family: inherit;
+}
+
+.weekly-auth-box textarea {
+  resize: vertical;
 }
 
 .weekly-auth-box button {

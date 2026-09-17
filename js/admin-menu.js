@@ -69,6 +69,7 @@ var AdminMenu = (function () {
     editingOriginalName = m.name || null;
     pendingCompressPromise = null;
     els.nameInput.value = (m.name && m.name.ko) || "";
+    els.descriptionInput.value = m.description || "";
     els.priceInput.value = typeof m.price === "number" ? m.price : "";
     els.imageInput.value = "";
     if (editingImageUrl) {
@@ -176,6 +177,7 @@ var AdminMenu = (function () {
     if (!currentAdminUser()) { setStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
     var name = els.nameInput.value.trim();
     if (!name) { setStatus("메뉴명을 입력해주세요.", true); return; }
+    var description = els.descriptionInput.value.trim(); // 선택 입력 — 비워도 됨
     var priceNum = Number(els.priceInput.value);
     if (els.priceInput.value === "" || isNaN(priceNum) || priceNum < 0) { setStatus("가격을 올바르게 입력해주세요.", true); return; }
 
@@ -200,6 +202,9 @@ var AdminMenu = (function () {
         var nextName = Object.assign({}, editingOriginalName, { ko: name });
         return d.collection("storeMenus").doc(editingId).update({
           name: nextName,
+          // 설명을 지우면 필드 자체를 제거합니다(빈 문자열로 남겨 화면에
+          // 빈 줄이 생기지 않도록).
+          description: description ? description : firebase.firestore.FieldValue.delete(),
           price: priceNum,
           image: imageUrl,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -209,7 +214,7 @@ var AdminMenu = (function () {
       var nextOrder = currentMenus.reduce(function (max, m) {
         return Math.max(max, typeof m.order === "number" ? m.order : 0);
       }, 0) + 1;
-      return d.collection("storeMenus").add({
+      var newDoc = {
         store: currentStore,
         name: { ko: name },
         price: priceNum,
@@ -219,7 +224,9 @@ var AdminMenu = (function () {
         order: nextOrder,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (description) newDoc.description = description; // 비어 있으면 필드 자체를 만들지 않음
+      return d.collection("storeMenus").add(newDoc);
     }).then(function () {
       setStatus(editingId ? "수정되었습니다." : "등록되었습니다.", false);
       resetForm();
@@ -464,6 +471,7 @@ var AdminMenu = (function () {
 
     els.formTitle = qs("menuFormTitle");
     els.nameInput = qs("menuNameInput");
+    els.descriptionInput = qs("menuDescriptionInput");
     els.priceInput = qs("menuPriceInput");
     els.imageInput = qs("menuImageInput");
     els.imagePreviewWrap = qs("menuImagePreviewWrap");

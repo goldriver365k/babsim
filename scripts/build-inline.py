@@ -952,6 +952,9 @@ def build_admin():
           <label for="menuNameInput">메뉴명</label>
           <input type="text" id="menuNameInput" maxlength="60">
 
+          <label for="menuDescriptionInput">메뉴 설명(선택)</label>
+          <textarea id="menuDescriptionInput" rows="3" maxlength="200"></textarea>
+
           <label for="menuPriceInput">가격(원)</label>
           <input type="number" id="menuPriceInput" min="0" step="100">
 
