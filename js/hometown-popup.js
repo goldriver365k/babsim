@@ -2,9 +2,8 @@
    babsim.store 홈 이벤트 팝업 — 후루룩찹찹 주말(토·일) 점심영업 안내
    (js/hometown-popup.js)
    - 관리자 등록 팝업(js/site-popup.js)과 같은 방식(.modal-overlay/.modal,
-     새 팝업 라이브러리 없음)을 재사용합니다. 포스터 이미지 자체에 모든
-     안내 문구가 들어있어 별도 HTML 텍스트는 표시하지 않습니다(포스터+
-     [메뉴 확인] 버튼만).
+     새 팝업 라이브러리 없음)을 재사용합니다. 이미지 파일 없이 HTML
+     텍스트 + CSS만으로 포스터처럼 보이게 구성합니다(업로드 기능 없음).
    - 일반 관리자 팝업(SitePopup) → 이 팝업 → 천원의 아침밥 평가 팝업 순서로
      app.js가 순차 호출해 동시에 겹치지 않습니다(app.js의 체인에서 호출되는
      한 단계만 이 파일이 담당).
@@ -13,7 +12,6 @@
 var HometownPopup = (function () {
   "use strict";
 
-  var IMAGE_SRC = "images/events/hometown-story.jpg";
   var SESSION_DISMISS_KEY = "hometownPopupDismissedSession";
   var TODAY_DISMISS_KEY = "hometownPopupDismissedDate";
   var LANG_KEY = "foodhall_lang"; // js/app.js LANG_KEY와 동일한 값(공용 저장소 재사용)
@@ -26,7 +24,7 @@ var HometownPopup = (function () {
   function currentLang() {
     try {
       var v = localStorage.getItem(LANG_KEY);
-      return (v && HOMETOWN_POPUP.title[v]) ? v : "ko";
+      return (v && HOMETOWN_POPUP.button[v]) ? v : "ko";
     } catch (e) { return "ko"; }
   }
 
@@ -56,6 +54,13 @@ var HometownPopup = (function () {
     if (typeof window.goToStore === "function") window.goToStore("hururuk");
   }
 
+  function el(tag, className, text) {
+    var e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
   function renderPopup(onClosed) {
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -70,6 +75,13 @@ var HometownPopup = (function () {
       if (onClosed) onClosed();
     }
 
+    function goAndClose() {
+      markDismissedThisSession();
+      overlay.remove();
+      if (onClosed) onClosed();
+      goToHururuk();
+    }
+
     var closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.className = "modal-close";
@@ -78,24 +90,42 @@ var HometownPopup = (function () {
     closeBtn.addEventListener("click", closeNow);
     modal.appendChild(closeBtn);
 
-    // 안내 문구가 모두 포스터 안에 있으므로 별도 HTML 텍스트는 넣지
-    // 않습니다. alt만 버튼 문구와 같은 값으로 채워 스크린리더 사용자도
-    // 내용을 알 수 있게 합니다.
-    function goAndClose() {
-      markDismissedThisSession();
-      overlay.remove();
-      if (onClosed) onClosed();
-      goToHururuk();
-    }
+    var poster = el("div", "hometown-popup-poster");
 
-    var img = document.createElement("img");
-    img.className = "site-popup-image hometown-popup-image";
-    img.src = IMAGE_SRC;
-    img.alt = t("button");
-    img.loading = "eager";
-    img.style.cursor = "pointer";
-    img.addEventListener("click", goAndClose);
-    modal.appendChild(img);
+    var titleBlock = el("div", "hometown-popup-title-block");
+    titleBlock.appendChild(el("p", "hometown-popup-title-accent", "토·일요일"));
+    titleBlock.appendChild(el("p", "hometown-popup-title-main", "점심 영업합니다"));
+    poster.appendChild(titleBlock);
+
+    var langsBlock = el("div", "hometown-popup-langs");
+    [
+      ["周六、周日", "午餐营业"],
+      ["Thứ Bảy · Chủ Nhật", "CÓ PHỤC VỤ BỮA TRƯA"],
+      ["SAT · SUN", "LUNCH OPEN"]
+    ].forEach(function (lines) {
+      var group = el("div", "hometown-popup-lang-group");
+      lines.forEach(function (line) { group.appendChild(el("p", "hometown-popup-lang-line", line)); });
+      langsBlock.appendChild(group);
+    });
+    poster.appendChild(langsBlock);
+
+    poster.appendChild(el("p", "hometown-popup-hours", "11:00 ~ 13:30"));
+
+    var noticeBlock = el("div", "hometown-popup-notice");
+    noticeBlock.appendChild(el("p", "hometown-popup-notice-line", "메뉴는"));
+    var siteLink = el("button", "hometown-popup-site-link", "babsim.store");
+    siteLink.type = "button";
+    siteLink.addEventListener("click", goAndClose);
+    noticeBlock.appendChild(siteLink);
+    noticeBlock.appendChild(el("p", "hometown-popup-notice-line", "에서 확인하세요"));
+    poster.appendChild(noticeBlock);
+
+    var locationBlock = el("div", "hometown-popup-location");
+    locationBlock.appendChild(el("p", "hometown-popup-location-line", "모인관 2층"));
+    locationBlock.appendChild(el("p", "hometown-popup-location-line hometown-popup-location-main", "후루룩찹찹"));
+    poster.appendChild(locationBlock);
+
+    modal.appendChild(poster);
 
     var ctaBtn = document.createElement("button");
     ctaBtn.type = "button";
