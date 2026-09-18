@@ -5706,6 +5706,9 @@ var AdminMenu = (function () {
   var editingId = null;
   var editingImageUrl = "";
   var editingOriginalName = null; // 수정 중인 메뉴의 기존 name 객체(다국어 보존용)
+  var editingOriginalDescription = null; // 수정 중인 메뉴의 기존 description(문자열 또는 다국어 객체, 보존용)
+  var editingOriginalDescriptionKo = ""; // 위 값의 한국어만 — 변경 여부 판단(재번역 필요성)용
+  var TRANSLATE_TARGET_LANGS = ["zh", "vi", "en", "mn", "bn", "my"];
   var pendingCompressPromise = null;
   var currentMenus = []; // 현재 매장의 메뉴 목록(순서대로) — 순서 이동 계산에 재사용
   var likeCounts = {};   // menuLikeCounts/all 문서 1회 캐시(menuId -> count)
@@ -5724,6 +5727,14 @@ var AdminMenu = (function () {
     return auth && auth.currentUser ? auth.currentUser : null;
   }
 
+  // name/description은 다국어 객체({ko:"...", en:"...", ...})로 저장되지만,
+  // 기존(번역 전) 데이터는 description이 아직 순수 문자열일 수 있습니다 —
+  // 관리 화면은 항상 한국어만 다루므로 두 경우 모두 한국어 값만 꺼냅니다.
+  function descriptionKoOf(m) {
+    if (!m || !m.description) return "";
+    return typeof m.description === "object" ? (m.description.ko || "") : m.description;
+  }
+
   function setStatus(text, isError) {
     if (!els.formStatus) return;
     if (!text) { els.formStatus.hidden = true; return; }
@@ -5736,6 +5747,8 @@ var AdminMenu = (function () {
     editingId = null;
     editingImageUrl = "";
     editingOriginalName = null;
+    editingOriginalDescription = null;
+    editingOriginalDescriptionKo = "";
     pendingCompressPromise = null;
     els.form.reset();
     els.imagePreviewWrap.hidden = true;
@@ -5750,9 +5763,11 @@ var AdminMenu = (function () {
     editingId = id;
     editingImageUrl = m.image || "";
     editingOriginalName = m.name || null;
+    editingOriginalDescription = m.description || null;
+    editingOriginalDescriptionKo = descriptionKoOf(m);
     pendingCompressPromise = null;
     els.nameInput.value = (m.name && m.name.ko) || "";
-    els.descriptionInput.value = m.description || "";
+    els.descriptionInput.value = editingOriginalDescriptionKo;
     els.priceInput.value = typeof m.price === "number" ? m.price : "";
     els.imageInput.value = "";
     if (editingImageUrl) {
@@ -5851,6 +5866,45 @@ var AdminMenu = (function () {
     });
   }
 
+  /* ---------------- 메뉴명/설명 번역(기존 커뮤니티 번역 서버 함수 재사용) ----------------
+     새 Netlify Function/새 API를 만들지 않고, 커뮤니티 게시글 번역에 이미
+     쓰이는 netlify/functions/community-translate.js의 translatePost
+     액션을 그대로 재사용합니다(이미 로그인된 관리자 계정의 idToken 사용).
+     메뉴명(title)+메뉴설명(content)을 한 번의 호출로 6개 언어 모두
+     번역합니다 — 메뉴마다 여러 번 호출하지 않습니다. 설명이 비어 있으면
+     content 필수 조건을 맞추기 위해 메뉴명을 대신 넣어 호출하되, 그
+     번역 결과는 저장하지 않습니다(설명 없음 상태 유지). 실패하면 null을
+     돌려주고 호출부가 기존 한국어만 저장하는 방식으로 안전하게 돌아갑니다.
+     ========================================================================== */
+  function translateMenuText(nameKo, descriptionKo) {
+    var user = currentAdminUser();
+    if (!user) return Promise.resolve(null);
+    return user.getIdToken().then(function (idToken) {
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translatePost",
+          idToken: idToken,
+          originalLanguage: "ko",
+          title: nameKo,
+          content: descriptionKo || nameKo,
+          targetLanguages: TRANSLATE_TARGET_LANGS
+        })
+      }).then(function (res) { return res.ok ? res.json() : null; });
+    }).then(function (data) {
+      if (!data || !data.translations) return null;
+      var nameOut = { ko: nameKo };
+      var descOut = descriptionKo ? { ko: descriptionKo } : null;
+      TRANSLATE_TARGET_LANGS.forEach(function (lang) {
+        var tr = data.translations[lang];
+        if (tr && typeof tr.title === "string") nameOut[lang] = tr.title;
+        if (descriptionKo && tr && typeof tr.content === "string") descOut[lang] = tr.content;
+      });
+      return { name: nameOut, description: descOut };
+    }).catch(function () { return null; });
+  }
+
   /* ---------------- 저장(등록/수정 — 같은 폼을 재사용) ---------------- */
 
   function handleSave(e) {
@@ -5877,39 +5931,60 @@ var AdminMenu = (function () {
     uploadPromise.then(function (newUrl) {
       var imageUrl = newUrl || editingImageUrl;
       if (!imageUrl) throw new Error("IMAGE_REQUIRED");
-      // 수정: 기존 document를 UPDATE만 합니다(menuId/createdAt/좋아요 변경 없음).
-      if (editingId) {
-        // 기존(다국어 번역이 있을 수 있는) name 객체에 한국어만 덮어써서
-        // 저장합니다 — 통째로 교체하면 기존 메뉴 연결로 들어온 다른
-        // 언어 번역이 사라집니다.
-        var nextName = Object.assign({}, editingOriginalName, { ko: name });
-        return d.collection("storeMenus").doc(editingId).update({
-          name: nextName,
+
+      // 메뉴명/설명이 실제로 바뀐 경우에만 번역을 다시 요청합니다(가격/
+      // 이미지만 바꾸는 저장에서는 번역 API를 부르지 않음 — 반복 호출 방지).
+      var needsTranslate = !editingId || name !== ((editingOriginalName && editingOriginalName.ko) || "") ||
+        description !== editingOriginalDescriptionKo;
+      var translatedPromise = needsTranslate ? translateMenuText(name, description) : Promise.resolve(null);
+
+      return translatedPromise.then(function (translated) {
+        // 수정: 기존 document를 UPDATE만 합니다(menuId/createdAt/좋아요 변경 없음).
+        if (editingId) {
+          // 기존(다국어 번역이 있을 수 있는) name 객체에 새 번역(또는
+          // 최소한 한국어)만 덮어써서 저장합니다 — 통째로 교체하면 기존
+          // 메뉴 연결로 들어온 다른 언어 번역이 사라집니다.
+          var nextName = Object.assign({}, editingOriginalName, (translated && translated.name) || { ko: name });
           // 설명을 지우면 필드 자체를 제거합니다(빈 문자열로 남겨 화면에
-          // 빈 줄이 생기지 않도록).
-          description: description ? description : firebase.firestore.FieldValue.delete(),
+          // 빈 줄이 생기지 않도록). 새로 번역되면 그 결과를, 아니면(가격만
+          // 수정 등) 기존 다국어 설명 객체에 한국어만 갱신해 다른 언어
+          // 번역이 사라지지 않게 합니다(레거시 문자열 데이터는 그대로 유지).
+          var nextDescription;
+          if (!description) {
+            nextDescription = firebase.firestore.FieldValue.delete();
+          } else if (translated && translated.description) {
+            nextDescription = translated.description;
+          } else if (editingOriginalDescription && typeof editingOriginalDescription === "object") {
+            nextDescription = Object.assign({}, editingOriginalDescription, { ko: description });
+          } else {
+            nextDescription = description;
+          }
+          return d.collection("storeMenus").doc(editingId).update({
+            name: nextName,
+            description: nextDescription,
+            price: priceNum,
+            image: imageUrl,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        // 새 등록: 이때만 새 menuId(Firestore 자동 문서 id)가 생성됩니다.
+        var nextOrder = currentMenus.reduce(function (max, m) {
+          return Math.max(max, typeof m.order === "number" ? m.order : 0);
+        }, 0) + 1;
+        var newDoc = {
+          store: currentStore,
+          name: (translated && translated.name) || { ko: name },
           price: priceNum,
           image: imageUrl,
+          soldOut: false,
+          isActive: true,
+          order: nextOrder,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-      // 새 등록: 이때만 새 menuId(Firestore 자동 문서 id)가 생성됩니다.
-      var nextOrder = currentMenus.reduce(function (max, m) {
-        return Math.max(max, typeof m.order === "number" ? m.order : 0);
-      }, 0) + 1;
-      var newDoc = {
-        store: currentStore,
-        name: { ko: name },
-        price: priceNum,
-        image: imageUrl,
-        soldOut: false,
-        isActive: true,
-        order: nextOrder,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      if (description) newDoc.description = description; // 비어 있으면 필드 자체를 만들지 않음
-      return d.collection("storeMenus").add(newDoc);
+        };
+        if (description) newDoc.description = (translated && translated.description) || description; // 비어 있으면 필드 자체를 만들지 않음
+        return d.collection("storeMenus").add(newDoc);
+      });
     }).then(function () {
       setStatus(editingId ? "수정되었습니다." : "등록되었습니다.", false);
       resetForm();
@@ -6004,7 +6079,7 @@ var AdminMenu = (function () {
     tdDesc.className = "desc-cell";
     var descClamp = document.createElement("span");
     descClamp.className = "desc-clamp";
-    descClamp.textContent = m.description || "-";
+    descClamp.textContent = descriptionKoOf(m) || "-";
     tdDesc.appendChild(descClamp);
     tr.appendChild(tdDesc);
 

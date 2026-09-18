@@ -9050,6 +9050,16 @@ var MenuLikes = (function () {
     return btn;
   }
 
+  // storeMenus의 description은 번역 전(문자열) 데이터와 번역 후(다국어
+  // 객체) 데이터가 함께 있을 수 있습니다 — 둘 다 안전하게 처리합니다.
+  // 번역이 없는 언어는 한국어로 되돌아가며(사라지지 않음), name은 항상
+  // 다국어 객체이므로 이 함수 없이 기존 방식(item.name[lang])을 그대로 씁니다.
+  function localizedText(value, lang) {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    return value[lang] || value.ko || "";
+  }
+
   function buildCard(item) {
     var card = document.createElement("div");
     card.className = "menu-card";
@@ -9113,10 +9123,11 @@ var MenuLikes = (function () {
 
     body.appendChild(names);
 
-    if (item.description) {
+    var descText = localizedText(item.description, state.lang);
+    if (descText) {
       var descEl = document.createElement("p");
       descEl.className = "card-description";
-      descEl.textContent = item.description;
+      descEl.textContent = descText;
       body.appendChild(descEl);
     }
 
