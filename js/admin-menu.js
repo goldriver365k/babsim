@@ -286,9 +286,10 @@ var AdminMenu = (function () {
       var translatedPromise = needsTranslate ? translateMenuText(name, description) : Promise.resolve(null);
 
       return translatedPromise.then(function (translateResult) {
-        // 번역을 시도하지 않은 저장(가격/이미지만 수정)에서는 결과가 없어도
-        // 정상입니다 — needsTranslate가 true였을 때만 성공/실패 메모를 남깁니다.
-        lastTranslateNote = !needsTranslate ? "" : (translateResult && translateResult.ok ? "" : " (번역 실패: " + ((translateResult && translateResult.reason) || "알 수 없음") + ")");
+        // 번역을 시도하지 않은 저장(가격/이미지만 수정, 이미 번역 완료된
+        // 메뉴)에서는 결과가 없어도 정상입니다. needsTranslate가 true였을
+        // 때는 성공/실패를 반드시 명확히 남깁니다(모호한 빈 문구 방지).
+        lastTranslateNote = !needsTranslate ? "" : (translateResult && translateResult.ok ? " (번역 완료)" : " (번역 실패: " + ((translateResult && translateResult.reason) || "알 수 없음") + ")");
         var translated = translateResult && translateResult.ok ? translateResult : null;
         // 수정: 기존 document를 UPDATE만 합니다(menuId/createdAt/좋아요 변경 없음).
         if (editingId) {
