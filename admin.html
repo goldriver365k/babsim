@@ -5950,9 +5950,21 @@ var AdminMenu = (function () {
       var imageUrl = newUrl || editingImageUrl;
       if (!imageUrl) throw new Error("IMAGE_REQUIRED");
 
-      // 메뉴명/설명이 실제로 바뀐 경우에만 번역을 다시 요청합니다(가격/
-      // 이미지만 바꾸는 저장에서는 번역 API를 부르지 않음 — 반복 호출 방지).
-      var needsTranslate = !editingId || name !== ((editingOriginalName && editingOriginalName.ko) || "") ||
+      // 메뉴명/설명 텍스트가 바뀌었거나, 아직 다국어 번역이 채워지지 않은
+      // (예: 번역 기능이 생기기 전에 등록된) 기존 메뉴라면 번역을
+      // 다시 요청합니다. 이미 7개 언어가 모두 채워진 메뉴를 가격/이미지만
+      // 바꿔 저장할 때는 번역 API를 부르지 않습니다(반복 호출 방지).
+      var hasFullNameTranslation = !!(editingOriginalName && TRANSLATE_TARGET_LANGS.every(function (l) {
+        return typeof editingOriginalName[l] === "string" && editingOriginalName[l];
+      }));
+      var hasFullDescriptionTranslation = !editingOriginalDescriptionKo || !!(
+        editingOriginalDescription && typeof editingOriginalDescription === "object" &&
+        TRANSLATE_TARGET_LANGS.every(function (l) {
+          return typeof editingOriginalDescription[l] === "string" && editingOriginalDescription[l];
+        })
+      );
+      var needsTranslate = !editingId || !hasFullNameTranslation || !hasFullDescriptionTranslation ||
+        name !== ((editingOriginalName && editingOriginalName.ko) || "") ||
         description !== editingOriginalDescriptionKo;
       var translatedPromise = needsTranslate ? translateMenuText(name, description) : Promise.resolve(null);
 
