@@ -5876,9 +5876,13 @@ var AdminMenu = (function () {
      번역 결과는 저장하지 않습니다(설명 없음 상태 유지). 실패하면 null을
      돌려주고 호출부가 기존 한국어만 저장하는 방식으로 안전하게 돌아갑니다.
      ========================================================================== */
+  // 항상 { ok: true, name, description } 또는 { ok: false, reason: "..." }를
+  // 돌려줍니다 — 실패 이유를 handleSave가 저장 완료 메시지에 그대로
+  // 붙여서 보여줄 수 있도록(브라우저 개발자도구 없이도 관리자가 원인을
+  // 바로 확인 가능).
   function translateMenuText(nameKo, descriptionKo) {
     var user = currentAdminUser();
-    if (!user) return Promise.resolve(null);
+    if (!user) return Promise.resolve({ ok: false, reason: "관리자 로그인 정보 없음" });
     return user.getIdToken().then(function (idToken) {
       return fetch("/.netlify/functions/community-translate", {
         method: "POST",
@@ -5891,18 +5895,31 @@ var AdminMenu = (function () {
           content: descriptionKo || nameKo,
           targetLanguages: TRANSLATE_TARGET_LANGS
         })
-      }).then(function (res) { return res.ok ? res.json() : null; });
-    }).then(function (data) {
-      if (!data || !data.translations) return null;
+      }).then(function (res) {
+        if (!res.ok) {
+          return res.json().catch(function () { return null; }).then(function (errBody) {
+            return { ok: false, reason: "서버 응답 " + res.status + (errBody && errBody.error ? "(" + errBody.error + ")" : "") };
+          });
+        }
+        return res.json().then(function (data) { return { ok: true, data: data }; });
+      });
+    }).then(function (result) {
+      if (!result.ok) return result;
+      var data = result.data;
+      if (!data || !data.translations) return { ok: false, reason: "번역 결과 형식 오류" };
       var nameOut = { ko: nameKo };
       var descOut = descriptionKo ? { ko: descriptionKo } : null;
+      var translatedCount = 0;
       TRANSLATE_TARGET_LANGS.forEach(function (lang) {
         var tr = data.translations[lang];
-        if (tr && typeof tr.title === "string") nameOut[lang] = tr.title;
+        if (tr && typeof tr.title === "string") { nameOut[lang] = tr.title; translatedCount++; }
         if (descriptionKo && tr && typeof tr.content === "string") descOut[lang] = tr.content;
       });
-      return { name: nameOut, description: descOut };
-    }).catch(function () { return null; });
+      if (!translatedCount) return { ok: false, reason: "번역된 언어 0개" };
+      return { ok: true, name: nameOut, description: descOut };
+    }).catch(function (e) {
+      return { ok: false, reason: "요청 실패(" + (e && e.message ? e.message : "네트워크 오류") + ")" };
+    });
   }
 
   /* ---------------- 저장(등록/수정 — 같은 폼을 재사용) ---------------- */
@@ -5920,6 +5937,7 @@ var AdminMenu = (function () {
 
     els.saveBtn.disabled = true;
     setStatus("저장 중...", false);
+    var lastTranslateNote = ""; // 번역 성공/실패 메모 — 저장 완료 메시지에 그대로 붙여 보여줌
 
     var file = els.imageInput.files[0];
     var uploadPromise = !file
@@ -5938,7 +5956,11 @@ var AdminMenu = (function () {
         description !== editingOriginalDescriptionKo;
       var translatedPromise = needsTranslate ? translateMenuText(name, description) : Promise.resolve(null);
 
-      return translatedPromise.then(function (translated) {
+      return translatedPromise.then(function (translateResult) {
+        // 번역을 시도하지 않은 저장(가격/이미지만 수정)에서는 결과가 없어도
+        // 정상입니다 — needsTranslate가 true였을 때만 성공/실패 메모를 남깁니다.
+        lastTranslateNote = !needsTranslate ? "" : (translateResult && translateResult.ok ? "" : " (번역 실패: " + ((translateResult && translateResult.reason) || "알 수 없음") + ")");
+        var translated = translateResult && translateResult.ok ? translateResult : null;
         // 수정: 기존 document를 UPDATE만 합니다(menuId/createdAt/좋아요 변경 없음).
         if (editingId) {
           // 기존(다국어 번역이 있을 수 있는) name 객체에 새 번역(또는
@@ -5986,8 +6008,12 @@ var AdminMenu = (function () {
         return d.collection("storeMenus").add(newDoc);
       });
     }).then(function () {
-      setStatus(editingId ? "수정되었습니다." : "등록되었습니다.", false);
+      // resetForm()이 내부적으로 setStatus("")를 호출해 메시지를 곧바로
+      // 숨기므로, 반드시 resetForm() 이후에 저장 완료 메시지를 다시
+      // 띄워야 실제로 화면에 보입니다(이전에는 매번 순간적으로 가려짐).
+      var wasEdit = !!editingId;
       resetForm();
+      setStatus((wasEdit ? "수정되었습니다." : "등록되었습니다.") + lastTranslateNote, !!lastTranslateNote);
       loadMenus();
     }).catch(function (err) {
       setStatus(err && err.message === "IMAGE_REQUIRED" ? "메뉴 이미지를 선택해주세요." : "저장에 실패했습니다.", true);
