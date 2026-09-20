@@ -1,5 +1,5 @@
 /* ==========================================================================
-   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 주말(토·일) 점심영업 안내
+   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 신메뉴(고추장버터화산불백) 예고
    (js/hometown-popup.js)
    - 관리자 등록 팝업(js/site-popup.js)과 같은 방식(.modal-overlay/.modal,
      새 팝업 라이브러리 없음)을 재사용합니다. 이미지 파일 없이 HTML
@@ -92,24 +92,36 @@ var HometownPopup = (function () {
 
     var poster = el("div", "hometown-popup-poster");
 
+    poster.appendChild(el("p", "hometown-popup-badge", "NEW"));
+
     var titleBlock = el("div", "hometown-popup-title-block");
-    titleBlock.appendChild(el("p", "hometown-popup-title-accent", "토·일요일"));
-    titleBlock.appendChild(el("p", "hometown-popup-title-main", "점심 영업합니다"));
+    var titleMain = el("p", "hometown-popup-title-main");
+    titleMain.appendChild(document.createTextNode("고추장버터"));
+    titleMain.appendChild(el("span", "hometown-popup-title-emphasis", "화산불백"));
+    titleBlock.appendChild(titleMain);
     poster.appendChild(titleBlock);
 
-    var langsBlock = el("div", "hometown-popup-langs");
-    [
-      ["周六、周日", "午餐营业"],
-      ["Thứ Bảy · Chủ Nhật", "CÓ PHỤC VỤ BỮA TRƯA"],
-      ["SAT · SUN", "LUNCH OPEN"]
-    ].forEach(function (lines) {
-      var group = el("div", "hometown-popup-lang-group");
-      lines.forEach(function (line) { group.appendChild(el("p", "hometown-popup-lang-line", line)); });
-      langsBlock.appendChild(group);
-    });
-    poster.appendChild(langsBlock);
+    var tagline = el("p", "hometown-popup-tagline");
+    tagline.appendChild(document.createTextNode("매콤함에 버터가 더해지면, 이건, 또 다른 "));
+    tagline.appendChild(el("span", "hometown-popup-tagline-emphasis", "불백"));
+    tagline.appendChild(document.createTextNode("."));
+    poster.appendChild(tagline);
 
-    poster.appendChild(el("p", "hometown-popup-hours", "11:00 ~ 13:30"));
+    var descriptors = el("div", "hometown-popup-descriptors");
+    ["매콤하게", "부드럽게", "더 특별하게"].forEach(function (text) {
+      descriptors.appendChild(el("span", "hometown-popup-descriptor", text));
+    });
+    poster.appendChild(descriptors);
+
+    var dateBlock = el("div", "hometown-popup-date-block");
+    dateBlock.appendChild(el("p", "hometown-popup-coming-soon", "COMING SOON"));
+    dateBlock.appendChild(el("p", "hometown-popup-hours", "2026.09.21"));
+    poster.appendChild(dateBlock);
+
+    var locationBlock = el("div", "hometown-popup-location");
+    locationBlock.appendChild(el("p", "hometown-popup-location-line", "인제대 모인관 2층"));
+    locationBlock.appendChild(el("p", "hometown-popup-location-line hometown-popup-location-main", "후루룩찹찹"));
+    poster.appendChild(locationBlock);
 
     var noticeBlock = el("div", "hometown-popup-notice");
     noticeBlock.appendChild(el("p", "hometown-popup-notice-line", "메뉴는"));
@@ -119,11 +131,6 @@ var HometownPopup = (function () {
     noticeBlock.appendChild(siteLink);
     noticeBlock.appendChild(el("p", "hometown-popup-notice-line", "에서 확인하세요"));
     poster.appendChild(noticeBlock);
-
-    var locationBlock = el("div", "hometown-popup-location");
-    locationBlock.appendChild(el("p", "hometown-popup-location-line", "모인관 2층"));
-    locationBlock.appendChild(el("p", "hometown-popup-location-line hometown-popup-location-main", "후루룩찹찹"));
-    poster.appendChild(locationBlock);
 
     modal.appendChild(poster);
 
