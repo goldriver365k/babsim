@@ -302,6 +302,7 @@
       renderColaBanner();
       renderOwnerChat();
       renderHelloKorean();
+      renderRoomSearchCard();
       renderGrid();
       renderGroupNav();
       updateBapsimViewVisibility();
@@ -918,6 +919,14 @@
     els.helloKoreanUrl.textContent = HELLOKOREAN_INFO.urlDisplay;
   }
 
+  /* ---------------- 방 구하기 카드(js/room-inquiry.js가 클릭을 처리) ---------------- */
+
+  function renderRoomSearchCard() {
+    if (typeof ROOM_SEARCH_CARD === "undefined" || !els.roomSearchTitle) return;
+    var lang = state.lang;
+    els.roomSearchTitle.textContent = ROOM_SEARCH_CARD.title[lang] || ROOM_SEARCH_CARD.title.ko;
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function loadSavedLang() {
@@ -1034,6 +1043,7 @@
     els.helloKoreanDesc = qs("helloKoreanDesc");
     els.helloKoreanBtn = qs("helloKoreanBtn");
     els.helloKoreanUrl = qs("helloKoreanUrl");
+    els.roomSearchTitle = qs("roomSearchTitle");
 
     els.storeTabButtons = {};
     // 커뮤니티 버튼(.community-tab, data-store 없음)은 매장이 아니므로 제외합니다.
@@ -1254,6 +1264,10 @@
     if (window.MenuLikes && typeof window.MenuLikes.init === "function") {
       window.MenuLikes.onChange(renderGrid);
       window.MenuLikes.init();
+    }
+
+    if (window.RoomInquiry && typeof window.RoomInquiry.init === "function") {
+      window.RoomInquiry.init();
     }
 
     /* 관리자 메뉴관리(storeMenus) — 매장마다 딱 1번씩만 조회합니다(실시간

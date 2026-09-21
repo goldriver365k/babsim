@@ -425,14 +425,17 @@ button {
    기존 --blue 등 전역 변수와는 별도로, 작업지시서에 명시된 정확한 색상값을
    그대로 씁니다(전역 팔레트에 영향 주지 않도록 이 카드 안에서만 정의). */
 
-.hellokorean-card {
+.hellokorean-card,
+.room-search-card {
   max-width: 1200px;
   margin: 24px auto 0;
   padding: 0 18px;
 }
 
-.hellokorean-link {
+.hellokorean-link,
+.room-search-link {
   display: block;
+  width: 100%;
   background: #FFFFFF;
   border: 1px solid #CBDDF7;
   border-radius: 14px;
@@ -444,12 +447,15 @@ button {
 }
 
 .hellokorean-link:hover,
-.hellokorean-link:focus-visible {
+.hellokorean-link:focus-visible,
+.room-search-link:hover,
+.room-search-link:focus-visible {
   box-shadow: 0 2px 6px rgba(18, 52, 91, 0.12);
   outline: none;
 }
 
-.hellokorean-title {
+.hellokorean-title,
+.room-search-title {
   margin: 0 0 6px;
   font-size: 17px;
   font-weight: 800;
@@ -457,7 +463,8 @@ button {
   overflow-wrap: anywhere;
 }
 
-.hellokorean-desc {
+.hellokorean-desc,
+.room-search-desc {
   margin: 0 0 14px;
   font-size: 14px;
   color: #64748B;
@@ -2044,6 +2051,8 @@ main {
 .community-form input[type="number"],
 .community-form input[type="url"],
 .community-form input[type="search"],
+.community-form input[type="tel"],
+.community-form input[type="date"],
 .community-form select,
 .community-form textarea {
   min-height: 48px;
@@ -2061,6 +2070,29 @@ main {
 .community-form textarea {
   min-height: 140px;
   resize: vertical;
+}
+
+/* 방 구하기 문의(js/room-inquiry.js) — 기존 .modal-overlay/.modal,
+   .community-form/.community-field/.community-btn-* 그대로 재사용하고,
+   여기 없는 것만 최소로 추가합니다. */
+.room-lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.room-inquiry-notice {
+  font-size: 12px;
+  color: #64748B;
+  margin: -4px 0 2px;
+}
+
+.room-inquiry-done-msg {
+  font-size: 15px;
+  color: var(--text-dark);
+  text-align: center;
+  margin: 6px 0 18px;
 }
 
 .community-checkbox-row {

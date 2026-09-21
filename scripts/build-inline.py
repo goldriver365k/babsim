@@ -68,6 +68,7 @@ def build():
     hometown_popup = read("js/hometown-popup.js")
     site_update = read("js/site-update.js")
     menu_likes = read("js/menu-likes.js")
+    room_inquiry = read("js/room-inquiry.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -162,6 +163,16 @@ def build():
          동안은 js/app.js가 자동으로 숨깁니다(임의 이미지 제작 없음). -->
     <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
   </div>
+
+  <!-- 방 구하기 문의(js/room-inquiry.js) — "무료 한국어 공부" 카드 자리에
+       배치하고, 기존 카드는 바로 아래로 이동(링크/GA/번역/클릭 동작은
+       그대로 유지, 새 컴포넌트가 아니라 같은 카드 스타일 재사용). -->
+  <section class="room-search-card">
+    <button type="button" class="room-search-link" id="roomSearchCardBtn">
+      <h3 class="room-search-title" id="roomSearchTitle">방 구하기</h3>
+      <p class="room-search-desc">한국어 · English · Tiếng Việt · 中文</p>
+    </button>
+  </section>
 
   <!-- 무료 한국어 공부 링크 2단계: "다양한 사람들이 함께하는 서비스" 문구
        자리로 이동(기존 hellokorean-card를 그대로 재사용 — 새 컴포넌트/새
@@ -415,6 +426,16 @@ def build():
   </div>
 </div>
 
+<!-- 방 구하기 문의(js/room-inquiry.js가 내용을 채웁니다) — 언어 선택 →
+     7개 입력 폼 → 접수 완료, 한 모달 안에서 단계만 바꿔 보여줍니다. -->
+<div class="modal-overlay" id="roomInquiryOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="roomInquiryTitle">
+    <button type="button" class="modal-close" id="roomInquiryClose" aria-label="닫기">×</button>
+    <h3 class="modal-title" id="roomInquiryTitle"></h3>
+    <div id="roomInquiryBody"></div>
+  </div>
+</div>
+
 <script>
 """ + translations + """
 </script>
@@ -470,6 +491,9 @@ def build():
 """ + menu_likes + """
 </script>
 <script>
+""" + room_inquiry + """
+</script>
+<script>
 """ + app + """
 </script>
 </body>
@@ -495,6 +519,7 @@ def build_admin():
     admin_community = read("js/admin-community.js")
     admin_popup = read("js/admin-popup.js")
     admin_menu = read("js/admin-menu.js")
+    admin_room = read("js/admin-room.js")
 
     html = """<!DOCTYPE html>
 <html lang="ko">
@@ -537,6 +562,7 @@ def build_admin():
       <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
       <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
       <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="room">방 구하기 문의</button>
     </nav>
   </header>
 
@@ -985,6 +1011,27 @@ def build_admin():
         <div class="table-scroll" id="menuListBody"></div>
       </div>
     </section>
+
+    <!-- ================= 방 구하기 문의 ================= -->
+    <section class="admin-page" id="pageRoom" hidden>
+      <div class="admin-card" id="roomAuthNotice">
+        <p class="empty-note" style="padding:0 0 10px;">방 구하기 문의를 조회하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이름·전화번호 등 개인정보가
+          포함되어 있어 로그인한 관리자만 조회할 수 있습니다.</p>
+      </div>
+
+      <div class="admin-card" id="roomListCard" hidden>
+        <h2>최근 문의 (최신순)</h2>
+        <p class="loading-note" id="roomListLoading" hidden>불러오는 중...</p>
+        <p class="empty-note" id="roomListEmpty" hidden></p>
+        <div class="table-scroll" id="roomListBody"></div>
+      </div>
+
+      <div class="admin-card" id="roomDetailCard" hidden>
+        <h2>문의 상세 / 상태 변경</h2>
+        <div id="roomDetailBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -1012,6 +1059,9 @@ def build_admin():
 </script>
 <script>
 """ + admin_menu + """
+</script>
+<script>
+""" + admin_room + """
 </script>
 </body>
 </html>
