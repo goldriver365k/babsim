@@ -302,29 +302,6 @@
             allow read: if true;
             allow write: if isSignedIn();
           }
-
-          // ---------------- 방 구하기 문의(js/room-inquiry.js,
-          // js/admin-room.js, 2026-09-21 추가) ---------------- 이름·
-          // 전화번호가 포함된 개인정보라 일반 사용자는 절대 읽을 수 없고
-          // (읽기는 관리자 로그인 필요), 작성(문의 접수)은 비로그인 상태로도
-          // 가능해야 합니다(학생 화면에서 로그인 절차 없음). 상태 변경은
-          // status 필드 하나만 바꾸는 것만 허용합니다(다른 필드 위·변조 방지).
-          match /roomInquiries/{docId} {
-            allow create: if request.resource.data.name is string && request.resource.data.name.size() > 0
-              && request.resource.data.phone is string && request.resource.data.phone.size() > 0
-              && request.resource.data.moveInDate is string
-              && request.resource.data.preferredArea is string
-              && request.resource.data.budget is string
-              && request.resource.data.deposit is string
-              && request.resource.data.monthlyRent is string
-              && request.resource.data.language is string
-              && request.resource.data.status == 'new'
-              && request.resource.data.keys().hasAll(['name','phone','moveInDate','preferredArea','budget','deposit','monthlyRent','language','status','createdAt']);
-            allow read: if request.auth != null;   // 관리자만 조회 가능(개인정보 보호)
-            allow update: if request.auth != null
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
-            allow delete: if false;
-          }
         }
       }
 
