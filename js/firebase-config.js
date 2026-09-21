@@ -325,6 +325,17 @@
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
             allow delete: if false;
           }
+
+          // ---------------- 사이트 설정(js/admin-room.js, 2026-09-21
+          // 추가) ---------------- 문서 1개(id="general")에 관리자가
+          // 값을 몇 개 두는 용도입니다. 지금은 방 구하기 SMS 수신번호
+          // (roomInquiryPhone) 하나뿐입니다 — 연락처일 뿐 개인정보가
+          // 아니라 학생 화면도 읽어야 하므로 읽기는 공개, 쓰기는 관리자
+          // 로그인(주간메뉴 관리와 같은 계정)만 가능합니다.
+          match /siteSettings/{docId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
         }
       }
 

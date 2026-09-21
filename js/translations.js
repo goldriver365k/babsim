@@ -230,6 +230,12 @@ const ROOM_INQUIRY_TEXT = {
     vi: "Ứng dụng nhắn tin sẽ mở ra. Yêu cầu của bạn đã được tiếp nhận dù bạn không gửi tin nhắn.",
     zh: "短信应用即将打开。即使您不发送短信，咨询也已受理。"
   },
+  notConfiguredMessage: {
+    ko: "문자 문의를 준비 중입니다. 문의 내용은 정상적으로 접수되었습니다.",
+    en: "SMS inquiry is being prepared. Your inquiry has already been received.",
+    vi: "Tính năng nhắn tin đang được chuẩn bị. Yêu cầu của bạn đã được tiếp nhận.",
+    zh: "短信咨询功能正在准备中。您的咨询已成功受理。"
+  },
   closeButton: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭" }
 };
 

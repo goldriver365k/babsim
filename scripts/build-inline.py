@@ -1020,6 +1020,17 @@ def build_admin():
           포함되어 있어 로그인한 관리자만 조회할 수 있습니다.</p>
       </div>
 
+      <div class="admin-card" id="roomPhoneCard" hidden>
+        <h2>문자 수신번호</h2>
+        <p class="empty-note" style="padding:0 0 10px;">방 구하기 문의가 들어올 때 사용자의 문자 앱에 자동으로
+          입력되는 수신번호입니다. 여기서 바꾸면 재배포 없이 바로 다음 문의부터 적용됩니다.</p>
+        <form class="weekly-auth-box" id="roomPhoneForm" style="max-width:320px;">
+          <input type="text" id="roomPhoneInput" placeholder="010-1234-5678" autocomplete="off">
+          <button type="submit" id="roomPhoneSaveBtn">저장</button>
+        </form>
+        <p class="publish-status" id="roomPhoneStatus" hidden></p>
+      </div>
+
       <div class="admin-card" id="roomListCard" hidden>
         <h2>최근 문의 (최신순)</h2>
         <p class="loading-note" id="roomListLoading" hidden>불러오는 중...</p>
