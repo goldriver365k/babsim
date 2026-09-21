@@ -302,6 +302,27 @@
             allow read: if true;
             allow write: if isSignedIn();
           }
+
+          // ---------------- 방 구하기(js/room-finder.js, 2026-09-21 추가)
+          // ---------------- 학생이 직접 씀(누구나 생성만 가능). 이름·전화번호
+          // 등 개인정보가 포함되므로 조회/상태변경은 관리자 로그인(주간메뉴
+          // 관리와 같은 계정)만 가능하고, 일반 사용자 화면에는 절대 공개하지
+          // 않습니다.
+          match /roomInquiries/{docId} {
+            allow create: if request.resource.data.name is string && request.resource.data.name.size() > 0
+              && request.resource.data.phone is string && request.resource.data.phone.size() > 0
+              && request.resource.data.status == 'new';
+            allow read, update: if request.auth != null;   // 관리자 로그인 필요
+            allow delete: if false;
+          }
+
+          // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
+          // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
+          // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
+          match /siteSettings/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
         }
       }
 

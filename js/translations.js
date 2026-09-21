@@ -230,6 +230,55 @@ const HOMETOWN_POPUP = {
 };
 
 /* ==========================================================================
+   방 구하기 (js/room-finder.js)
+   - 작업지시서 범위대로 4개 언어(한국어·English·Tiếng Việt·中文)만 지원.
+   - langButton은 언어 선택 화면의 버튼 4개 라벨(항상 그 언어 그대로 표시,
+     선택된 언어에 따라 바뀌지 않음)이라 이 객체가 아니라 js/room-finder.js
+     안에 고정 목록으로 둡니다.
+   ========================================================================== */
+const ROOM_FINDER = {
+  langStepTitle: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
+  langStepDesc: {
+    ko: "언어를 선택해주세요", en: "Please select a language",
+    vi: "Vui lòng chọn ngôn ngữ", zh: "请选择语言"
+  },
+  title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
+  field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名" },
+  field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码" },
+  field_moveInDate: { ko: "입주 희망일", en: "Desired Move-in Date", vi: "Ngày muốn chuyển vào", zh: "希望入住日期" },
+  field_preferredArea: { ko: "희망 지역", en: "Preferred Area", vi: "Khu vực mong muốn", zh: "希望地区" },
+  field_budget: { ko: "희망 예산", en: "Budget", vi: "Ngân sách dự kiến", zh: "预算" },
+  field_deposit: { ko: "보증금", en: "Deposit", vi: "Tiền đặt cọc", zh: "押金" },
+  field_monthlyRent: { ko: "월세", en: "Monthly Rent", vi: "Tiền thuê hàng tháng", zh: "月租" },
+  submitButton: { ko: "문자로 문의하기", en: "Send Inquiry by SMS", vi: "Gửi yêu cầu qua SMS", zh: "短信咨询" },
+  privacy: {
+    ko: "입력한 문의 내용은 상담을 위해 관리자에게 전달됩니다.",
+    en: "Your inquiry information will be sent to the administrator for consultation.",
+    vi: "Thông tin yêu cầu của bạn sẽ được gửi đến quản trị viên để tư vấn.",
+    zh: "您填写的咨询内容将发送给管理员以便咨询。"
+  },
+  requiredError: {
+    ko: "이름과 전화번호를 입력해주세요.",
+    en: "Please enter your name and phone number.",
+    vi: "Vui lòng nhập họ tên và số điện thoại.",
+    zh: "请输入姓名和电话号码。"
+  },
+  saveError: {
+    ko: "문의 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    en: "Failed to save your inquiry. Please try again shortly.",
+    vi: "Không thể lưu yêu cầu. Vui lòng thử lại sau.",
+    zh: "咨询保存失败，请稍后重试。"
+  },
+  phoneNotReady: {
+    ko: "문자 문의를 준비 중입니다.",
+    en: "SMS inquiries are being prepared.",
+    vi: "Chức năng nhắn tin đang được chuẩn bị.",
+    zh: "短信咨询功能正在准备中。"
+  },
+  closeAriaLabel: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭" }
+};
+
+/* ==========================================================================
    PWA 업데이트 알림 / 바탕화면 추가 안내 문구 (js/pwa.js)
    ========================================================================== */
 const PWA_UPDATE_INFO = {

@@ -537,6 +537,52 @@ button {
   .hellokorean-btn { width: 100%; }
 }
 
+/* ---------------- 방 구하기 카드 + 모달(js/room-finder.js) ----------------
+   홈 카드는 기존 .hellokorean-card/.hellokorean-link/.hellokorean-title/
+   .hellokorean-desc를 그대로 재사용합니다(버튼 리셋 한 줄만 추가). 모달
+   껍데기는 .modal-overlay/.modal/.modal-close, 입력창은 .community-form/
+   .community-field/.community-label, 버튼은 .community-btn-primary를
+   그대로 재사용합니다(새 디자인 시스템 없음). */
+.room-finder-link {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+.room-finder-step-title {
+  margin: 0 0 4px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.room-finder-step-desc {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.room-finder-lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-finder-lang-btn { width: 100%; }
+
+.room-finder-form .community-field { margin-bottom: 12px; }
+
+.room-finder-privacy {
+  font-size: 12px;
+  color: var(--text-mid);
+  margin: 4px 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.room-finder-submit { width: 100%; }
+
 /* ---------------- 사장님께 말해요 ---------------- */
 
 .owner-chat-banner {
@@ -2086,6 +2132,8 @@ main {
 .community-form input[type="number"],
 .community-form input[type="url"],
 .community-form input[type="search"],
+.community-form input[type="tel"],
+.community-form input[type="date"],
 .community-form select,
 .community-form textarea {
   min-height: 48px;
@@ -2463,9 +2511,21 @@ main {
     <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
   </div>
 
+  <!-- 방 구하기(js/room-finder.js) — 기존 hellokorean-card 껍데기를 그대로
+       재사용한 정적 카드입니다(클릭 시 room-finder.js가 언어 선택 →
+       입력폼 모달을 띄웁니다). 언어 선택 전 카드 문구 자체는 4개 언어를
+       한 줄에 나열해 고정 표시합니다(사이트 언어 전환과 무관). -->
+  <section class="hellokorean-card">
+    <button type="button" class="hellokorean-link room-finder-link" id="roomFinderCardBtn" aria-label="방 구하기 - 한국어, English, Tiếng Việt, 中文">
+      <h3 class="hellokorean-title">방 구하기</h3>
+      <p class="hellokorean-desc">한국어 · English · Tiếng Việt · 中文</p>
+    </button>
+  </section>
+
   <!-- 무료 한국어 공부 링크 2단계: "다양한 사람들이 함께하는 서비스" 문구
        자리로 이동(기존 hellokorean-card를 그대로 재사용 — 새 컴포넌트/새
-       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). -->
+       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). 방 구하기
+       추가로 위치만 그 카드 바로 아래로 밀렸습니다(URL/기능/번역/GA 동일). -->
   <section class="hellokorean-card">
     <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
       <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
@@ -2945,6 +3005,55 @@ const HOMETOWN_POPUP = {
   closeAriaLabel: {
     ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်"
   }
+};
+
+/* ==========================================================================
+   방 구하기 (js/room-finder.js)
+   - 작업지시서 범위대로 4개 언어(한국어·English·Tiếng Việt·中文)만 지원.
+   - langButton은 언어 선택 화면의 버튼 4개 라벨(항상 그 언어 그대로 표시,
+     선택된 언어에 따라 바뀌지 않음)이라 이 객체가 아니라 js/room-finder.js
+     안에 고정 목록으로 둡니다.
+   ========================================================================== */
+const ROOM_FINDER = {
+  langStepTitle: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
+  langStepDesc: {
+    ko: "언어를 선택해주세요", en: "Please select a language",
+    vi: "Vui lòng chọn ngôn ngữ", zh: "请选择语言"
+  },
+  title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
+  field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名" },
+  field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码" },
+  field_moveInDate: { ko: "입주 희망일", en: "Desired Move-in Date", vi: "Ngày muốn chuyển vào", zh: "希望入住日期" },
+  field_preferredArea: { ko: "희망 지역", en: "Preferred Area", vi: "Khu vực mong muốn", zh: "希望地区" },
+  field_budget: { ko: "희망 예산", en: "Budget", vi: "Ngân sách dự kiến", zh: "预算" },
+  field_deposit: { ko: "보증금", en: "Deposit", vi: "Tiền đặt cọc", zh: "押金" },
+  field_monthlyRent: { ko: "월세", en: "Monthly Rent", vi: "Tiền thuê hàng tháng", zh: "月租" },
+  submitButton: { ko: "문자로 문의하기", en: "Send Inquiry by SMS", vi: "Gửi yêu cầu qua SMS", zh: "短信咨询" },
+  privacy: {
+    ko: "입력한 문의 내용은 상담을 위해 관리자에게 전달됩니다.",
+    en: "Your inquiry information will be sent to the administrator for consultation.",
+    vi: "Thông tin yêu cầu của bạn sẽ được gửi đến quản trị viên để tư vấn.",
+    zh: "您填写的咨询内容将发送给管理员以便咨询。"
+  },
+  requiredError: {
+    ko: "이름과 전화번호를 입력해주세요.",
+    en: "Please enter your name and phone number.",
+    vi: "Vui lòng nhập họ tên và số điện thoại.",
+    zh: "请输入姓名和电话号码。"
+  },
+  saveError: {
+    ko: "문의 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    en: "Failed to save your inquiry. Please try again shortly.",
+    vi: "Không thể lưu yêu cầu. Vui lòng thử lại sau.",
+    zh: "咨询保存失败，请稍后重试。"
+  },
+  phoneNotReady: {
+    ko: "문자 문의를 준비 중입니다.",
+    en: "SMS inquiries are being prepared.",
+    vi: "Chức năng nhắn tin đang được chuẩn bị.",
+    zh: "短信咨询功能正在准备中。"
+  },
+  closeAriaLabel: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭" }
 };
 
 /* ==========================================================================
@@ -4076,6 +4185,27 @@ const BREAKFAST_WEEKLY_MENU = {
           match /storeMenus/{menuId} {
             allow read: if true;
             allow write: if isSignedIn();
+          }
+
+          // ---------------- 방 구하기(js/room-finder.js, 2026-09-21 추가)
+          // ---------------- 학생이 직접 씀(누구나 생성만 가능). 이름·전화번호
+          // 등 개인정보가 포함되므로 조회/상태변경은 관리자 로그인(주간메뉴
+          // 관리와 같은 계정)만 가능하고, 일반 사용자 화면에는 절대 공개하지
+          // 않습니다.
+          match /roomInquiries/{docId} {
+            allow create: if request.resource.data.name is string && request.resource.data.name.size() > 0
+              && request.resource.data.phone is string && request.resource.data.phone.size() > 0
+              && request.resource.data.status == 'new';
+            allow read, update: if request.auth != null;   // 관리자 로그인 필요
+            allow delete: if false;
+          }
+
+          // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
+          // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
+          // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
+          match /siteSettings/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
           }
         }
       }
@@ -8944,6 +9074,269 @@ var MenuLikes = (function () {
   }
 
   return { init: init, getCount: getCount, isLiked: isLiked, toggle: toggle, onChange: onChange };
+})();
+
+</script>
+<script>
+/* ==========================================================================
+   babsim.store 방 구하기 (js/room-finder.js)
+   - 홈 카드(#roomFinderCardBtn) 클릭 시 언어 선택 → 입력폼 순서로 진행하는
+     모달을 띄웁니다. 기존 팝업들(js/hometown-popup.js 등)과 같은 방식
+     (.modal-overlay/.modal, 새 팝업 라이브러리 없음)을 재사용합니다.
+   - 입력폼은 기존 커뮤니티 폼 스타일(.community-form/.community-field/
+     .community-label/.community-btn-primary)을 그대로 재사용합니다.
+   - Firestore roomInquiries에 문의를 저장하고, 관리자가 설정한 SMS 수신번호
+     (siteSettings/main의 roomInquiryPhone)를 읽어 휴대폰 기본 문자 앱을
+     엽니다(sms: 링크, 유료 SMS API 없음).
+   ========================================================================== */
+
+var RoomFinder = (function () {
+  "use strict";
+
+  var LANGS = ["ko", "en", "vi", "zh"];
+  var LANG_LABEL = { ko: "한국어", en: "English", vi: "Tiếng Việt", zh: "中文" };
+
+  var els = {};
+  var selectedLang = "ko";
+  var submitting = false;
+  // siteSettings/main의 roomInquiryPhone 캐시(같은 페이지에서 반복 read 방지).
+  // null=아직 읽지 않음, ""=읽었지만 값 없음, 그 외=실제 번호.
+  var cachedPhone = null;
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+
+  function t(key) {
+    var entry = (typeof ROOM_FINDER !== "undefined") ? ROOM_FINDER[key] : null;
+    if (!entry) return "";
+    return entry[selectedLang] || entry.ko || "";
+  }
+
+  function el(tag, className, text) {
+    var e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function closeModal() {
+    var overlay = qs("roomFinderOverlay");
+    if (overlay) overlay.remove();
+    submitting = false;
+  }
+
+  function openModal() {
+    if (qs("roomFinderOverlay")) return; // 이미 열려 있으면 중복 생성 방지
+    selectedLang = "ko";
+
+    var overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "roomFinderOverlay";
+
+    var modal = document.createElement("div");
+    modal.className = "modal room-finder-modal";
+
+    var closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "modal-close";
+    closeBtn.setAttribute("aria-label", "닫기");
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", closeModal);
+    modal.appendChild(closeBtn);
+
+    var body = document.createElement("div");
+    body.id = "roomFinderBody";
+    modal.appendChild(body);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+    document.body.appendChild(overlay);
+
+    renderLangStep();
+  }
+
+  function renderLangStep() {
+    var body = qs("roomFinderBody");
+    if (!body) return;
+    body.innerHTML = "";
+    body.appendChild(el("h2", "room-finder-step-title", t("langStepTitle") || "방 구하기"));
+    body.appendChild(el("p", "room-finder-step-desc", t("langStepDesc") || "언어를 선택해주세요"));
+
+    var list = el("div", "room-finder-lang-list");
+    LANGS.forEach(function (lang) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "community-btn-primary room-finder-lang-btn";
+      btn.textContent = LANG_LABEL[lang];
+      btn.addEventListener("click", function () {
+        selectedLang = lang;
+        renderFormStep();
+      });
+      list.appendChild(btn);
+    });
+    body.appendChild(list);
+  }
+
+  // 입력항목 정확히 7개(작업지시서 7번) — 임의 추가/삭제 금지.
+  var FIELDS = [
+    { key: "name", type: "text" },
+    { key: "phone", type: "tel" },
+    { key: "moveInDate", type: "date" },
+    { key: "preferredArea", type: "text" },
+    { key: "budget", type: "text" },
+    { key: "deposit", type: "text" },
+    { key: "monthlyRent", type: "text" }
+  ];
+
+  function renderFormStep() {
+    var body = qs("roomFinderBody");
+    if (!body) return;
+    body.innerHTML = "";
+    body.appendChild(el("h2", "room-finder-step-title", t("title")));
+
+    var form = document.createElement("form");
+    form.className = "community-form room-finder-form";
+
+    var inputs = {};
+    FIELDS.forEach(function (f) {
+      var wrap = el("div", "community-field");
+      var inputId = "roomFinderField_" + f.key;
+      var label = el("label", "community-label", t("field_" + f.key));
+      label.setAttribute("for", inputId);
+      wrap.appendChild(label);
+
+      var input = document.createElement("input");
+      input.type = f.type;
+      input.id = inputId;
+      wrap.appendChild(input);
+
+      form.appendChild(wrap);
+      inputs[f.key] = input;
+    });
+
+    var statusP = el("p", "community-form-error");
+    form.appendChild(statusP);
+
+    form.appendChild(el("p", "room-finder-privacy", t("privacy")));
+
+    var submitBtn = document.createElement("button");
+    submitBtn.type = "submit";
+    submitBtn.className = "community-btn-primary room-finder-submit";
+    submitBtn.textContent = t("submitButton");
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (submitting) return; // 버튼 중복 클릭 방지(같은 문의 중복 등록 방지)
+
+      var name = inputs.name.value.trim();
+      var phone = inputs.phone.value.trim();
+      if (!name || !phone) {
+        statusP.textContent = t("requiredError");
+        return;
+      }
+
+      var d = db();
+      if (!d) {
+        statusP.textContent = t("saveError");
+        return;
+      }
+
+      statusP.textContent = "";
+      submitting = true;
+      submitBtn.disabled = true;
+
+      var data = {
+        name: name,
+        phone: phone,
+        moveInDate: inputs.moveInDate.value.trim(),
+        preferredArea: inputs.preferredArea.value.trim(),
+        budget: inputs.budget.value.trim(),
+        deposit: inputs.deposit.value.trim(),
+        monthlyRent: inputs.monthlyRent.value.trim(),
+        language: selectedLang,
+        status: "new",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      // 1) Firestore 저장 먼저(성공해야만 문자 앱을 엽니다) → 2) 관리자
+      // 수신번호 확인 → 3) 문자 앱 실행. 저장에 실패했는데 성공한 것처럼
+      // 처리하지 않습니다.
+      d.collection("roomInquiries").add(data).then(function () {
+        return sendSms(data, statusP, submitBtn);
+      }).catch(function () {
+        submitting = false;
+        submitBtn.disabled = false;
+        statusP.textContent = t("saveError");
+      });
+    });
+
+    body.appendChild(form);
+  }
+
+  function fetchPhone() {
+    if (cachedPhone !== null) return Promise.resolve(cachedPhone);
+    var d = db();
+    if (!d) { cachedPhone = ""; return Promise.resolve(""); }
+    return d.collection("siteSettings").doc("main").get().then(function (doc) {
+      cachedPhone = (doc.exists && doc.data().roomInquiryPhone) || "";
+      return cachedPhone;
+    }).catch(function () {
+      cachedPhone = "";
+      return "";
+    });
+  }
+
+  function buildSmsBody(data) {
+    var lines = [
+      "[방 구하기 문의]",
+      "",
+      "이름: " + data.name,
+      "전화번호: " + data.phone,
+      "입주 희망일: " + (data.moveInDate || "-"),
+      "희망 지역: " + (data.preferredArea || "-"),
+      "희망 예산: " + (data.budget || "-"),
+      "보증금: " + (data.deposit || "-"),
+      "월세: " + (data.monthlyRent || "-"),
+      "선택 언어: " + data.language
+    ];
+    return lines.join("\n");
+  }
+
+  // iPhone/Android sms: 링크 구분자 차이만 최소 분기(그 외 호환성 처리는
+  // 브라우저 기본 동작에 맡깁니다 — 새 라이브러리 없음).
+  function buildSmsLink(phone, body) {
+    var digits = phone.replace(/[^0-9]/g, "");
+    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    var sep = isIOS ? "&" : "?";
+    return "sms:" + digits + sep + "body=" + encodeURIComponent(body);
+  }
+
+  function sendSms(data, statusP, submitBtn) {
+    return fetchPhone().then(function (phone) {
+      submitting = false;
+      if (!phone) {
+        // 수신번호 미설정: 임의 번호로 문자 앱을 열지 않습니다. 문의는 이미
+        // Firestore에 저장되어 관리자 문의 목록에는 그대로 남아 있습니다.
+        statusP.textContent = t("phoneNotReady");
+        submitBtn.disabled = true;
+        return;
+      }
+      var smsLink = buildSmsLink(phone, buildSmsBody(data));
+      window.location.href = smsLink;
+      closeModal();
+    });
+  }
+
+  function init() {
+    els.cardBtn = qs("roomFinderCardBtn");
+    if (!els.cardBtn) return;
+    els.cardBtn.addEventListener("click", openModal);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  return { openModal: openModal };
 })();
 
 </script>

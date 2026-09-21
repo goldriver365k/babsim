@@ -495,6 +495,52 @@ button {
   .hellokorean-btn { width: 100%; }
 }
 
+/* ---------------- 방 구하기 카드 + 모달(js/room-finder.js) ----------------
+   홈 카드는 기존 .hellokorean-card/.hellokorean-link/.hellokorean-title/
+   .hellokorean-desc를 그대로 재사용합니다(버튼 리셋 한 줄만 추가). 모달
+   껍데기는 .modal-overlay/.modal/.modal-close, 입력창은 .community-form/
+   .community-field/.community-label, 버튼은 .community-btn-primary를
+   그대로 재사용합니다(새 디자인 시스템 없음). */
+.room-finder-link {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+.room-finder-step-title {
+  margin: 0 0 4px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.room-finder-step-desc {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.room-finder-lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-finder-lang-btn { width: 100%; }
+
+.room-finder-form .community-field { margin-bottom: 12px; }
+
+.room-finder-privacy {
+  font-size: 12px;
+  color: var(--text-mid);
+  margin: 4px 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.room-finder-submit { width: 100%; }
+
 /* ---------------- 사장님께 말해요 ---------------- */
 
 .owner-chat-banner {
@@ -2044,6 +2090,8 @@ main {
 .community-form input[type="number"],
 .community-form input[type="url"],
 .community-form input[type="search"],
+.community-form input[type="tel"],
+.community-form input[type="date"],
 .community-form select,
 .community-form textarea {
   min-height: 48px;

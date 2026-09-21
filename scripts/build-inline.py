@@ -68,6 +68,7 @@ def build():
     hometown_popup = read("js/hometown-popup.js")
     site_update = read("js/site-update.js")
     menu_likes = read("js/menu-likes.js")
+    room_finder = read("js/room-finder.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -163,9 +164,21 @@ def build():
     <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
   </div>
 
+  <!-- 방 구하기(js/room-finder.js) — 기존 hellokorean-card 껍데기를 그대로
+       재사용한 정적 카드입니다(클릭 시 room-finder.js가 언어 선택 →
+       입력폼 모달을 띄웁니다). 언어 선택 전 카드 문구 자체는 4개 언어를
+       한 줄에 나열해 고정 표시합니다(사이트 언어 전환과 무관). -->
+  <section class="hellokorean-card">
+    <button type="button" class="hellokorean-link room-finder-link" id="roomFinderCardBtn" aria-label="방 구하기 - 한국어, English, Tiếng Việt, 中文">
+      <h3 class="hellokorean-title">방 구하기</h3>
+      <p class="hellokorean-desc">한국어 · English · Tiếng Việt · 中文</p>
+    </button>
+  </section>
+
   <!-- 무료 한국어 공부 링크 2단계: "다양한 사람들이 함께하는 서비스" 문구
        자리로 이동(기존 hellokorean-card를 그대로 재사용 — 새 컴포넌트/새
-       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). -->
+       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). 방 구하기
+       추가로 위치만 그 카드 바로 아래로 밀렸습니다(URL/기능/번역/GA 동일). -->
   <section class="hellokorean-card">
     <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
       <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
@@ -470,6 +483,9 @@ def build():
 """ + menu_likes + """
 </script>
 <script>
+""" + room_finder + """
+</script>
+<script>
 """ + app + """
 </script>
 </body>
@@ -495,6 +511,7 @@ def build_admin():
     admin_community = read("js/admin-community.js")
     admin_popup = read("js/admin-popup.js")
     admin_menu = read("js/admin-menu.js")
+    admin_room_inquiry = read("js/admin-room-inquiry.js")
 
     html = """<!DOCTYPE html>
 <html lang="ko">
@@ -537,6 +554,7 @@ def build_admin():
       <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
       <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
       <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="roomInquiry">방 구하기 문의</button>
     </nav>
   </header>
 
@@ -985,6 +1003,29 @@ def build_admin():
         <div class="table-scroll" id="menuListBody"></div>
       </div>
     </section>
+
+    <!-- ================= 방 구하기 문의 ================= -->
+    <section class="admin-page" id="pageRoomInquiry" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">문자 수신번호를 저장하거나 문의 상태를 바꾸려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다).</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>문자 수신번호</h2>
+        <form class="weekly-auth-box" id="roomInquiryPhoneForm" style="max-width:320px;">
+          <label for="roomInquiryPhoneInput">방 구하기 문의를 받을 번호</label>
+          <input type="tel" id="roomInquiryPhoneInput" placeholder="010-1234-5678">
+          <button type="submit" id="roomInquiryPhoneSaveBtn">저장</button>
+        </form>
+        <p class="publish-status" id="roomInquiryPhoneStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>문의 목록</h2>
+        <div class="table-scroll" id="roomInquiryListBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -1012,6 +1053,9 @@ def build_admin():
 </script>
 <script>
 """ + admin_menu + """
+</script>
+<script>
+""" + admin_room_inquiry + """
 </script>
 </body>
 </html>
