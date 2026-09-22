@@ -235,6 +235,8 @@ const HOMETOWN_POPUP = {
    - langButton은 언어 선택 화면의 버튼 4개 라벨(항상 그 언어 그대로 표시,
      선택된 언어에 따라 바뀌지 않음)이라 이 객체가 아니라 js/room-finder.js
      안에 고정 목록으로 둡니다.
+   - 입력항목은 정확히 3개(이름/전화번호/입주예정일)만 사용합니다(희망
+     지역/예산/보증금/월세 문구는 삭제).
    ========================================================================== */
 const ROOM_FINDER = {
   langStepTitle: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
@@ -245,12 +247,8 @@ const ROOM_FINDER = {
   title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
   field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名" },
   field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码" },
-  field_moveInDate: { ko: "입주 희망일", en: "Desired Move-in Date", vi: "Ngày muốn chuyển vào", zh: "希望入住日期" },
-  field_preferredArea: { ko: "희망 지역", en: "Preferred Area", vi: "Khu vực mong muốn", zh: "希望地区" },
-  field_budget: { ko: "희망 예산", en: "Budget", vi: "Ngân sách dự kiến", zh: "预算" },
-  field_deposit: { ko: "보증금", en: "Deposit", vi: "Tiền đặt cọc", zh: "押金" },
-  field_monthlyRent: { ko: "월세", en: "Monthly Rent", vi: "Tiền thuê hàng tháng", zh: "月租" },
-  submitButton: { ko: "카카오톡으로 문의하기", en: "Contact via KakaoTalk", vi: "Liên hệ qua KakaoTalk", zh: "通过 KakaoTalk 咨询" },
+  field_moveInDate: { ko: "입주예정일", en: "Expected Move-in Date", vi: "Ngày dự kiến chuyển vào", zh: "预计入住日期" },
+  submitButton: { ko: "문자로 문의하기", en: "Send Inquiry by SMS", vi: "Gửi yêu cầu qua SMS", zh: "短信咨询" },
   privacy: {
     ko: "입력한 문의 내용은 상담을 위해 관리자에게 전달됩니다.",
     en: "Your inquiry information will be sent to the administrator for consultation.",
@@ -258,10 +256,10 @@ const ROOM_FINDER = {
     zh: "您填写的咨询内容将发送给管理员以便咨询。"
   },
   requiredError: {
-    ko: "이름과 전화번호를 입력해주세요.",
-    en: "Please enter your name and phone number.",
-    vi: "Vui lòng nhập họ tên và số điện thoại.",
-    zh: "请输入姓名和电话号码。"
+    ko: "이름, 전화번호, 입주예정일을 모두 입력해주세요.",
+    en: "Please enter your name, phone number, and move-in date.",
+    vi: "Vui lòng nhập đầy đủ họ tên, số điện thoại và ngày dự kiến chuyển vào.",
+    zh: "请填写姓名、电话号码和预计入住日期。"
   },
   saveError: {
     ko: "문의 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
@@ -269,11 +267,11 @@ const ROOM_FINDER = {
     vi: "Không thể lưu yêu cầu. Vui lòng thử lại sau.",
     zh: "咨询保存失败，请稍后重试。"
   },
-  inquiryReceived: {
-    ko: "문의가 접수되었습니다.",
-    en: "Your inquiry has been received.",
-    vi: "Yêu cầu của bạn đã được tiếp nhận.",
-    zh: "您的咨询已收到。"
+  phoneNotReady: {
+    ko: "문자 문의를 준비 중입니다.",
+    en: "SMS inquiries are being prepared.",
+    vi: "Chức năng nhắn tin đang được chuẩn bị.",
+    zh: "短信咨询功能正在准备中。"
   },
   closeAriaLabel: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭" }
 };

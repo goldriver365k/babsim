@@ -4,9 +4,9 @@
      "방 구하기 문의" 탭 하나를 추가합니다(새 관리자 사이트 아님).
    - 로그인은 "주간메뉴 관리"에서 이미 로그인한 Firebase 계정을 그대로
      씁니다(별도 로그인 화면 없음). js/admin-popup.js와 같은 방식입니다.
-   - 카카오톡 채팅 연결주소(roomInquiryKakaoUrl)는 siteSettings/main
-     문서 하나에 저장합니다(전화번호 대신 URL 하나만을 위한 새 설정
-     시스템을 만들지 않음 — 기존 문서·필드 재사용).
+   - 문자(SMS) 수신번호(roomInquiryPhone)는 siteSettings/main 문서
+     하나에 저장합니다(전화번호 하나만을 위한 새 설정 시스템을 만들지
+     않음 — 기존 문서·필드 재사용).
    ========================================================================== */
 
 var AdminRoomInquiry = (function () {
@@ -14,7 +14,7 @@ var AdminRoomInquiry = (function () {
 
   var els = {};
   // siteSettings/main 캐시(같은 화면에서 반복 read 방지). null=아직 안 읽음.
-  var cachedKakaoUrl = null;
+  var cachedPhone = null;
   var STATUS_LABEL = { new: "신규", processing: "처리중", completed: "완료" };
   var STATUS_ORDER = ["new", "processing", "completed"];
 
@@ -34,55 +34,50 @@ var AdminRoomInquiry = (function () {
 
   function normalizePhoneDigits(v) { return (v || "").replace(/[^0-9]/g, ""); }
 
-  // 지나치게 복잡한 검증은 만들지 않습니다 — http(s):// URL인지만 확인
-  // 합니다(작업지시서 4번). 카카오톡 링크 자체를 코드에서 만들지 않고
-  // 관리자가 직접 입력한 주소를 그대로 씁니다.
-  function isValidHttpUrl(v) {
-    try {
-      var u = new URL(v);
-      return u.protocol === "http:" || u.protocol === "https:";
-    } catch (e) {
-      return false;
-    }
+  // 지나치게 복잡한 검증은 만들지 않습니다 — 하이픈 유무만 허용하고
+  // 자릿수만 느슨하게 확인합니다.
+  function isValidPhoneLoose(v) {
+    var digits = normalizePhoneDigits(v);
+    return digits.length >= 9 && digits.length <= 11;
   }
 
-  function setKakaoStatus(text, isError) {
-    if (!els.kakaoStatus) return;
-    if (!text) { els.kakaoStatus.hidden = true; return; }
-    els.kakaoStatus.hidden = false;
-    els.kakaoStatus.textContent = text;
-    els.kakaoStatus.className = "publish-status" + (isError ? " error" : " success");
+  function setPhoneStatus(text, isError) {
+    if (!els.phoneStatus) return;
+    if (!text) { els.phoneStatus.hidden = true; return; }
+    els.phoneStatus.hidden = false;
+    els.phoneStatus.textContent = text;
+    els.phoneStatus.className = "publish-status" + (isError ? " error" : " success");
   }
 
-  function loadKakaoUrl() {
+  function loadPhone() {
     var d = db();
-    if (!d || !els.kakaoInput) return;
+    if (!d || !els.phoneInput) return;
     d.collection("siteSettings").doc("main").get().then(function (doc) {
-      cachedKakaoUrl = (doc.exists && doc.data().roomInquiryKakaoUrl) || "";
-      els.kakaoInput.value = cachedKakaoUrl;
+      cachedPhone = (doc.exists && doc.data().roomInquiryPhone) || "";
+      els.phoneInput.value = cachedPhone;
     }).catch(function () {
-      setKakaoStatus("불러오지 못했습니다.", true);
+      setPhoneStatus("불러오지 못했습니다.", true);
     });
   }
 
-  function handleKakaoSave(e) {
+  function handlePhoneSave(e) {
     e.preventDefault();
     var d = db();
-    if (!d) { setKakaoStatus("Firebase가 연결되지 않았습니다.", true); return; }
-    if (!currentAdminUser()) { setKakaoStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
+    if (!d) { setPhoneStatus("Firebase가 연결되지 않았습니다.", true); return; }
+    if (!currentAdminUser()) { setPhoneStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
 
-    var value = els.kakaoInput.value.trim();
-    if (!value) { setKakaoStatus("카카오톡 연결주소를 입력해주세요.", true); return; }
-    if (!isValidHttpUrl(value)) { setKakaoStatus("올바른 URL 형식이 아닙니다(http:// 또는 https://).", true); return; }
+    var value = els.phoneInput.value.trim();
+    if (!value) { setPhoneStatus("전화번호를 입력해주세요.", true); return; }
+    if (!isValidPhoneLoose(value)) { setPhoneStatus("올바른 전화번호 형식이 아닙니다.", true); return; }
 
-    els.kakaoSaveBtn.disabled = true;
-    setKakaoStatus("저장 중...", false);
-    d.collection("siteSettings").doc("main").set({ roomInquiryKakaoUrl: value }, { merge: true }).then(function () {
-      cachedKakaoUrl = value; // 재배포 없이 바로 다음 문의부터 적용(학생 화면은 자체적으로 다시 읽음)
-      setKakaoStatus("저장되었습니다.", false);
+    els.phoneSaveBtn.disabled = true;
+    setPhoneStatus("저장 중...", false);
+    d.collection("siteSettings").doc("main").set({ roomInquiryPhone: value }, { merge: true }).then(function () {
+      cachedPhone = value; // 재배포 없이 바로 다음 문의부터 적용(학생 화면은 자체적으로 다시 읽음)
+      setPhoneStatus("저장되었습니다.", false);
     }).catch(function () {
-      setKakaoStatus("저장에 실패했습니다.", true);
-    }).finally(function () { els.kakaoSaveBtn.disabled = false; });
+      setPhoneStatus("저장에 실패했습니다.", true);
+    }).finally(function () { els.phoneSaveBtn.disabled = false; });
   }
 
   function updateStatus(id, next, selectEl, prevValue) {
@@ -114,8 +109,7 @@ var AdminRoomInquiry = (function () {
       var table = document.createElement("table");
       table.className = "results-table";
       table.innerHTML = "<thead><tr>" +
-        "<th>접수일시</th><th>이름</th><th>전화번호</th><th>입주희망일</th>" +
-        "<th>희망지역</th><th>희망예산</th><th>보증금</th><th>월세</th><th>언어</th><th>상태</th>" +
+        "<th>접수일시</th><th>이름</th><th>전화번호</th><th>입주예정일</th><th>상태</th>" +
         "</tr></thead>";
       var tbody = document.createElement("tbody");
 
@@ -132,7 +126,7 @@ var AdminRoomInquiry = (function () {
         tr.appendChild(tdName);
 
         // 문의자 본인 전화번호(사용자가 입력한 phone 필드) — 관리자
-        // 카카오톡 연결주소(roomInquiryKakaoUrl)와 절대 혼동하지 않습니다.
+        // 수신번호(roomInquiryPhone)와 절대 혼동하지 않습니다.
         var tdPhone = document.createElement("td");
         if (r.phone) {
           var phoneLink = document.createElement("a");
@@ -147,27 +141,6 @@ var AdminRoomInquiry = (function () {
         var tdMoveIn = document.createElement("td");
         tdMoveIn.textContent = r.moveInDate || "-";
         tr.appendChild(tdMoveIn);
-
-        var tdArea = document.createElement("td");
-        tdArea.className = "menu-cell";
-        tdArea.textContent = r.preferredArea || "-";
-        tr.appendChild(tdArea);
-
-        var tdBudget = document.createElement("td");
-        tdBudget.textContent = r.budget || "-";
-        tr.appendChild(tdBudget);
-
-        var tdDeposit = document.createElement("td");
-        tdDeposit.textContent = r.deposit || "-";
-        tr.appendChild(tdDeposit);
-
-        var tdRent = document.createElement("td");
-        tdRent.textContent = r.monthlyRent || "-";
-        tr.appendChild(tdRent);
-
-        var tdLang = document.createElement("td");
-        tdLang.textContent = r.language || "-";
-        tr.appendChild(tdLang);
 
         var tdStatus = document.createElement("td");
         var select = document.createElement("select");
@@ -196,16 +169,16 @@ var AdminRoomInquiry = (function () {
   }
 
   function init() {
-    els.kakaoForm = qs("roomInquiryKakaoForm");
-    if (!els.kakaoForm) return; // 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
-    els.kakaoInput = qs("roomInquiryKakaoUrlInput");
-    els.kakaoSaveBtn = qs("roomInquiryKakaoSaveBtn");
-    els.kakaoStatus = qs("roomInquiryKakaoStatus");
+    els.phoneForm = qs("roomInquiryPhoneForm");
+    if (!els.phoneForm) return; // 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+    els.phoneInput = qs("roomInquiryPhoneInput");
+    els.phoneSaveBtn = qs("roomInquiryPhoneSaveBtn");
+    els.phoneStatus = qs("roomInquiryPhoneStatus");
     els.listBody = qs("roomInquiryListBody");
 
-    els.kakaoForm.addEventListener("submit", handleKakaoSave);
+    els.phoneForm.addEventListener("submit", handlePhoneSave);
 
-    loadKakaoUrl();
+    loadPhone();
     loadInquiries();
   }
 
