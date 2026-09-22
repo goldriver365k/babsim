@@ -1007,18 +1007,18 @@ def build_admin():
     <!-- ================= 방 구하기 문의 ================= -->
     <section class="admin-page" id="pageRoomInquiry" hidden>
       <div class="admin-card">
-        <p class="empty-note" style="padding:0 0 10px;">문자 수신번호를 저장하거나 문의 상태를 바꾸려면 먼저 "주간메뉴 관리" 탭에서
+        <p class="empty-note" style="padding:0 0 10px;">카카오톡 연결주소를 저장하거나 문의 상태를 바꾸려면 먼저 "주간메뉴 관리" 탭에서
           관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다).</p>
       </div>
 
       <div class="admin-card">
-        <h2>문자 수신번호</h2>
-        <form class="weekly-auth-box" id="roomInquiryPhoneForm" style="max-width:320px;">
-          <label for="roomInquiryPhoneInput">방 구하기 문의를 받을 번호</label>
-          <input type="tel" id="roomInquiryPhoneInput" placeholder="010-1234-5678">
-          <button type="submit" id="roomInquiryPhoneSaveBtn">저장</button>
+        <h2>카카오톡 연결주소</h2>
+        <form class="weekly-auth-box" id="roomInquiryKakaoForm" style="max-width:420px;">
+          <label for="roomInquiryKakaoUrlInput">방 구하기 문의를 받을 카카오톡 채팅 연결주소</label>
+          <input type="url" id="roomInquiryKakaoUrlInput" placeholder="https://open.kakao.com/o/...">
+          <button type="submit" id="roomInquiryKakaoSaveBtn">저장</button>
         </form>
-        <p class="publish-status" id="roomInquiryPhoneStatus" hidden></p>
+        <p class="publish-status" id="roomInquiryKakaoStatus" hidden></p>
       </div>
 
       <div class="admin-card">

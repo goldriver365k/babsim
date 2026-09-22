@@ -316,9 +316,9 @@
             allow delete: if false;
           }
 
-          // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
-          // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
-          // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
+          // 사이트 설정(현재는 방 구하기 카카오톡 채팅 연결주소
+          // roomInquiryKakaoUrl 하나뿐 — 문서 1개, id="main"). 학생 화면이
+          // 카카오톡을 열 때 연결주소를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
           match /siteSettings/{docId} {
             allow read: if true;
             allow write: if request.auth != null;   // 관리자 로그인 필요

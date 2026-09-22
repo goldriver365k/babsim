@@ -5,9 +5,9 @@
      (.modal-overlay/.modal, 새 팝업 라이브러리 없음)을 재사용합니다.
    - 입력폼은 기존 커뮤니티 폼 스타일(.community-form/.community-field/
      .community-label/.community-btn-primary)을 그대로 재사용합니다.
-   - Firestore roomInquiries에 문의를 저장하고, 관리자가 설정한 SMS 수신번호
-     (siteSettings/main의 roomInquiryPhone)를 읽어 휴대폰 기본 문자 앱을
-     엽니다(sms: 링크, 유료 SMS API 없음).
+   - Firestore roomInquiries에 문의를 저장하고, 관리자가 설정한 카카오톡
+     채팅 연결주소(siteSettings/main의 roomInquiryKakaoUrl)를 읽어 그
+     주소를 엽니다(관리자가 입력한 URL 그대로 사용 — 새 API/URL 생성 없음).
    ========================================================================== */
 
 var RoomFinder = (function () {
@@ -19,9 +19,9 @@ var RoomFinder = (function () {
   var els = {};
   var selectedLang = "ko";
   var submitting = false;
-  // siteSettings/main의 roomInquiryPhone 캐시(같은 페이지에서 반복 read 방지).
-  // null=아직 읽지 않음, ""=읽었지만 값 없음, 그 외=실제 번호.
-  var cachedPhone = null;
+  // siteSettings/main의 roomInquiryKakaoUrl 캐시(같은 페이지에서 반복
+  // read 방지). null=아직 읽지 않음, ""=읽었지만 값 없음, 그 외=실제 주소.
+  var cachedKakaoUrl = null;
 
   function qs(id) { return document.getElementById(id); }
   function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
@@ -179,11 +179,11 @@ var RoomFinder = (function () {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      // 1) Firestore 저장 먼저(성공해야만 문자 앱을 엽니다) → 2) 관리자
-      // 수신번호 확인 → 3) 문자 앱 실행. 저장에 실패했는데 성공한 것처럼
-      // 처리하지 않습니다.
+      // 1) Firestore 저장 먼저(성공해야만 카카오톡을 엽니다) → 2) 관리자
+      // 카카오톡 연결주소 확인 → 3) 그 주소 열기. 저장에 실패했는데
+      // 성공한 것처럼 처리하지 않습니다.
       d.collection("roomInquiries").add(data).then(function () {
-        return sendSms(data, statusP, submitBtn);
+        return openKakao(statusP, submitBtn);
       }).catch(function () {
         submitting = false;
         submitBtn.disabled = false;
@@ -194,56 +194,32 @@ var RoomFinder = (function () {
     body.appendChild(form);
   }
 
-  function fetchPhone() {
-    if (cachedPhone !== null) return Promise.resolve(cachedPhone);
+  function fetchKakaoUrl() {
+    if (cachedKakaoUrl !== null) return Promise.resolve(cachedKakaoUrl);
     var d = db();
-    if (!d) { cachedPhone = ""; return Promise.resolve(""); }
+    if (!d) { cachedKakaoUrl = ""; return Promise.resolve(""); }
     return d.collection("siteSettings").doc("main").get().then(function (doc) {
-      cachedPhone = (doc.exists && doc.data().roomInquiryPhone) || "";
-      return cachedPhone;
+      cachedKakaoUrl = (doc.exists && doc.data().roomInquiryKakaoUrl) || "";
+      return cachedKakaoUrl;
     }).catch(function () {
-      cachedPhone = "";
+      cachedKakaoUrl = "";
       return "";
     });
   }
 
-  function buildSmsBody(data) {
-    var lines = [
-      "[방 구하기 문의]",
-      "",
-      "이름: " + data.name,
-      "전화번호: " + data.phone,
-      "입주 희망일: " + (data.moveInDate || "-"),
-      "희망 지역: " + (data.preferredArea || "-"),
-      "희망 예산: " + (data.budget || "-"),
-      "보증금: " + (data.deposit || "-"),
-      "월세: " + (data.monthlyRent || "-"),
-      "선택 언어: " + data.language
-    ];
-    return lines.join("\n");
-  }
-
-  // iPhone/Android sms: 링크 구분자 차이만 최소 분기(그 외 호환성 처리는
-  // 브라우저 기본 동작에 맡깁니다 — 새 라이브러리 없음).
-  function buildSmsLink(phone, body) {
-    var digits = phone.replace(/[^0-9]/g, "");
-    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-    var sep = isIOS ? "&" : "?";
-    return "sms:" + digits + sep + "body=" + encodeURIComponent(body);
-  }
-
-  function sendSms(data, statusP, submitBtn) {
-    return fetchPhone().then(function (phone) {
+  function openKakao(statusP, submitBtn) {
+    return fetchKakaoUrl().then(function (url) {
       submitting = false;
-      if (!phone) {
-        // 수신번호 미설정: 임의 번호로 문자 앱을 열지 않습니다. 문의는 이미
+      if (!url) {
+        // 연결주소 미설정: 잘못된 페이지를 열지 않습니다. 문의는 이미
         // Firestore에 저장되어 관리자 문의 목록에는 그대로 남아 있습니다.
-        statusP.textContent = t("phoneNotReady");
+        statusP.textContent = t("inquiryReceived");
         submitBtn.disabled = true;
         return;
       }
-      var smsLink = buildSmsLink(phone, buildSmsBody(data));
-      window.location.href = smsLink;
+      // 이름/전화번호/희망지역 등 개인정보는 URL에 붙이지 않고, 관리자가
+      // 저장해 둔 카카오톡 채팅 연결주소를 그대로 엽니다(상담창 연결 용도).
+      window.location.href = url;
       closeModal();
     });
   }

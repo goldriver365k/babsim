@@ -250,7 +250,7 @@ const ROOM_FINDER = {
   field_budget: { ko: "희망 예산", en: "Budget", vi: "Ngân sách dự kiến", zh: "预算" },
   field_deposit: { ko: "보증금", en: "Deposit", vi: "Tiền đặt cọc", zh: "押金" },
   field_monthlyRent: { ko: "월세", en: "Monthly Rent", vi: "Tiền thuê hàng tháng", zh: "月租" },
-  submitButton: { ko: "문자로 문의하기", en: "Send Inquiry by SMS", vi: "Gửi yêu cầu qua SMS", zh: "短信咨询" },
+  submitButton: { ko: "카카오톡으로 문의하기", en: "Contact via KakaoTalk", vi: "Liên hệ qua KakaoTalk", zh: "通过 KakaoTalk 咨询" },
   privacy: {
     ko: "입력한 문의 내용은 상담을 위해 관리자에게 전달됩니다.",
     en: "Your inquiry information will be sent to the administrator for consultation.",
@@ -269,11 +269,11 @@ const ROOM_FINDER = {
     vi: "Không thể lưu yêu cầu. Vui lòng thử lại sau.",
     zh: "咨询保存失败，请稍后重试。"
   },
-  phoneNotReady: {
-    ko: "문자 문의를 준비 중입니다.",
-    en: "SMS inquiries are being prepared.",
-    vi: "Chức năng nhắn tin đang được chuẩn bị.",
-    zh: "短信咨询功能正在准备中。"
+  inquiryReceived: {
+    ko: "문의가 접수되었습니다.",
+    en: "Your inquiry has been received.",
+    vi: "Yêu cầu của bạn đã được tiếp nhận.",
+    zh: "您的咨询已收到。"
   },
   closeAriaLabel: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭" }
 };
