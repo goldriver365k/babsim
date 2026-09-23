@@ -2531,3 +2531,27 @@ main {
  .b2-breakfast .b2-small{font-size:25px!important}.b2-breakfast strong{font-size:29px!important}
 }
 
+
+
+/* ===== BABSIM HOME V12 — premium 3D typography tiles ===== */
+.b12-home{background:#f7f1e8!important;padding:14px 10px 100px!important}
+.b12-grid{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:116px 260px 170px 170px 170px;gap:10px!important;max-width:600px;margin:0 auto}
+.b12-card{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;box-sizing:border-box;padding:22px 22px 24px;border:0;border-radius:22px;text-align:left;text-decoration:none;overflow:hidden;cursor:pointer;color:#fff;font-family:inherit;box-shadow:inset 2px 2px 2px rgba(255,255,255,.42),inset -2px -3px 3px rgba(0,0,0,.16),0 8px 0 var(--edge),0 13px 18px rgba(55,38,19,.16);transition:transform .12s ease,box-shadow .12s ease}
+.b12-card::before{content:"";position:absolute;left:3%;right:3%;top:2px;height:28%;border-radius:20px 20px 50% 50%;background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,0));pointer-events:none}
+.b12-card:active{transform:translateY(5px);box-shadow:inset 2px 2px 2px rgba(255,255,255,.32),inset -2px -3px 3px rgba(0,0,0,.18),0 3px 0 var(--edge),0 7px 10px rgba(55,38,19,.15)}
+.b12-card strong{position:relative;z-index:2;display:block;margin:0;font-size:clamp(24px,6vw,39px);font-weight:950;line-height:.98;letter-spacing:-.065em;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.16),0 5px 9px rgba(0,0,0,.16)}
+.b12-desc,.b12-eyebrow,.b12-price{position:relative;z-index:2}.b12-desc{margin-bottom:9px;font-size:13px;font-weight:800;line-height:1.2;letter-spacing:-.035em;color:#fff}.b12-desc.dark{color:#171717}.b12-eyebrow{font-size:12px;font-weight:950;letter-spacing:.25em;margin-bottom:5px}.b12-arrow{position:absolute;z-index:3;right:15px;bottom:15px;width:39px;height:39px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#202020;font-size:35px;font-weight:800;line-height:1;box-shadow:0 4px 8px rgba(0,0,0,.18)}.b12-arrow.dark{color:#202020}
+.b12-event{grid-column:1/13;grid-row:1;--edge:#a9151c;background:linear-gradient(145deg,#ff3942,#ed1c24 56%,#cf1018);padding-left:28px}.b12-event strong{font-size:45px}.b12-event .b12-desc{margin:4px 55px 0 0;font-size:14px}
+.b12-breakfast{grid-column:1/8;grid-row:2;--edge:#c89100;background:linear-gradient(145deg,#ffd83d,#ffc20b 58%,#efa900);color:#111}.b12-breakfast strong{color:#111;text-shadow:0 3px 0 rgba(255,255,255,.24),0 5px 9px rgba(74,50,0,.15);font-size:48px}.b12-small{font-size:.72em}.b12-price{margin-top:15px;padding:7px 15px;border-radius:999px;background:#fff3b0;color:#111;font-size:19px;font-weight:950;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.b12-room{grid-column:8/13;grid-row:2;--edge:#075ea8;background:linear-gradient(145deg,#2697ef,#087bd8 58%,#0566b7)}.b12-room strong{font-size:48px}
+.b12-bapsim{grid-column:1/5;grid-row:3;--edge:#087d3c;background:linear-gradient(145deg,#27c568,#08a84d 58%,#078f42)}
+.b12-hururuk{grid-column:5/9;grid-row:3;--edge:#b11b1b;background:linear-gradient(145deg,#ff4b3e,#ed2d26 58%,#d51e1e)}
+.b12-mangwon{grid-column:9/13;grid-row:3;--edge:#5515a0;background:linear-gradient(145deg,#9149e8,#7127c9 58%,#611db3)}
+.b12-hometown{grid-column:1/7;grid-row:4;--edge:#b51862;background:linear-gradient(145deg,#ff4f9c,#e92f82 58%,#cf1e6c)}
+.b12-friends{grid-column:7/13;grid-row:4;--edge:#0867b9;background:linear-gradient(145deg,#28a2f4,#0985df 58%,#0872c5)}
+.b12-korean{grid-column:1/7;grid-row:5;--edge:#057a71;background:linear-gradient(145deg,#1fc8b7,#09a99b 58%,#078f84)}
+.b12-owner{grid-column:7/13;grid-row:5;--edge:#bf5b00;background:linear-gradient(145deg,#ff9c2a,#ff7b08 58%,#e96c00)}
+.b12-bapsim strong,.b12-hururuk strong,.b12-mangwon strong{font-size:29px}.b12-hometown strong,.b12-friends strong,.b12-korean strong,.b12-owner strong{font-size:32px}
+@media(max-width:430px){.b12-home{padding:10px 7px 94px!important}.b12-grid{grid-template-rows:104px 225px 148px 148px 148px;gap:8px!important}.b12-card{border-radius:18px;padding:16px 14px 18px;box-shadow:inset 2px 2px 2px rgba(255,255,255,.4),inset -2px -3px 3px rgba(0,0,0,.15),0 6px 0 var(--edge),0 10px 13px rgba(55,38,19,.15)}.b12-event{padding-left:20px}.b12-event strong{font-size:37px}.b12-event .b12-desc{font-size:11px}.b12-breakfast strong,.b12-room strong{font-size:39px}.b12-bapsim strong,.b12-hururuk strong,.b12-mangwon strong{font-size:clamp(19px,5vw,24px)}.b12-hometown strong,.b12-friends strong,.b12-korean strong,.b12-owner strong{font-size:clamp(23px,6vw,29px)}.b12-desc{font-size:11px;margin-bottom:7px}.b12-arrow{width:33px;height:33px;right:10px;bottom:11px;font-size:29px}.b12-price{font-size:16px;padding:6px 11px;margin-top:11px}}
+@media(max-width:360px){.b12-grid{grid-template-rows:96px 210px 138px 138px 138px;gap:7px!important}.b12-card{padding:14px 11px 16px}.b12-event strong{font-size:33px}.b12-breakfast strong,.b12-room strong{font-size:34px}.b12-desc{font-size:10px}.b12-hururuk .b12-desc,.b12-mangwon .b12-desc{display:none}}
+
