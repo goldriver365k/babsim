@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko" class="theme">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>babsim.store — EAT · PLAY · CONNECT</title>
+<meta name="description" content="babsim.store — 인제대학교 학생과 외국인 유학생이 함께 사용하는 캠퍼스 생활 플랫폼" />
+<meta name="theme-color" content="#F3EEE2" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream: #F3EEE2;
+    --ink: #1C1C1E;
+
+    --tomato: #E8452A;
+    --butter: #F4C842;
+    --cobalt: #2647C0;
+    --forest: #2C7A4B;
+    --charcoal: #1C1C1E;
+    --brown: #B85C2A;
+    --coral: #F4917E;
+    --blue: #1E5FE0;
+    --lavender: #8E6FD6;
+    --orange: #F0801E;
+
+    --gap: 4px;
+    --radius: 11px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+  html,body{ background:var(--cream); }
+
+  body{
+    font-family:'Archivo', 'Noto Sans KR', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    color:var(--ink);
+    min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:390px;
+    margin:0 auto;
+    padding:10px 10px 28px;
+  }
+  @media (min-width:760px){
+    .wrap{ max-width:720px; padding:20px 16px 40px; }
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    padding:6px 4px 12px;
+  }
+  .brand h1{
+    font-size:19px;
+    font-weight:900;
+    letter-spacing:-0.02em;
+  }
+  .brand .tag{
+    display:block;
+    margin-top:3px;
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#8a8478;
+  }
+  .brand .sub{
+    display:block;
+    margin-top:2px;
+    font-size:11px;
+    color:#8a8478;
+  }
+  .langbtn{
+    flex:none;
+    border:1px solid rgba(28,28,30,.14);
+    background:transparent;
+    color:var(--ink);
+    font:inherit;
+    font-size:12px;
+    font-weight:800;
+    padding:7px 11px;
+    border-radius:999px;
+    cursor:pointer;
+    display:inline-flex;
+    gap:5px;
+    align-items:center;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .langbtn:active{ transform:scale(.96); }
+  .langbtn:hover{ background:rgba(28,28,30,.05); }
+
+  /* ---------- Board ---------- */
+  .board{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    grid-auto-rows:30px;
+    gap:var(--gap);
+  }
+  @media (min-width:760px){
+    .board{ grid-auto-rows:44px; }
+  }
+
+  .block{
+    position:relative;
+    border:0;
+    border-radius:var(--radius);
+    padding:14px;
+    text-align:left;
+    color:#fff;
+    font:inherit;
+    cursor:pointer;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    transition:transform .09s ease;
+    isolation:isolate;
+  }
+  .block:active{ transform:scale(.98); }
+
+  .kicker{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    opacity:.85;
+  }
+  .title{
+    font-size:23px;
+    font-weight:900;
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    margin-top:auto;
+  }
+  .title .arrow{ font-weight:800; }
+  .big{ font-size:44px; line-height:.95; font-weight:900; letter-spacing:-0.02em; }
+
+  @media (min-width:760px){
+    .title{ font-size:28px; }
+    .big{ font-size:60px; }
+    .block{ padding:18px; }
+  }
+
+  /* placement — irregular mosaic */
+  .b-event   { grid-column:1 / span 6; grid-row:span 3;  background:var(--tomato); }
+  .b-cheonwon{ grid-column:1 / span 4; grid-row:span 5;  background:var(--butter); color:var(--ink); }
+  .b-room    { grid-column:5 / span 2; grid-row:span 5;  background:var(--cobalt); }
+  .b-bapsim  { grid-column:1 / span 2; grid-row:span 3;  background:var(--forest); }
+  .b-hururuk { grid-column:3 / span 4; grid-row:span 3;  background:var(--charcoal); }
+  .b-hometown{ grid-column:1 / span 4; grid-row:span 4;  background:var(--coral); color:var(--ink); }
+  .b-mangwon { grid-column:5 / span 2; grid-row:span 4;  background:var(--brown); }
+  .b-connect { grid-column:1 / span 4; grid-row:span 4;  background:var(--blue); }
+  .b-korean  { grid-column:5 / span 2; grid-row:span 4;  background:var(--lavender); color:var(--ink); }
+  .b-talk    { grid-column:1 / span 6; grid-row:span 3;  background:var(--orange); }
+
+  .b-event .title{ font-size:20px; }
+  @media (min-width:760px){ .b-event .title{ font-size:24px; } }
+
+  /* ---------- Selected toast ---------- */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:var(--cream);
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:800;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:60;
+    max-width:90vw;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- Language overlay ---------- */
+  .lang-overlay{
+    position:fixed;
+    inset:0;
+    background:var(--cream);
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .lang-overlay[hidden]{ display:none; }
+  .lang-card{
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .lang-card .logo{
+    font-size:26px;
+    font-weight:900;
+    letter-spacing:-0.02em;
+  }
+  .lang-card .eat{
+    margin-top:6px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.24em;
+    color:#8a8478;
+  }
+  .lang-card .choose{
+    margin-top:26px;
+    font-size:15px;
+    font-weight:800;
+  }
+  .lang-card .choose small{
+    display:block;
+    margin-top:3px;
+    font-size:12px;
+    font-weight:600;
+    color:#8a8478;
+  }
+  .lang-list{
+    margin-top:20px;
+    display:grid;
+    gap:8px;
+  }
+  .lang-list button{
+    font:inherit;
+    font-size:15px;
+    font-weight:800;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid rgba(28,28,30,.12);
+    background:#fff;
+    color:var(--ink);
+    cursor:pointer;
+    transition:transform .08s ease, border-color .15s ease;
+  }
+  .lang-list button:active{ transform:scale(.98); }
+  .lang-list button:hover{ border-color:rgba(28,28,30,.35); }
+
+  /* ---------- Language sheet (from header) ---------- */
+  .sheet-backdrop{
+    position:fixed; inset:0; background:rgba(28,28,30,.35);
+    z-index:80; opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:81;
+    background:var(--cream);
+    border-radius:18px 18px 0 0;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+    transform:translateY(102%);
+    transition:transform .25s cubic-bezier(.22,.61,.36,1);
+    max-width:720px; margin:0 auto;
+  }
+  .sheet.open{ transform:translateY(0); }
+  .sheet h2{ font-size:13px; font-weight:800; letter-spacing:.04em; text-align:center; margin-bottom:12px; color:#8a8478; }
+  .sheet .grip{ width:40px; height:4px; border-radius:2px; background:rgba(28,28,30,.2); margin:0 auto 12px; }
+  .sheet-list{ display:grid; gap:8px; }
+  .sheet-list button{
+    font:inherit; font-size:15px; font-weight:800; text-align:left;
+    padding:13px 16px; border-radius:12px; border:1px solid rgba(28,28,30,.12);
+    background:#fff; color:var(--ink); cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+  }
+  .sheet-list button[aria-current="true"]{ border-color:var(--ink); }
+  .sheet-list button:active{ transform:scale(.99); }
+</style>
+</head>
+<body>
+
+  <!-- First-visit language selection -->
+  <div class="lang-overlay" id="langOverlay" hidden>
+    <div class="lang-card">
+      <div class="logo">babsim.store</div>
+      <div class="eat">EAT · PLAY · CONNECT</div>
+      <div class="choose">
+        언어를 선택하세요
+        <small>Choose your language</small>
+      </div>
+      <div class="lang-list" id="langList"></div>
+    </div>
+  </div>
+
+  <div class="wrap" id="app" hidden>
+    <header>
+      <div class="brand">
+        <h1>babsim.store</h1>
+        <span class="tag">EAT · PLAY · CONNECT</span>
+        <span class="sub">Moin-gwan · Inje University</span>
+      </div>
+      <button class="langbtn" id="langBtn" aria-haspopup="dialog">🌐 <span id="langLabel">KO</span></button>
+    </header>
+
+    <main class="board" id="board"></main>
+  </div>
+
+  <!-- Language sheet -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Language">
+    <div class="grip"></div>
+    <h2>LANGUAGE</h2>
+    <div class="sheet-list" id="sheetList"></div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "babsim_lang";
+
+  var LANGS = [
+    { code:"ko", label:"한국어",       badge:"KO"   },
+    { code:"en", label:"English",      badge:"EN"   },
+    { code:"zh", label:"中文",         badge:"中文" },
+    { code:"vi", label:"Tiếng Việt",   badge:"VI"   },
+    { code:"mn", label:"Монгол",       badge:"MN"   },
+    { code:"bn", label:"বাংলা",         badge:"BN"   },
+    { code:"my", label:"မြန်မာ",       badge:"MY"   }
+  ];
+
+  // Exact block content from the brief. Korean brand/section names are kept as-is (proper nouns).
+  var BLOCKS = [
+    { key:"event",    cls:"b-event",    kicker:"EVENT",                title:"What's happening<br>today?" },
+    { key:"cheonwon", cls:"b-cheonwon", big:"1,000",                   title:"천원의<br>아침밥" },
+    { key:"room",     cls:"b-room",     kicker:"ROOM",                 title:"방<br>구하기" },
+    { key:"bapsim",   cls:"b-bapsim",                                  title:"밥심" },
+    { key:"hururuk",  cls:"b-hururuk",  kicker:"NOODLE · RICE · PASTA",title:"후루룩찹찹" },
+    { key:"hometown", cls:"b-hometown", kicker:"HOMETOWN",             title:"나의 고향<br>이야기" },
+    { key:"mangwon",  cls:"b-mangwon",                                 title:"만권화밥" },
+    { key:"connect",  cls:"b-connect",  kicker:"CONNECT",              title:"친구<br>만들기" },
+    { key:"korean",   cls:"b-korean",   kicker:"KOREAN",               title:"한국어<br>공부", arrow:"↗" },
+    { key:"talk",     cls:"b-talk",     kicker:"TALK",                 title:"사장님에게<br>말하기" }
+  ];
+
+  var $ = function(id){ return document.getElementById(id); };
+  var current = localStorage.getItem(STORAGE_KEY);
+
+  function badgeFor(code){
+    for (var i=0;i<LANGS.length;i++){ if (LANGS[i].code===code) return LANGS[i].badge; }
+    return "KO";
+  }
+
+  function renderBoard(){
+    var html = "";
+    for (var i=0;i<BLOCKS.length;i++){
+      var b = BLOCKS[i];
+      var arrow = b.arrow || "→";
+      html += '<button class="block '+b.cls+'" data-key="'+b.key+'" data-name="'+b.title.replace(/<br>/g," ")+'">';
+      if (b.kicker) html += '<span class="kicker">'+b.kicker+'</span>';
+      if (b.big)    html += '<span class="big">'+b.big+'</span>';
+      html += '<span class="title">'+b.title+' <span class="arrow">'+arrow+'</span></span>';
+      html += '</button>';
+    }
+    $("board").innerHTML = html;
+  }
+
+  function renderLangList(container, withBadge){
+    var html = "";
+    for (var i=0;i<LANGS.length;i++){
+      var l = LANGS[i];
+      var cur = (l.code===current) ? ' aria-current="true"' : '';
+      html += '<button data-code="'+l.code+'"'+cur+'>'+l.label+(withBadge?' <span style="opacity:.5;font-weight:700">'+l.badge+'</span>':'')+'</button>';
+    }
+    container.innerHTML = html;
+  }
+
+  var toastTimer;
+  function showToast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 1600);
+  }
+
+  function openSheet(){
+    renderLangList($("sheetList"), true);
+    $("sheetBackdrop").classList.add("open");
+    $("sheet").classList.add("open");
+  }
+  function closeSheet(){
+    $("sheetBackdrop").classList.remove("open");
+    $("sheet").classList.remove("open");
+  }
+
+  function setLang(code){
+    current = code;
+    localStorage.setItem(STORAGE_KEY, code);
+    $("langLabel").textContent = badgeFor(code);
+    document.documentElement.lang = code;
+  }
+
+  function showApp(){
+    $("langOverlay").hidden = true;
+    $("app").hidden = false;
+  }
+
+  // --- init ---
+  renderBoard();
+  renderLangList($("langList"), false);
+
+  if (current){
+    setLang(current);
+    showApp();
+  } else {
+    $("langOverlay").hidden = false;
+  }
+
+  // first-visit selection
+  $("langList").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-code]");
+    if (!btn) return;
+    setLang(btn.getAttribute("data-code"));
+    showApp();
+  });
+
+  // header sheet
+  $("langBtn").addEventListener("click", openSheet);
+  $("sheetBackdrop").addEventListener("click", closeSheet);
+  $("sheetList").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-code]");
+    if (!btn) return;
+    setLang(btn.getAttribute("data-code"));
+    closeSheet();
+  });
+
+  // block placeholder handlers
+  $("board").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-key]");
+    if (!btn) return;
+    showToast(btn.getAttribute("data-name"));
+  });
+})();
+</script>
+</body>
+</html>
