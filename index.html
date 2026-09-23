@@ -1000,9 +1000,18 @@ button {
   align-items: flex-start;
   gap: 6px;
   min-height: 64px;
-  padding: 14px 14px 12px;
+  position: relative;
+  isolation: isolate;
+  padding: 26px 14px 15px;
   border: none;
-  border-radius: 10px;
+  border-radius: 11px;
+  /* 실제 LEGO 블록처럼: 두꺼운 옆면(0 6px 0 어두운색) + 보드에 지는
+     소프트 그림자 + 윗면 광택 하이라이트 + 아랫면 안쪽 음영 */
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.20),
+    0 11px 15px rgba(0, 0, 0, 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 0.40),
+    inset 0 -7px 11px rgba(0, 0, 0, 0.13);
   text-align: left;
   color: #fff;
   overflow-wrap: anywhere;
@@ -1010,14 +1019,62 @@ button {
   background: none;
   font-family: inherit;
   /* 18번: 아주 작은 터치 반응만(빙글 돌거나 튀는 애니메이션 금지) */
-  transition: transform 0.08s ease;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 /* eyebrow 없이 제목만 있는 작은 블록(밥심/만권화밥)은 세로 가운데 정렬 */
 .lego-bapsim, .lego-mangwon { justify-content: center; }
 
-.lego-block:active { transform: scale(0.98); }
+/* 누르면 블록이 살짝 밑으로 눌리며 옆면(그림자)이 얇아짐 — 실제로
+   레고를 누르는 느낌 */
+.lego-block:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.20),
+    0 4px 8px rgba(0, 0, 0, 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.12);
+}
 .lego-block:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+
+/* 레고 돌기(스터드) — 블록 상단에 원기둥형 돌기 한 줄. DOM/마크업을
+   바꾸지 않고 ::before 하나로 그립니다. 텍스트는 아래 z-index 규칙으로
+   이 위에 오게 둡니다. */
+.lego-block::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 14px;
+  right: 14px;
+  height: 17px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 50% 42%,
+    rgba(255, 255, 255, 0.62) 0 17%,
+    rgba(255, 255, 255, 0.22) 24% 33%,
+    rgba(0, 0, 0, 0.16) 43% 50%,
+    transparent 55%);
+  background-size: 24px 20px;
+  background-repeat: repeat-x;
+  background-position: left top;
+}
+
+/* 플라스틱 표면 광택 — 위는 밝게, 아래로 갈수록 살짝 어둡게 */
+.lego-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.20) 0%,
+    rgba(255, 255, 255, 0) 42%,
+    rgba(0, 0, 0, 0.07) 100%);
+}
+
+/* 실제 콘텐츠(제목·화살표·숫자)는 돌기/광택 오버레이 위로 */
+.lego-block > * { position: relative; z-index: 1; }
 
 .lego-eyebrow {
   font-size: 12px;
@@ -1208,7 +1265,7 @@ button {
   outline: none;
 }
 
-/* ---------------- 본문 ---------------- */
+/* ---------------- 본��� ---------------- */
 
 main {
   max-width: 1200px;
@@ -3065,7 +3122,7 @@ const BREAKFAST_RATING_TEXT = {
   score5: { ko: "아주 좋아요", en: "Loved it", zh: "非常好", vi: "Rất thích", mn: "Маш их таалагдсан", bn: "খুব ভালো লেগেছে", my: "အရမ်းကြိုက်တယ်" },
   score4: { ko: "좋아요", en: "Good", zh: "好", vi: "Thích", mn: "Таалагдсан", bn: "ভালো লেগেছে", my: "ကြိုက်တယ်" },
   score3: { ko: "보통이에요", en: "Okay", zh: "一般", vi: "Bình thường", mn: "Дунд зэрэг", bn: "মোটামুটি", my: "ရိုးရိုး" },
-  score2: { ko: "아쉬워요", en: "Not great", zh: "有点遗憾", vi: "Chưa hài lòng", mn: "Дутагдалтай", bn: "কিছুটা খারাপ", my: "သိပ်မကောင်းဘူး" },
+  score2: { ko: "아���워요", en: "Not great", zh: "有点遗憾", vi: "Chưa hài lòng", mn: "Дутагдалтай", bn: "কিছুটা খারাপ", my: "သိပ်မကောင်းဘူး" },
   score1: { ko: "별로예요", en: "Not good", zh: "不满意", vi: "Không thích", mn: "Таалагдаагүй", bn: "ভালো লাগেনি", my: "မကြိုက်ဘူး" },
   thanks: { ko: "감사합니다!", en: "Thank you!", zh: "谢谢！", vi: "Cảm ơn bạn!", mn: "Баярлалаа!", bn: "ধন্যবাদ!", my: "ကျေးဇူးတင်ပါတယ်!" },
   completed: {
@@ -3314,7 +3371,7 @@ const PWA_INSTALL_INFO = {
     zh: ["点击 Safari 浏览器的分享按钮", "选择“添加到主屏幕”", "点击右上角的“添加”"],
     vi: ["Nhấn nút Chia sẻ trên Safari", "Chọn “Thêm vào màn hình chính”", "Nhấn “Thêm” ở góc trên bên phải"],
     en: ["Tap the Share button in Safari", "Select “Add to Home Screen”", "Tap “Add” in the top-right corner"],
-    mn: ["Safari-н Хуваалцах товчийг дарна уу", "“Нүүр дэлгэцэд нэмэх”-ийг сонгоно уу", "Баруун дээд буланд байх “Нэмэх”-ийг дарна уу"],
+    mn: ["Safari-н Хуваалцах товчийг дарна уу", "“Нүүр дэлгэцэд нэмэх”-ийг сонгоно уу", "Баруун дээ�� буланд байх “Нэмэх”-ийг дарна уу"],
     bn: ["Safari-এর শেয়ার বাটনে চাপুন", "“হোম স্ক্রিনে যোগ করুন” নির্বাচন করুন", "উপরের ডানদিকে “যোগ করুন”-এ চাপুন"],
     my: ["Safari ၏ မျှဝေရန်ခလုတ်ကို နှိပ်ပါ", "“ပင်မစခရင်တွင်ထည့်ရန်” ကိုရွေးပါ", "ညာဘက်အပေါ်ရှိ “ထည့်ရန်” ကိုနှိပ်ပါ"]
   }
@@ -3670,7 +3727,7 @@ const MENU_DATA = [
     id: "hururuk-meat-ragu-spaghetti",
     store: "hururuk", group: 1, order: 12,
     image: "/images/hururuk/meat-ragu-spaghetti.jpg",
-    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти", bn: "প্রচুর মাংসসহ রাগু স্প্যাগেটি", my: "အသားအပြည့်ရာဂုစပါဂက်တီ" },
+    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти", bn: "প্র��ুর মাংসসহ রাগু স্প্যাগেটি", my: "အသားအပြည့်ရာဂုစပါဂက်တီ" },
     price: 7900, soldOut: false, needsReview: false
   },
 
@@ -3693,7 +3750,7 @@ const MENU_DATA = [
     id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
     store: "hururuk", group: 2, order: 3,
     image: "/images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
-    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти", bn: "স্মোকি বিফ বেলি রাগু স্প্যাগেটি", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုစပါဂက်တီ" },
+    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛��花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти", bn: "স্মোকি বিফ বেলি রাগু স্প্যাগেটি", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုစပါဂက်တီ" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
@@ -4242,7 +4299,7 @@ const BREAKFAST_WEEKLY_MENU = {
 
           // 하루 작성/번역 한도(회원 1명당 게시글 5개·댓글 30개·번역 20회) —
           // 글/댓글을 쓸 때는 클라이언트가 이 문서를 같은 트랜잭션으로 함께
-          // 1씩 늘리고, 번역을 요청할 때는 서버(Netlify 함수)가 호출자의
+          // 1씩 늘리고, 번역을 요청할 때는 서버(Netlify 함수)가 호��자의
           // ID 토큰으로 이 문서의 translationCount만 늘립니다. 어느 쪽이든
           // 한도를 넘으면 이 문서 쓰기 자체가 거부됩니다(글/댓글은 같은
           // 트랜잭션의 본문 쓰기까지 함께 취소됨). 문서 ID는
@@ -5409,7 +5466,7 @@ var MZ_CAFE_BUTTONS = {
 };
 
 // 대표메뉴(10곳 중 겹치는 값은 같은 객체를 재사용)
-var MZ_M1 = { ko: "에스프레소, 드립커피", zh: "意式浓缩, 手冲咖啡", vi: "Espresso, cà phê pour-over", en: "Espresso, drip coffee", mn: "Эспрессо, дринк кофе", bn: "এসপ্রেসো, ড্রিপ কফি", my: "အက်စပရက်စို၊ ဒရစ်ပ်ကော်ဖီ" };
+var MZ_M1 = { ko: "에스프레소, 드립커피", zh: "意式浓缩, 手冲咖啡", vi: "Espresso, cà phê pour-over", en: "Espresso, drip coffee", mn: "Эспрессо, дринк кофе", bn: "এসপ্রেসো, ���্রিপ কফি", my: "အက်စပရက်စို၊ ဒရစ်ပ်ကော်ဖီ" };
 var MZ_M2 = { ko: "커피, 디저트", zh: "咖啡, 甜点", vi: "Cà phê, bánh ngọt", en: "Coffee, dessert", mn: "Кофе, амттан", bn: "কফি, ডেজার্ট", my: "ကော်ဖီ၊ အချိုပွဲ" };
 var MZ_M3 = { ko: "커피, 베이커리", zh: "咖啡, 烘焙", vi: "Cà phê, bánh", en: "Coffee, bakery", mn: "Кофе, бэйкери", bn: "কফি, বেকারি", my: "ကော်ဖီ၊ ဘေကာရီ" };
 var MZ_M4 = { ko: "케이크, 디저트", zh: "蛋糕, 甜点", vi: "Bánh kem, bánh ngọt", en: "Cake, dessert", mn: "Бялуу, амттан", bn: "কেক, ডেজার্ট", my: "ကိတ်မုန့်၊ အချိုပွဲ" };
@@ -5688,7 +5745,7 @@ var COMMUNITY_MSG = {
   errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна.", bn: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।", my: "အီးမေးလ် သို့မဟုတ် စကားဝှက်မှားနေသည်။" },
   errPhotoLimit: { ko: "사진은 1장만 첨부할 수 있습니다.", zh: "只能上传1张照片。", vi: "Chỉ có thể đính kèm 1 ảnh.", en: "You can attach only 1 photo.", mn: "Зөвхөн 1 зураг хавсаргах боломжтой.", bn: "শুধুমাত্র ১টি ছবি সংযুক্ত করা যাবে।", my: "ဓာတ်ပုံ ၁ ပုံသာ ပူးတွဲနိုင်ပါသည်။" },
   errPhotoTooLarge: { ko: "사진 용량이 너무 커서 압축 후에도 등록할 수 없습니다. 다른 사진을 선택해 주세요.", zh: "照片文件过大，压缩后仍无法上传，请选择其他照片。", vi: "Ảnh quá lớn, sau khi nén vẫn không thể đăng. Vui lòng chọn ảnh khác.", en: "This photo is too large to upload even after compression. Please choose a different photo.", mn: "Зургийн хэмжээ хэт том тул шахсны дараа ч оруулах боломжгүй байна. Өөр зураг сонгоно уу.", bn: "ছবির আকার অনেক বড় হওয়ায় কম্প্রেস করার পরও আপলোড করা যাচ্ছে না। অন্য ছবি বেছে নিন।", my: "ဓာတ်ပုံအရွယ်အစားကြီးလွန်းသောကြောင့် ချုံ့ပြီးနောက်တွင်ပင် တင်၍မရပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
-  errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу.", bn: "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।", my: "အမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ။" },
+  errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу.", bn: "একটি ত্রুটি ঘ��েছে। আবার চেষ্টা করুন।", my: "အမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ။" },
   errTooSoon: { ko: "너무 빠르게 반복해서 작성할 수 없습니다. 잠시 후 다시 시도해 주세요.", zh: "发布过于频繁，请稍后再试。", vi: "Bạn đang đăng quá nhanh. Vui lòng thử lại sau ít phút.", en: "You're posting too quickly. Please wait a moment and try again.", mn: "Хэт хурдан дахин бичиж болохгүй. Түр хүлээгээд дахин оролдоно уу.", bn: "খুব দ্রুত বারবার লেখা যাবে না। একটু পর আবার চেষ্টা করুন।", my: "လျင်မြန်လွန်းစွာ ထပ်ခါထပ်ခါရေးနေပါသည်။ ခဏစောင့်ပြီးထပ်ကြိုးစားပါ။" },
   doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа.", bn: "সংরক্ষিত হয়েছে।", my: "သိမ်းဆည်းပြီးပါပြီ။" },
   doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа.", bn: "মুছে ফেলা হয়েছে।", my: "ဖျက်ပြီးပါပြီ။" }
@@ -5840,7 +5897,7 @@ var Community = (function () {
 
   /* ---------------- 로그인/가입 후 원래 화면으로 돌아가기 ----------------
      비회원이 게시글·글쓰기·댓글 등을 누르면 로그인/가입 안내창을 띄우고,
-     누르려던 경로를 sessionStorage에 잠깐만 저장해 둡니다(탭을 닫으면
+     누르려던 경로�� sessionStorage에 잠깐만 저장해 둡니다(탭을 닫으면
      사라짐). 가입/로그인이 끝나면 이 경로로 돌아가고, 없으면 커뮤니티
      첫 화면으로 갑니다. babsim.store 내부 커뮤니티 경로("/community"로
      시작)만 허용해 외부 주소로 임의 이동하는 것을 막습니다. */
@@ -5976,7 +6033,7 @@ var Community = (function () {
     return d.collection("communityUsers").doc(uid).update({ nickname: nickname }).then(function () {
       profile.nickname = nickname;
       return profile;
-    }).catch(function () { return profile; }); // 실패해도 글쓰기 자체를 막지 않음(다음 기회에 다시 시도)
+    }).catch(function () { return profile; }); // 실패해도 글쓰기 자��를 막지 않음(다음 기회에 다시 시도)
   }
 
   // 게시글/댓글 작성 시 표시할 이름을 정합니다 — 비회원은 자동 닉네임
@@ -7817,7 +7874,7 @@ var Community = (function () {
       parentCommentId: parentId || null,
       authorId: authUser.uid,
       authorNameMasked: currentDisplayNickname(),
-      authorNameIsNickname: true, // 실명이 아니라 닉네임임을 표시(구 댓글과 구분해 마스킹 처리)
+      authorNameIsNickname: true, // 실���이 아니라 닉네임임을 표시(구 댓글과 구분해 마스킹 처리)
       authorNationality: (profile && profile.nationality) || "",
       authorIsAnonymous: !!(profile && profile.isAnonymous),
       originalLanguage: lang,
@@ -10715,7 +10772,7 @@ var RoomFinder = (function () {
       });
     }
 
-    // 히어로 이미지도 로고와 같은 방식으로, 파일이 없으면 자동으로 숨깁니다.
+    // 히어로 이미지도 로고와 같은 방식으로, ���일이 없으면 자동으로 숨깁니다.
     if (els.homeHeroImg) {
       var hideBrokenHero = function () {
         if (els.homeHeroImg.complete && els.homeHeroImg.naturalWidth === 0) els.homeHeroImg.hidden = true;
