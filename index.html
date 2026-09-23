@@ -1017,61 +1017,38 @@ button {
   color: var(--text-mid);
 }
 
-/* ---------------- HOME LEGO BOARD — reference implementation ---------------- */
-:root{--lego-bg:#fffaf1;--lego-event:#f12f2b;--lego-breakfast:#ffd52b;--lego-room:#1568ed;--lego-bapsim:#08ad5d;--lego-hururuk:#ed3229;--lego-mangwon:#7a42e8;--lego-hometown:#f25a9a;--lego-friends:#0875ed;--lego-korean:#08a95b;--lego-ownerchat:#ff8a17}
-.home-view{background:var(--lego-bg);padding:0 6px calc(84px + env(safe-area-inset-bottom,0px))}
-body:has(.home-view:not([hidden])){background:var(--lego-bg)}
-body:has(.home-view:not([hidden])) main{padding:8px 0 94px}
-body:has(.home-view:not([hidden])) .store-tabs,body:has(.home-view:not([hidden])) .site-title,body:has(.home-view:not([hidden])) .site-logo-btn{display:none}
-body:has(.home-view:not([hidden])) .header-top{margin-bottom:0}
-body:has(.home-view:not([hidden])) .owner-chat-fab,body:has(.home-view:not([hidden])) .owner-chat-banner{display:none!important}
+/* ---------------- HOME LEGO — full rebuild from user reference 2026-09-23 ---------------- */
+:root{--cream:#fffaf2}
+body:has(.home-view:not([hidden])){background:var(--cream)}
+body:has(.home-view:not([hidden])) main{padding:0 0 92px}
+body:has(.home-view:not([hidden])) .site-header{background:var(--cream);border:0;padding:10px 12px 8px}
+body:has(.home-view:not([hidden])) .header-top{min-height:66px;margin:0;align-items:center}
+body:has(.home-view:not([hidden])) .site-logo-btn{display:flex!important;align-items:center;gap:8px}
+body:has(.home-view:not([hidden])) .site-logo-img{display:none}
+body:has(.home-view:not([hidden])) .site-logo-btn::before{content:"◆";width:42px;height:42px;display:grid;place-items:center;border-radius:8px;background:#ef3028;color:#fff;font-size:22px;box-shadow:inset 3px 3px rgba(255,255,255,.25),inset -3px -4px rgba(0,0,0,.13)}
+body:has(.home-view:not([hidden])) .site-logo-btn::after{content:"BABSIM";font-size:29px;line-height:1;font-weight:950;letter-spacing:-.03em;color:#111820}
+body:has(.home-view:not([hidden])) .site-brand-name{display:none}
+body:has(.home-view:not([hidden])) .site-tagline{position:absolute;left:62px;top:49px;font-size:9px;font-weight:800;letter-spacing:.08em;color:#111820}
+body:has(.home-view:not([hidden])) .lang-compact-btn{background:transparent;border:0;box-shadow:none;font-size:15px;font-weight:800;padding:8px 5px}
+body:has(.home-view:not([hidden])) .lang-compact-icon{font-size:24px}
+body:has(.home-view:not([hidden])) .store-tabs,body:has(.home-view:not([hidden])) .site-title{display:none}
+.home-view{background:var(--cream);padding:0 5px calc(84px + env(safe-area-inset-bottom,0px))}
 .home-hero:has(.home-hero-img[hidden]){display:none}
-.lego-board{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:112px 238px 146px 154px 154px;gap:3px;margin:0 auto 18px;max-width:720px}
-.lego-block{--stud:var(--block-color);position:relative;min-width:0;min-height:0;margin:0!important;padding:42px 14px 15px;border:1px solid rgba(0,0,0,.09);border-radius:16px;clip-path:none!important;overflow:visible;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:6px;text-align:left;color:#fff;text-decoration:none;background:linear-gradient(145deg,color-mix(in srgb,var(--block-color) 72%,white) 0%,var(--block-color) 36%,color-mix(in srgb,var(--block-color) 86%,black) 100%);box-shadow:inset 4px 4px 0 rgba(255,255,255,.38),inset -5px -7px 0 rgba(0,0,0,.15),0 6px 0 color-mix(in srgb,var(--block-color) 63%,black),0 8px 10px rgba(0,0,0,.2);filter:none;z-index:1}
-.lego-block::before{content:"";position:absolute;z-index:3;top:-9px;left:13px;right:13px;height:31px;background-image:radial-gradient(ellipse 17px 7px at 18px 7px,color-mix(in srgb,var(--stud) 48%,white) 0 70%,color-mix(in srgb,var(--stud) 72%,white) 88%,transparent 92%),linear-gradient(90deg,transparent 1px,color-mix(in srgb,var(--stud) 65%,white) 3px,var(--stud) 18px,color-mix(in srgb,var(--stud) 54%,black) 34px,transparent 36px),radial-gradient(ellipse 18px 6px at 18px 22px,rgba(0,0,0,.34) 0 74%,transparent 78%);background-size:58px 31px,58px 14px,58px 31px;background-position:0 0,0 8px,0 0;background-repeat:space no-repeat,space no-repeat,space no-repeat;pointer-events:none}
-.lego-block::after{content:"›";position:absolute;right:12px;bottom:12px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#161616;font-size:30px;font-weight:950;line-height:.8;box-shadow:0 3px 5px rgba(0,0,0,.2);pointer-events:none}
-.lego-block:active{transform:translateY(3px);box-shadow:inset 3px 3px 0 rgba(255,255,255,.28),inset -4px -4px 0 rgba(0,0,0,.12),0 3px 0 color-mix(in srgb,var(--block-color) 63%,black),0 5px 7px rgba(0,0,0,.16)}
-.lego-block:focus-visible{outline:3px solid #fff;outline-offset:-5px}
-.lego-block .lego-arrow{display:none}
-.lego-eyebrow{font-size:10px;font-weight:900;letter-spacing:.12em;opacity:.82}
-.lego-title-line{display:block;max-width:calc(100% - 40px)}
-.lego-title{font-size:clamp(18px,5.2vw,27px);font-weight:950;line-height:1.06;word-break:keep-all;overflow-wrap:normal;text-shadow:0 2px 2px rgba(0,0,0,.18)}
-.lego-hero-number{font-size:0;margin-bottom:auto}
-.lego-hero-number::before{content:"천원의";font-size:clamp(32px,9vw,47px);font-weight:950;line-height:1;color:#111;letter-spacing:-.05em}
-.lego-event{--block-color:var(--lego-event);grid-column:1/13;grid-row:1;align-items:center;justify-content:center;text-align:center}
-.lego-event::before{background-size:76px 31px,76px 14px,76px 31px}
-.lego-breakfast{--block-color:var(--lego-breakfast);grid-column:1/9;grid-row:2;color:#151515;padding:44px 56px 18px 18px}
-.lego-breakfast::before{background-size:82px 31px,82px 14px,82px 31px}
-.lego-room{--block-color:var(--lego-room);grid-column:9/13;grid-row:2;padding:44px 12px 18px;justify-content:flex-end}
-.lego-room::before{background-size:64px 31px,64px 14px,64px 31px}
-.lego-bapsim{--block-color:var(--lego-bapsim);grid-column:1/4;grid-row:3}
-.lego-hururuk{--block-color:var(--lego-hururuk);grid-column:4/9;grid-row:3}
-.lego-mangwon{--block-color:var(--lego-mangwon);grid-column:9/13;grid-row:3}
-.lego-hometown{--block-color:var(--lego-hometown);grid-column:1/7;grid-row:4}
-.lego-friends{--block-color:var(--lego-friends);grid-column:7/13;grid-row:4}
-.lego-korean{--block-color:var(--lego-korean);grid-column:1/7;grid-row:5}
-.lego-ownerchat{--block-color:var(--lego-ownerchat);grid-column:7/13;grid-row:5;color:#171717}
-.lego-event .lego-eyebrow{display:none}.lego-event .lego-title{font-size:0;text-shadow:none}.lego-event .lego-title::before{content:"이벤트";font-size:clamp(31px,8.5vw,46px);font-weight:950;color:#fff}
-.lego-event .lego-title-line::before{content:"📣";font-size:38px;margin-right:10px;filter:drop-shadow(0 2px 1px rgba(0,0,0,.18))}
-.lego-room .lego-title-line::before{content:"⌂";display:block;font-size:52px;line-height:.8;margin-bottom:12px;text-shadow:0 3px 2px rgba(0,0,0,.2)}
-.lego-bapsim .lego-title-line::before{content:"♨";font-size:30px;margin-right:7px}
-.lego-hururuk .lego-title-line::before{content:"≋";font-size:34px;margin-right:7px}
-.lego-mangwon .lego-title-line::before{content:"▤";font-size:29px;margin-right:7px}
-.lego-hometown .lego-title-line::before{content:"◎";font-size:36px;margin-right:8px}
-.lego-friends .lego-title-line::before{content:"●●";font-size:22px;letter-spacing:-7px;margin-right:12px}
-.lego-korean .lego-title-line::before{content:"A가";font-size:24px;font-weight:950;margin-right:9px}
-.lego-ownerchat .lego-title-line::before{content:"•••";font-size:27px;letter-spacing:2px;margin-right:9px}
-.lego-block:nth-child(n+4) .lego-title-line{display:flex;align-items:center}
-.lego-breakfast .lego-title{font-size:0;text-shadow:none}.lego-breakfast .lego-title::before{content:"아침밥";font-size:clamp(39px,11vw,58px);font-weight:950;line-height:.95;color:#ed2c20}
-.lego-room .lego-title{font-size:clamp(24px,6.6vw,34px)}.lego-room .lego-eyebrow{margin-bottom:auto}
-.lego-bapsim .lego-title,.lego-hururuk .lego-title,.lego-mangwon .lego-title{font-size:clamp(18px,4.8vw,25px)}
-.lego-hometown .lego-title,.lego-friends .lego-title,.lego-korean .lego-title,.lego-ownerchat .lego-title{font-size:clamp(21px,5.8vw,30px)}
-.lego-block:nth-child(n+4) .lego-eyebrow{display:none}
-.lego-block .hellokorean-desc,.lego-block .hellokorean-btn,.lego-block .hellokorean-url{display:none}
-.home-section-title,.home-community-latest{display:none!important}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:#fff;border-top:1px solid #e6e1d8;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -2px 9px rgba(0,0,0,.05)}
-.bottom-nav[hidden]{display:none}.bottom-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:70px;padding:7px 3px;background:none;border:0;color:#40505a}.bottom-nav-btn.active{color:#16834f;font-weight:800}.bottom-nav-icon{font-size:24px;line-height:1}.bottom-nav-label{font-size:11px;line-height:1.15;text-align:center;white-space:normal}.bottom-nav-btn-write .bottom-nav-icon{font-size:24px}.bottom-nav-btn-write .bottom-nav-label{font-weight:700}
-@media(max-width:390px){.lego-board{grid-template-rows:104px 222px 138px 146px 146px}.lego-block{border-radius:16px;padding:39px 10px 12px}.lego-block::before{left:10px;right:10px;background-size:52px 31px,52px 14px,52px 31px}.lego-block::after{right:9px;bottom:9px;width:31px;height:31px;font-size:27px}.lego-breakfast{padding-left:15px;padding-right:46px}.lego-title-line{max-width:calc(100% - 34px)}}
+.lego-board{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:116px 242px 148px 158px 158px;gap:0;margin:0 auto 14px;max-width:720px;overflow:visible}
+.lego-block{--c:#777;position:relative;min-width:0;min-height:0;margin:0!important;padding:43px 13px 14px;border:0;border-radius:17px;clip-path:none!important;overflow:visible;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;color:#fff;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 66%,white) 0%,var(--c) 35%,color-mix(in srgb,var(--c) 84%,black) 100%);box-shadow:inset 4px 4px 0 rgba(255,255,255,.36),inset -5px -7px 0 rgba(0,0,0,.14),0 6px 0 color-mix(in srgb,var(--c) 64%,black),0 8px 9px rgba(0,0,0,.18);z-index:1;text-decoration:none}
+.lego-block::before{content:"";position:absolute;top:-10px;left:12px;right:12px;height:34px;z-index:4;background-image:radial-gradient(ellipse 18px 7px at 19px 7px,color-mix(in srgb,var(--c) 45%,white) 0 69%,color-mix(in srgb,var(--c) 70%,white) 86%,transparent 90%),linear-gradient(90deg,transparent 1px,color-mix(in srgb,var(--c) 65%,white) 3px,var(--c) 19px,color-mix(in srgb,var(--c) 55%,black) 36px,transparent 38px),radial-gradient(ellipse 19px 6px at 19px 23px,rgba(0,0,0,.32) 0 74%,transparent 78%);background-size:62px 34px,62px 15px,62px 34px;background-position:0 0,0 9px,0 0;background-repeat:space no-repeat,space no-repeat,space no-repeat;pointer-events:none}
+.lego-block::after{content:"›";position:absolute;right:12px;bottom:12px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#161616;font-size:30px;font-weight:950;line-height:.8;box-shadow:0 3px 5px rgba(0,0,0,.18)}
+.lego-block .lego-arrow{display:none}.lego-eyebrow{display:none}.lego-title-line{display:flex;align-items:center;max-width:calc(100% - 40px)}.lego-title{font-size:clamp(20px,5.4vw,29px);font-weight:950;line-height:1.05;word-break:keep-all;text-shadow:0 2px 2px rgba(0,0,0,.18)}.lego-hero-number{font-size:0;margin-bottom:auto}
+.lego-event{--c:#f22f2a;grid-column:1/13;grid-row:1;align-items:center;justify-content:center}.lego-event .lego-title{font-size:0}.lego-event .lego-title::before{content:"이벤트";font-size:clamp(34px,9vw,48px);font-weight:950}.lego-event .lego-title-line::before{content:"◖";font-size:40px;margin-right:12px;color:#fff}.lego-event::before{background-size:76px 34px,76px 15px,76px 34px}
+.lego-breakfast{--c:#ffd62a;grid-column:1/9;grid-row:2;color:#111;padding:44px 54px 18px 17px}.lego-breakfast .lego-hero-number::before{content:"천원의";font-size:clamp(34px,9vw,48px);font-weight:950;line-height:1;color:#111}.lego-breakfast .lego-title{font-size:0;text-shadow:none}.lego-breakfast .lego-title::before{content:"아침밥";font-size:clamp(43px,12vw,62px);font-weight:950;line-height:.9;color:#ee2e21}.lego-breakfast .lego-title-line::after{content:"1,000";position:absolute;right:26px;top:75px;width:70px;height:70px;border:4px solid #161616;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:950;color:#c65a00;background:#ffd642;box-shadow:0 5px 0 #b87600}.lego-breakfast::before{background-size:82px 34px,82px 15px,82px 34px}
+.lego-room{--c:#1468ee;grid-column:9/13;grid-row:2;padding:44px 12px 18px;justify-content:flex-end}.lego-room .lego-title{font-size:clamp(25px,6.6vw,35px)}.lego-room .lego-title-line::before{content:"⌂";position:absolute;left:50%;top:62px;transform:translateX(-50%);font-size:70px;line-height:.7;text-shadow:0 4px 2px rgba(0,0,0,.25)}
+.lego-bapsim{--c:#08ad5d;grid-column:1/5;grid-row:3}.lego-hururuk{--c:#ef342b;grid-column:5/9;grid-row:3}.lego-mangwon{--c:#7942e8;grid-column:9/13;grid-row:3}.lego-bapsim .lego-title-line::before{content:"♨";font-size:35px;margin-right:7px}.lego-hururuk .lego-title-line::before{content:"≋";font-size:38px;margin-right:7px}.lego-mangwon .lego-title-line::before{content:"▤";font-size:33px;margin-right:7px}.lego-bapsim .lego-title,.lego-hururuk .lego-title,.lego-mangwon .lego-title{font-size:clamp(18px,4.8vw,25px)}
+.lego-hometown{--c:#f25b9a;grid-column:1/7;grid-row:4}.lego-friends{--c:#0875ed;grid-column:7/13;grid-row:4}.lego-hometown .lego-title-line::before{content:"◎";font-size:42px;margin-right:9px}.lego-friends .lego-title-line::before{content:"●●●";font-size:19px;letter-spacing:-7px;margin-right:13px}.lego-hometown .lego-title,.lego-friends .lego-title{font-size:clamp(22px,6vw,31px)}
+.lego-korean{--c:#08aa5c;grid-column:1/7;grid-row:5}.lego-ownerchat{--c:#ff8b17;grid-column:7/13;grid-row:5;color:#171717}.lego-korean .lego-title-line::before{content:"가 A";font-size:28px;font-weight:950;margin-right:10px}.lego-ownerchat .lego-title-line::before{content:"•••";font-size:30px;letter-spacing:2px;margin-right:10px}.lego-korean .lego-title,.lego-ownerchat .lego-title{font-size:clamp(22px,6vw,31px)}
+.lego-block .hellokorean-desc,.lego-block .hellokorean-btn,.lego-block .hellokorean-url{display:none}.home-section-title,.home-community-latest{display:none!important}
+body:has(.home-view:not([hidden])) .owner-chat-fab,body:has(.home-view:not([hidden])) .owner-chat-banner{display:none!important}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:#fff;border-top:1px solid #e7e2da;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -2px 9px rgba(0,0,0,.05)}.bottom-nav[hidden]{display:none}.bottom-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:72px;padding:7px 2px;background:none;border:0;color:#40505a}.bottom-nav-btn.active{color:#16834f;font-weight:800}.bottom-nav-icon{font-size:24px}.bottom-nav-label{font-size:11px;line-height:1.1}.bottom-nav-btn-write .bottom-nav-icon{font-size:24px}
+@media(max-width:390px){.lego-board{grid-template-rows:106px 224px 140px 148px 148px}.lego-block{border-radius:15px;padding:40px 10px 12px}.lego-block::before{left:9px;right:9px;background-size:54px 34px,54px 15px,54px 34px}.lego-block::after{right:8px;bottom:8px;width:31px;height:31px;font-size:27px}.lego-breakfast{padding-left:14px;padding-right:44px}.lego-title-line{max-width:calc(100% - 34px)}}
 
 
 /* ---------------- 천원의 아침밥 평가 팝업(당일 첫 방문 1회, 모바일 UI 개선 6단계) ---------------- */
