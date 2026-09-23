@@ -2736,6 +2736,29 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
 .b3-breakfast-shape{width:calc(100% + 12px)!important}
 .b3-room-shape{width:calc(100% + 8px)!important;left:-8px!important}
 
+
+/* ===== HOME V10 — studless interlocking puzzle blocks ===== */
+.b2-brick::before{display:none!important}
+.b3-event-studs,.b3-breakfast-studs,.b3-room-studs{display:none!important}
+.b2-brick,.b3-event,.b3-breakfast,.b3-room{border-radius:12px!important}
+.b2-grid{gap:0!important}
+.b2-event{margin-bottom:8px!important}
+.b2-breakfast,.b2-room{margin-bottom:0!important}
+.b2-breakfast{clip-path:polygon(0 0,100% 0,100% 40%,94% 40%,94% 66%,100% 66%,100% 100%,0 100%)}
+.b2-room{clip-path:polygon(6% 0,100% 0,100% 100%,0 100%,0 66%,8% 66%,8% 40%,0 40%,0 0)}
+.b2-bapsim{clip-path:polygon(0 0,100% 0,100% 38%,94% 38%,94% 68%,100% 68%,100% 100%,0 100%)}
+.b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 38%,100% 38%,100% 68%,94% 68%,94% 100%,6% 100%,6% 68%,0 68%,0 38%,6% 38%)}
+.b2-mangwon{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 68%,6% 68%,6% 38%,0 38%)}
+.b2-hometown{clip-path:polygon(0 0,100% 0,100% 40%,94% 40%,94% 66%,100% 66%,100% 100%,0 100%)}
+.b2-friends{clip-path:polygon(6% 0,100% 0,100% 100%,0 100%,0 66%,8% 66%,8% 40%,0 40%,0 0)}
+.b2-korean{clip-path:polygon(0 0,100% 0,100% 40%,94% 40%,94% 66%,100% 66%,100% 100%,0 100%)}
+.b2-owner{clip-path:polygon(6% 0,100% 0,100% 100%,0 100%,0 66%,8% 66%,8% 40%,0 40%,0 0)}
+.b2-breakfast::after,.b2-hometown::after,.b2-korean::after{display:none!important}
+.b3-event-shape .b3-event-face{d:path("M8 7H392V84L378 98H22L8 84Z")}
+.b3-breakfast-shape .b3-breakfast-face{d:path("M8 7H252V84H238V144H252V192L238 207H22L8 192Z")}
+.b3-event-shape .b3-event-depth,.b3-breakfast-shape .b3-breakfast-depth{display:none!important}
+@media(max-width:430px){.b2-grid{column-gap:0!important;row-gap:0!important}.b2-event{margin-bottom:7px!important}}
+
 </style>
 </head>
 <body>
