@@ -693,6 +693,7 @@ button {
 
 @media (max-width: 700px) {
   .owner-chat-fab { display: inline-flex; }
+  body:has(.home-view:not([hidden])) .owner-chat-fab { display: none; }
 }
 
 /* ---------------- PWA 업데이트 알림 / 바탕화면 추가 안내 ----------------
@@ -1014,7 +1015,7 @@ body:has(.home-view:not([hidden])) .header-top { margin-bottom: 0; }
   /* 교정 지시서 3번의 블록별 시각적 무게를 그대로 행 높이로 씁니다
      (이벤트/아침밥·방구하기 행/밥심·후루룩찹찹 행/고향·만권화밥 행/
      친구·한국어 행/사장님 행). PC/모바일 공통(이미 모바일 기준 값). */
-  grid-template-rows: 106px 215px 142px 145px 148px;
+  grid-template-rows: 88px 160px 122px 128px 126px;
   /* 블록끼리 완전히 맞붙으면 색칠된 표처럼 보여, 각 블록 모서리를
      둥글리고(.lego-block border-radius) 그 사이로 보드 배경(--lego-bg)이
      이음매처럼 보이도록 간격을 넉넉히 둡니다(레고 블록이 서로 맞닿을 때
