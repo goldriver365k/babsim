@@ -2688,6 +2688,16 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
 .b3-breakfast>span,.b3-breakfast>strong{position:relative;z-index:2}
 .b3-breakfast:active{transform:translateY(4px)!important;filter:brightness(.97)}
 
+
+/* ===== HOME V9 stage 3: ROOM real SVG block ===== */
+.b3-room{background:transparent!important;box-shadow:none!important;border:0!important;overflow:visible!important;isolation:isolate}
+.b3-room::before,.b3-room::after{display:none!important}
+.b3-room-shape{position:absolute;inset:0;width:100%;height:100%;z-index:0;overflow:visible;filter:drop-shadow(0 5px 4px rgba(43,30,12,.24))}
+.b3-room-face,.b3-room-depth,.b3-room-studs{stroke:rgba(0,0,0,.15);stroke-width:1.5}
+.b3-room-face,.b3-room-studs{fill:#1e88e5}.b3-room-depth{fill:#1268ad}
+.b3-room>span,.b3-room>strong{position:relative;z-index:2}
+.b3-room:active{transform:translateY(4px)!important;filter:brightness(.97)}
+
 </style>
 </head>
 <body>
@@ -2754,7 +2764,7 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
     <button type="button" class="b2-brick b2-breakfast b3-breakfast" id="homeCardBreakfast"><svg class="b3-breakfast-shape" viewBox="0 0 260 220" preserveAspectRatio="none" aria-hidden="true"><path class="b3-breakfast-depth" d="M8 14H252V91H240V137H252V199L238 214H22L8 199Z"/><path class="b3-breakfast-face" d="M8 7H252V84H238V144H252V192L238 207H22L8 192Z"/><g class="b3-breakfast-studs"><ellipse cx="52" cy="11" rx="21" ry="8"/><ellipse cx="130" cy="11" rx="21" ry="8"/><ellipse cx="208" cy="11" rx="21" ry="8"/></g></svg>
       <span class="b2-small">천원의</span><strong id="homeCardBreakfastName">아침밥</strong><span class="b2-breakfast-art" aria-hidden="true"><svg viewBox="0 0 92 70"><path d="M12 34h60c0 19-12 29-30 29S12 53 12 34Z"/><path d="M18 31c6-15 42-15 48 0"/><path d="M29 12c-6 7 6 9 0 16M44 8c-7 9 7 10 0 20M59 12c-6 7 6 9 0 16"/></svg></span><span class="b2-coin">1,000</span><span class="b2-go">›</span><span id="homeCardBreakfastPrice" hidden></span><span id="homeCardBreakfastLoc" hidden></span>
     </button>
-    <button type="button" class="b2-brick b2-room" id="roomFinderCardBtn" aria-label="방 구하기">
+    <button type="button" class="b2-brick b2-room b3-room" id="roomFinderCardBtn" aria-label="방 구하기"><svg class="b3-room-shape" viewBox="0 0 180 220" preserveAspectRatio="none" aria-hidden="true"><path class="b3-room-depth" d="M8 14H172V199L158 214H22L8 199V143H20V86H8Z"/><path class="b3-room-face" d="M8 7H172V192L158 207H22L8 192V136H22V79H8Z"/><g class="b3-room-studs"><ellipse cx="48" cy="11" rx="20" ry="8"/><ellipse cx="132" cy="11" rx="20" ry="8"/></g></svg>
       <span class="b2-room-art" aria-hidden="true"><svg viewBox="0 0 92 78"><path d="M15 39 46 13l31 26v29H15z"/><path d="M35 68V47h22v21"/><path d="M9 25c3-9 16-10 21-3M64 17c4-8 15-7 19 0"/></svg></span><strong id="homeLegoRoomTitle">방 구하기</strong><span class="b2-go">›</span>
     </button>
     <button type="button" class="home-service-card b2-brick b2-bapsim" data-store="bapsim"><span class="b2-symbol b2-icon-bowl" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M12 30h40c0 15-8 24-20 24S12 45 12 30Z"/><path d="M17 27c4-11 26-11 30 0"/><path d="M23 10c-5 6 5 7 0 13M34 8c-5 7 6 8 0 15M45 11c-5 6 5 7 0 13"/></svg></span><strong>밥심</strong><span class="b2-go">›</span><span id="homeCardBapsimLoc" hidden></span></button>
