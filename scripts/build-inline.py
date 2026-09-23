@@ -174,39 +174,44 @@ def build():
          진입점. 새 이벤트 CMS를 만들지 않습니다. -->
     <button type="button" class="lego-block lego-event" id="homeLegoEventBtn">
       <span class="lego-eyebrow">EVENT</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoEventLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoEventLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
     </button>
 
-    <!-- 2. 천원의 아침밥 — 기존 id/클릭 핸들러 그대로(밥심 내부 아침밥 화면). -->
+    <!-- 2. 천원의 아침밥 — 기존 id/클릭 핸들러 그대로(밥심 내부 아침밥 화면).
+         "1,000원"을 블록을 채우는 큰 숫자로 씁니다(교정 지시서 4번). -->
     <button type="button" class="lego-block lego-breakfast" id="homeCardBreakfast">
-      <span class="lego-eyebrow" id="homeCardBreakfastPrice"></span>
-      <span class="lego-title-line"><span class="lego-title" id="homeCardBreakfastName"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-hero-number" id="homeCardBreakfastPrice"></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeCardBreakfastName"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
       <span class="home-service-loc" id="homeCardBreakfastLoc" hidden></span>
     </button>
 
     <!-- 3. 방 구하기(js/room-finder.js) — 기존 id 그대로, 클릭하면
-         room-finder.js가 언어 선택 → 입력폼 모달을 띄웁니다. -->
+         room-finder.js가 언어 선택 → 입력폼 모달을 띄웁니다. 제목은
+         기존 ROOM_FINDER.title 다국어 데이터를 그대로 재사용합니다
+         (js/app.js renderHome()에서 채움 — 브랜드명이 아닌 일반 UI
+         문구라 언어별로 바뀌어야 합니다, 교정 지시서 14번). -->
     <button type="button" class="lego-block lego-room" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
       <span class="lego-eyebrow">ROOM</span>
-      <span class="lego-title-line"><span class="lego-title">방 구하기</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoRoomTitle"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
     </button>
 
-    <!-- 4. 밥심 — 기존 data-store 그대로. -->
+    <!-- 4. 밥심 — 기존 data-store 그대로. 매장 브랜드명은 헤더 탭과
+         마찬가지로 항상 한국어 고정입니다(기존 정책, 새 번역 없음). -->
     <button type="button" class="home-service-card lego-block lego-bapsim" data-store="bapsim">
-      <span class="lego-title-line"><span class="lego-title">밥심</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-title-line"><span class="lego-title">밥심</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
       <span class="home-service-loc" id="homeCardBapsimLoc" hidden></span>
     </button>
 
     <!-- 5. 후루룩찹찹 — 기존 data-store 그대로. -->
     <button type="button" class="home-service-card lego-block lego-hururuk" data-store="hururuk">
       <span class="lego-eyebrow">NOODLE · RICE</span>
-      <span class="lego-title-line"><span class="lego-title">후루룩찹찹</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-title-line"><span class="lego-title">후루룩찹찹</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
       <span class="home-service-loc" id="homeCardHururukLoc" hidden></span>
     </button>
 
     <!-- 6. 만권화밥 — 기존 data-store 그대로. -->
     <button type="button" class="home-service-card lego-block lego-mangwon" data-store="mangwon">
-      <span class="lego-title-line"><span class="lego-title">만권화밥</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-title-line"><span class="lego-title">만권화밥</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
       <span class="home-service-loc" id="homeCardMangwonLoc" hidden></span>
     </button>
 
@@ -214,20 +219,22 @@ def build():
          hometown 카테고리로 바로 들어갑니다(js/community.js
          navigateToCategory, 새 route 아님). -->
     <button type="button" class="lego-block lego-hometown" id="homeLegoHometownBtn">
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoHometownLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-eyebrow">HOMETOWN</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoHometownLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
     </button>
 
     <!-- 8. 친구 만들기 — 기존 밥심 커뮤니티의 friends 카테고리로 이동. -->
     <button type="button" class="lego-block lego-friends" id="homeLegoFriendsBtn">
       <span class="lego-eyebrow">CONNECT</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoFriendsLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoFriendsLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
     </button>
 
     <!-- 9. 한국어 공부 — 기존 hellokorean.site 연결(id/href/GA 클릭 추적)
          그대로. 부제/버튼/URL 텍스트는 기존 로직이 계속 채우지만(빈
          상태로 두면 안 됨), LEGO 보드에서는 보이지 않게만 둡니다. -->
     <a class="lego-block lego-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
-      <span class="lego-title-line"><span class="lego-title" id="helloKoreanTitle"></span><span class="lego-arrow" aria-hidden="true">↗</span></span>
+      <span class="lego-eyebrow">KOREAN</span>
+      <span class="lego-title-line"><span class="lego-title" id="helloKoreanTitle"></span><span class="lego-arrow" aria-hidden="true"> ↗</span></span>
       <span class="hellokorean-desc" id="helloKoreanDesc" hidden></span>
       <span class="hellokorean-btn" id="helloKoreanBtn" hidden></span>
       <span class="hellokorean-url" hidden><span id="helloKoreanUrl">hellokorean.site</span></span>
@@ -238,7 +245,8 @@ def build():
          아님). 기존 footer/FAB은 그대로 두고, 홈 보드 안에도 같은
          진입점을 하나 더 둡니다. -->
     <a class="lego-block lego-ownerchat" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer">
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoOwnerChatLabel"></span><span class="lego-arrow" aria-hidden="true">↗</span></span>
+      <span class="lego-eyebrow">TALK</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoOwnerChatLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
     </a>
   </div>
 

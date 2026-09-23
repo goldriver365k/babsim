@@ -433,6 +433,9 @@
     if (els.homeLegoFriendsLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoFriendsLabel.textContent = COMMUNITY_CATEGORIES.friends[state.lang] || COMMUNITY_CATEGORIES.friends.ko;
     }
+    if (els.homeLegoRoomTitle) {
+      els.homeLegoRoomTitle.textContent = ROOM_FINDER.title[state.lang] || ROOM_FINDER.title.ko;
+    }
     // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
     if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
@@ -969,6 +972,10 @@
     els.homeLegoFriendsBtn = qs("homeLegoFriendsBtn");
     els.homeLegoFriendsLabel = qs("homeLegoFriendsLabel");
     els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
+    // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
+    // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
+    // 선택 언어에 맞춰 바꿉니다(교정 지시서 14번 — 새 번역 없음).
+    els.homeLegoRoomTitle = qs("homeLegoRoomTitle");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");
