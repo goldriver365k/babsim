@@ -2527,3 +2527,20 @@ body:has(.b2-home:not([hidden])) .owner-chat-fab,body:has(.b2-home:not([hidden])
 .b2-icon-chat svg path{fill:#fff;stroke:#fff}.b2-icon-chat svg circle{fill:#d86e00;stroke:none}
 .b2-bapsim .b2-symbol,.b2-hururuk .b2-symbol,.b2-mangwon .b2-symbol,.b2-hometown .b2-symbol,.b2-friends .b2-symbol,.b2-korean .b2-symbol,.b2-owner .b2-symbol{transform:none}
 
+
+
+/* ===== BABSIM HOME V8.2 — hero SVG illustrations ===== */
+.b2-event{padding-left:98px!important;align-items:flex-start!important}
+.b2-event::after{display:none!important}
+.b2-hero-icon{position:absolute;left:17px;top:19px;width:69px;height:61px;color:#fff}
+.b2-hero-icon svg,.b2-breakfast-art svg,.b2-room-art svg{width:100%;height:100%;overflow:visible}
+.b2-hero-icon path,.b2-breakfast-art path,.b2-room-art path{fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.b2-event .b2-kicker{position:absolute;left:98px;top:18px;margin:0}
+.b2-event strong{margin-top:7px}
+.b2-event-sub{font-size:11px;font-weight:850;letter-spacing:-.03em;margin-top:3px;color:#fff;opacity:.95}
+.b2-breakfast-art{position:absolute;right:9px;bottom:39px;width:69px;height:54px;color:#17212a;filter:drop-shadow(0 3px 0 rgba(0,0,0,.13))}
+.b2-breakfast .b2-coin{top:47px;right:14px;width:55px;height:55px;z-index:3}
+.b2-room-art{display:block;width:75px;height:66px;margin:0 auto 17px;color:#fff;filter:drop-shadow(0 3px 0 rgba(0,0,0,.15))}
+.b2-house{display:none!important}
+@media(min-width:431px){.b2-hero-icon{left:23px;top:20px;width:78px;height:68px}.b2-event{padding-left:116px!important}.b2-event .b2-kicker{left:116px}.b2-event-sub{font-size:13px}.b2-breakfast-art{width:82px;height:64px;right:15px;bottom:43px}.b2-breakfast .b2-coin{top:56px;right:20px}.b2-room-art{width:88px;height:76px}}
+
