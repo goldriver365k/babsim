@@ -2515,3 +2515,15 @@ body:has(.b2-home:not([hidden])) main{max-width:600px;margin:auto;padding:0 8px 
 body:has(.b2-home:not([hidden])) .owner-chat-fab,body:has(.b2-home:not([hidden])) .owner-chat-banner{display:none!important}
 @media(min-width:431px){.b2-grid{grid-template-rows:114px 248px 152px 162px 162px}.b2-brick{padding:46px 15px 16px}.b2-breakfast{padding-right:90px}.b2-breakfast .b2-coin{width:72px;height:72px;right:17px;top:92px;font-size:21px}.b2-breakfast::after{top:101px}.b2-symbol{min-width:60px;height:53px}}
 
+
+
+/* ===== BABSIM HOME V8.1 — inline SVG service illustrations ===== */
+.b2-symbol svg{display:block;width:100%;height:100%;overflow:visible}
+.b2-symbol svg path,.b2-symbol svg circle{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.b2-icon-bowl,.b2-icon-noodle,.b2-icon-books,.b2-icon-globe,.b2-icon-friends,.b2-icon-korean,.b2-icon-chat{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;color:#fff}
+.b2-icon-bowl{width:61px!important;height:55px!important}.b2-icon-noodle{width:58px!important;height:57px!important}.b2-icon-books{width:61px!important;height:55px!important}.b2-icon-globe{width:61px!important;height:58px!important}.b2-icon-friends{width:74px!important;height:58px!important}.b2-icon-korean{width:70px!important;height:58px!important}.b2-icon-chat{width:60px!important;height:56px!important;color:#fff!important}
+.b2-icon-books svg path:nth-child(-n+3){fill:rgba(255,255,255,.12)}
+.b2-icon-korean svg path{fill:#fff;stroke:#fff}.b2-icon-korean svg text{font:900 17px sans-serif;fill:#287c39;stroke:none}
+.b2-icon-chat svg path{fill:#fff;stroke:#fff}.b2-icon-chat svg circle{fill:#d86e00;stroke:none}
+.b2-bapsim .b2-symbol,.b2-hururuk .b2-symbol,.b2-mangwon .b2-symbol,.b2-hometown .b2-symbol,.b2-friends .b2-symbol,.b2-korean .b2-symbol,.b2-owner .b2-symbol{transform:none}
+

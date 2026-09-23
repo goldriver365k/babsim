@@ -2563,6 +2563,17 @@ body:has(.b2-home:not([hidden])) main{max-width:600px;margin:auto;padding:0 8px 
 body:has(.b2-home:not([hidden])) .owner-chat-fab,body:has(.b2-home:not([hidden])) .owner-chat-banner{display:none!important}
 @media(min-width:431px){.b2-grid{grid-template-rows:114px 248px 152px 162px 162px}.b2-brick{padding:46px 15px 16px}.b2-breakfast{padding-right:90px}.b2-breakfast .b2-coin{width:72px;height:72px;right:17px;top:92px;font-size:21px}.b2-breakfast::after{top:101px}.b2-symbol{min-width:60px;height:53px}}
 
+
+/* ===== BABSIM HOME V8.1 — inline SVG service illustrations ===== */
+.b2-symbol svg{display:block;width:100%;height:100%;overflow:visible}
+.b2-symbol svg path,.b2-symbol svg circle{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.b2-icon-bowl,.b2-icon-noodle,.b2-icon-books,.b2-icon-globe,.b2-icon-friends,.b2-icon-korean,.b2-icon-chat{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;color:#fff}
+.b2-icon-bowl{width:61px!important;height:55px!important}.b2-icon-noodle{width:58px!important;height:57px!important}.b2-icon-books{width:61px!important;height:55px!important}.b2-icon-globe{width:61px!important;height:58px!important}.b2-icon-friends{width:74px!important;height:58px!important}.b2-icon-korean{width:70px!important;height:58px!important}.b2-icon-chat{width:60px!important;height:56px!important;color:#fff!important}
+.b2-icon-books svg path:nth-child(-n+3){fill:rgba(255,255,255,.12)}
+.b2-icon-korean svg path{fill:#fff;stroke:#fff}.b2-icon-korean svg text{font:900 17px sans-serif;fill:#287c39;stroke:none}
+.b2-icon-chat svg path{fill:#fff;stroke:#fff}.b2-icon-chat svg circle{fill:#d86e00;stroke:none}
+.b2-bapsim .b2-symbol,.b2-hururuk .b2-symbol,.b2-mangwon .b2-symbol,.b2-hometown .b2-symbol,.b2-friends .b2-symbol,.b2-korean .b2-symbol,.b2-owner .b2-symbol{transform:none}
+
 </style>
 </head>
 <body>
@@ -2632,13 +2643,13 @@ body:has(.b2-home:not([hidden])) .owner-chat-fab,body:has(.b2-home:not([hidden])
     <button type="button" class="b2-brick b2-room" id="roomFinderCardBtn" aria-label="방 구하기">
       <span class="b2-house" aria-hidden="true"></span><strong id="homeLegoRoomTitle">방 구하기</strong><span class="b2-go">›</span>
     </button>
-    <button type="button" class="home-service-card b2-brick b2-bapsim" data-store="bapsim"><span class="b2-symbol">밥</span><strong>밥심</strong><span class="b2-go">›</span><span id="homeCardBapsimLoc" hidden></span></button>
-    <button type="button" class="home-service-card b2-brick b2-hururuk" data-store="hururuk"><span class="b2-symbol">면</span><strong>후루룩찹찹</strong><span class="b2-go">›</span><span id="homeCardHururukLoc" hidden></span></button>
-    <button type="button" class="home-service-card b2-brick b2-mangwon" data-store="mangwon"><span class="b2-symbol">책</span><strong>만권화밥</strong><span class="b2-go">›</span><span id="homeCardMangwonLoc" hidden></span></button>
-    <button type="button" class="b2-brick b2-hometown" id="homeLegoHometownBtn"><span class="b2-symbol">地</span><strong id="homeLegoHometownLabel">나의 고향 이야기</strong><span class="b2-go">›</span></button>
-    <button type="button" class="b2-brick b2-friends" id="homeLegoFriendsBtn"><span class="b2-symbol">●●●</span><strong id="homeLegoFriendsLabel">친구 만들기</strong><span class="b2-go">›</span></button>
-    <a class="b2-brick b2-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer"><span class="b2-symbol">가 A</span><strong id="helloKoreanTitle">한국어 공부</strong><span class="b2-go">›</span><span id="helloKoreanDesc" hidden></span><span id="helloKoreanBtn" hidden></span><span id="helloKoreanUrl" hidden>hellokorean.site</span></a>
-    <a class="b2-brick b2-owner" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer"><span class="b2-symbol">•••</span><strong id="homeLegoOwnerChatLabel">사장님에게 말하기</strong><span class="b2-go">›</span></a>
+    <button type="button" class="home-service-card b2-brick b2-bapsim" data-store="bapsim"><span class="b2-symbol b2-icon-bowl" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M12 30h40c0 15-8 24-20 24S12 45 12 30Z"/><path d="M17 27c4-11 26-11 30 0"/><path d="M23 10c-5 6 5 7 0 13M34 8c-5 7 6 8 0 15M45 11c-5 6 5 7 0 13"/></svg></span><strong>밥심</strong><span class="b2-go">›</span><span id="homeCardBapsimLoc" hidden></span></button>
+    <button type="button" class="home-service-card b2-brick b2-hururuk" data-store="hururuk"><span class="b2-symbol b2-icon-noodle" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M14 28h36l-5 25H19l-5-25Z"/><path d="M12 24h40M22 13c0 8 6 7 6 15M33 10c0 10 6 9 6 18M44 13c0 8-6 7-6 15"/></svg></span><strong>후루룩찹찹</strong><span class="b2-go">›</span><span id="homeCardHururukLoc" hidden></span></button>
+    <button type="button" class="home-service-card b2-brick b2-mangwon" data-store="mangwon"><span class="b2-symbol b2-icon-books" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M10 14h34v11H10zM16 27h38v11H16zM9 40h39v11H9z"/><path d="M17 18h20M23 31h23M16 44h24"/></svg></span><strong>만권화밥</strong><span class="b2-go">›</span><span id="homeCardMangwonLoc" hidden></span></button>
+    <button type="button" class="b2-brick b2-hometown" id="homeLegoHometownBtn"><span class="b2-symbol b2-icon-globe" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="28" cy="30" r="20"/><path d="M8 30h40M28 10c-10 11-10 29 0 40M28 10c10 11 10 29 0 40"/><path d="M49 34c0-6 9-6 9 0 0 7-4 11-4 11s-5-5-5-11Z"/></svg></span><strong id="homeLegoHometownLabel">나의 고향 이야기</strong><span class="b2-go">›</span></button>
+    <button type="button" class="b2-brick b2-friends" id="homeLegoFriendsBtn"><span class="b2-symbol b2-icon-friends" aria-hidden="true"><svg viewBox="0 0 76 64"><circle cx="38" cy="18" r="9"/><circle cx="17" cy="24" r="7"/><circle cx="59" cy="24" r="7"/><path d="M23 53c1-14 7-21 15-21s14 7 15 21M6 53c1-11 5-17 11-17 5 0 8 3 10 8M70 53c-1-11-5-17-11-17-5 0-8 3-10 8"/></svg></span><strong id="homeLegoFriendsLabel">친구 만들기</strong><span class="b2-go">›</span></button>
+    <a class="b2-brick b2-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer"><span class="b2-symbol b2-icon-korean" aria-hidden="true"><svg viewBox="0 0 76 64"><path d="M8 13h27v39H8zM41 13h27v39H41z"/><path d="M35 17c-8-4-18-4-27 0M41 17c8-4 18-4 27 0"/><text x="14" y="39">가</text><text x="48" y="39">A</text></svg></span><strong id="helloKoreanTitle">한국어 공부</strong><span class="b2-go">›</span><span id="helloKoreanDesc" hidden></span><span id="helloKoreanBtn" hidden></span><span id="helloKoreanUrl" hidden>hellokorean.site</span></a>
+    <a class="b2-brick b2-owner" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer"><span class="b2-symbol b2-icon-chat" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M9 13h46v32H31L19 54v-9H9V13Z"/><circle cx="21" cy="29" r="3"/><circle cx="32" cy="29" r="3"/><circle cx="43" cy="29" r="3"/></svg></span><strong id="homeLegoOwnerChatLabel">사장님에게 말하기</strong><span class="b2-go">›</span></a>
   </div>
   <h2 class="home-section-title" id="homeCommunityLatestTitle" hidden></h2><div class="home-community-latest" id="homeCommunityLatest" hidden></div>
 </section>
