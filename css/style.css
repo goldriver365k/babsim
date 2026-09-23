@@ -2661,3 +2661,27 @@ main {
  .b2-room:before{width:16px!important}
  .b2-bapsim:before,.b2-hururuk:before{right:-11px!important;width:22px!important}
 }
+
+
+/* ===== HOME V12 — seamless interlocking joints ===== */
+.b2-grid{gap:0!important;column-gap:0!important;row-gap:0!important}
+.b2-brick{margin:0!important}
+.b2-event{margin-bottom:4px!important}
+.b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{clip-path:none!important}
+.b2-breakfast::after,.b2-hometown::after,.b2-korean::after{display:block!important;content:"";position:absolute!important;right:-16px!important;top:42%!important;width:32px!important;height:58px!important;border-radius:0 13px 13px 0!important;background:inherit!important;z-index:8!important;box-shadow:4px 3px 4px rgba(0,0,0,.14)!important}
+.b2-room::after,.b2-friends::after,.b2-owner::after{display:block!important;content:"";position:absolute!important;left:-16px!important;top:42%!important;width:32px!important;height:58px!important;border-radius:13px 0 0 13px!important;background:#f7f1e7!important;z-index:9!important;box-shadow:inset -3px 0 3px rgba(0,0,0,.12)!important}
+.b2-bapsim::after{display:block!important;content:"";position:absolute!important;right:-13px!important;top:35%!important;width:26px!important;height:48px!important;border-radius:0 11px 11px 0!important;background:inherit!important;z-index:8!important}
+.b2-hururuk::before{display:block!important;content:"";position:absolute!important;left:-13px!important;top:35%!important;width:26px!important;height:48px!important;border-radius:11px 0 0 11px!important;background:#f7f1e7!important;z-index:9!important}
+.b2-hururuk::after{display:block!important;content:"";position:absolute!important;right:-13px!important;top:35%!important;width:26px!important;height:48px!important;border-radius:0 11px 11px 0!important;background:inherit!important;z-index:8!important}
+.b2-mangwon::after{display:block!important;content:"";position:absolute!important;left:-13px!important;top:35%!important;width:26px!important;height:48px!important;border-radius:11px 0 0 11px!important;background:#f7f1e7!important;z-index:9!important}
+.b3-breakfast-shape,.b3-event-shape{display:none!important}
+.b3-breakfast,.b3-event{background:var(--b2-bg,transparent)!important}
+.b3-event{--b2-bg:linear-gradient(180deg,#ff3b43 0%,#ed151f 76%,#bd0710 100%)!important;box-shadow:inset 0 5px 0 rgba(255,255,255,.22),inset 0 -7px 0 rgba(126,0,0,.25),0 5px 8px rgba(40,20,0,.18)!important}
+.b3-breakfast{--b2-bg:linear-gradient(180deg,#ffd84d 0%,#ffc20c 76%,#d89c00 100%)!important;box-shadow:inset 0 5px 0 rgba(255,255,255,.25),inset 0 -7px 0 rgba(140,91,0,.22),0 5px 8px rgba(40,20,0,.16)!important}
+.b2-room{background:linear-gradient(180deg,#3ba4ed 0%,#1686d8 76%,#0864aa 100%)!important}
+.b2-bapsim{background:linear-gradient(180deg,#39ce79 0%,#08ad58 76%,#087c43 100%)!important}
+.b2-hururuk{background:linear-gradient(180deg,#ff5a52 0%,#ef2823 76%,#b90e0b 100%)!important}
+.b2-mangwon{background:linear-gradient(180deg,#9c52e8 0%,#7426cb 76%,#53149a 100%)!important}
+.b2-brick{overflow:visible!important;border-radius:18px!important}
+.b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon{box-shadow:inset 0 5px 0 rgba(255,255,255,.18),inset 0 -7px 0 rgba(0,0,0,.18),0 5px 8px rgba(40,20,0,.15)!important}
+@media(max-width:430px){.b2-grid{gap:0!important}.b2-event{margin-bottom:4px!important}.b2-breakfast::after,.b2-room::after{top:41%!important}}
