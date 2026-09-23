@@ -2529,41 +2529,34 @@ main {
 
 
 
-/* ===== HOME SVG-BLOCK STAGE 1 — breakfast + room ===== */
-body:has(#homeView:not([hidden])){background:#f8f3ea}
-body:has(#homeView:not([hidden])) .site-header{background:#fffaf3;padding:12px 14px 9px;border:0;box-shadow:none}
-body:has(#homeView:not([hidden])) .header-top{max-width:600px;margin:auto;min-height:62px}
-body:has(#homeView:not([hidden])) .site-logo-btn,body:has(#homeView:not([hidden])) .site-title,body:has(#homeView:not([hidden])) .store-tabs{display:none!important}
-body:has(#homeView:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:34px;font-weight:950;line-height:.9;letter-spacing:-.055em;color:#121820}
-body:has(#homeView:not([hidden])) .site-tagline{display:block!important;margin:7px 0 0;font-size:10px;font-weight:900;letter-spacing:.13em;color:#30343a}
-body:has(#homeView:not([hidden])) .site-tagline:empty::before{content:"EAT · PLAY · CONNECT"}
-body:has(#homeView:not([hidden])) main{max-width:600px;margin:auto;padding:0 7px 96px!important;background:#f8f3ea}
-#homeView{padding:10px 0 0!important;background:#f8f3ea}
-#homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
-#homeLegoBoard{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:94px 206px 120px 128px 128px;gap:6px!important;width:100%;margin:0 auto 18px;padding:0}
-#homeLegoBoard .lego-block{--brick:#666;position:relative!important;min-width:0;min-height:0;margin:0!important;padding:36px 10px 10px!important;border:0!important;border-radius:14px!important;clip-path:none!important;overflow:visible!important;display:flex!important;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;text-decoration:none;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--brick) 70%,white),var(--brick) 28%,color-mix(in srgb,var(--brick) 84%,black))!important;box-shadow:inset 3px 3px 0 rgba(255,255,255,.3),inset -4px -5px 0 rgba(0,0,0,.15),0 6px 0 color-mix(in srgb,var(--brick) 68%,black),0 9px 10px rgba(0,0,0,.18)!important}
-#homeLegoBoard .lego-block::before{content:"";position:absolute;top:-9px;left:9px;right:9px;height:28px;background:radial-gradient(ellipse 18px 7px at 18px 7px,color-mix(in srgb,var(--brick) 48%,white) 0 54%,var(--brick) 57% 70%,color-mix(in srgb,var(--brick) 62%,black) 73% 82%,transparent 85%);background-size:44px 28px;background-repeat:space no-repeat;filter:drop-shadow(0 3px 1px rgba(0,0,0,.17))}
-#homeLegoBoard .lego-block::after{content:"›";position:absolute;right:8px;bottom:8px;width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font:900 26px/1 Arial;box-shadow:0 3px 6px rgba(0,0,0,.2)}
-#homeLegoBoard .lego-arrow{display:none!important}
-#homeLegoBoard .lego-title-line{display:block;max-width:calc(100% - 34px)}
-#homeLegoBoard .lego-title{font-size:clamp(16px,4.8vw,22px)!important;font-weight:950;line-height:1.03;letter-spacing:-.04em;word-break:keep-all;text-shadow:0 2px 0 rgba(0,0,0,.18)}
-#homeLegoBoard .lego-eyebrow{margin-bottom:auto;font-size:9px;font-weight:900;letter-spacing:.1em;opacity:.75}
-#homeLegoBoard .lego-event{grid-column:1/13;grid-row:1;--brick:#e53935;align-items:center;justify-content:center}
-#homeLegoBoard .lego-breakfast{grid-column:1/9;grid-row:2;--brick:#ffc107;color:#111;padding:28px 74px 15px 15px!important;border-radius:18px 10px 18px 18px!important}
-#homeLegoBoard .lego-room{grid-column:9/13;grid-row:2;--brick:#1e88e5;padding:38px 10px 15px!important;border-radius:10px 18px 18px 10px!important}
-#homeLegoBoard .lego-bapsim{grid-column:1/5;grid-row:3;--brick:#4caf50}#homeLegoBoard .lego-hururuk{grid-column:5/9;grid-row:3;--brick:#e53935}#homeLegoBoard .lego-mangwon{grid-column:9/13;grid-row:3;--brick:#8e24aa}#homeLegoBoard .lego-hometown{grid-column:1/7;grid-row:4;--brick:#f06292}#homeLegoBoard .lego-friends{grid-column:7/13;grid-row:4;--brick:#1e88e5}#homeLegoBoard .lego-korean{grid-column:1/7;grid-row:5;--brick:#4caf50}#homeLegoBoard .lego-ownerchat{grid-column:7/13;grid-row:5;--brick:#ffc107;color:#111}
-#homeLegoBoard .lego-breakfast::before{left:10px;right:10px;background-size:46px 28px}
-#homeLegoBoard .lego-breakfast::after{content:"›";z-index:6}
-#homeLegoBoard .lego-breakfast .lego-hero-number{font-size:0;margin:auto 0 3px}
-#homeLegoBoard .lego-breakfast .lego-hero-number::before{content:"천원의";display:block;font-size:clamp(30px,8vw,43px);font-weight:950;line-height:.9;color:#111;letter-spacing:-.07em}
-#homeLegoBoard .lego-breakfast .lego-hero-number::after{content:"1,000";display:grid;place-items:center;position:absolute;right:16px;top:72px;width:61px;height:61px;border:4px solid #191919;border-radius:50%;background:linear-gradient(#ffd95a,#f3a900);color:#bd5b00;font-size:19px;font-weight:950;box-shadow:0 5px 0 #bf7600}
-#homeLegoBoard .lego-breakfast .lego-title{font-size:clamp(29px,8vw,43px)!important;color:#e72a20;text-shadow:none}
-#homeLegoBoard .lego-breakfast .lego-title-line::after{content:"";position:absolute;right:24px;bottom:43px;width:49px;height:36px;border-radius:50% 50% 42% 42%;background:radial-gradient(circle at 50% 35%,#fff 0 34%,transparent 35%),linear-gradient(#f6fbff 0 44%,#83bed8 45% 100%);border:3px solid #17212a;box-shadow:0 3px 0 rgba(0,0,0,.2)}
-#homeLegoBoard .lego-room .lego-title{font-size:clamp(21px,6vw,29px)!important}
-#homeLegoBoard .lego-room .lego-title-line::before{content:"";display:block;width:68px;height:62px;margin:0 auto 18px;background:linear-gradient(135deg,transparent 46%,#fff 47% 55%,transparent 56%),linear-gradient(45deg,transparent 46%,#fff 47% 55%,transparent 56%);border-bottom:8px solid #fff;filter:drop-shadow(0 3px 0 rgba(0,0,0,.18))}
-#homeLegoBoard .lego-block .hellokorean-desc,#homeLegoBoard .lego-block .hellokorean-btn,#homeLegoBoard .lego-block .hellokorean-url{display:none!important}
-body:has(#homeView:not([hidden])) .owner-chat-fab,body:has(#homeView:not([hidden])) .owner-chat-banner{display:none!important}
-@media(min-width:431px){#homeLegoBoard{grid-template-rows:104px 232px 136px 146px 146px}#homeLegoBoard .lego-breakfast{padding-right:95px!important}#homeLegoBoard .lego-breakfast .lego-hero-number::after{width:72px;height:72px;right:22px;top:80px;font-size:22px}}
+
+/* ===== BABSIM HOME V5 — clean replacement ===== */
+body:has(.b2-home:not([hidden])){background:#f7f2e9}
+body:has(.b2-home:not([hidden])) .site-header{background:#fffaf3;padding:12px 14px 9px;border:0;box-shadow:none}
+body:has(.b2-home:not([hidden])) .header-top{max-width:600px;margin:auto;min-height:62px}
+body:has(.b2-home:not([hidden])) .site-logo-btn,body:has(.b2-home:not([hidden])) .site-title,body:has(.b2-home:not([hidden])) .store-tabs{display:none!important}
+body:has(.b2-home:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:34px;font-weight:950;line-height:.9;letter-spacing:-.055em;color:#121820}
+body:has(.b2-home:not([hidden])) .site-tagline{display:block!important;margin:7px 0 0;font-size:10px;font-weight:900;letter-spacing:.13em;color:#30343a}
+body:has(.b2-home:not([hidden])) .site-tagline:empty::before{content:"EAT · PLAY · CONNECT"}
+body:has(.b2-home:not([hidden])) .lang-compact-btn{background:transparent;border:0;box-shadow:none;font-weight:850}
+body:has(.b2-home:not([hidden])) main{max-width:600px;margin:auto;padding:0 6px 98px!important;background:#f7f2e9}
+.b2-home{padding:11px 0 0!important;background:#f7f2e9}
+.b2-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:94px 194px 122px 132px 132px;gap:6px;width:100%;margin:0 auto 20px}
+.b2-brick{--c:#777;--dark:color-mix(in srgb,var(--c) 66%,black);appearance:none;position:relative;isolation:isolate;min-width:0;border:0;border-radius:15px;padding:35px 10px 12px;overflow:visible;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;text-decoration:none;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 72%,white) 0%,var(--c) 26%,var(--c) 70%,color-mix(in srgb,var(--c) 84%,black) 100%);box-shadow:inset 3px 3px 0 rgba(255,255,255,.33),inset -4px -5px 0 rgba(0,0,0,.16),0 6px 0 var(--dark),0 9px 10px rgba(36,25,14,.19);font:inherit;cursor:pointer}
+.b2-brick::before{content:"";position:absolute;z-index:4;top:-9px;left:8px;right:8px;height:28px;background:radial-gradient(ellipse 18px 7px at 18px 7px,color-mix(in srgb,var(--c) 46%,white) 0 55%,var(--c) 58% 71%,color-mix(in srgb,var(--c) 62%,black) 74% 82%,transparent 85%);background-size:43px 28px;background-repeat:space no-repeat;filter:drop-shadow(0 3px 1px rgba(0,0,0,.17));pointer-events:none}
+.b2-brick strong{max-width:calc(100% - 34px);font-size:clamp(17px,5vw,23px);font-weight:950;line-height:1.03;letter-spacing:-.045em;word-break:keep-all;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+.b2-go{position:absolute;z-index:5;right:8px;bottom:8px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font:900 27px/1 Arial;box-shadow:0 3px 6px rgba(0,0,0,.2)}
+.b2-symbol{display:grid;place-items:center;min-width:48px;height:45px;margin-bottom:9px;padding:0 5px;border:3px solid currentColor;border-radius:12px;font-size:17px;font-weight:950;line-height:1}
+.b2-kicker{margin-bottom:auto;font-size:9px;font-weight:900;letter-spacing:.13em;opacity:.8}
+.b2-event{grid-column:1/13;grid-row:1;--c:#e53935;align-items:center;justify-content:center}.b2-event strong{font-size:clamp(29px,8vw,42px)}
+.b2-breakfast{grid-column:1/9;grid-row:2;--c:#ffc107;color:#111;padding:38px 66px 14px 14px}.b2-breakfast .b2-small{margin-bottom:auto;font-size:clamp(27px,8vw,41px);font-weight:950;line-height:.9;letter-spacing:-.07em}.b2-breakfast strong{font-size:clamp(31px,9vw,46px);color:#e62b20;text-shadow:none}.b2-coin{position:absolute;right:13px;top:72px;width:57px;height:57px;border:4px solid #171717;border-radius:50%;display:grid;place-items:center;background:linear-gradient(#ffdc61,#f3a900);color:#b85800;font-size:17px;font-weight:950;box-shadow:0 5px 0 #bd7600}
+.b2-room{grid-column:9/13;grid-row:2;--c:#1e88e5}.b2-room strong{font-size:clamp(20px,6vw,29px)}.b2-house{width:61px;height:51px;margin:0 auto 22px;border:7px solid #fff;border-top:0;position:relative}.b2-house::before{content:"";position:absolute;width:39px;height:39px;left:4px;top:-22px;border-left:7px solid #fff;border-top:7px solid #fff;transform:rotate(45deg)}
+.b2-bapsim{grid-column:1/5;grid-row:3;--c:#4caf50}.b2-hururuk{grid-column:5/9;grid-row:3;--c:#e53935}.b2-mangwon{grid-column:9/13;grid-row:3;--c:#8e24aa}
+.b2-hometown{grid-column:1/7;grid-row:4;--c:#f06292}.b2-friends{grid-column:7/13;grid-row:4;--c:#1e88e5}
+.b2-korean{grid-column:1/7;grid-row:5;--c:#4caf50}.b2-owner{grid-column:7/13;grid-row:5;--c:#ff9f1c;color:#111}
+.b2-brick:active{transform:translateY(3px);box-shadow:inset 3px 3px 0 rgba(255,255,255,.25),inset -3px -3px 0 rgba(0,0,0,.14),0 3px 0 var(--dark),0 5px 7px rgba(36,25,14,.14)}
+body:has(.b2-home:not([hidden])) .owner-chat-fab,body:has(.b2-home:not([hidden])) .owner-chat-banner{display:none!important}
+@media(min-width:431px){.b2-grid{grid-template-rows:104px 222px 138px 148px 148px}.b2-brick{padding:39px 14px 14px}.b2-breakfast{padding-right:90px}.b2-breakfast .b2-coin{width:70px;height:70px;right:18px;top:82px;font-size:21px}}
 
 </style>
 </head>
@@ -2623,102 +2616,26 @@ body:has(#homeView:not([hidden])) .owner-chat-fab,body:has(#homeView:not([hidden
 <!-- 홈 화면(js/app.js의 renderHome()이 내용을 채웁니다). 기본으로
      보이는 화면이며, 매장(밥심 등)을 고르거나 커뮤니티로 이동하면
      숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
-<section class="home-view" id="homeView">
-  <div class="home-hero">
-    <!-- 히어로 이미지 placeholder — images/icon/home-hero.jpg 파일을
-         나중에 올리기만 하면 코드 수정 없이 적용됩니다. 파일이 없는
-         동안은 js/app.js가 자동으로 숨깁니다(임의 이미지 제작 없음). -->
-    <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
+<section class="home-view b2-home" id="homeView">
+  <div class="b2-grid" id="homeLegoBoard">
+    <button type="button" class="b2-brick b2-event" id="homeLegoEventBtn">
+      <span class="b2-kicker">EVENT</span><strong id="homeLegoEventLabel">이벤트</strong><span class="b2-go">›</span>
+    </button>
+    <button type="button" class="b2-brick b2-breakfast" id="homeCardBreakfast">
+      <span class="b2-small">천원의</span><strong id="homeCardBreakfastName">아침밥</strong><span class="b2-coin">1,000</span><span class="b2-go">›</span><span id="homeCardBreakfastPrice" hidden></span><span id="homeCardBreakfastLoc" hidden></span>
+    </button>
+    <button type="button" class="b2-brick b2-room" id="roomFinderCardBtn" aria-label="방 구하기">
+      <span class="b2-house" aria-hidden="true"></span><strong id="homeLegoRoomTitle">방 구하기</strong><span class="b2-go">›</span>
+    </button>
+    <button type="button" class="home-service-card b2-brick b2-bapsim" data-store="bapsim"><span class="b2-symbol">밥</span><strong>밥심</strong><span class="b2-go">›</span><span id="homeCardBapsimLoc" hidden></span></button>
+    <button type="button" class="home-service-card b2-brick b2-hururuk" data-store="hururuk"><span class="b2-symbol">면</span><strong>후루룩찹찹</strong><span class="b2-go">›</span><span id="homeCardHururukLoc" hidden></span></button>
+    <button type="button" class="home-service-card b2-brick b2-mangwon" data-store="mangwon"><span class="b2-symbol">책</span><strong>만권화밥</strong><span class="b2-go">›</span><span id="homeCardMangwonLoc" hidden></span></button>
+    <button type="button" class="b2-brick b2-hometown" id="homeLegoHometownBtn"><span class="b2-symbol">地</span><strong id="homeLegoHometownLabel">나의 고향 이야기</strong><span class="b2-go">›</span></button>
+    <button type="button" class="b2-brick b2-friends" id="homeLegoFriendsBtn"><span class="b2-symbol">●●●</span><strong id="homeLegoFriendsLabel">친구 만들기</strong><span class="b2-go">›</span></button>
+    <a class="b2-brick b2-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer"><span class="b2-symbol">가 A</span><strong id="helloKoreanTitle">한국어 공부</strong><span class="b2-go">›</span><span id="helloKoreanDesc" hidden></span><span id="helloKoreanBtn" hidden></span><span id="helloKoreanUrl" hidden>hellokorean.site</span></a>
+    <a class="b2-brick b2-owner" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer"><span class="b2-symbol">•••</span><strong id="homeLegoOwnerChatLabel">사장님에게 말하기</strong><span class="b2-go">›</span></a>
   </div>
-
-  <!-- MZ LEGO 홈 보드(리뉴얼 1단계) — 서로 다른 크기 블록 10개가 맞물린
-       구조입니다. 순서/이동 대상은 작업지시서 4·15번을 그대로 따르고,
-       모든 블록은 기존 id·data-store·클릭 핸들러를 재사용합니다(새
-       route/새 컬렉션/새 CMS 없음). 배치는 css/style.css의 .lego-* 규칙이
-       담당하고, 여기서는 DOM 순서(읽기 순서)만 그 우선순위를 따릅니다. -->
-  <div class="lego-board" id="homeLegoBoard">
-    <!-- 1. EVENT — 기존 팝업(js/site-popup.js)을 다시 열어 보여주는
-         진입점. 새 이벤트 CMS를 만들지 않습니다. -->
-    <button type="button" class="lego-block lego-event" id="homeLegoEventBtn">
-      <span class="lego-eyebrow">EVENT</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoEventLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-    </button>
-
-    <!-- 2. 천원의 아침밥 — 기존 id/클릭 핸들러 그대로(밥심 내부 아침밥 화면).
-         "1,000원"을 블록을 채우는 큰 숫자로 씁니다(교정 지시서 4번). -->
-    <button type="button" class="lego-block lego-breakfast" id="homeCardBreakfast">
-      <span class="lego-hero-number" id="homeCardBreakfastPrice"></span>
-      <span class="lego-title-line"><span class="lego-title" id="homeCardBreakfastName"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-      <span class="home-service-loc" id="homeCardBreakfastLoc" hidden></span>
-    </button>
-
-    <!-- 3. 방 구하기(js/room-finder.js) — 기존 id 그대로, 클릭하면
-         room-finder.js가 언어 선택 → 입력폼 모달을 띄웁니다. 제목은
-         기존 ROOM_FINDER.title 다국어 데이터를 그대로 재사용합니다
-         (js/app.js renderHome()에서 채움 — 브랜드명이 아닌 일반 UI
-         문구라 언어별로 바뀌어야 합니다, 교정 지시서 14번). -->
-    <button type="button" class="lego-block lego-room" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
-      <span class="lego-eyebrow">ROOM</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoRoomTitle"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-    </button>
-
-    <!-- 4. 밥심 — 기존 data-store 그대로. 매장 브랜드명은 헤더 탭과
-         마찬가지로 항상 한국어 고정입니다(기존 정책, 새 번역 없음). -->
-    <button type="button" class="home-service-card lego-block lego-bapsim" data-store="bapsim">
-      <span class="lego-title-line"><span class="lego-title">밥심</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-      <span class="home-service-loc" id="homeCardBapsimLoc" hidden></span>
-    </button>
-
-    <!-- 5. 후루룩찹찹 — 기존 data-store 그대로. -->
-    <button type="button" class="home-service-card lego-block lego-hururuk" data-store="hururuk">
-      <span class="lego-eyebrow">NOODLE · RICE</span>
-      <span class="lego-title-line"><span class="lego-title">후루룩찹찹</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-      <span class="home-service-loc" id="homeCardHururukLoc" hidden></span>
-    </button>
-
-    <!-- 6. 만권화밥 — 기존 data-store 그대로. -->
-    <button type="button" class="home-service-card lego-block lego-mangwon" data-store="mangwon">
-      <span class="lego-title-line"><span class="lego-title">만권화밥</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-      <span class="home-service-loc" id="homeCardMangwonLoc" hidden></span>
-    </button>
-
-    <!-- 7. 나의 고향 이야기 — 새 게시판 없이 기존 밥심 커뮤니티의
-         hometown 카테고리로 바로 들어갑니다(js/community.js
-         navigateToCategory, 새 route 아님). -->
-    <button type="button" class="lego-block lego-hometown" id="homeLegoHometownBtn">
-      <span class="lego-eyebrow">HOMETOWN</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoHometownLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-    </button>
-
-    <!-- 8. 친구 만들기 — 기존 밥심 커뮤니티의 friends 카테고리로 이동. -->
-    <button type="button" class="lego-block lego-friends" id="homeLegoFriendsBtn">
-      <span class="lego-eyebrow">CONNECT</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoFriendsLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-    </button>
-
-    <!-- 9. 한국어 공부 — 기존 hellokorean.site 연결(id/href/GA 클릭 추적)
-         그대로. 부제/버튼/URL 텍스트는 기존 로직이 계속 채우지만(빈
-         상태로 두면 안 됨), LEGO 보드에서는 보이지 않게만 둡니다. -->
-    <a class="lego-block lego-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
-      <span class="lego-eyebrow">KOREAN</span>
-      <span class="lego-title-line"><span class="lego-title" id="helloKoreanTitle"></span><span class="lego-arrow" aria-hidden="true"> ↗</span></span>
-      <span class="hellokorean-desc" id="helloKoreanDesc" hidden></span>
-      <span class="hellokorean-btn" id="helloKoreanBtn" hidden></span>
-      <span class="hellokorean-url" hidden><span id="helloKoreanUrl">hellokorean.site</span></span>
-    </a>
-
-    <!-- 10. 사장님에게 말하기 — 기존 footer/FAB(#ownerChatBanner/#ownerChatFab)
-         과 똑같은 카카오톡 오픈채팅 주소를 그대로 재사용합니다(새 링크
-         아님). 기존 footer/FAB은 그대로 두고, 홈 보드 안에도 같은
-         진입점을 하나 더 둡니다. -->
-    <a class="lego-block lego-ownerchat" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer">
-      <span class="lego-eyebrow">TALK</span>
-      <span class="lego-title-line"><span class="lego-title" id="homeLegoOwnerChatLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
-    </a>
-  </div>
-
-  <h2 class="home-section-title" id="homeCommunityLatestTitle"></h2>
-  <div class="home-community-latest" id="homeCommunityLatest"></div>
+  <h2 class="home-section-title" id="homeCommunityLatestTitle" hidden></h2><div class="home-community-latest" id="homeCommunityLatest" hidden></div>
 </section>
 
 <!-- 하단 내비게이션 — 홈/커뮤니티 두 화면만 빠르게 오갈 수 있게 합니다
