@@ -100,47 +100,100 @@ button {
 
 .site-brand-text { min-width: 0; }
 
-.site-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--blue);
+/* "babsim.store" — 참고 이미지의 고정 브랜드 표기(언어 무관, 굵고 크게) */
+.site-brand-name {
   margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #14181F;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* 기존 siteTitle(건물명·대학명, 매장에 따라 실제로 바뀌는 정보)은
+   대체하지 않고 브랜드명 아래 보조 줄로 내립니다. */
+.site-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin: 1px 0 0;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 
 /* LEGO 홈 디자인 참고 이미지의 장식용 태그라인("EAT · PLAY · CONNECT") —
-   siteTitle을 대체하지 않고 그 아래 보조 문구로만 추가합니다. */
+   siteTitle을 대체하지 않고 그 아래 보조 문구로만 추가합니다. 세 단어를
+   참고 이미지처럼 서로 다른 색으로 표시합니다(js/app.js에서 분리). */
 .site-tagline {
   margin: 2px 0 0;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.03em;
-  color: var(--text-mid);
   overflow-wrap: anywhere;
 }
 
-/* ---------------- 언어 선택 (7개 버튼 항상 표시, 드롭다운/팝업 없음) ----------------
-   PC: 한 줄, 균등 간격, 화면 중앙 정렬. 모바일: 숨기거나 드롭다운으로
-   바꾸지 않고, 화면 너비에 맞춰 자연스럽게 줄바꿈(기본 4+3)합니다. */
-.lang-bar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  max-width: 1200px;
-  margin: 0 auto 12px;
+.site-tagline-part-0 { color: #D6503F; }
+.site-tagline-part-1 { color: #2E6B4F; }
+.site-tagline-part-2 { color: #1D4FA3; }
+
+/* ---------------- 언어 선택 — 작은 🌐 토글 + 드롭다운 ----------------
+   참고 이미지 지시서 3번: 항상 펼쳐진 7버튼 나열 대신 작은 control로
+   표시. 버튼 목록(.lang-bar-btn)과 클릭 로직은 기존 그대로 재사용하고
+   펼침/접힘(hidden)만 새로 추가합니다. */
+.lang-compact { position: relative; flex: 0 0 auto; }
+
+.lang-compact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
+.lang-compact-btn:hover,
+.lang-compact-btn:focus-visible {
+  border-color: #1559D6;
+  outline: none;
+}
+
+.lang-compact-icon { font-size: 15px; line-height: 1; }
+.lang-compact-label { max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
+.lang-compact-caret { font-size: 11px; opacity: .7; }
+
+.lang-bar {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
+  gap: 6px;
+  width: max-content;
+  max-width: 260px;
+  margin: 0;
+  padding: 10px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-gray);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .16);
+}
+
+.lang-bar[hidden] { display: none; }
+
 .lang-bar-btn {
-  flex: 1 1 auto;
-  min-height: 42px;
-  padding: 8px 14px;
+  min-height: 40px;
+  padding: 8px 10px;
   background: #FFFFFF;
   color: #334155;
   border: 1px solid #CBD5E1;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -976,7 +1029,7 @@ button {
   min-height: 64px;
   /* 위쪽 여백을 넉넉히 두어 ::before 스터드(돌기) 줄과 텍스트가 겹치지
      않게 합니다. */
-  padding: 28px 14px 12px;
+  padding: 32px 14px 12px;
   border: none;
   border-radius: 10px;
   text-align: left;
@@ -990,37 +1043,54 @@ button {
     color-mix(in srgb, var(--block-color) 72%, white) 0%,
     var(--block-color) 45%,
     color-mix(in srgb, var(--block-color) 80%, black) 100%);
-  /* 아래로 떨어지는 입체 그림자 + 위쪽 광택 하이라이트 */
+  /* 블록 두께 표현: 위/왼쪽은 밝은 하이라이트, 오른쪽/아래는 어두운
+     옆면, 바닥에는 단단한 접지 그림자 + 부드러운 확산 그림자. */
   box-shadow:
-    0 4px 0 color-mix(in srgb, var(--block-color) 65%, black),
-    0 6px 10px rgba(0, 0, 0, .22),
-    inset 0 1px 0 rgba(255, 255, 255, .35);
+    inset 2px 0 0 rgba(255, 255, 255, .22),
+    inset 0 2px 0 rgba(255, 255, 255, .38),
+    inset -3px 0 0 rgba(0, 0, 0, .16),
+    inset 0 -4px 0 rgba(0, 0, 0, .18),
+    0 5px 0 color-mix(in srgb, var(--block-color) 62%, black),
+    0 8px 14px rgba(0, 0, 0, .25);
   /* 18번: 아주 작은 터치 반응만(빙글 돌거나 튀는 애니메이션 금지) */
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-/* 블록 상단의 레고 스터드(돌기) — 새 이미지 없이 radial-gradient만으로
-   반복 원형 패턴을 만들어 하이라이트(위)·그림자(아래)로 입체감을 줍니다. */
+/* 블록 상단의 레고 스터드(돌기) — 새 이미지 없이 radial-gradient 3겹만
+   으로 원통형(위쪽 밝은 면 → 옆면 음영 → 바닥 그림자) 입체감을 줍니다. */
 .lego-block::before {
   content: "";
   position: absolute;
-  top: 9px;
+  top: 6px;
   left: 12px;
   right: 12px;
-  height: 15px;
+  height: 22px;
   background-image:
-    radial-gradient(circle at 50% 66%, rgba(0, 0, 0, .22) 0%, rgba(0, 0, 0, 0) 60%),
-    radial-gradient(circle at 50% 32%, rgba(255, 255, 255, .95) 0%, rgba(255, 255, 255, .5) 32%, rgba(255, 255, 255, .08) 56%, rgba(255, 255, 255, 0) 62%);
-  background-size: 26px 15px, 26px 15px;
-  background-repeat: repeat-x, repeat-x;
-  background-position: 13px center, 13px center;
+    /* 스터드 바닥 접지 그림자(원통이 표면에 닿는 부분) */
+    radial-gradient(circle at 50% 76%, rgba(0, 0, 0, .38) 0%, rgba(0, 0, 0, .18) 35%, rgba(0, 0, 0, 0) 58%),
+    /* 원통 옆면(중간 톤 → 살짝 어두운 아래쪽) */
+    radial-gradient(circle at 50% 52%, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, .10) 48%, rgba(0, 0, 0, .22) 62%, rgba(0, 0, 0, 0) 72%),
+    /* 원통 윗면 밝은 하이라이트(살짝 위쪽으로 치우침 = 광원 위치) */
+    radial-gradient(circle at 42% 28%, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, .6) 28%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, 0) 60%);
+  background-size: 28px 22px, 28px 22px, 28px 22px;
+  background-repeat: repeat-x, repeat-x, repeat-x;
+  background-position: 14px 8px, 14px 4px, 14px 2px;
   pointer-events: none;
 }
 
 /* eyebrow 없이 제목만 있는 작은 블록(밥심/만권화밥)은 세로 가운데 정렬 */
 .lego-bapsim, .lego-mangwon { justify-content: center; }
 
-.lego-block:active { transform: scale(0.98); box-shadow: 0 2px 0 color-mix(in srgb, var(--block-color) 65%, black), 0 3px 5px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .35); }
+.lego-block:active {
+  transform: scale(0.98);
+  box-shadow:
+    inset 2px 0 0 rgba(255, 255, 255, .22),
+    inset 0 2px 0 rgba(255, 255, 255, .38),
+    inset -3px 0 0 rgba(0, 0, 0, .16),
+    inset 0 -4px 0 rgba(0, 0, 0, .18),
+    0 2px 0 color-mix(in srgb, var(--block-color) 62%, black),
+    0 3px 6px rgba(0, 0, 0, .2);
+}
 .lego-block:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 
 .lego-eyebrow {
@@ -1088,15 +1158,14 @@ button {
 .lego-korean    { --block-color: var(--lego-korean); }
 .lego-ownerchat { --block-color: var(--lego-ownerchat); }
 
-/* ---- 퍼즐 요철(참고 이미지에서 가장 눈에 띄는 천원의 아침밥↔방 구하기
-   경계에 시범 적용) — clip-path는 border-radius를 대체(무시)하므로,
-   각지지 않도록 네 모서리도 작은 챔퍼(경사)로 직접 그려 넣었습니다.
-   나머지 블록 쌍은 border-radius만으로 충분히 "조각" 느낌이 나므로
-   과도한 복잡도를 피해 적용하지 않았습니다. 두 블록 모두 같은 높이
-   기준점(천원의 아침밥 자신의 50% = 방 구하기 기준 31.2% 지점, 두
-   블록의 공유 구간인 아침밥 행 높이 260px의 중앙)에 홈을 파 서로 맞물린
-   경계처럼 보이게 했습니다. */
+/* ---- 퍼즐 요철(참고 이미지처럼 인접한 몇몇 블록 경계에 적용) —
+   clip-path는 border-radius를 대체(무시)하므로, 각지지 않도록 네
+   모서리도 작은 챔퍼(경사)로 직접 그려 넣었습니다. 오른쪽 블록은 홈을
+   왼쪽 블록은 탭을 파서 서로 맞물린 경계처럼 보이게 했습니다(전체 10개
+   블록이 아니라 같은 행에서 마주보는 3쌍에만 적용 — 비용 최소화). */
 .lego-breakfast {
+  /* 천원의 아침밥(260px 높이) 자신의 50% = 방 구하기 기준 31.2% 지점과
+     같은 높이(두 블록의 공유 구간인 아침밥 행 260px의 중앙). */
   clip-path: polygon(
     10px 0, calc(100% - 10px) 0, 100% 10px,
     100% calc(50% - 15px), calc(100% - 10px) calc(50% - 15px), calc(100% - 10px) calc(50% + 15px), 100% calc(50% + 15px),
@@ -1107,6 +1176,22 @@ button {
   clip-path: polygon(
     10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px),
     0 calc(31.2% + 15px), 10px calc(31.2% + 15px), 10px calc(31.2% - 15px), 0 calc(31.2% - 15px),
+    0 10px
+  );
+}
+/* 나의 고향 이야기 ↔ 만권화밥, 친구 만들기 ↔ 한국어 공부 — 같은 행이라
+   두 블록 높이가 같으므로 각자 자신의 50% 지점을 쓰면 그대로 맞습니다. */
+.lego-hometown, .lego-friends {
+  clip-path: polygon(
+    10px 0, calc(100% - 10px) 0, 100% 10px,
+    100% calc(50% - 15px), calc(100% - 10px) calc(50% - 15px), calc(100% - 10px) calc(50% + 15px), 100% calc(50% + 15px),
+    100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px
+  );
+}
+.lego-mangwon, .lego-korean {
+  clip-path: polygon(
+    10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px),
+    0 calc(50% + 15px), 10px calc(50% + 15px), 10px calc(50% - 15px), 0 calc(50% - 15px),
     0 10px
   );
 }

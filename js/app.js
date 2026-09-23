@@ -254,10 +254,34 @@
     els.groupIndicator.textContent = current + " / " + groups.length;
   }
 
+  function openLangDropdown() {
+    if (!els.langBar) return;
+    els.langBar.hidden = false;
+    if (els.langCompactBtn) els.langCompactBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeLangDropdown() {
+    if (!els.langBar) return;
+    els.langBar.hidden = true;
+    if (els.langCompactBtn) els.langCompactBtn.setAttribute("aria-expanded", "false");
+  }
+
   function renderHeader() {
     els.siteTitle.textContent = UI_TEXT.siteTitle[state.lang];
     document.title = UI_TEXT.siteTitle[state.lang];
-    if (els.siteTagline) els.siteTagline.textContent = UI_TEXT.siteTagline[state.lang];
+    if (els.siteTagline) {
+      // 참고 이미지처럼 " · "로 구분된 3단어를 각각 다른 색으로 표시
+      // (새 번역 데이터 없이 기존 UI_TEXT.siteTagline 문자열만 분리).
+      els.siteTagline.textContent = "";
+      var taglineParts = UI_TEXT.siteTagline[state.lang].split(" · ");
+      taglineParts.forEach(function (part, i) {
+        if (i > 0) els.siteTagline.appendChild(document.createTextNode(" · "));
+        var span = document.createElement("span");
+        span.className = "site-tagline-part site-tagline-part-" + (i % 3);
+        span.textContent = part;
+        els.siteTagline.appendChild(span);
+      });
+    }
 
     STORE_ORDER.forEach(function (store) {
       var btn = els.storeTabButtons[store];
@@ -287,8 +311,10 @@
 
     SUPPORTED_LANGS.forEach(function (lang) {
       var btn = els.langButtons[lang];
-      btn.classList.toggle("active", lang === state.lang);
-      btn.setAttribute("aria-pressed", lang === state.lang ? "true" : "false");
+      var isActive = lang === state.lang;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+      if (isActive && els.langCompactLabel) els.langCompactLabel.textContent = btn.textContent;
     });
 
     els.storeHeading.textContent = UI_TEXT.storeHeading[state.store][state.lang];
@@ -949,6 +975,11 @@
     els.siteTagline = qs("siteTagline");
     els.siteLogo = qs("siteLogo");
     els.siteLogoBtn = qs("siteLogoBtn");
+    // 언어 선택 — 항상 펼쳐진 7버튼 대신 작은 🌐 토글로 여닫는 드롭다운
+    // (기존 langBar/lang-bar-btn과 setLang 로직은 그대로 재사용).
+    els.langCompact = qs("langCompact");
+    els.langCompactBtn = qs("langCompactBtn");
+    els.langCompactLabel = qs("langCompactLabel");
     els.langBar = qs("langBar");
 
     els.homeView = qs("homeView");
@@ -1213,8 +1244,23 @@
     Array.prototype.forEach.call(document.querySelectorAll(".lang-bar-btn"), function (btn) {
       var lang = btn.getAttribute("data-lang");
       els.langButtons[lang] = btn;
-      btn.addEventListener("click", function () { setLang(lang); });
+      btn.addEventListener("click", function () {
+        setLang(lang);
+        closeLangDropdown();
+      });
     });
+
+    if (els.langCompactBtn && els.langBar) {
+      els.langCompactBtn.addEventListener("click", function () {
+        if (els.langBar.hidden) openLangDropdown(); else closeLangDropdown();
+      });
+      document.addEventListener("click", function (e) {
+        if (!els.langBar.hidden && els.langCompact && !els.langCompact.contains(e.target)) closeLangDropdown();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !els.langBar.hidden) closeLangDropdown();
+      });
+    }
 
     // 로고 파일이 아직 없으면(placeholder) 깨진 이미지 아이콘 없이 자동으로 숨깁니다.
     // 나중에 images/icon/site-logo.png 파일을 올리기만 하면 코드 수정 없이 보입니다.

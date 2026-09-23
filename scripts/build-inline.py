@@ -129,22 +129,35 @@ def build():
         <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.jpg" alt="인제대학교">
       </button>
       <div class="site-brand-text">
+        <!-- "babsim.store"는 언어와 무관한 고정 브랜드/도메인 표기라
+             번역하지 않고 그대로 둡니다(참고 이미지 지시서 3번). 매장별로
+             실제 바뀌는 기존 정보(건물명·대학명)는 그대로 siteTitle에
+             유지하되 보조 줄로 내립니다. -->
+        <p class="site-brand-name">babsim.store</p>
         <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
         <p class="site-tagline" id="siteTagline"></p>
       </div>
     </div>
-  </div>
-  <!-- 언어 선택 위치/표시 방식 변경: 드롭다운·팝업 없이 7개 언어 버튼을
-       항상 표시합니다(모인관·인제대학교 바로 아래, 식당/커뮤니티 선택
-       메뉴 바로 위). 국기 이미지·"언어 선택" 제목 없이 언어명만 나열. -->
-  <div class="lang-bar" id="langBar" role="group" aria-label="언어 선택">
-    <button type="button" class="lang-bar-btn" data-lang="ko" aria-label="한국어">한국어</button>
-    <button type="button" class="lang-bar-btn" data-lang="zh" aria-label="中文">中文</button>
-    <button type="button" class="lang-bar-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
-    <button type="button" class="lang-bar-btn" data-lang="en" aria-label="English">English</button>
-    <button type="button" class="lang-bar-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
-    <button type="button" class="lang-bar-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
-    <button type="button" class="lang-bar-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+    <!-- 언어 선택 — 기존 7개 버튼(.lang-bar-btn)과 클릭 로직(setLang)은
+         그대로 두고, 항상 펼쳐진 줄 대신 작은 🌐 토글 버튼을 눌렀을 때만
+         드롭다운으로 보이게 표시 방식만 바꿉니다(참고 이미지 지시서
+         3번 — 새 번역/저장 시스템 없음, 기존 것 재사용). -->
+    <div class="lang-compact" id="langCompact">
+      <button type="button" class="lang-compact-btn" id="langCompactBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langBar">
+        <span class="lang-compact-icon" aria-hidden="true">🌐</span>
+        <span class="lang-compact-label" id="langCompactLabel">한국어</span>
+        <span class="lang-compact-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-bar" id="langBar" role="group" aria-label="언어 선택" hidden>
+        <button type="button" class="lang-bar-btn" data-lang="ko" aria-label="한국어">한국어</button>
+        <button type="button" class="lang-bar-btn" data-lang="zh" aria-label="中文">中文</button>
+        <button type="button" class="lang-bar-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
+        <button type="button" class="lang-bar-btn" data-lang="en" aria-label="English">English</button>
+        <button type="button" class="lang-bar-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+        <button type="button" class="lang-bar-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+        <button type="button" class="lang-bar-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+      </div>
+    </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
     <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="밥심 커뮤니티">
