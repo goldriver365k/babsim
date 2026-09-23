@@ -941,10 +941,12 @@ button {
      (이벤트/아침밥·방구하기 행/밥심·후루룩찹찹 행/고향·만권화밥 행/
      친구·한국어 행/사장님 행). PC/모바일 공통(이미 모바일 기준 값). */
   grid-template-rows: 120px 260px 150px 170px 165px 110px;
-  gap: 4px;
+  /* 블록끼리 완전히 맞붙으면 색칠된 표처럼 보여, 각 블록 모서리를
+     둥글리고(.lego-block border-radius) 그 사이로 보드 배경(--lego-bg)이
+     이음매처럼 보이도록 간격을 넉넉히 둡니다(레고 블록이 서로 맞닿을 때
+     둥근 모서리끼리 만들어내는 틈과 같은 효과). */
+  gap: 7px;
   margin-bottom: 28px;
-  border-radius: 14px;
-  overflow: hidden; /* 전체 외곽만 둥글게, 내부 결합부는 각지게 */
 }
 
 .lego-block {
@@ -958,7 +960,7 @@ button {
   min-height: 64px;
   padding: 14px 14px 12px;
   border: none;
-  border-radius: 0;
+  border-radius: 10px;
   text-align: left;
   color: #fff;
   overflow-wrap: anywhere;
@@ -1049,7 +1051,7 @@ button {
 .lego-ownerchat .lego-title { font-size: clamp(19px, 5.2vw, 25px); }
 
 @media (min-width: 640px) {
-  .lego-board { gap: 5px; }
+  .lego-board { gap: 8px; }
 }
 
 /* .hellokorean-btn/.hellokorean-url이 자체 display를 지정해 두어(UA
