@@ -2668,6 +2668,16 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
  .b2-hometown strong,.b2-owner strong{max-width:calc(100% - 38px)}
 }
 
+
+/* ===== HOME V9 stage 1: EVENT real SVG block ===== */
+.b3-event{background:transparent!important;box-shadow:none!important;border:0!important;overflow:visible!important;isolation:isolate}
+.b3-event::before,.b3-event::after{display:none!important}
+.b3-event-shape{position:absolute;inset:0;width:100%;height:100%;z-index:0;overflow:visible;filter:drop-shadow(0 5px 4px rgba(43,30,12,.24))}
+.b3-event-face,.b3-event-depth,.b3-event-studs{stroke:rgba(0,0,0,.15);stroke-width:1.5}
+.b3-event-face,.b3-event-studs{fill:#e53935}.b3-event-depth{fill:#a91f1c}
+.b3-event>span,.b3-event>strong{position:relative;z-index:2}
+.b3-event:active{transform:translateY(4px)!important;filter:brightness(.97)}
+
 </style>
 </head>
 <body>
@@ -2728,7 +2738,7 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
      숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
 <section class="home-view b2-home" id="homeView">
   <div class="b2-grid" id="homeLegoBoard">
-    <button type="button" class="b2-brick b2-event" id="homeLegoEventBtn">
+    <button type="button" class="b2-brick b2-event b3-event" id="homeLegoEventBtn"><svg class="b3-event-shape" viewBox="0 0 400 110" preserveAspectRatio="none" aria-hidden="true"><path class="b3-event-depth" d="M8 14H392V91L378 105H22L8 91Z"/><path class="b3-event-face" d="M8 7H392V84L378 98H22L8 84Z"/><g class="b3-event-studs"><ellipse cx="52" cy="11" rx="22" ry="8"/><ellipse cx="126" cy="11" rx="22" ry="8"/><ellipse cx="200" cy="11" rx="22" ry="8"/><ellipse cx="274" cy="11" rx="22" ry="8"/><ellipse cx="348" cy="11" rx="22" ry="8"/></g></svg>
       <span class="b2-hero-icon b2-icon-mega" aria-hidden="true"><svg viewBox="0 0 86 64"><path d="M12 28h18l34-14v36L30 36H12z"/><path d="M28 37l7 18H23l-6-18M69 20l8-7M70 32h11M69 44l8 7"/></svg></span><span class="b2-kicker">EVENT</span><strong id="homeLegoEventLabel">이벤트</strong><span class="b2-event-sub">좋은 날, 더 맛있는 캠퍼스!</span><span class="b2-go">›</span>
     </button>
     <button type="button" class="b2-brick b2-breakfast" id="homeCardBreakfast">
