@@ -128,7 +128,10 @@ def build():
       <button type="button" class="site-logo-btn" id="siteLogoBtn" aria-label="인제대학교 — 홈으로 이동">
         <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.jpg" alt="인제대학교">
       </button>
-      <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
+      <div class="site-brand-text">
+        <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
+        <p class="site-tagline" id="siteTagline"></p>
+      </div>
     </div>
   </div>
   <!-- 언어 선택 위치/표시 방식 변경: 드롭다운·팝업 없이 7개 언어 버튼을

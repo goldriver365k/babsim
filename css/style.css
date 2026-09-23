@@ -98,12 +98,25 @@ button {
 
 .site-logo[hidden] { display: none; }
 
+.site-brand-text { min-width: 0; }
+
 .site-title {
   font-size: 22px;
   font-weight: 800;
   color: var(--blue);
   margin: 0;
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* LEGO 홈 디자인 참고 이미지의 장식용 태그라인("EAT · PLAY · CONNECT") —
+   siteTitle을 대체하지 않고 그 아래 보조 문구로만 추가합니다. */
+.site-tagline {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--text-mid);
   overflow-wrap: anywhere;
 }
 
@@ -910,9 +923,11 @@ button {
 
 /* ---------------- MZ LEGO 홈 보드(홈 화면 리뉴얼 1단계) ----------------
    서로 다른 크기의 블록 10개가 빈틈없이 맞물린 하나의 보드처럼 보이게
-   합니다. 실제 LEGO 돌기·플라스틱 질감·두꺼운 3D 그림자는 쓰지 않고,
-   "서로 다른 크기 블록이 맞물리는 구조"만 가져옵니다. 블록 순서(DOM)는
-   작업지시서의 우선순위를, grid-column/row는 손그림 배치를 따릅니다. */
+   합니다. 블록 순서(DOM)는 작업지시서의 우선순위를, grid-column/row는
+   손그림 배치를 따릅니다. (참고 이미지 재현 지시에 따라 실제 LEGO
+   돌기·글로시 플라스틱 그라데이션·입체 그림자·퍼즐 요철 모서리를 CSS로
+   구현 — 새 이미지/폰트/패키지 없이 그라데이션·radial-gradient·clip-path만
+   사용합니다.) */
 :root {
   --lego-bg: #F5F2EA;
   --lego-event: #D6503F;
@@ -950,6 +965,7 @@ button {
 }
 
 .lego-block {
+  position: relative;
   display: flex;
   flex-direction: column;
   /* 교정 지시서 13번: 텍스트를 하단에 몰아넣지 않고 eyebrow(위)-제목
@@ -958,23 +974,53 @@ button {
   align-items: flex-start;
   gap: 6px;
   min-height: 64px;
-  padding: 14px 14px 12px;
+  /* 위쪽 여백을 넉넉히 두어 ::before 스터드(돌기) 줄과 텍스트가 겹치지
+     않게 합니다. */
+  padding: 28px 14px 12px;
   border: none;
   border-radius: 10px;
   text-align: left;
   color: #fff;
   overflow-wrap: anywhere;
   text-decoration: none;
-  background: none;
   font-family: inherit;
+  /* 참고 이미지처럼 광택 있는 플라스틱 블록 — 블록 고유색(--block-color,
+     각 .lego-x 규칙에서 지정)을 밝은 상단→진한 하단으로 그라데이션. */
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--block-color) 72%, white) 0%,
+    var(--block-color) 45%,
+    color-mix(in srgb, var(--block-color) 80%, black) 100%);
+  /* 아래로 떨어지는 입체 그림자 + 위쪽 광택 하이라이트 */
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--block-color) 65%, black),
+    0 6px 10px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .35);
   /* 18번: 아주 작은 터치 반응만(빙글 돌거나 튀는 애니메이션 금지) */
-  transition: transform 0.08s ease;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+/* 블록 상단의 레고 스터드(돌기) — 새 이미지 없이 radial-gradient만으로
+   반복 원형 패턴을 만들어 하이라이트(위)·그림자(아래)로 입체감을 줍니다. */
+.lego-block::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 12px;
+  right: 12px;
+  height: 15px;
+  background-image:
+    radial-gradient(circle at 50% 66%, rgba(0, 0, 0, .22) 0%, rgba(0, 0, 0, 0) 60%),
+    radial-gradient(circle at 50% 32%, rgba(255, 255, 255, .95) 0%, rgba(255, 255, 255, .5) 32%, rgba(255, 255, 255, .08) 56%, rgba(255, 255, 255, 0) 62%);
+  background-size: 26px 15px, 26px 15px;
+  background-repeat: repeat-x, repeat-x;
+  background-position: 13px center, 13px center;
+  pointer-events: none;
 }
 
 /* eyebrow 없이 제목만 있는 작은 블록(밥심/만권화밥)은 세로 가운데 정렬 */
 .lego-bapsim, .lego-mangwon { justify-content: center; }
 
-.lego-block:active { transform: scale(0.98); }
+.lego-block:active { transform: scale(0.98); box-shadow: 0 2px 0 color-mix(in srgb, var(--block-color) 65%, black), 0 3px 5px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .35); }
 .lego-block:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 
 .lego-eyebrow {
@@ -1029,17 +1075,41 @@ button {
 
 .lego-event, .lego-ownerchat { align-items: center; text-align: center; }
 
-/* ---- 한 블록 = 한 색(배경 1개 + 텍스트 1개), gradient/패턴 없음 ---- */
-.lego-event     { background: var(--lego-event); }
-.lego-breakfast { background: var(--lego-breakfast); color: #2B2B2B; }
-.lego-room      { background: var(--lego-room); }
-.lego-bapsim    { background: var(--lego-bapsim); }
-.lego-hururuk   { background: var(--lego-hururuk); }
-.lego-mangwon   { background: var(--lego-mangwon); }
-.lego-hometown  { background: var(--lego-hometown); color: #2B2B2B; }
-.lego-friends   { background: var(--lego-friends); }
-.lego-korean    { background: var(--lego-korean); }
-.lego-ownerchat { background: var(--lego-ownerchat); }
+/* ---- 한 블록 = 한 색(--block-color 1개), 실제 배경은 위 .lego-block의
+   공통 그라데이션 규칙이 이 색을 기준으로 계산합니다 ---- */
+.lego-event     { --block-color: var(--lego-event); }
+.lego-breakfast { --block-color: var(--lego-breakfast); color: #2B2B2B; }
+.lego-room      { --block-color: var(--lego-room); }
+.lego-bapsim    { --block-color: var(--lego-bapsim); }
+.lego-hururuk   { --block-color: var(--lego-hururuk); }
+.lego-mangwon   { --block-color: var(--lego-mangwon); }
+.lego-hometown  { --block-color: var(--lego-hometown); color: #2B2B2B; }
+.lego-friends   { --block-color: var(--lego-friends); }
+.lego-korean    { --block-color: var(--lego-korean); }
+.lego-ownerchat { --block-color: var(--lego-ownerchat); }
+
+/* ---- 퍼즐 요철(참고 이미지에서 가장 눈에 띄는 천원의 아침밥↔방 구하기
+   경계에 시범 적용) — clip-path는 border-radius를 대체(무시)하므로,
+   각지지 않도록 네 모서리도 작은 챔퍼(경사)로 직접 그려 넣었습니다.
+   나머지 블록 쌍은 border-radius만으로 충분히 "조각" 느낌이 나므로
+   과도한 복잡도를 피해 적용하지 않았습니다. 두 블록 모두 같은 높이
+   기준점(천원의 아침밥 자신의 50% = 방 구하기 기준 31.2% 지점, 두
+   블록의 공유 구간인 아침밥 행 높이 260px의 중앙)에 홈을 파 서로 맞물린
+   경계처럼 보이게 했습니다. */
+.lego-breakfast {
+  clip-path: polygon(
+    10px 0, calc(100% - 10px) 0, 100% 10px,
+    100% calc(50% - 15px), calc(100% - 10px) calc(50% - 15px), calc(100% - 10px) calc(50% + 15px), 100% calc(50% + 15px),
+    100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px
+  );
+}
+.lego-room {
+  clip-path: polygon(
+    10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px),
+    0 calc(31.2% + 15px), 10px calc(31.2% + 15px), 10px calc(31.2% - 15px), 0 calc(31.2% - 15px),
+    0 10px
+  );
+}
 
 /* 대형 블록(후루룩찹찹/방 구하기)은 글자를 더 크게(교정 지시서 5·6번) */
 .lego-hururuk .lego-title,

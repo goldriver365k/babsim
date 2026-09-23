@@ -257,6 +257,7 @@
   function renderHeader() {
     els.siteTitle.textContent = UI_TEXT.siteTitle[state.lang];
     document.title = UI_TEXT.siteTitle[state.lang];
+    if (els.siteTagline) els.siteTagline.textContent = UI_TEXT.siteTagline[state.lang];
 
     STORE_ORDER.forEach(function (store) {
       var btn = els.storeTabButtons[store];
@@ -945,6 +946,7 @@
 
   function init() {
     els.siteTitle = qs("siteTitle");
+    els.siteTagline = qs("siteTagline");
     els.siteLogo = qs("siteLogo");
     els.siteLogoBtn = qs("siteLogoBtn");
     els.langBar = qs("langBar");
