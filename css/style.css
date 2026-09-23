@@ -2680,3 +2680,15 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
  .b3-breakfast strong{font-size:30px!important}
  .b2-room strong{font-size:20px!important}
 }
+
+
+/* ===== HOME V9.4 — LEGO geometry correction ===== */
+.b3-event-shape .b3-stud-cyl rect{fill:#bd2825;stroke:#a91f1c;stroke-width:1}
+.b3-event-shape .b3-stud-cyl ellipse{fill:#ef4540;stroke:#b92724;stroke-width:1.4}
+.b3-breakfast-shape .b3-stud-cyl rect{fill:#d69e00;stroke:#bd8900;stroke-width:1}
+.b3-breakfast-shape .b3-stud-cyl ellipse{fill:#ffd02a;stroke:#d69e00;stroke-width:1.4}
+.b3-room-shape .b3-stud-cyl rect{fill:#1775c5;stroke:#1268ad;stroke-width:1}
+.b3-room-shape .b3-stud-cyl ellipse{fill:#3299ed;stroke:#1268ad;stroke-width:1.4}
+.b3-breakfast{z-index:2!important}.b3-room{z-index:1!important}
+.b3-breakfast-shape{width:calc(100% + 12px)!important}
+.b3-room-shape{width:calc(100% + 8px)!important;left:-8px!important}

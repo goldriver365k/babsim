@@ -2724,6 +2724,18 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
  .b2-room strong{font-size:20px!important}
 }
 
+
+/* ===== HOME V9.4 — LEGO geometry correction ===== */
+.b3-event-shape .b3-stud-cyl rect{fill:#bd2825;stroke:#a91f1c;stroke-width:1}
+.b3-event-shape .b3-stud-cyl ellipse{fill:#ef4540;stroke:#b92724;stroke-width:1.4}
+.b3-breakfast-shape .b3-stud-cyl rect{fill:#d69e00;stroke:#bd8900;stroke-width:1}
+.b3-breakfast-shape .b3-stud-cyl ellipse{fill:#ffd02a;stroke:#d69e00;stroke-width:1.4}
+.b3-room-shape .b3-stud-cyl rect{fill:#1775c5;stroke:#1268ad;stroke-width:1}
+.b3-room-shape .b3-stud-cyl ellipse{fill:#3299ed;stroke:#1268ad;stroke-width:1.4}
+.b3-breakfast{z-index:2!important}.b3-room{z-index:1!important}
+.b3-breakfast-shape{width:calc(100% + 12px)!important}
+.b3-room-shape{width:calc(100% + 8px)!important;left:-8px!important}
+
 </style>
 </head>
 <body>
@@ -2784,13 +2796,19 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
      숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
 <section class="home-view b2-home" id="homeView">
   <div class="b2-grid" id="homeLegoBoard">
-    <button type="button" class="b2-brick b2-event b3-event" id="homeLegoEventBtn"><svg class="b3-event-shape" viewBox="0 0 400 110" preserveAspectRatio="none" aria-hidden="true"><path class="b3-event-depth" d="M8 14H392V91L378 105H22L8 91Z"/><path class="b3-event-face" d="M8 7H392V84L378 98H22L8 84Z"/><g class="b3-event-studs"><ellipse cx="52" cy="11" rx="22" ry="8"/><ellipse cx="126" cy="11" rx="22" ry="8"/><ellipse cx="200" cy="11" rx="22" ry="8"/><ellipse cx="274" cy="11" rx="22" ry="8"/><ellipse cx="348" cy="11" rx="22" ry="8"/></g></svg>
+    <button type="button" class="b2-brick b2-event b3-event" id="homeLegoEventBtn"><svg class="b3-event-shape" viewBox="0 0 400 110" preserveAspectRatio="none" aria-hidden="true">
+<path class="b3-event-depth" d="M7 16H393V91L379 105H21L7 91Z"/><path class="b3-event-face" d="M7 8H393V84L379 98H21L7 84Z"/>
+<g class="b3-stud-cyl"><g transform="translate(52 8)"><rect x="-22" y="0" width="44" height="7"/><ellipse cy="0" rx="22" ry="7"/></g><g transform="translate(126 8)"><rect x="-22" y="0" width="44" height="7"/><ellipse cy="0" rx="22" ry="7"/></g><g transform="translate(200 8)"><rect x="-22" y="0" width="44" height="7"/><ellipse cy="0" rx="22" ry="7"/></g><g transform="translate(274 8)"><rect x="-22" y="0" width="44" height="7"/><ellipse cy="0" rx="22" ry="7"/></g><g transform="translate(348 8)"><rect x="-22" y="0" width="44" height="7"/><ellipse cy="0" rx="22" ry="7"/></g></g></svg>
       <span class="b2-hero-icon b2-icon-mega" aria-hidden="true"><svg viewBox="0 0 86 64"><path d="M12 28h18l34-14v36L30 36H12z"/><path d="M28 37l7 18H23l-6-18M69 20l8-7M70 32h11M69 44l8 7"/></svg></span><span class="b2-kicker">EVENT</span><strong id="homeLegoEventLabel">이벤트</strong><span class="b2-event-sub">좋은 날, 더 맛있는 캠퍼스!</span><span class="b2-go">›</span>
     </button>
-    <button type="button" class="b2-brick b2-breakfast b3-breakfast" id="homeCardBreakfast"><svg class="b3-breakfast-shape" viewBox="0 0 260 220" preserveAspectRatio="none" aria-hidden="true"><path class="b3-breakfast-depth" d="M8 14H252V91H240V137H252V199L238 214H22L8 199Z"/><path class="b3-breakfast-face" d="M8 7H252V84H238V144H252V192L238 207H22L8 192Z"/><g class="b3-breakfast-studs"><ellipse cx="52" cy="11" rx="21" ry="8"/><ellipse cx="130" cy="11" rx="21" ry="8"/><ellipse cx="208" cy="11" rx="21" ry="8"/></g></svg>
+    <button type="button" class="b2-brick b2-breakfast b3-breakfast" id="homeCardBreakfast"><svg class="b3-breakfast-shape" viewBox="0 0 260 220" preserveAspectRatio="none" aria-hidden="true">
+<path class="b3-breakfast-depth" d="M6 16H238V80H258V148H238V198L224 214H20L6 198Z"/><path class="b3-breakfast-face" d="M6 8H238V74H258V142H238V191L224 207H20L6 191Z"/>
+<g class="b3-stud-cyl"><g transform="translate(48 8)"><rect x="-20" width="40" height="7"/><ellipse rx="20" ry="7"/></g><g transform="translate(122 8)"><rect x="-20" width="40" height="7"/><ellipse rx="20" ry="7"/></g><g transform="translate(196 8)"><rect x="-20" width="40" height="7"/><ellipse rx="20" ry="7"/></g></g></svg>
       <span class="b2-small">천원의</span><strong id="homeCardBreakfastName">아침밥</strong><span class="b2-breakfast-art" aria-hidden="true"><svg viewBox="0 0 92 70"><path d="M12 34h60c0 19-12 29-30 29S12 53 12 34Z"/><path d="M18 31c6-15 42-15 48 0"/><path d="M29 12c-6 7 6 9 0 16M44 8c-7 9 7 10 0 20M59 12c-6 7 6 9 0 16"/></svg></span><span class="b2-coin">1,000</span><span class="b2-go">›</span><span id="homeCardBreakfastPrice" hidden></span><span id="homeCardBreakfastLoc" hidden></span>
     </button>
-    <button type="button" class="b2-brick b2-room b3-room" id="roomFinderCardBtn" aria-label="방 구하기"><svg class="b3-room-shape" viewBox="0 0 180 220" preserveAspectRatio="none" aria-hidden="true"><path class="b3-room-depth" d="M8 14H172V199L158 214H22L8 199V143H20V86H8Z"/><path class="b3-room-face" d="M8 7H172V192L158 207H22L8 192V136H22V79H8Z"/><g class="b3-room-studs"><ellipse cx="48" cy="11" rx="20" ry="8"/><ellipse cx="132" cy="11" rx="20" ry="8"/></g></svg>
+    <button type="button" class="b2-brick b2-room b3-room" id="roomFinderCardBtn" aria-label="방 구하기"><svg class="b3-room-shape" viewBox="0 0 180 220" preserveAspectRatio="none" aria-hidden="true">
+<path class="b3-room-depth" d="M6 16H174V198L160 214H20L6 198V148H26V80H6Z"/><path class="b3-room-face" d="M6 8H174V191L160 207H20L6 191V142H26V74H6Z"/>
+<g class="b3-stud-cyl"><g transform="translate(56 8)"><rect x="-20" width="40" height="7"/><ellipse rx="20" ry="7"/></g><g transform="translate(132 8)"><rect x="-20" width="40" height="7"/><ellipse rx="20" ry="7"/></g></g></svg>
       <span class="b2-room-art" aria-hidden="true"><svg viewBox="0 0 92 78"><path d="M15 39 46 13l31 26v29H15z"/><path d="M35 68V47h22v21"/><path d="M9 25c3-9 16-10 21-3M64 17c4-8 15-7 19 0"/></svg></span><strong id="homeLegoRoomTitle">방 구하기</strong><span class="b2-go">›</span>
     </button>
     <button type="button" class="home-service-card b2-brick b2-bapsim" data-store="bapsim"><span class="b2-symbol b2-icon-bowl" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M12 30h40c0 15-8 24-20 24S12 45 12 30Z"/><path d="M17 27c4-11 26-11 30 0"/><path d="M23 10c-5 6 5 7 0 13M34 8c-5 7 6 8 0 15M45 11c-5 6 5 7 0 13"/></svg></span><strong>밥심</strong><span class="b2-go">›</span><span id="homeCardBapsimLoc" hidden></span></button>
