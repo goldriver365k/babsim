@@ -2654,3 +2654,29 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
 .b3-room-face,.b3-room-studs{fill:#1e88e5}.b3-room-depth{fill:#1268ad}
 .b3-room>span,.b3-room>strong{position:relative;z-index:2}
 .b3-room:active{transform:translateY(4px)!important;filter:brightness(.97)}
+
+
+/* ===== HOME V9.3 screenshot correction: top typography/layout ===== */
+.b3-event{padding:22px 78px 12px 112px!important;justify-content:center!important}
+.b3-event .b2-kicker{position:static!important;font-size:10px!important;line-height:1!important;margin:0 0 2px!important}
+.b3-event strong{font-size:34px!important;line-height:.98!important;letter-spacing:-.06em!important;white-space:nowrap}
+.b3-event .b2-event-sub{font-size:11px!important;line-height:1.1!important;margin-top:5px!important;white-space:nowrap}
+.b3-event .b2-hero-icon{left:28px!important;top:26px!important;width:68px!important;height:52px!important}
+.b3-breakfast{padding:42px 76px 20px 20px!important;align-items:flex-start!important;justify-content:flex-start!important}
+.b3-breakfast .b2-small{position:static!important;display:block!important;font-size:25px!important;line-height:1!important;margin:0!important}
+.b3-breakfast strong{display:block!important;font-size:34px!important;line-height:1.02!important;margin:4px 0 0!important;white-space:nowrap!important;max-width:none!important}
+.b3-breakfast .b2-breakfast-art{right:12px!important;bottom:35px!important;width:64px!important;height:51px!important}
+.b3-breakfast .b2-coin{right:14px!important;top:48px!important;width:52px!important;height:52px!important}
+.b2-room{padding:40px 12px 20px!important;justify-content:center!important;align-items:center!important}
+.b2-room .b2-room-art{margin:0 auto 10px!important;width:68px!important;height:58px!important}
+.b2-room strong{font-size:24px!important;line-height:1!important;white-space:nowrap!important;max-width:none!important}
+@media(max-width:430px){
+ .b3-event{padding-left:84px!important;padding-right:42px!important}
+ .b3-event .b2-hero-icon{left:15px!important;top:22px!important;width:58px!important;height:48px!important}
+ .b3-event strong{font-size:29px!important}
+ .b3-event .b2-event-sub{font-size:9px!important}
+ .b3-breakfast{padding:38px 60px 15px 12px!important}
+ .b3-breakfast .b2-small{font-size:23px!important}
+ .b3-breakfast strong{font-size:30px!important}
+ .b2-room strong{font-size:20px!important}
+}
