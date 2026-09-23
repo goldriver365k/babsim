@@ -2764,6 +2764,33 @@ main {
  .b2-bapsim::after,.b2-hururuk::after{right:-12px!important;width:24px!important}
 }
 
+
+/* ===== HOME V14 — seamless colored interlocks ===== */
+.b12-grid{gap:0!important;padding:4px!important}
+.b12-card{clip-path:none!important;overflow:visible!important;border-radius:17px!important;margin:0!important}
+.b12-event{margin-bottom:5px!important;z-index:20!important}
+.b12-breakfast{z-index:18!important}.b12-room{z-index:17!important}
+.b12-bapsim{z-index:16!important}.b12-hururuk{z-index:15!important}.b12-mangwon{z-index:14!important}
+.b12-hometown{z-index:13!important}.b12-friends{z-index:12!important}
+.b12-korean{z-index:11!important}.b12-owner{z-index:10!important}
+/* glossy highlight stays inside each tile */
+.b12-card::before{z-index:1!important;pointer-events:none!important}
+/* colored tabs bridge each shared edge; no cream/white connector pieces */
+.b12-breakfast::after,.b12-bapsim::after,.b12-hururuk::after,.b12-hometown::after,.b12-korean::after{
+ content:"";position:absolute;right:-18px;top:50%;transform:translateY(-50%);width:36px;height:62px;
+ border-radius:0 15px 15px 0;z-index:2;border:1px solid rgba(255,255,255,.22);
+ box-shadow:inset 0 3px 1px rgba(255,255,255,.22),inset 0 -5px 1px rgba(0,0,0,.13),3px 4px 5px rgba(0,0,0,.12)
+}
+.b12-breakfast::after{background:#ffc20b}.b12-bapsim::after{background:#08a84d}.b12-hururuk::after{background:#ed2d26}.b12-hometown::after{background:#e92f82}.b12-korean::after{background:#09a99b}
+/* subtle receiving seam makes the protrusion read as a fitted joint */
+.b12-room,.b12-hururuk,.b12-mangwon,.b12-friends,.b12-owner{border-left:2px solid rgba(0,0,0,.10)!important}
+.b12-card strong,.b12-card .b12-desc,.b12-card .b12-eyebrow,.b12-card .b12-price,.b12-card .b12-arrow{z-index:5!important}
+@media(max-width:430px){
+ .b12-grid{gap:0!important;padding:2px!important}
+ .b12-breakfast::after,.b12-bapsim::after,.b12-hururuk::after,.b12-hometown::after,.b12-korean::after{right:-14px;width:28px;height:54px;border-radius:0 12px 12px 0}
+ .b12-card{border-radius:15px!important}
+}
+
 </style>
 </head>
 <body>
