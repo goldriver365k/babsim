@@ -420,9 +420,21 @@
     // 그대로 씁니다(새 번역 없음).
     if (els.homeCardBreakfastName) els.homeCardBreakfastName.textContent = BREAKFAST_INFO.title[state.lang];
     if (els.homeCardBreakfastLoc) els.homeCardBreakfastLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
+    if (els.homeCardBreakfastPrice) els.homeCardBreakfastPrice.textContent = BREAKFAST_INFO.price[state.lang];
     if (els.homeCardBapsimLoc) els.homeCardBapsimLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
     if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
     if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
+    // 홈 MZ LEGO 보드 — 새로 추가된 블록 3개(EVENT/나의 고향 이야기/친구
+    // 만들기)도 기존 데이터(UI_TEXT/COMMUNITY_CATEGORIES)를 그대로 재사용.
+    if (els.homeLegoEventLabel) els.homeLegoEventLabel.textContent = UI_TEXT.homeEventLabel[state.lang];
+    if (els.homeLegoHometownLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoHometownLabel.textContent = COMMUNITY_CATEGORIES.hometown[state.lang] || COMMUNITY_CATEGORIES.hometown.ko;
+    }
+    if (els.homeLegoFriendsLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoFriendsLabel.textContent = COMMUNITY_CATEGORIES.friends[state.lang] || COMMUNITY_CATEGORIES.friends.ko;
+    }
+    // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
+    if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
     if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
     // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
@@ -942,9 +954,21 @@
     els.homeCardBreakfast = qs("homeCardBreakfast");
     els.homeCardBreakfastName = qs("homeCardBreakfastName");
     els.homeCardBreakfastLoc = qs("homeCardBreakfastLoc");
+    els.homeCardBreakfastPrice = qs("homeCardBreakfastPrice");
     els.homeCardBapsimLoc = qs("homeCardBapsimLoc");
     els.homeCardMangwonLoc = qs("homeCardMangwonLoc");
     els.homeCardHururukLoc = qs("homeCardHururukLoc");
+    // 홈 MZ LEGO 보드(리뉴얼 1단계) — 기존에 없던 블록 3개(EVENT/나의 고향
+    // 이야기/친구 만들기/사장님에게 말하기)만 새로 연결합니다. 나머지
+    // 블록(천원의 아침밥/방 구하기/밥심/후루룩찹찹/만권화밥/한국어 공부)은
+    // 기존 id·클릭 핸들러를 그대로 재사용합니다.
+    els.homeLegoEventBtn = qs("homeLegoEventBtn");
+    els.homeLegoEventLabel = qs("homeLegoEventLabel");
+    els.homeLegoHometownBtn = qs("homeLegoHometownBtn");
+    els.homeLegoHometownLabel = qs("homeLegoHometownLabel");
+    els.homeLegoFriendsBtn = qs("homeLegoFriendsBtn");
+    els.homeLegoFriendsLabel = qs("homeLegoFriendsLabel");
+    els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");
@@ -1068,6 +1092,27 @@
       var store = card.getAttribute("data-store");
       card.addEventListener("click", function () { goToStore(store); });
     });
+
+    // 홈 MZ LEGO 보드(리뉴얼 1단계)의 새 블록 3개 — 전부 기존 기능을
+    // 그대로 연결합니다(새 route/새 API 없음).
+    if (els.homeLegoEventBtn) {
+      // 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점 — 새
+      // 이벤트 CMS/컬렉션을 만들지 않습니다. 활성 팝업이 없으면
+      // 조용히 아무 일도 하지 않습니다.
+      els.homeLegoEventBtn.addEventListener("click", function () {
+        if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+      });
+    }
+    if (els.homeLegoHometownBtn) {
+      els.homeLegoHometownBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("hometown");
+      });
+    }
+    if (els.homeLegoFriendsBtn) {
+      els.homeLegoFriendsBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("friends");
+      });
+    }
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
     // 라우팅(goHome)을 그대로 재사용합니다.

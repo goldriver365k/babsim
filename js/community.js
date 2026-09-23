@@ -83,6 +83,16 @@ var Community = (function () {
     route();
   }
 
+  // 홈 MZ LEGO 보드(리뉴얼 1단계)의 "나의 고향 이야기"/"친구 만들기"
+  // 블록에서 씁니다 — 새 route를 만들지 않고, 카테고리 탭을 직접 누른
+  // 것과 똑같이 기존 state_category만 미리 맞춰 둔 뒤 기존 navigate()로
+  // 커뮤니티 목록으로 이동합니다(목록 화면이 그 카테고리를 선택된
+  // 상태로 그려줌).
+  function navigateToCategory(catKey) {
+    if (COMMUNITY_CATEGORY_ORDER.indexOf(catKey) !== -1) state_category = catKey;
+    navigate(ROUTE_PREFIX);
+  }
+
   window.addEventListener("popstate", function () { route(); });
 
   /* ---------------- 로그인/가입 후 원래 화면으로 돌아가기 ----------------
@@ -2959,6 +2969,7 @@ var Community = (function () {
     setLang: setLang,
     isCommunityPath: isCommunityPath,
     navigate: navigate,
+    navigateToCategory: navigateToCategory,
     routePrefix: ROUTE_PREFIX,
     fetchLatestPosts: fetchLatestPostsForHome,
     showToast: showToast

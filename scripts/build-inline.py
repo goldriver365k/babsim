@@ -164,63 +164,82 @@ def build():
     <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
   </div>
 
-  <!-- 방 구하기(js/room-finder.js) — 기존 hellokorean-card 껍데기를 그대로
-       재사용한 정적 카드입니다(클릭 시 room-finder.js가 언어 선택 →
-       입력폼 모달을 띄웁니다). 언어 선택 전 카드 문구 자체는 4개 언어를
-       한 줄에 나열해 고정 표시합니다(사이트 언어 전환과 무관). -->
-  <section class="hellokorean-card">
-    <button type="button" class="hellokorean-link room-finder-link" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
-      <h3 class="hellokorean-title">방 구하기</h3>
-      <p class="hellokorean-desc">Find a Room · 找房 · Tìm phòng</p>
+  <!-- MZ LEGO 홈 보드(리뉴얼 1단계) — 서로 다른 크기 블록 10개가 맞물린
+       구조입니다. 순서/이동 대상은 작업지시서 4·15번을 그대로 따르고,
+       모든 블록은 기존 id·data-store·클릭 핸들러를 재사용합니다(새
+       route/새 컬렉션/새 CMS 없음). 배치는 css/style.css의 .lego-* 규칙이
+       담당하고, 여기서는 DOM 순서(읽기 순서)만 그 우선순위를 따릅니다. -->
+  <div class="lego-board" id="homeLegoBoard">
+    <!-- 1. EVENT — 기존 팝업(js/site-popup.js)을 다시 열어 보여주는
+         진입점. 새 이벤트 CMS를 만들지 않습니다. -->
+    <button type="button" class="lego-block lego-event" id="homeLegoEventBtn">
+      <span class="lego-eyebrow">EVENT</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoEventLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
     </button>
-  </section>
 
-  <!-- 무료 한국어 공부 링크 2단계: "다양한 사람들이 함께하는 서비스" 문구
-       자리로 이동(기존 hellokorean-card를 그대로 재사용 — 새 컴포넌트/새
-       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). 방 구하기
-       추가로 위치만 그 카드 바로 아래로 밀렸습니다(URL/기능/번역/GA 동일). -->
-  <section class="hellokorean-card">
-    <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
-      <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
-      <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
-      <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
-      <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
+    <!-- 2. 천원의 아침밥 — 기존 id/클릭 핸들러 그대로(밥심 내부 아침밥 화면). -->
+    <button type="button" class="lego-block lego-breakfast" id="homeCardBreakfast">
+      <span class="lego-eyebrow" id="homeCardBreakfastPrice"></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeCardBreakfastName"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardBreakfastLoc" hidden></span>
+    </button>
+
+    <!-- 3. 방 구하기(js/room-finder.js) — 기존 id 그대로, 클릭하면
+         room-finder.js가 언어 선택 → 입력폼 모달을 띄웁니다. -->
+    <button type="button" class="lego-block lego-room" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
+      <span class="lego-eyebrow">ROOM</span>
+      <span class="lego-title-line"><span class="lego-title">방 구하기</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+    </button>
+
+    <!-- 4. 밥심 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-bapsim" data-store="bapsim">
+      <span class="lego-title-line"><span class="lego-title">밥심</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardBapsimLoc" hidden></span>
+    </button>
+
+    <!-- 5. 후루룩찹찹 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-hururuk" data-store="hururuk">
+      <span class="lego-eyebrow">NOODLE · RICE</span>
+      <span class="lego-title-line"><span class="lego-title">후루룩찹찹</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardHururukLoc" hidden></span>
+    </button>
+
+    <!-- 6. 만권화밥 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-mangwon" data-store="mangwon">
+      <span class="lego-title-line"><span class="lego-title">만권화밥</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardMangwonLoc" hidden></span>
+    </button>
+
+    <!-- 7. 나의 고향 이야기 — 새 게시판 없이 기존 밥심 커뮤니티의
+         hometown 카테고리로 바로 들어갑니다(js/community.js
+         navigateToCategory, 새 route 아님). -->
+    <button type="button" class="lego-block lego-hometown" id="homeLegoHometownBtn">
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoHometownLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+    </button>
+
+    <!-- 8. 친구 만들기 — 기존 밥심 커뮤니티의 friends 카테고리로 이동. -->
+    <button type="button" class="lego-block lego-friends" id="homeLegoFriendsBtn">
+      <span class="lego-eyebrow">CONNECT</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoFriendsLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+    </button>
+
+    <!-- 9. 한국어 공부 — 기존 hellokorean.site 연결(id/href/GA 클릭 추적)
+         그대로. 부제/버튼/URL 텍스트는 기존 로직이 계속 채우지만(빈
+         상태로 두면 안 됨), LEGO 보드에서는 보이지 않게만 둡니다. -->
+    <a class="lego-block lego-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
+      <span class="lego-title-line"><span class="lego-title" id="helloKoreanTitle"></span><span class="lego-arrow" aria-hidden="true">↗</span></span>
+      <span class="hellokorean-desc" id="helloKoreanDesc" hidden></span>
+      <span class="hellokorean-btn" id="helloKoreanBtn" hidden></span>
+      <span class="hellokorean-url" hidden><span id="helloKoreanUrl">hellokorean.site</span></span>
     </a>
-  </section>
 
-  <h2 class="home-section-title" id="homeServicesTitle"></h2>
-  <div class="home-service-grid" id="homeServiceGrid">
-    <!-- 모바일 UI 개선 6단계: 서비스 노출 순서 확정 — 1.천원의 아침밥
-         2.유학생 커뮤니티 3.후루룩찹찹 4.만권화밥 5.밥심. 천원의 아침밥은
-         새 페이지가 아니라 기존 밥심 내부 화면(data-store="bapsim")을
-         그대로 재사용합니다(밥심 카드와 같은 곳으로 이동, 조금 더 강조만).
-         10단계: 후루룩찹찹/만권화밥/밥심은 사용자 제공 공식 로고
-         이미지(images/icon/logo-*.png, 원본 그대로)로 교체. 천원의
-         아침밥/유학생 커뮤니티는 제공된 로고가 없어 기존 이모지 유지. -->
-    <button type="button" class="home-service-card home-service-card-featured" id="homeCardBreakfast">
-      <span class="home-service-icon" aria-hidden="true">🍳</span>
-      <span class="home-service-name" id="homeCardBreakfastName"></span>
-      <span class="home-service-loc" id="homeCardBreakfastLoc"></span>
-    </button>
-    <button type="button" class="home-service-card" id="homeCardCommunity">
-      <span class="home-service-icon" aria-hidden="true">💬</span>
-      <span class="home-service-name" id="homeCardCommunityName"></span>
-    </button>
-    <button type="button" class="home-service-card" data-store="hururuk">
-      <img class="home-service-icon-img" src="/images/icon/logo-hururuk.png" alt="">
-      <span class="home-service-name">후루룩찹찹</span>
-      <span class="home-service-loc" id="homeCardHururukLoc"></span>
-    </button>
-    <button type="button" class="home-service-card" data-store="mangwon">
-      <img class="home-service-icon-img" src="/images/icon/logo-mangwon.png" alt="">
-      <span class="home-service-name">만권화밥</span>
-      <span class="home-service-loc" id="homeCardMangwonLoc"></span>
-    </button>
-    <button type="button" class="home-service-card" data-store="bapsim">
-      <img class="home-service-icon-img" src="/images/icon/logo-bapsim.png" alt="">
-      <span class="home-service-name">밥심</span>
-      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
-    </button>
+    <!-- 10. 사장님에게 말하기 — 기존 footer/FAB(#ownerChatBanner/#ownerChatFab)
+         과 똑같은 카카오톡 오픈채팅 주소를 그대로 재사용합니다(새 링크
+         아님). 기존 footer/FAB은 그대로 두고, 홈 보드 안에도 같은
+         진입점을 하나 더 둡니다. -->
+    <a class="lego-block lego-ownerchat" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer">
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoOwnerChatLabel"></span><span class="lego-arrow" aria-hidden="true">↗</span></span>
+    </a>
   </div>
 
   <h2 class="home-section-title" id="homeCommunityLatestTitle"></h2>

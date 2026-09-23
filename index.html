@@ -950,6 +950,139 @@ button {
   color: var(--text-mid);
 }
 
+/* ---------------- MZ LEGO 홈 보드(홈 화면 리뉴얼 1단계) ----------------
+   서로 다른 크기의 블록 10개가 빈틈없이 맞물린 하나의 보드처럼 보이게
+   합니다. 실제 LEGO 돌기·플라스틱 질감·두꺼운 3D 그림자는 쓰지 않고,
+   "서로 다른 크기 블록이 맞물리는 구조"만 가져옵니다. 블록 순서(DOM)는
+   작업지시서의 우선순위를, grid-column/row는 손그림 배치를 따릅니다. */
+:root {
+  --lego-bg: #F5F2EA;
+  --lego-event: #D6503F;
+  --lego-breakfast: #F4C64C;
+  --lego-room: #1D4FA3;
+  --lego-bapsim: #2E6B4F;
+  --lego-hururuk: #262626;
+  --lego-mangwon: #A85C32;
+  --lego-hometown: #EA9A8E;
+  --lego-friends: #3B7DD8;
+  --lego-korean: #8A76C4;
+  --lego-ownerchat: #E8823F;
+}
+
+.home-view { background: var(--lego-bg); }
+
+.lego-board {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: minmax(56px, auto);
+  gap: 3px;
+  margin-bottom: 28px;
+  border-radius: 14px;
+  overflow: hidden; /* 전체 외곽만 둥글게, 내부 결합부는 각지게 */
+}
+
+.lego-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 3px;
+  min-height: 64px;
+  padding: 12px 12px 10px;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  color: #fff;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  background: none;
+  font-family: inherit;
+  /* 18번: 아주 작은 터치 반응만(빙글 돌거나 튀는 애니메이션 금지) */
+  transition: transform 0.08s ease;
+}
+
+.lego-block:active { transform: scale(0.98); }
+.lego-block:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+
+.lego-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.lego-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.lego-title {
+  font-size: clamp(16px, 4.6vw, 21px);
+  font-weight: 800;
+  line-height: 1.2;
+  /* 한글이 음절 중간에서 잘리지 않도록(카드가 좁아 줄바꿈이 필요할 때도
+     자연스러운 단어 경계에서만 끊기게) — .lego-block의 overflow-wrap:
+     anywhere보다 우선합니다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.lego-arrow {
+  font-size: 15px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+/* ---- 배치(6열 기준, 손그림 순서) ---- */
+.lego-event     { grid-column: 1 / 7; grid-row: 1; min-height: 92px; justify-content: center; }
+.lego-breakfast { grid-column: 1 / 5; grid-row: 2 / 4; min-height: 136px; }
+.lego-room      { grid-column: 5 / 7; grid-row: 2 / 4; }
+.lego-bapsim    { grid-column: 1 / 3; grid-row: 4; }
+.lego-hururuk   { grid-column: 3 / 7; grid-row: 4; }
+.lego-hometown  { grid-column: 1 / 4; grid-row: 5; }
+.lego-mangwon   { grid-column: 4 / 7; grid-row: 5; }
+.lego-friends   { grid-column: 1 / 5; grid-row: 6; }
+.lego-korean    { grid-column: 5 / 7; grid-row: 6; }
+.lego-ownerchat { grid-column: 1 / 7; grid-row: 7; min-height: 60px; align-items: center; }
+.lego-ownerchat .lego-title-line { justify-content: center; }
+
+/* ---- 한 블록 = 한 색(배경 1개 + 텍스트 1개), gradient/패턴 없음 ---- */
+.lego-event     { background: var(--lego-event); }
+.lego-breakfast { background: var(--lego-breakfast); color: #2B2B2B; }
+.lego-room      { background: var(--lego-room); }
+.lego-bapsim    { background: var(--lego-bapsim); }
+.lego-hururuk   { background: var(--lego-hururuk); }
+.lego-mangwon   { background: var(--lego-mangwon); }
+.lego-hometown  { background: var(--lego-hometown); color: #2B2B2B; }
+.lego-friends   { background: var(--lego-friends); }
+.lego-korean    { background: var(--lego-korean); }
+.lego-ownerchat { background: var(--lego-ownerchat); }
+
+/* 대형 블록(천원의 아침밥/후루룩찹찹)은 글자를 더 크게 */
+.lego-breakfast .lego-title,
+.lego-hururuk .lego-title { font-size: clamp(19px, 5.4vw, 26px); }
+.lego-bapsim .lego-title { font-size: clamp(15px, 4vw, 17px); }
+.lego-event .lego-title { font-size: clamp(16px, 4.2vw, 19px); }
+/* 좁은 세로형 블록(방 구하기/한국어 공부, 2/6열)은 글자를 줄여 한 줄에
+   맞춥니다(음절이 어색하게 잘리는 것 방지). */
+.lego-room .lego-title,
+.lego-korean .lego-title { font-size: clamp(14px, 3.6vw, 16px); }
+
+@media (min-width: 640px) {
+  .lego-board { gap: 4px; }
+}
+
+/* .hellokorean-btn/.hellokorean-url이 자체 display를 지정해 두어(UA
+   [hidden] 기본값보다 우선 적용됨) hidden 속성만으로는 안 가려지므로
+   명시적으로 감춥니다(기존 로직이 계속 값은 채우되 LEGO 보드에는
+   보이지 않게만). */
+.lego-block .hellokorean-desc,
+.lego-block .hellokorean-btn,
+.lego-block .hellokorean-url { display: none; }
+
 /* ---------------- 하단 내비게이션(홈 화면 전용) ---------------- */
 
 .bottom-nav {
@@ -2511,63 +2644,82 @@ main {
     <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
   </div>
 
-  <!-- 방 구하기(js/room-finder.js) — 기존 hellokorean-card 껍데기를 그대로
-       재사용한 정적 카드입니다(클릭 시 room-finder.js가 언어 선택 →
-       입력폼 모달을 띄웁니다). 언어 선택 전 카드 문구 자체는 4개 언어를
-       한 줄에 나열해 고정 표시합니다(사이트 언어 전환과 무관). -->
-  <section class="hellokorean-card">
-    <button type="button" class="hellokorean-link room-finder-link" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
-      <h3 class="hellokorean-title">방 구하기</h3>
-      <p class="hellokorean-desc">Find a Room · 找房 · Tìm phòng</p>
+  <!-- MZ LEGO 홈 보드(리뉴얼 1단계) — 서로 다른 크기 블록 10개가 맞물린
+       구조입니다. 순서/이동 대상은 작업지시서 4·15번을 그대로 따르고,
+       모든 블록은 기존 id·data-store·클릭 핸들러를 재사용합니다(새
+       route/새 컬렉션/새 CMS 없음). 배치는 css/style.css의 .lego-* 규칙이
+       담당하고, 여기서는 DOM 순서(읽기 순서)만 그 우선순위를 따릅니다. -->
+  <div class="lego-board" id="homeLegoBoard">
+    <!-- 1. EVENT — 기존 팝업(js/site-popup.js)을 다시 열어 보여주는
+         진입점. 새 이벤트 CMS를 만들지 않습니다. -->
+    <button type="button" class="lego-block lego-event" id="homeLegoEventBtn">
+      <span class="lego-eyebrow">EVENT</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoEventLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
     </button>
-  </section>
 
-  <!-- 무료 한국어 공부 링크 2단계: "다양한 사람들이 함께하는 서비스" 문구
-       자리로 이동(기존 hellokorean-card를 그대로 재사용 — 새 컴포넌트/새
-       링크 없음, URL·클릭 통계·다국어 문구 전부 기존 그대로). 방 구하기
-       추가로 위치만 그 카드 바로 아래로 밀렸습니다(URL/기능/번역/GA 동일). -->
-  <section class="hellokorean-card">
-    <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
-      <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
-      <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
-      <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
-      <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
+    <!-- 2. 천원의 아침밥 — 기존 id/클릭 핸들러 그대로(밥심 내부 아침밥 화면). -->
+    <button type="button" class="lego-block lego-breakfast" id="homeCardBreakfast">
+      <span class="lego-eyebrow" id="homeCardBreakfastPrice"></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeCardBreakfastName"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardBreakfastLoc" hidden></span>
+    </button>
+
+    <!-- 3. 방 구하기(js/room-finder.js) — 기존 id 그대로, 클릭하면
+         room-finder.js가 언어 선택 → 입력폼 모달을 띄웁니다. -->
+    <button type="button" class="lego-block lego-room" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
+      <span class="lego-eyebrow">ROOM</span>
+      <span class="lego-title-line"><span class="lego-title">방 구하기</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+    </button>
+
+    <!-- 4. 밥심 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-bapsim" data-store="bapsim">
+      <span class="lego-title-line"><span class="lego-title">밥심</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardBapsimLoc" hidden></span>
+    </button>
+
+    <!-- 5. 후루룩찹찹 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-hururuk" data-store="hururuk">
+      <span class="lego-eyebrow">NOODLE · RICE</span>
+      <span class="lego-title-line"><span class="lego-title">후루룩찹찹</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardHururukLoc" hidden></span>
+    </button>
+
+    <!-- 6. 만권화밥 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-mangwon" data-store="mangwon">
+      <span class="lego-title-line"><span class="lego-title">만권화밥</span><span class="lego-arrow" aria-hidden="true">→</span></span>
+      <span class="home-service-loc" id="homeCardMangwonLoc" hidden></span>
+    </button>
+
+    <!-- 7. 나의 고향 이야기 — 새 게시판 없이 기존 밥심 커뮤니티의
+         hometown 카테고리로 바로 들어갑니다(js/community.js
+         navigateToCategory, 새 route 아님). -->
+    <button type="button" class="lego-block lego-hometown" id="homeLegoHometownBtn">
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoHometownLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+    </button>
+
+    <!-- 8. 친구 만들기 — 기존 밥심 커뮤니티의 friends 카테고리로 이동. -->
+    <button type="button" class="lego-block lego-friends" id="homeLegoFriendsBtn">
+      <span class="lego-eyebrow">CONNECT</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoFriendsLabel"></span><span class="lego-arrow" aria-hidden="true">→</span></span>
+    </button>
+
+    <!-- 9. 한국어 공부 — 기존 hellokorean.site 연결(id/href/GA 클릭 추적)
+         그대로. 부제/버튼/URL 텍스트는 기존 로직이 계속 채우지만(빈
+         상태로 두면 안 됨), LEGO 보드에서는 보이지 않게만 둡니다. -->
+    <a class="lego-block lego-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
+      <span class="lego-title-line"><span class="lego-title" id="helloKoreanTitle"></span><span class="lego-arrow" aria-hidden="true">↗</span></span>
+      <span class="hellokorean-desc" id="helloKoreanDesc" hidden></span>
+      <span class="hellokorean-btn" id="helloKoreanBtn" hidden></span>
+      <span class="hellokorean-url" hidden><span id="helloKoreanUrl">hellokorean.site</span></span>
     </a>
-  </section>
 
-  <h2 class="home-section-title" id="homeServicesTitle"></h2>
-  <div class="home-service-grid" id="homeServiceGrid">
-    <!-- 모바일 UI 개선 6단계: 서비스 노출 순서 확정 — 1.천원의 아침밥
-         2.유학생 커뮤니티 3.후루룩찹찹 4.만권화밥 5.밥심. 천원의 아침밥은
-         새 페이지가 아니라 기존 밥심 내부 화면(data-store="bapsim")을
-         그대로 재사용합니다(밥심 카드와 같은 곳으로 이동, 조금 더 강조만).
-         10단계: 후루룩찹찹/만권화밥/밥심은 사용자 제공 공식 로고
-         이미지(images/icon/logo-*.png, 원본 그대로)로 교체. 천원의
-         아침밥/유학생 커뮤니티는 제공된 로고가 없어 기존 이모지 유지. -->
-    <button type="button" class="home-service-card home-service-card-featured" id="homeCardBreakfast">
-      <span class="home-service-icon" aria-hidden="true">🍳</span>
-      <span class="home-service-name" id="homeCardBreakfastName"></span>
-      <span class="home-service-loc" id="homeCardBreakfastLoc"></span>
-    </button>
-    <button type="button" class="home-service-card" id="homeCardCommunity">
-      <span class="home-service-icon" aria-hidden="true">💬</span>
-      <span class="home-service-name" id="homeCardCommunityName"></span>
-    </button>
-    <button type="button" class="home-service-card" data-store="hururuk">
-      <img class="home-service-icon-img" src="/images/icon/logo-hururuk.png" alt="">
-      <span class="home-service-name">후루룩찹찹</span>
-      <span class="home-service-loc" id="homeCardHururukLoc"></span>
-    </button>
-    <button type="button" class="home-service-card" data-store="mangwon">
-      <img class="home-service-icon-img" src="/images/icon/logo-mangwon.png" alt="">
-      <span class="home-service-name">만권화밥</span>
-      <span class="home-service-loc" id="homeCardMangwonLoc"></span>
-    </button>
-    <button type="button" class="home-service-card" data-store="bapsim">
-      <img class="home-service-icon-img" src="/images/icon/logo-bapsim.png" alt="">
-      <span class="home-service-name">밥심</span>
-      <span class="home-service-loc" id="homeCardBapsimLoc"></span>
-    </button>
+    <!-- 10. 사장님에게 말하기 — 기존 footer/FAB(#ownerChatBanner/#ownerChatFab)
+         과 똑같은 카카오톡 오픈채팅 주소를 그대로 재사용합니다(새 링크
+         아님). 기존 footer/FAB은 그대로 두고, 홈 보드 안에도 같은
+         진입점을 하나 더 둡니다. -->
+    <a class="lego-block lego-ownerchat" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer">
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoOwnerChatLabel"></span><span class="lego-arrow" aria-hidden="true">↗</span></span>
+    </a>
   </div>
 
   <h2 class="home-section-title" id="homeCommunityLatestTitle"></h2>
@@ -2847,6 +2999,9 @@ const UI_TEXT = {
   },
   homeServicesTitle: { ko: "핵심 서비스", en: "Core Services", zh: "核心服务", vi: "Dịch vụ chính", mn: "Үндсэн үйлчилгээ", bn: "মূল পরিষেবা", my: "အဓိကဝန်ဆောင်မှုများ" },
   homeCommunityLatestTitle: { ko: "커뮤니티 최신 글", en: "Latest Community Posts", zh: "社区最新帖子", vi: "Bài viết cộng đồng mới nhất", mn: "Нийгэмлэгийн сүүлийн үеийн нийтлэл", bn: "কমিউনিটির সাম্প্রতিক পোস্ট", my: "အသိုင်းအဝိုင်း နောက်ဆုံးပို့စ်များ" },
+  // 홈 MZ LEGO 보드(리뉴얼 1단계) EVENT 블록의 제목 문구 — 새 이벤트
+  // CMS 없이 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점입니다.
+  homeEventLabel: { ko: "새로운 소식", en: "Latest News", zh: "最新消息", vi: "Tin tức mới", mn: "Сүүлийн үеийн мэдээ", bn: "সর্বশেষ খবর", my: "နောက်ဆုံးရသတင်း" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
   /* 모바일 UI 개선 8단계: 하단 내비게이션 5개(홈/검색/글쓰기/알림/MY) —
@@ -5640,6 +5795,16 @@ var Community = (function () {
       else history.pushState({}, "", path);
     }
     route();
+  }
+
+  // 홈 MZ LEGO 보드(리뉴얼 1단계)의 "나의 고향 이야기"/"친구 만들기"
+  // 블록에서 씁니다 — 새 route를 만들지 않고, 카테고리 탭을 직접 누른
+  // 것과 똑같이 기존 state_category만 미리 맞춰 둔 뒤 기존 navigate()로
+  // 커뮤니티 목록으로 이동합니다(목록 화면이 그 카테고리를 선택된
+  // 상태로 그려줌).
+  function navigateToCategory(catKey) {
+    if (COMMUNITY_CATEGORY_ORDER.indexOf(catKey) !== -1) state_category = catKey;
+    navigate(ROUTE_PREFIX);
   }
 
   window.addEventListener("popstate", function () { route(); });
@@ -8518,6 +8683,7 @@ var Community = (function () {
     setLang: setLang,
     isCommunityPath: isCommunityPath,
     navigate: navigate,
+    navigateToCategory: navigateToCategory,
     routePrefix: ROUTE_PREFIX,
     fetchLatestPosts: fetchLatestPostsForHome,
     showToast: showToast
@@ -8579,9 +8745,11 @@ var SitePopup = (function () {
   }
 
   // 활성 팝업이 여러 개면 가장 최근(createdAt desc로 이미 정렬됨) 1개만.
-  function pickPopup(docs) {
+  // ignoreDismissed=true면 "오늘 세션에서 이미 닫음" 여부를 무시합니다
+  // (홈 MZ LEGO 보드의 EVENT 블록처럼 사용자가 직접 다시 열어보는 경우).
+  function pickPopup(docs, ignoreDismissed) {
     for (var i = 0; i < docs.length; i++) {
-      if (isEligible(docs[i].data) && !isDismissedThisSession(docs[i].id)) return docs[i];
+      if (isEligible(docs[i].data) && (ignoreDismissed || !isDismissedThisSession(docs[i].id))) return docs[i];
     }
     return null;
   }
@@ -8651,9 +8819,10 @@ var SitePopup = (function () {
     document.body.appendChild(overlay);
   }
 
-  // done은 반드시 호출됩니다(팝업을 안 띄우는 경우 즉시, 띄운 경우 닫힐
-  // 때) — app.js가 이 콜백 다음에 천원의 아침밥 평가 팝업을 띄웁니다.
-  function maybeShow(done) {
+  // fetch + 선택 + preload + 렌더 파이프라인 공용부(maybeShow/showActive가
+  // ignoreDismissed 값만 다르게 씀). done은 반드시 호출됩니다(팝업을 안
+  // 띄우는 경우 즉시, 띄운 경우 닫힐 때).
+  function showPopup(ignoreDismissed, done) {
     var finish = typeof done === "function" ? done : function () {};
     var d = db();
     if (!d) { finish(); return; }
@@ -8667,7 +8836,7 @@ var SitePopup = (function () {
     d.collection("sitePopups").orderBy("createdAt", "desc").limit(20).get().then(function (snap) {
       var docs = [];
       snap.forEach(function (doc) { docs.push({ id: doc.id, data: doc.data() }); });
-      var chosen = pickPopup(docs);
+      var chosen = pickPopup(docs, ignoreDismissed);
       if (!chosen) { finish(); return; }
       // 데이터 확인 → 이미지 preload → 이미지 준비 → 팝업 표시 순서로,
       // 이미지가 깨진 채/빈 채로 잠깐 보이는 것을 막습니다.
@@ -8677,7 +8846,16 @@ var SitePopup = (function () {
     }).catch(function () { finish(); });
   }
 
-  return { maybeShow: maybeShow };
+  // app.js가 이 콜백 다음에 천원의 아침밥 평가 팝업을 띄웁니다(자동 표시).
+  function maybeShow(done) { showPopup(false, done); }
+
+  // 홈 MZ LEGO 보드의 EVENT 블록 클릭 — 사용자가 이미 이번 세션에 닫았던
+  // 팝업이라도 다시 보여줍니다(자동 표시가 아니라 직접 눌러서 여는
+  // 것이므로). 활성 팝업이 없으면 조용히 아무 일도 하지 않습니다(새
+  // 이벤트 목록 화면을 만들지 않음).
+  function showActive(done) { showPopup(true, done); }
+
+  return { maybeShow: maybeShow, showActive: showActive };
 })();
 
 </script>
@@ -9756,9 +9934,21 @@ var RoomFinder = (function () {
     // 그대로 씁니다(새 번역 없음).
     if (els.homeCardBreakfastName) els.homeCardBreakfastName.textContent = BREAKFAST_INFO.title[state.lang];
     if (els.homeCardBreakfastLoc) els.homeCardBreakfastLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
+    if (els.homeCardBreakfastPrice) els.homeCardBreakfastPrice.textContent = BREAKFAST_INFO.price[state.lang];
     if (els.homeCardBapsimLoc) els.homeCardBapsimLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
     if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
     if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
+    // 홈 MZ LEGO 보드 — 새로 추가된 블록 3개(EVENT/나의 고향 이야기/친구
+    // 만들기)도 기존 데이터(UI_TEXT/COMMUNITY_CATEGORIES)를 그대로 재사용.
+    if (els.homeLegoEventLabel) els.homeLegoEventLabel.textContent = UI_TEXT.homeEventLabel[state.lang];
+    if (els.homeLegoHometownLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoHometownLabel.textContent = COMMUNITY_CATEGORIES.hometown[state.lang] || COMMUNITY_CATEGORIES.hometown.ko;
+    }
+    if (els.homeLegoFriendsLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoFriendsLabel.textContent = COMMUNITY_CATEGORIES.friends[state.lang] || COMMUNITY_CATEGORIES.friends.ko;
+    }
+    // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
+    if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
     if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
     // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
@@ -10278,9 +10468,21 @@ var RoomFinder = (function () {
     els.homeCardBreakfast = qs("homeCardBreakfast");
     els.homeCardBreakfastName = qs("homeCardBreakfastName");
     els.homeCardBreakfastLoc = qs("homeCardBreakfastLoc");
+    els.homeCardBreakfastPrice = qs("homeCardBreakfastPrice");
     els.homeCardBapsimLoc = qs("homeCardBapsimLoc");
     els.homeCardMangwonLoc = qs("homeCardMangwonLoc");
     els.homeCardHururukLoc = qs("homeCardHururukLoc");
+    // 홈 MZ LEGO 보드(리뉴얼 1단계) — 기존에 없던 블록 3개(EVENT/나의 고향
+    // 이야기/친구 만들기/사장님에게 말하기)만 새로 연결합니다. 나머지
+    // 블록(천원의 아침밥/방 구하기/밥심/후루룩찹찹/만권화밥/한국어 공부)은
+    // 기존 id·클릭 핸들러를 그대로 재사용합니다.
+    els.homeLegoEventBtn = qs("homeLegoEventBtn");
+    els.homeLegoEventLabel = qs("homeLegoEventLabel");
+    els.homeLegoHometownBtn = qs("homeLegoHometownBtn");
+    els.homeLegoHometownLabel = qs("homeLegoHometownLabel");
+    els.homeLegoFriendsBtn = qs("homeLegoFriendsBtn");
+    els.homeLegoFriendsLabel = qs("homeLegoFriendsLabel");
+    els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");
@@ -10404,6 +10606,27 @@ var RoomFinder = (function () {
       var store = card.getAttribute("data-store");
       card.addEventListener("click", function () { goToStore(store); });
     });
+
+    // 홈 MZ LEGO 보드(리뉴얼 1단계)의 새 블록 3개 — 전부 기존 기능을
+    // 그대로 연결합니다(새 route/새 API 없음).
+    if (els.homeLegoEventBtn) {
+      // 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점 — 새
+      // 이벤트 CMS/컬렉션을 만들지 않습니다. 활성 팝업이 없으면
+      // 조용히 아무 일도 하지 않습니다.
+      els.homeLegoEventBtn.addEventListener("click", function () {
+        if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+      });
+    }
+    if (els.homeLegoHometownBtn) {
+      els.homeLegoHometownBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("hometown");
+      });
+    }
+    if (els.homeLegoFriendsBtn) {
+      els.homeLegoFriendsBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("friends");
+      });
+    }
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
     // 라우팅(goHome)을 그대로 재사용합니다.

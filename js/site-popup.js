@@ -47,9 +47,11 @@ var SitePopup = (function () {
   }
 
   // 활성 팝업이 여러 개면 가장 최근(createdAt desc로 이미 정렬됨) 1개만.
-  function pickPopup(docs) {
+  // ignoreDismissed=true면 "오늘 세션에서 이미 닫음" 여부를 무시합니다
+  // (홈 MZ LEGO 보드의 EVENT 블록처럼 사용자가 직접 다시 열어보는 경우).
+  function pickPopup(docs, ignoreDismissed) {
     for (var i = 0; i < docs.length; i++) {
-      if (isEligible(docs[i].data) && !isDismissedThisSession(docs[i].id)) return docs[i];
+      if (isEligible(docs[i].data) && (ignoreDismissed || !isDismissedThisSession(docs[i].id))) return docs[i];
     }
     return null;
   }
@@ -119,9 +121,10 @@ var SitePopup = (function () {
     document.body.appendChild(overlay);
   }
 
-  // done은 반드시 호출됩니다(팝업을 안 띄우는 경우 즉시, 띄운 경우 닫힐
-  // 때) — app.js가 이 콜백 다음에 천원의 아침밥 평가 팝업을 띄웁니다.
-  function maybeShow(done) {
+  // fetch + 선택 + preload + 렌더 파이프라인 공용부(maybeShow/showActive가
+  // ignoreDismissed 값만 다르게 씀). done은 반드시 호출됩니다(팝업을 안
+  // 띄우는 경우 즉시, 띄운 경우 닫힐 때).
+  function showPopup(ignoreDismissed, done) {
     var finish = typeof done === "function" ? done : function () {};
     var d = db();
     if (!d) { finish(); return; }
@@ -135,7 +138,7 @@ var SitePopup = (function () {
     d.collection("sitePopups").orderBy("createdAt", "desc").limit(20).get().then(function (snap) {
       var docs = [];
       snap.forEach(function (doc) { docs.push({ id: doc.id, data: doc.data() }); });
-      var chosen = pickPopup(docs);
+      var chosen = pickPopup(docs, ignoreDismissed);
       if (!chosen) { finish(); return; }
       // 데이터 확인 → 이미지 preload → 이미지 준비 → 팝업 표시 순서로,
       // 이미지가 깨진 채/빈 채로 잠깐 보이는 것을 막습니다.
@@ -145,5 +148,14 @@ var SitePopup = (function () {
     }).catch(function () { finish(); });
   }
 
-  return { maybeShow: maybeShow };
+  // app.js가 이 콜백 다음에 천원의 아침밥 평가 팝업을 띄웁니다(자동 표시).
+  function maybeShow(done) { showPopup(false, done); }
+
+  // 홈 MZ LEGO 보드의 EVENT 블록 클릭 — 사용자가 이미 이번 세션에 닫았던
+  // 팝업이라도 다시 보여줍니다(자동 표시가 아니라 직접 눌러서 여는
+  // 것이므로). 활성 팝업이 없으면 조용히 아무 일도 하지 않습니다(새
+  // 이벤트 목록 화면을 만들지 않음).
+  function showActive(done) { showPopup(true, done); }
+
+  return { maybeShow: maybeShow, showActive: showActive };
 })();
