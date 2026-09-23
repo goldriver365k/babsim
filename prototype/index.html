@@ -14,19 +14,8 @@
     --cream: #F3EEE2;
     --ink: #1C1C1E;
 
-    --tomato: #E8452A;
-    --butter: #F4C842;
-    --cobalt: #2647C0;
-    --forest: #2C7A4B;
-    --charcoal: #1C1C1E;
-    --brown: #B85C2A;
-    --coral: #F4917E;
-    --blue: #1E5FE0;
-    --lavender: #8E6FD6;
-    --orange: #F0801E;
-
-    --gap: 4px;
-    --radius: 11px;
+    --gap: 7px;
+    --radius: 13px;
   }
 
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
@@ -99,68 +88,144 @@
   .board{
     display:grid;
     grid-template-columns:repeat(6, 1fr);
-    grid-auto-rows:30px;
+    grid-auto-rows:34px;
     gap:var(--gap);
+    padding-bottom:10px;
+    /* faint shadow so the assembled board rests on the cream surface */
+    filter:drop-shadow(0 22px 26px rgba(60,40,20,.10));
   }
   @media (min-width:760px){
-    .board{ grid-auto-rows:44px; }
+    .board{ grid-auto-rows:48px; }
   }
 
+  /* ---------- LEGO brick ---------- */
   .block{
     position:relative;
     border:0;
     border-radius:var(--radius);
-    padding:14px;
+    padding:10px 13px 13px;
     text-align:left;
-    color:#fff;
+    color:var(--fg, #fff);
     font:inherit;
     cursor:pointer;
-    overflow:hidden;
     display:flex;
     flex-direction:column;
-    justify-content:space-between;
-    transition:transform .09s ease;
     isolation:isolate;
+    /* the brick face: bright top, base body, shaded foot */
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--c) 78%, #fff) 0%,
+        var(--c) 34%,
+        color-mix(in srgb, var(--c) 86%, #000) 100%);
+    /* real thickness (colored side wall) + soft contact shadow on the board */
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.34),
+      inset 0 -3px 6px rgba(0,0,0,.20),
+      inset 3px 0 6px rgba(255,255,255,.10),
+      0 6px 0 var(--cd),
+      0 10px 12px rgba(50,30,10,.22);
+    transition:transform .08s ease, box-shadow .08s ease;
   }
-  .block:active{ transform:scale(.98); }
+  /* glossy sheen on the upper-left */
+  .block::after{
+    content:"";
+    position:absolute;
+    inset:2px 2px auto 2px;
+    height:42%;
+    border-radius:var(--radius) var(--radius) 40% 40% / var(--radius) var(--radius) 60% 60%;
+    background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,0));
+    pointer-events:none;
+    z-index:0;
+  }
+  /* pressed: the brick sinks and its side wall shrinks */
+  .block:active{
+    transform:translateY(3px) scale(.99);
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.30),
+      inset 0 -3px 6px rgba(0,0,0,.20),
+      0 3px 0 var(--cd),
+      0 5px 7px rgba(50,30,10,.20);
+  }
+
+  /* ---------- Studs ---------- */
+  .studs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:6px;
+    position:relative;
+    z-index:2;
+  }
+  .stud{
+    width:17px;
+    height:17px;
+    border-radius:50%;
+    flex:none;
+    background:
+      radial-gradient(circle at 50% 34%, rgba(255,255,255,.6), rgba(255,255,255,0) 62%),
+      var(--c);
+    box-shadow:
+      inset 0 -2px 3px rgba(0,0,0,.30),
+      inset 0 2px 2px rgba(255,255,255,.30),
+      0 1px 1px rgba(0,0,0,.20);
+  }
+  @media (min-width:760px){
+    .stud{ width:22px; height:22px; }
+  }
+
+  .content{
+    position:relative;
+    z-index:1;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .bottom{ margin-top:auto; }
 
   .kicker{
     font-size:10px;
     font-weight:800;
-    letter-spacing:0.16em;
+    letter-spacing:0.14em;
     text-transform:uppercase;
-    opacity:.85;
+    opacity:.9;
   }
   .title{
-    font-size:23px;
+    font-size:24px;
     font-weight:900;
-    line-height:1.08;
+    line-height:1.06;
     letter-spacing:-0.01em;
-    margin-top:auto;
+    text-shadow:0 1px 0 rgba(0,0,0,.10);
   }
   .title .arrow{ font-weight:800; }
-  .big{ font-size:44px; line-height:.95; font-weight:900; letter-spacing:-0.02em; }
-
-  @media (min-width:760px){
-    .title{ font-size:28px; }
-    .big{ font-size:60px; }
-    .block{ padding:18px; }
+  .big{
+    display:block;
+    font-size:46px;
+    line-height:.92;
+    font-weight:900;
+    letter-spacing:-0.03em;
+    text-shadow:0 2px 0 rgba(0,0,0,.10);
   }
 
-  /* placement — irregular mosaic */
-  .b-event   { grid-column:1 / span 6; grid-row:span 3;  background:var(--tomato); }
-  .b-cheonwon{ grid-column:1 / span 4; grid-row:span 5;  background:var(--butter); color:var(--ink); }
-  .b-room    { grid-column:5 / span 2; grid-row:span 5;  background:var(--cobalt); }
-  .b-bapsim  { grid-column:1 / span 2; grid-row:span 3;  background:var(--forest); }
-  .b-hururuk { grid-column:3 / span 4; grid-row:span 3;  background:var(--charcoal); }
-  .b-hometown{ grid-column:1 / span 4; grid-row:span 4;  background:var(--coral); color:var(--ink); }
-  .b-mangwon { grid-column:5 / span 2; grid-row:span 4;  background:var(--brown); }
-  .b-connect { grid-column:1 / span 4; grid-row:span 4;  background:var(--blue); }
-  .b-korean  { grid-column:5 / span 2; grid-row:span 4;  background:var(--lavender); color:var(--ink); }
-  .b-talk    { grid-column:1 / span 6; grid-row:span 3;  background:var(--orange); }
+  @media (min-width:760px){
+    .title{ font-size:30px; }
+    .big{ font-size:66px; }
+    .block{ padding:12px 18px 18px; }
+  }
 
-  .b-event .title{ font-size:20px; }
-  @media (min-width:760px){ .b-event .title{ font-size:24px; } }
+  /* placement — irregular mosaic (unchanged sizes) + per-brick colors */
+  .b-event   { grid-column:1 / span 6; grid-row:span 3; --c:#E8452A; --cd:#A62E1B; --fg:#fff; }
+  .b-cheonwon{ grid-column:1 / span 4; grid-row:span 5; --c:#F4C842; --cd:#CE9E17; --fg:#1C1C1E; }
+  .b-room    { grid-column:5 / span 2; grid-row:span 5; --c:#2647C0; --cd:#182F8C; --fg:#fff; }
+  .b-bapsim  { grid-column:1 / span 2; grid-row:span 3; --c:#2C7A4B; --cd:#1C5334; --fg:#fff; }
+  .b-hururuk { grid-column:3 / span 4; grid-row:span 3; --c:#F4917E; --cd:#D3695A; --fg:#1C1C1E; }
+  .b-hometown{ grid-column:1 / span 4; grid-row:span 4; --c:#EE6FA8; --cd:#C64C85; --fg:#1C1C1E; }
+  .b-mangwon { grid-column:5 / span 2; grid-row:span 4; --c:#8E6FD6; --cd:#6B4CB4; --fg:#fff; }
+  .b-connect { grid-column:1 / span 4; grid-row:span 4; --c:#1E5FE0; --cd:#1444A8; --fg:#fff; }
+  .b-korean  { grid-column:5 / span 2; grid-row:span 4; --c:#34A853; --cd:#237A3B; --fg:#fff; }
+  .b-talk    { grid-column:1 / span 6; grid-row:span 3; --c:#F0801E; --cd:#C25F0F; --fg:#fff; }
+
+  .b-event .title{ font-size:21px; }
+  @media (min-width:760px){ .b-event .title{ font-size:26px; } }
 
   /* ---------- Selected toast ---------- */
   .toast{
@@ -327,16 +392,16 @@
 
   // Exact block content from the brief. Korean brand/section names are kept as-is (proper nouns).
   var BLOCKS = [
-    { key:"event",    cls:"b-event",    kicker:"EVENT",                title:"What's happening<br>today?" },
-    { key:"cheonwon", cls:"b-cheonwon", big:"1,000",                   title:"천원의<br>아침밥" },
-    { key:"room",     cls:"b-room",     kicker:"ROOM",                 title:"방<br>구하기" },
-    { key:"bapsim",   cls:"b-bapsim",                                  title:"밥심" },
-    { key:"hururuk",  cls:"b-hururuk",  kicker:"NOODLE · RICE · PASTA",title:"후루룩찹찹" },
-    { key:"hometown", cls:"b-hometown", kicker:"HOMETOWN",             title:"나의 고향<br>이야기" },
-    { key:"mangwon",  cls:"b-mangwon",                                 title:"만권화밥" },
-    { key:"connect",  cls:"b-connect",  kicker:"CONNECT",              title:"친구<br>만들기" },
-    { key:"korean",   cls:"b-korean",   kicker:"KOREAN",               title:"한국어<br>공부", arrow:"↗" },
-    { key:"talk",     cls:"b-talk",     kicker:"TALK",                 title:"사장님에게<br>말하기" }
+    { key:"event",    cls:"b-event",    studs:6, kicker:"EVENT",                title:"What's happening<br>today?" },
+    { key:"cheonwon", cls:"b-cheonwon", studs:8, big:"1,000",                   title:"천원의<br>아침밥" },
+    { key:"room",     cls:"b-room",     studs:3, kicker:"ROOM",                 title:"방<br>구하기" },
+    { key:"bapsim",   cls:"b-bapsim",   studs:2,                                title:"밥심" },
+    { key:"hururuk",  cls:"b-hururuk",  studs:4, kicker:"NOODLE · RICE · PASTA",title:"후루룩찹찹" },
+    { key:"hometown", cls:"b-hometown", studs:4, kicker:"HOMETOWN",             title:"나의 고향<br>이야기" },
+    { key:"mangwon",  cls:"b-mangwon",  studs:3,                                title:"만권화밥" },
+    { key:"connect",  cls:"b-connect",  studs:4, kicker:"CONNECT",              title:"친구<br>만들기" },
+    { key:"korean",   cls:"b-korean",   studs:3, kicker:"KOREAN",               title:"한국어<br>공부", arrow:"↗" },
+    { key:"talk",     cls:"b-talk",     studs:6, kicker:"TALK",                 title:"사장님에게<br>말하기" }
   ];
 
   var $ = function(id){ return document.getElementById(id); };
@@ -347,15 +412,26 @@
     return "KO";
   }
 
+  function studsHtml(n){
+    var s = "";
+    for (var j=0;j<n;j++) s += '<span class="stud"></span>';
+    return s;
+  }
+
   function renderBoard(){
     var html = "";
     for (var i=0;i<BLOCKS.length;i++){
       var b = BLOCKS[i];
       var arrow = b.arrow || "→";
       html += '<button class="block '+b.cls+'" data-key="'+b.key+'" data-name="'+b.title.replace(/<br>/g," ")+'">';
+      html += '<span class="studs" aria-hidden="true">'+studsHtml(b.studs||3)+'</span>';
+      html += '<span class="content">';
       if (b.kicker) html += '<span class="kicker">'+b.kicker+'</span>';
+      html += '<span class="bottom">';
       if (b.big)    html += '<span class="big">'+b.big+'</span>';
       html += '<span class="title">'+b.title+' <span class="arrow">'+arrow+'</span></span>';
+      html += '</span>';
+      html += '</span>';
       html += '</button>';
     }
     $("board").innerHTML = html;
