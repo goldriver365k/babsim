@@ -2485,44 +2485,39 @@ main {
 }
 
 
-
-/* ===== HOME TOY-BLOCK V4 — task-spec implementation ===== */
-body:has(#homeView:not([hidden])){background:#f7f2e8}
-body:has(#homeView:not([hidden])) .site-header{background:#fffaf2;padding:12px 14px 9px;border:0;box-shadow:none}
+/* ===== HOME SVG-BLOCK STAGE 1 — breakfast + room ===== */
+body:has(#homeView:not([hidden])){background:#f8f3ea}
+body:has(#homeView:not([hidden])) .site-header{background:#fffaf3;padding:12px 14px 9px;border:0;box-shadow:none}
 body:has(#homeView:not([hidden])) .header-top{max-width:600px;margin:auto;min-height:62px}
 body:has(#homeView:not([hidden])) .site-logo-btn,body:has(#homeView:not([hidden])) .site-title,body:has(#homeView:not([hidden])) .store-tabs{display:none!important}
-body:has(#homeView:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:34px;font-weight:950;line-height:.88;letter-spacing:-.055em;color:#121820}
-body:has(#homeView:not([hidden])) .site-brand-name::first-letter{color:#e53935}
+body:has(#homeView:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:34px;font-weight:950;line-height:.9;letter-spacing:-.055em;color:#121820}
 body:has(#homeView:not([hidden])) .site-tagline{display:block!important;margin:7px 0 0;font-size:10px;font-weight:900;letter-spacing:.13em;color:#30343a}
 body:has(#homeView:not([hidden])) .site-tagline:empty::before{content:"EAT · PLAY · CONNECT"}
-body:has(#homeView:not([hidden])) .lang-compact-btn{min-height:38px;background:transparent;border:0;box-shadow:none;font-size:14px;font-weight:850}
-body:has(#homeView:not([hidden])) main{max-width:600px;margin:auto;padding:0 8px 96px!important;background:#f7f2e8}
-#homeView{padding:10px 0 0!important;background:#f7f2e8}
+body:has(#homeView:not([hidden])) main{max-width:600px;margin:auto;padding:0 7px 96px!important;background:#f8f3ea}
+#homeView{padding:10px 0 0!important;background:#f8f3ea}
 #homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
-#homeLegoBoard{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:98px 190px 126px 136px 136px;gap:7px!important;width:100%;margin:0 auto 18px;padding:0;overflow:visible}
-#homeLegoBoard .lego-block{--side:color-mix(in srgb,var(--brick) 68%,black);position:relative!important;isolation:isolate;min-width:0;min-height:0;margin:0!important;padding:38px 13px 13px!important;border:0!important;border-radius:17px!important;clip-path:none!important;overflow:visible!important;display:flex!important;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:5px;text-align:left;text-decoration:none;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--brick) 73%,white) 0%,var(--brick) 28%,var(--brick) 68%,color-mix(in srgb,var(--brick) 83%,black) 100%)!important;box-shadow:inset 3px 3px 0 rgba(255,255,255,.34),inset -4px -5px 0 rgba(0,0,0,.15),0 7px 0 var(--side),0 10px 12px rgba(34,25,16,.18)!important;filter:none!important;transition:transform .1s ease,box-shadow .1s ease;z-index:1}
-#homeLegoBoard .lego-block::before{content:"";position:absolute;z-index:4;top:-9px;left:13px;right:13px;height:29px;background:radial-gradient(ellipse 18px 7px at 18px 7px,color-mix(in srgb,var(--brick) 48%,white) 0 54%,var(--brick) 57% 70%,color-mix(in srgb,var(--brick) 64%,black) 73% 82%,transparent 85%);background-size:46px 29px;background-repeat:space no-repeat;filter:drop-shadow(0 3px 1px rgba(0,0,0,.18));pointer-events:none}
-#homeLegoBoard .lego-block::after{content:"›";position:absolute;z-index:5;right:11px;bottom:11px;width:33px;height:33px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font:900 29px/1 Arial;box-shadow:0 3px 6px rgba(0,0,0,.20)}
+#homeLegoBoard{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:94px 206px 120px 128px 128px;gap:6px!important;width:100%;margin:0 auto 18px;padding:0}
+#homeLegoBoard .lego-block{--brick:#666;position:relative!important;min-width:0;min-height:0;margin:0!important;padding:36px 10px 10px!important;border:0!important;border-radius:14px!important;clip-path:none!important;overflow:visible!important;display:flex!important;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;text-decoration:none;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--brick) 70%,white),var(--brick) 28%,color-mix(in srgb,var(--brick) 84%,black))!important;box-shadow:inset 3px 3px 0 rgba(255,255,255,.3),inset -4px -5px 0 rgba(0,0,0,.15),0 6px 0 color-mix(in srgb,var(--brick) 68%,black),0 9px 10px rgba(0,0,0,.18)!important}
+#homeLegoBoard .lego-block::before{content:"";position:absolute;top:-9px;left:9px;right:9px;height:28px;background:radial-gradient(ellipse 18px 7px at 18px 7px,color-mix(in srgb,var(--brick) 48%,white) 0 54%,var(--brick) 57% 70%,color-mix(in srgb,var(--brick) 62%,black) 73% 82%,transparent 85%);background-size:44px 28px;background-repeat:space no-repeat;filter:drop-shadow(0 3px 1px rgba(0,0,0,.17))}
+#homeLegoBoard .lego-block::after{content:"›";position:absolute;right:8px;bottom:8px;width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font:900 26px/1 Arial;box-shadow:0 3px 6px rgba(0,0,0,.2)}
 #homeLegoBoard .lego-arrow{display:none!important}
-#homeLegoBoard .lego-eyebrow{margin-bottom:auto;font-size:9px;font-weight:900;letter-spacing:.12em;opacity:.78}
-#homeLegoBoard .lego-title-line{display:block;max-width:calc(100% - 38px)}
-#homeLegoBoard .lego-title{font-size:clamp(18px,5vw,27px)!important;font-weight:950;line-height:1.03;letter-spacing:-.04em;word-break:keep-all;text-shadow:0 2px 0 rgba(0,0,0,.17)}
-#homeLegoBoard .lego-hero-number{margin-bottom:auto;font-size:clamp(43px,12vw,68px);font-weight:950;line-height:.86;letter-spacing:-.065em}
-#homeLegoBoard .lego-event{grid-column:1/13;grid-row:1;--brick:#e53935;align-items:center;justify-content:center;text-align:center}
-#homeLegoBoard .lego-breakfast{grid-column:1/9;grid-row:2;--brick:#ffc107;color:#151515}
-#homeLegoBoard .lego-room{grid-column:9/13;grid-row:2;--brick:#1e88e5}
-#homeLegoBoard .lego-bapsim{grid-column:1/5;grid-row:3;--brick:#4caf50}
-#homeLegoBoard .lego-hururuk{grid-column:5/9;grid-row:3;--brick:#e53935}
-#homeLegoBoard .lego-mangwon{grid-column:9/13;grid-row:3;--brick:#8e24aa}
-#homeLegoBoard .lego-hometown{grid-column:1/7;grid-row:4;--brick:#f06292}
-#homeLegoBoard .lego-friends{grid-column:7/13;grid-row:4;--brick:#1e88e5}
-#homeLegoBoard .lego-korean{grid-column:1/7;grid-row:5;--brick:#4caf50}
-#homeLegoBoard .lego-ownerchat{grid-column:7/13;grid-row:5;--brick:#ffc107;color:#151515}
-#homeLegoBoard .lego-event .lego-title{font-size:clamp(29px,8vw,43px)!important}
-#homeLegoBoard .lego-breakfast .lego-title{font-size:clamp(27px,7.5vw,41px)!important;color:#d9251c;text-shadow:none}
-#homeLegoBoard .lego-room .lego-title{font-size:clamp(20px,6vw,30px)!important}
+#homeLegoBoard .lego-title-line{display:block;max-width:calc(100% - 34px)}
+#homeLegoBoard .lego-title{font-size:clamp(16px,4.8vw,22px)!important;font-weight:950;line-height:1.03;letter-spacing:-.04em;word-break:keep-all;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+#homeLegoBoard .lego-eyebrow{margin-bottom:auto;font-size:9px;font-weight:900;letter-spacing:.1em;opacity:.75}
+#homeLegoBoard .lego-event{grid-column:1/13;grid-row:1;--brick:#e53935;align-items:center;justify-content:center}
+#homeLegoBoard .lego-breakfast{grid-column:1/9;grid-row:2;--brick:#ffc107;color:#111;padding:28px 74px 15px 15px!important;border-radius:18px 10px 18px 18px!important}
+#homeLegoBoard .lego-room{grid-column:9/13;grid-row:2;--brick:#1e88e5;padding:38px 10px 15px!important;border-radius:10px 18px 18px 10px!important}
+#homeLegoBoard .lego-bapsim{grid-column:1/5;grid-row:3;--brick:#4caf50}#homeLegoBoard .lego-hururuk{grid-column:5/9;grid-row:3;--brick:#e53935}#homeLegoBoard .lego-mangwon{grid-column:9/13;grid-row:3;--brick:#8e24aa}#homeLegoBoard .lego-hometown{grid-column:1/7;grid-row:4;--brick:#f06292}#homeLegoBoard .lego-friends{grid-column:7/13;grid-row:4;--brick:#1e88e5}#homeLegoBoard .lego-korean{grid-column:1/7;grid-row:5;--brick:#4caf50}#homeLegoBoard .lego-ownerchat{grid-column:7/13;grid-row:5;--brick:#ffc107;color:#111}
+#homeLegoBoard .lego-breakfast::before{left:10px;right:10px;background-size:46px 28px}
+#homeLegoBoard .lego-breakfast::after{content:"›";z-index:6}
+#homeLegoBoard .lego-breakfast .lego-hero-number{font-size:0;margin:auto 0 3px}
+#homeLegoBoard .lego-breakfast .lego-hero-number::before{content:"천원의";display:block;font-size:clamp(30px,8vw,43px);font-weight:950;line-height:.9;color:#111;letter-spacing:-.07em}
+#homeLegoBoard .lego-breakfast .lego-hero-number::after{content:"1,000";display:grid;place-items:center;position:absolute;right:16px;top:72px;width:61px;height:61px;border:4px solid #191919;border-radius:50%;background:linear-gradient(#ffd95a,#f3a900);color:#bd5b00;font-size:19px;font-weight:950;box-shadow:0 5px 0 #bf7600}
+#homeLegoBoard .lego-breakfast .lego-title{font-size:clamp(29px,8vw,43px)!important;color:#e72a20;text-shadow:none}
+#homeLegoBoard .lego-breakfast .lego-title-line::after{content:"";position:absolute;right:24px;bottom:43px;width:49px;height:36px;border-radius:50% 50% 42% 42%;background:radial-gradient(circle at 50% 35%,#fff 0 34%,transparent 35%),linear-gradient(#f6fbff 0 44%,#83bed8 45% 100%);border:3px solid #17212a;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+#homeLegoBoard .lego-room .lego-title{font-size:clamp(21px,6vw,29px)!important}
+#homeLegoBoard .lego-room .lego-title-line::before{content:"";display:block;width:68px;height:62px;margin:0 auto 18px;background:linear-gradient(135deg,transparent 46%,#fff 47% 55%,transparent 56%),linear-gradient(45deg,transparent 46%,#fff 47% 55%,transparent 56%);border-bottom:8px solid #fff;filter:drop-shadow(0 3px 0 rgba(0,0,0,.18))}
 #homeLegoBoard .lego-block .hellokorean-desc,#homeLegoBoard .lego-block .hellokorean-btn,#homeLegoBoard .lego-block .hellokorean-url{display:none!important}
-#homeLegoBoard .lego-block:active{transform:translateY(3px)!important;box-shadow:inset 3px 3px 0 rgba(255,255,255,.25),inset -3px -3px 0 rgba(0,0,0,.13),0 3px 0 var(--side),0 5px 7px rgba(34,25,16,.15)!important}
 body:has(#homeView:not([hidden])) .owner-chat-fab,body:has(#homeView:not([hidden])) .owner-chat-banner{display:none!important}
-@media(max-width:430px){body:has(#homeView:not([hidden])) main{padding-left:6px!important;padding-right:6px!important}#homeLegoBoard{grid-template-rows:90px 180px 118px 128px 128px;gap:6px!important}#homeLegoBoard .lego-block{padding:35px 9px 10px!important;border-radius:14px!important}#homeLegoBoard .lego-block::before{left:8px;right:8px;background-size:42px 29px}#homeLegoBoard .lego-block::after{right:8px;bottom:8px;width:29px;height:29px;font-size:26px}#homeLegoBoard .lego-title-line{max-width:calc(100% - 33px)}#homeLegoBoard .lego-title{font-size:clamp(16px,4.8vw,22px)!important}#homeLegoBoard .lego-event .lego-title{font-size:clamp(27px,7.5vw,38px)!important}#homeLegoBoard .lego-breakfast .lego-title{font-size:clamp(25px,7.2vw,36px)!important}#homeLegoBoard .lego-room .lego-title{font-size:clamp(19px,5.8vw,27px)!important}#homeLegoBoard .lego-hero-number{font-size:clamp(39px,11vw,58px)}}
+@media(min-width:431px){#homeLegoBoard{grid-template-rows:104px 232px 136px 146px 146px}#homeLegoBoard .lego-breakfast{padding-right:95px!important}#homeLegoBoard .lego-breakfast .lego-hero-number::after{width:72px;height:72px;right:22px;top:80px;font-size:22px}}
 
