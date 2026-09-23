@@ -2638,6 +2638,36 @@ body:has(.b2-home:not([hidden])) .bottom-nav .nav-item{min-width:0}
 body:has(.b2-home:not([hidden])) .bottom-nav .nav-label{font-size:10px;font-weight:800;white-space:nowrap}
 body:has(.b2-home:not([hidden])) .bottom-nav .nav-item.active{color:#e53935}
 
+
+/* ===== BABSIM HOME V8.4 — final reference polish ===== */
+.b2-grid{perspective:900px}
+.b2-brick{transform:translateZ(0);transition:transform .12s ease,filter .12s ease}
+.b2-brick:hover{filter:saturate(1.04) brightness(1.015)}
+.b2-event{background:linear-gradient(140deg,#f14b46 0%,#e53935 45%,#c92623 100%)}
+.b2-breakfast{background:linear-gradient(140deg,#ffd54a 0%,#ffc107 48%,#e7a800 100%)}
+.b2-room,.b2-friends{background:linear-gradient(140deg,#45a1ed 0%,#1e88e5 52%,#116fbd 100%)}
+.b2-bapsim,.b2-korean{background:linear-gradient(140deg,#6bc66f 0%,#4caf50 52%,#338a38 100%)}
+.b2-hururuk{background:linear-gradient(140deg,#ef5752 0%,#e53935 52%,#bd2724 100%)}
+.b2-mangwon{background:linear-gradient(140deg,#a846bd 0%,#8e24aa 52%,#69147f 100%)}
+.b2-hometown{background:linear-gradient(140deg,#f784aa 0%,#f06292 52%,#d34676 100%)}
+.b2-owner{background:linear-gradient(140deg,#ffbd45 0%,#ff9f1c 55%,#df7d00 100%)}
+.b2-brick strong{position:relative;z-index:4}
+.b2-event-sub,.b2-kicker,.b2-small,.b2-coin,.b2-symbol,.b2-hero-icon,.b2-breakfast-art,.b2-room-art{z-index:4}
+.b2-event-sub{font-style:italic;transform:rotate(-1deg);transform-origin:left center}
+.b2-breakfast .b2-small{color:#171717;text-shadow:0 1px 0 rgba(255,255,255,.28)}
+.b2-breakfast strong{filter:drop-shadow(0 2px 0 rgba(255,255,255,.2))}
+.b2-coin{outline:2px solid rgba(255,255,255,.2);outline-offset:-7px}
+.b2-symbol svg,.b2-hero-icon svg,.b2-breakfast-art svg,.b2-room-art svg{filter:drop-shadow(0 2px 0 rgba(0,0,0,.13))}
+.b2-go{transition:transform .12s ease}
+.b2-brick:active .b2-go{transform:translateX(2px)}
+body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(5px,env(safe-area-inset-bottom))}
+@media(max-width:430px){
+ .b2-grid{max-width:418px;margin-left:auto;margin-right:auto}
+ .b2-event{min-height:94px}
+ .b2-event strong{letter-spacing:-.065em}
+ .b2-hometown strong,.b2-owner strong{max-width:calc(100% - 38px)}
+}
+
 </style>
 </head>
 <body>
