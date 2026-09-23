@@ -2634,3 +2634,13 @@ body:has(.b2-home:not([hidden])) .bottom-nav{min-height:64px;padding-bottom:max(
 .b3-event-face,.b3-event-studs{fill:#e53935}.b3-event-depth{fill:#a91f1c}
 .b3-event>span,.b3-event>strong{position:relative;z-index:2}
 .b3-event:active{transform:translateY(4px)!important;filter:brightness(.97)}
+
+
+/* ===== HOME V9 stage 2: BREAKFAST real SVG block ===== */
+.b3-breakfast{background:transparent!important;box-shadow:none!important;border:0!important;overflow:visible!important;isolation:isolate}
+.b3-breakfast::before,.b3-breakfast::after{display:none!important}
+.b3-breakfast-shape{position:absolute;inset:0;width:100%;height:100%;z-index:0;overflow:visible;filter:drop-shadow(0 5px 4px rgba(43,30,12,.24))}
+.b3-breakfast-face,.b3-breakfast-depth,.b3-breakfast-studs{stroke:rgba(0,0,0,.15);stroke-width:1.5}
+.b3-breakfast-face,.b3-breakfast-studs{fill:#ffc107}.b3-breakfast-depth{fill:#c38f00}
+.b3-breakfast>span,.b3-breakfast>strong{position:relative;z-index:2}
+.b3-breakfast:active{transform:translateY(4px)!important;filter:brightness(.97)}
