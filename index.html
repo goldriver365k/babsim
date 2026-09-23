@@ -2823,6 +2823,32 @@ main {
  .b2-friends,.b2-owner{clip-path:polygon(5% 0,100% 0,100% 100%,5% 100%,5% 61%,0 61%,0 39%,5% 39%)!important}
 }
 
+
+/* ===== HOME V13 — true silhouette interlocks, no pasted tabs ===== */
+.b2-grid{gap:0!important}
+.b2-brick{overflow:hidden!important}
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{display:none!important}
+
+/* Pair 1: yellow convex / blue matching concave */
+.b2-breakfast{clip-path:path("M 0 0 H 94% V 38% C 94% 42% 100% 42% 100% 46% V 54% C 100% 58% 94% 58% 94% 62% V 100% H 0 Z")!important}
+.b2-room{clip-path:path("M 6% 0 H 100% V 100% H 6% V 62% C 6% 58% 0 58% 0 54% V 46% C 0 42% 6% 42% 6% 38% Z")!important}
+
+/* Three-card row: green -> red -> purple */
+.b2-bapsim{clip-path:path("M 0 0 H 94% V 38% C 94% 42% 100% 42% 100% 46% V 54% C 100% 58% 94% 58% 94% 62% V 100% H 0 Z")!important}
+.b2-hururuk{clip-path:path("M 6% 0 H 94% V 38% C 94% 42% 100% 42% 100% 46% V 54% C 100% 58% 94% 58% 94% 62% V 100% H 6% V 62% C 6% 58% 0 58% 0 54% V 46% C 0 42% 6% 42% 6% 38% Z")!important}
+.b2-mangwon{clip-path:path("M 6% 0 H 100% V 100% H 6% V 62% C 6% 58% 0 58% 0 54% V 46% C 0 42% 6% 42% 6% 38% Z")!important}
+
+/* Lower pairs */
+.b2-hometown,.b2-korean{clip-path:path("M 0 0 H 94% V 38% C 94% 42% 100% 42% 100% 46% V 54% C 100% 58% 94% 58% 94% 62% V 100% H 0 Z")!important}
+.b2-friends,.b2-owner{clip-path:path("M 6% 0 H 100% V 100% H 6% V 62% C 6% 58% 0 58% 0 54% V 46% C 0 42% 6% 42% 6% 38% Z")!important}
+
+/* preserve depth while keeping the actual silhouette clean */
+.b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{
+ border-radius:0!important;
+ filter:drop-shadow(0 5px 0 rgba(0,0,0,.18)) drop-shadow(0 7px 5px rgba(0,0,0,.10))!important;
+}
+
 </style>
 </head>
 <body>
