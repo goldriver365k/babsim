@@ -3062,6 +3062,55 @@ main {
 .b2-owner{background:linear-gradient(180deg,#ffad45 0%,#ff8617 28%,#ed6f00 100%)!important}
 @media(max-width:430px){.b2-grid{gap:3px!important}.b2-brick{border-radius:15px!important}}
 
+
+/* ===== HOME V13 — true body interlocks ===== */
+/* Replace overlay tabs with true silhouette cuts. No cream cover blocks. */
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{display:none!important;content:none!important}
+.b2-breakfast,.b2-bapsim,.b2-hururuk,.b2-hometown,.b2-korean,
+.b2-room,.b2-mangwon,.b2-friends,.b2-owner{overflow:hidden!important}
+
+/* paired horizontal joint: 28px deep, centered; opposing silhouettes share the same geometry */
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{
+ clip-path:polygon(0 0,calc(100% - 14px) 0,calc(100% - 14px) calc(50% - 29px),100% calc(50% - 29px),100% calc(50% + 29px),calc(100% - 14px) calc(50% + 29px),calc(100% - 14px) 100%,0 100%)!important;
+}
+.b2-room,.b2-friends,.b2-owner{
+ clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,14px calc(50% + 29px),0 calc(50% + 29px),0 calc(50% - 29px),14px calc(50% - 29px))!important;
+}
+.b2-hururuk{
+ clip-path:polygon(14px 0,calc(100% - 14px) 0,calc(100% - 14px) calc(50% - 29px),100% calc(50% - 29px),100% calc(50% + 29px),calc(100% - 14px) calc(50% + 29px),calc(100% - 14px) 100%,14px 100%,14px calc(50% + 29px),0 calc(50% + 29px),0 calc(50% - 29px),14px calc(50% - 29px))!important;
+}
+.b2-mangwon{
+ clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,14px calc(50% + 29px),0 calc(50% + 29px),0 calc(50% - 29px),14px calc(50% - 29px))!important;
+}
+/* make neighboring bodies overlap exactly at the joint, eliminating visible gutters */
+.b2-room,.b2-hururuk,.b2-mangwon,.b2-friends,.b2-owner{margin-left:-14px!important}
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{margin-right:-14px!important}
+.b2-grid{column-gap:0!important;row-gap:0!important}
+
+/* keep typography clear of the physical joint */
+.b2-breakfast{padding-right:48px!important}
+.b2-room{padding-left:28px!important}
+.b2-bapsim{padding-right:24px!important}
+.b2-hururuk{padding-left:24px!important;padding-right:24px!important}
+.b2-mangwon{padding-left:24px!important}
+.b2-hometown,.b2-korean{padding-right:32px!important}
+.b2-friends,.b2-owner{padding-left:30px!important}
+
+@media(max-width:430px){
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{
+  clip-path:polygon(0 0,calc(100% - 10px) 0,calc(100% - 10px) calc(50% - 24px),100% calc(50% - 24px),100% calc(50% + 24px),calc(100% - 10px) calc(50% + 24px),calc(100% - 10px) 100%,0 100%)!important
+ }
+ .b2-room,.b2-friends,.b2-owner,.b2-mangwon{
+  clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,10px calc(50% + 24px),0 calc(50% + 24px),0 calc(50% - 24px),10px calc(50% - 24px))!important
+ }
+ .b2-hururuk{
+  clip-path:polygon(10px 0,calc(100% - 10px) 0,calc(100% - 10px) calc(50% - 24px),100% calc(50% - 24px),100% calc(50% + 24px),calc(100% - 10px) calc(50% + 24px),calc(100% - 10px) 100%,10px 100%,10px calc(50% + 24px),0 calc(50% + 24px),0 calc(50% - 24px),10px calc(50% - 24px))!important
+ }
+ .b2-room,.b2-hururuk,.b2-mangwon,.b2-friends,.b2-owner{margin-left:-10px!important}
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{margin-right:-10px!important}
+}
+
 </style>
 </head>
 <body>
