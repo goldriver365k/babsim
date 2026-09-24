@@ -670,10 +670,10 @@ button {
   display: none;
   position: fixed;
   right: 16px;
-  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로, 그리고 모바일 UI
-     개선 8단계부터 항상 고정 표시되는 하단 내비게이션(약 76px) 위로
-     겹치지 않게 밀어 올립니다. */
-  bottom: calc(76px + 16px + var(--pwa-banner-height, 0px));
+  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올립니다. 하단
+     내비게이션은 이제 항상 숨김이라 더 이상 그 위 간격을 계산하지
+     않고, iPhone safe-area만 확보합니다. */
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--pwa-banner-height, 0px));
   transition: bottom 0.15s ease;
   z-index: 40;
   align-items: center;
@@ -834,7 +834,7 @@ button {
 .home-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px calc(76px + 16px + 64px + 20px); /* 하단 내비게이션(약 76px) + "사장님께 말해요" FAB(약 64px, 16px 간격)에 가려지지 않도록 */
+  padding: 20px 16px calc(64px + 20px + env(safe-area-inset-bottom, 0px)); /* 하단 내비게이션은 숨김 처리되어 더 이상 가리지 않음 — "사장님께 말해요" FAB(약 64px, 16px 간격) + safe-area만 확보 */
 }
 
 .home-view[hidden] { display: none; }
@@ -983,15 +983,17 @@ button {
 }
 
 /* ---------------- 하단 고정 내비게이션 ----------------
-   외부에서 들어온 커밋들이 이 기본 규칙을 실수로 지워 무스타일 상태가
-   되어 있던 것을 복구했습니다(2f8bb16 시점의 마지막 정상 버전 그대로). */
+   HOME/세부페이지 UX 정정 지시서: HOME 포함 전체 화면에서 이 fixed
+   bottom bar의 UI를 숨깁니다(버튼/라우팅/기능 코드는 삭제하지 않고
+   그대로 둠 — display:none만 적용). Search/Write/Alerts/MY 기능은
+   밥심 커뮤니티 등 해당 페이지 내부의 기존 접근 방법으로 유지됩니다. */
 .bottom-nav {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 40;
-  display: flex;
+  display: none;
   background: #ffffff;
   border-top: 1px solid var(--border-gray);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -1089,9 +1091,9 @@ button {
 main {
   max-width: 1200px;
   margin: 0 auto;
-  /* 모바일 UI 개선 8단계: 하단 내비게이션 + "사장님께 말해요" FAB이 항상
-     고정 표시되어 가리지 않도록 */
-  padding: 20px 16px calc(76px + 16px + 64px + 20px);
+  /* HOME/세부페이지 UX 정정: 하단 내비게이션은 항상 숨김이라 더 이상
+     가리지 않음 — "사장님께 말해요" FAB(항상 고정 표시)만 확보 */
+  padding: 20px 16px calc(64px + 20px + env(safe-area-inset-bottom, 0px));
 }
 
 .store-heading {
@@ -2012,9 +2014,9 @@ main {
 .community-root {
   max-width: 760px;
   margin: 0 auto;
-  /* 모바일 UI 개선 8단계: 하단 내비게이션 + "사장님께 말해요" FAB이 항상
-     고정 표시되어 가리지 않도록 */
-  padding: 16px 16px calc(76px + 16px + 64px + 20px);
+  /* HOME/세부페이지 UX 정정: 하단 내비게이션은 항상 숨김이라 더 이상
+     가리지 않음 — "사장님께 말해요" FAB(항상 고정 표시)만 확보 */
+  padding: 16px 16px calc(64px + 20px + env(safe-area-inset-bottom, 0px));
   font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", "Noto Sans Bengali", "Noto Sans Myanmar", inherit;
   color: var(--comm-text);
 }
@@ -2744,22 +2746,10 @@ body:not(:has(#homeView:not([hidden]))) .detail-home-link{display:inline-flex}
      고정(nowrap)으로 바꿔 브랜드 텍스트가 자연스럽게 줄바꿈되며
      shrink하도록 해 같은 줄을 유지합니다(겹침 없이). */
   body:not(:has(#homeView:not([hidden]))) .header-top{flex-wrap:nowrap}
-
-  /* 하단 고정 내비게이션(홈/검색/글쓰기/알림/MY) — 이 화면에서만 UI를
-     숨김(기능/라우팅/코드는 그대로, display만 변경). 홈 화면과 PC는
-     기존 그대로 노출됩니다. */
-  body:not(:has(#homeView:not([hidden]))) .bottom-nav{display:none}
-  /* bottom-nav가 사라진 만큼만 하단 여백을 줄이되, FAB 공간과 iPhone
-     safe-area는 그대로 유지합니다. */
-  body:not(:has(#homeView:not([hidden]))) main{
-    padding-bottom:calc(64px + 20px + env(safe-area-inset-bottom, 0px));
-  }
-  body:not(:has(#homeView:not([hidden]))) .community-root{
-    padding-bottom:calc(64px + 20px + env(safe-area-inset-bottom, 0px));
-  }
-  body:not(:has(#homeView:not([hidden]))) .owner-chat-fab{
-    bottom:calc(16px + env(safe-area-inset-bottom, 0px) + var(--pwa-banner-height, 0px));
-  }
+  /* 하단 고정 내비게이션(홈/검색/글쓰기/알림/MY)은 이제 .bottom-nav
+     기본 규칙 자체가 항상 숨김이라(HOME 포함 전체 화면) 이 화면 전용
+     override가 더 필요하지 않습니다 — main/.community-root/
+     owner-chat-fab의 여백도 기본 규칙에서 이미 맞춰져 있습니다. */
 }
 
 /* 매장 타이틀 밴드(영문 eyebrow + 큰 한글 제목) — 다크 배경, 서비스별
