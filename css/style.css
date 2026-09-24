@@ -3087,3 +3087,43 @@ main {
 .b2-owner{background:linear-gradient(180deg,#ffa83b 0%,#ff8112 60%,#df6500 100%)!important}
 .b2-brick{box-shadow:inset 0 3px 0 rgba(255,255,255,.28),inset 0 -7px 0 rgba(0,0,0,.13),0 3px 7px rgba(38,28,18,.16)!important}
 @media(max-width:430px){.b2-grid{gap:3px!important}.b2-brick{border-radius:15px!important}}
+
+
+/* ===== HOME V13 — true paired silhouette interlocks ===== */
+/* Disable every legacy pseudo-tab/socket. The joint is now cut into both bodies. */
+.b2-breakfast:before,.b2-breakfast:after,.b2-room:before,.b2-room:after,
+.b2-bapsim:before,.b2-bapsim:after,.b2-hururuk:before,.b2-hururuk:after,
+.b2-mangwon:before,.b2-mangwon:after,.b2-hometown:before,.b2-hometown:after,
+.b2-friends:before,.b2-friends:after,.b2-korean:before,.b2-korean:after,
+.b2-owner:before,.b2-owner:after{display:none!important;content:none!important}
+
+/* Keep tiles touching. Shapes themselves provide the male/female joint. */
+.b2-grid{gap:0!important}
+.b2-brick{overflow:hidden!important}
+
+/* Two-column rows: left has a convex tongue, right has the matching concave socket. */
+.b2-breakfast,.b2-hometown,.b2-korean{
+ clip-path:path("M 14 0 H 92 Q 100 0 100 8 V 39 H 106 Q 112 39 112 45 V 55 Q 112 61 106 61 H 100 V 92 Q 100 100 92 100 H 14 Q 0 100 0 86 V 14 Q 0 0 14 0 Z")!important;
+}
+.b2-room,.b2-friends,.b2-owner{
+ clip-path:path("M 8 0 H 86 Q 100 0 100 14 V 86 Q 100 100 86 100 H 8 Q 0 100 0 92 V 61 H 6 Q 12 61 12 55 V 45 Q 12 39 6 39 H 0 V 8 Q 0 0 8 0 Z")!important;
+}
+
+/* Three-column row: green -> red -> purple. */
+.b2-bapsim{
+ clip-path:path("M 12 0 H 88 Q 100 0 100 12 V 39 H 106 Q 112 39 112 45 V 55 Q 112 61 106 61 H 100 V 88 Q 100 100 88 100 H 12 Q 0 100 0 88 V 12 Q 0 0 12 0 Z")!important;
+}
+.b2-hururuk{
+ clip-path:path("M 6 0 H 94 Q 100 0 100 6 V 39 H 106 Q 112 39 112 45 V 55 Q 112 61 106 61 H 100 V 94 Q 100 100 94 100 H 6 Q 0 100 0 94 V 61 H 6 Q 12 61 12 55 V 45 Q 12 39 6 39 H 0 V 6 Q 0 0 6 0 Z")!important;
+}
+.b2-mangwon{
+ clip-path:path("M 6 0 H 88 Q 100 0 100 12 V 88 Q 100 100 88 100 H 6 Q 0 100 0 94 V 61 H 6 Q 12 61 12 55 V 45 Q 12 39 6 39 H 0 V 6 Q 0 0 6 0 Z")!important;
+}
+
+/* clip-path path() coordinates above are percentage-like design units; browsers that
+   cannot scale path() reliably fall back to polygon notches below. */
+@supports not (clip-path:path("M 0 0 H 1 V 1 Z")){
+ .b2-breakfast,.b2-hometown,.b2-korean,.b2-bapsim{clip-path:polygon(0 0,94% 0,94% 39%,100% 39%,100% 61%,94% 61%,94% 100%,0 100%)!important}
+ .b2-room,.b2-friends,.b2-owner,.b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
+ .b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 39%,100% 39%,100% 61%,94% 61%,94% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
+}
