@@ -441,13 +441,13 @@
   var homeHeroPopup;
 
   // 현재 실제 진행 중인 신메뉴 홍보 — js/hometown-popup.js가 이미 쓰고
-  // 있는 것과 같은 문구(고추장버터/화산불백, 후루룩찹찹 이동)를 그대로
+  // 있는 것과 같은 내용(고추장버터/화산불백, 후루룩찹찹 이동)을 그대로
   // 재사용합니다(새 이벤트 데이터 아님). 관리자 팝업(homeHeroPopup)이
   // 없을 때 홈 히어로의 기본 내용으로 씁니다. 사진/썸네일 없이 텍스트만.
+  // 라벨/메뉴명은 다국어 화면에 한국어가 그대로 남지 않도록 UI_TEXT의
+  // homeHeroMenuLabel/homeHeroMenuTitleSub/homeHeroMenuTitleMain(기존
+  // 메뉴 번역 정책과 동일한 표기)을 language별로 조회해서 씁니다.
   var HERO_MENU_PROMO = {
-    eyebrow: "NEW MENU",
-    titleSub: "고추장버터",
-    titleMain: "화산불백",
     desc: {
       ko: "신메뉴 출시", en: "New menu launch", zh: "新菜品上市", vi: "Ra mắt món mới",
       mn: "Шинэ хоол гарлаа", bn: "নতুন মেনু চালু হয়েছে", my: "မီနူးအသစ်စတင်ပါပြီ"
@@ -468,10 +468,10 @@
       if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-menu-promo");
       if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-event");
     } else {
-      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = HERO_MENU_PROMO.eyebrow;
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = UI_TEXT.homeHeroMenuLabel[state.lang] || UI_TEXT.homeHeroMenuLabel.ko;
       els.homeHeadline.innerHTML =
-        '<span class="home-hero-menu-sub">' + HERO_MENU_PROMO.titleSub + '</span><br>' +
-        '<span class="home-hero-menu-main">' + HERO_MENU_PROMO.titleMain + '</span>';
+        '<span class="home-hero-menu-sub">' + (UI_TEXT.homeHeroMenuTitleSub[state.lang] || UI_TEXT.homeHeroMenuTitleSub.ko) + '</span><br>' +
+        '<span class="home-hero-menu-main">' + (UI_TEXT.homeHeroMenuTitleMain[state.lang] || UI_TEXT.homeHeroMenuTitleMain.ko) + '</span>';
       if (els.homeHeroDesc) {
         els.homeHeroDesc.textContent = HERO_MENU_PROMO.desc[state.lang] || HERO_MENU_PROMO.desc.ko;
         els.homeHeroDesc.hidden = false;

@@ -87,6 +87,12 @@ const UI_TEXT = {
   // 팝업 종류와 무관하게 쓰는 범용 라벨(새 필드 없이 기존 sitePopups
   // title/linkUrl만 재사용).
   homeHeroCta: { ko: "자세히 보기", en: "View details", zh: "查看详情", vi: "Xem chi tiết", mn: "Дэлгэрэнгүй үзэх", bn: "বিস্তারিত দেখুন", my: "အသေးစိတ်ကြည့်ရန်" },
+  // 홈 히어로의 신메뉴(고추장버터 화산불백) 홍보 — 라벨/메뉴명 모두 기존
+  // 메뉴 번역 정책(js/menu-data.js의 "고추장"→Gochujang/辣椒酱, "불백"→
+  // Bulgogi/烤肉 등 기존 표기)을 그대로 재사용해 7개 언어로 표시합니다.
+  homeHeroMenuLabel: { ko: "신메뉴", en: "NEW MENU", zh: "新菜品", vi: "Món mới", mn: "Шинэ хоол", bn: "নতুন মেনু", my: "မီနူးအသစ်" },
+  homeHeroMenuTitleSub: { ko: "고추장버터", en: "Gochujang Butter", zh: "辣椒酱黄油", vi: "Bơ sốt ớt cay", mn: "Гочужан цөцгийн тос", bn: "গোচুজাং মাখন", my: "ဂိုချူဂျန်ထောပတ်" },
+  homeHeroMenuTitleMain: { ko: "화산불백", en: "Volcano Bulgogi", zh: "火山烤肉", vi: "Thịt nướng núi lửa", mn: "Галт уулын шарсан мах", bn: "আগ্নেয়গিরি বুলগোগি", my: "မီးတောင်ဘူဂိုဂီ" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
   // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.
@@ -287,7 +293,11 @@ const ROOM_FINDER = {
     ko: "언어를 선택해주세요", en: "Please select a language",
     vi: "Vui lòng chọn ngôn ngữ", zh: "请选择语言"
   },
-  title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
+  // title은 홈 화면 카드 제목(#homeLegoRoomTitle)에도 쓰여서, mn/bn/my가
+  // 없어 그 언어로 홈을 보면 한국어로 fallback되던 문제를 여기서만
+  // 최소로 보완합니다(같은 문구를 쓰는 langStepTitle 등 방 구하기 입력
+  // 폼 쪽은 홈 화면이 아니라 이번 수정 범위 밖이라 그대로 둠).
+  title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房", mn: "Байр хайх", bn: "রুম খুঁজুন", my: "အခန်းရှာရန်" },
   field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名" },
   field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码" },
   field_moveInDate: { ko: "입주예정일", en: "Expected Move-in Date", vi: "Ngày dự kiến chuyển vào", zh: "预计入住日期" },
