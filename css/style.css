@@ -2650,19 +2650,25 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-friends{order:8}
   .home-tile-feedback{order:9;grid-column:1/3}
 
-  /* 방 구하기 — 좁고 긴 가로형 카드(세로 스택 대신 한 줄 배치). */
+  /* 방 구하기 — 좁고 긴 가로형 "Quick Access" 카드(세로 스택 대신 한 줄
+     배치). 주변 파스텔 카드와 다르게 코발트 블루 단색 + 흰색 글자 +
+     BABSIM 브랜드 노란 화살표로 눈에 띄게 함(그라데이션/그림자 없음). */
   .home-tile-room{
     min-height:68px;padding:14px 44px 14px 18px;
     flex-direction:row;align-items:center;gap:10px;
+    background:#2457E6;
   }
-  .home-tile-room .home-tile-eyebrow{flex:0 0 auto}
+  .home-tile-room .home-tile-eyebrow{flex:0 0 auto;color:rgba(255,255,255,.78)}
   .home-tile-room .home-tile-title{
-    margin:0;flex:0 0 auto;font-size:19px;line-height:1.15;white-space:nowrap;
+    margin:0;flex:0 0 auto;font-size:19px;font-weight:700;line-height:1.15;
+    white-space:nowrap;color:#FFFFFF;
   }
   .home-tile-room .home-tile-sub{
-    margin:0;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    margin:0;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;font-weight:400;color:rgba(255,255,255,.68);
   }
-  .home-tile-room .home-tile-arrow{top:50%;bottom:auto;transform:translateY(-50%)}
+  .home-tile-room .home-tile-arrow{top:50%;bottom:auto;transform:translateY(-50%);color:var(--home-yellow)}
+  .home-tile-room:focus-visible{outline-color:var(--home-yellow)}
 }
 
 @media(min-width:700px){
