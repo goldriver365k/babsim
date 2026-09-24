@@ -2992,3 +2992,26 @@ main {
  .b2-room,.b2-friends,.b2-owner,.b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
  .b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 39%,100% 39%,100% 61%,94% 61%,94% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
 }
+
+
+/* ===== HOME V13 — clean rectangular 3D tiles, no interlocks ===== */
+.b2-grid{gap:4px!important}
+.b2-brick{clip-path:none!important;overflow:hidden!important;border-radius:18px!important}
+.b2-brick:before,.b2-brick:after,
+.b2-breakfast:before,.b2-breakfast:after,.b2-room:before,.b2-room:after,
+.b2-bapsim:before,.b2-bapsim:after,.b2-hururuk:before,.b2-hururuk:after,
+.b2-mangwon:before,.b2-mangwon:after,.b2-hometown:before,.b2-hometown:after,
+.b2-friends:before,.b2-friends:after,.b2-korean:before,.b2-korean:after,
+.b2-owner:before,.b2-owner:after{display:none!important;content:none!important}
+.b3-event-shape,.b3-breakfast-shape,.b3-room-shape{display:none!important}
+.b3-event,.b3-breakfast,.b3-room{box-shadow:inset 0 4px 0 rgba(255,255,255,.18),inset 0 -7px 0 rgba(0,0,0,.16),0 5px 0 rgba(0,0,0,.20),0 8px 12px rgba(0,0,0,.12)!important}
+.b2-event{background:linear-gradient(180deg,#ff4148 0%,#ef1721 28%,#df0f19 100%)!important}
+.b2-breakfast{background:linear-gradient(180deg,#ffd64c 0%,#ffc51a 28%,#ffb900 100%)!important}
+.b2-room,.b2-friends{background:linear-gradient(180deg,#46a8ef 0%,#1f8dde 28%,#0878c8 100%)!important}
+.b2-bapsim{background:linear-gradient(180deg,#39cf7b 0%,#0fb45b 28%,#079746 100%)!important}
+.b2-hururuk{background:linear-gradient(180deg,#ff5b55 0%,#f32f2b 28%,#d91d1b 100%)!important}
+.b2-mangwon{background:linear-gradient(180deg,#9c51e8 0%,#7c2dd0 28%,#6520b1 100%)!important}
+.b2-hometown{background:linear-gradient(180deg,#ff5ba6 0%,#ef3187 28%,#d91d73 100%)!important}
+.b2-korean{background:linear-gradient(180deg,#35cec2 0%,#12afa4 28%,#078f87 100%)!important}
+.b2-owner{background:linear-gradient(180deg,#ffad45 0%,#ff8617 28%,#ed6f00 100%)!important}
+@media(max-width:430px){.b2-grid{gap:3px!important}.b2-brick{border-radius:15px!important}}
