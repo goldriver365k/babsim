@@ -2899,3 +2899,18 @@ main {
  .b2-breakfast,.b2-hometown,.b2-korean,.b2-bapsim,.b2-hururuk{margin-right:-6%!important}
  .b2-room,.b2-friends,.b2-owner,.b2-hururuk,.b2-mangwon{padding-left:8%!important}
 }
+
+
+/* HOME V13: paired interlock silhouettes */
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{content:none!important;display:none!important}
+.b2-grid{gap:0!important}
+.b2-brick{overflow:hidden!important}
+.b2-breakfast{clip-path:polygon(0 0,94% 0,94% 36%,100% 36%,100% 64%,94% 64%,94% 100%,0 100%)!important}
+.b2-room{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
+.b2-bapsim{clip-path:polygon(0 0,94% 0,94% 36%,100% 36%,100% 64%,94% 64%,94% 100%,0 100%)!important}
+.b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 36%,100% 36%,100% 64%,94% 64%,94% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
+.b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
+.b2-hometown,.b2-korean{clip-path:polygon(0 0,94% 0,94% 36%,100% 36%,100% 64%,94% 64%,94% 100%,0 100%)!important}
+.b2-friends,.b2-owner{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
+.b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{border-radius:10px!important;filter:drop-shadow(0 5px 0 rgba(0,0,0,.20))!important}
