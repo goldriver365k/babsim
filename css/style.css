@@ -2959,3 +2959,36 @@ main {
 .b2-room,.b2-friends,.b2-owner{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
 .b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 36%,100% 36%,100% 64%,94% 64%,94% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
 .b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
+
+
+/* ===== HOME V13 — true cut-out interlocks, no overlay tabs ===== */
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{display:none!important;content:none!important}
+.b2-grid{gap:0!important}
+.b2-brick{overflow:hidden!important}
+
+/* paired horizontal puzzle silhouettes: 8% tab/socket depth, centered vertically */
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{
+ clip-path:polygon(0 0,92% 0,92% 38%,100% 38%,100% 62%,92% 62%,92% 100%,0 100%)!important
+}
+.b2-room,.b2-friends,.b2-owner{
+ clip-path:polygon(8% 0,100% 0,100% 100%,8% 100%,8% 62%,0 62%,0 38%,8% 38%)!important
+}
+.b2-hururuk{
+ clip-path:polygon(8% 0,92% 0,92% 38%,100% 38%,100% 62%,92% 62%,92% 100%,8% 100%,8% 62%,0 62%,0 38%,8% 38%)!important
+}
+.b2-mangwon{
+ clip-path:polygon(8% 0,100% 0,100% 100%,8% 100%,8% 62%,0 62%,0 38%,8% 38%)!important
+}
+/* preserve readable content inside the carved edges */
+.b2-room,.b2-friends,.b2-owner,.b2-mangwon{padding-left:9%!important}
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{padding-right:9%!important}
+.b2-hururuk{padding-left:9%!important;padding-right:9%!important}
+/* shadow now follows the actual cut silhouette */
+.b2-brick{filter:drop-shadow(0 6px 0 rgba(0,0,0,.18)) drop-shadow(0 3px 5px rgba(0,0,0,.10))!important;box-shadow:inset 0 3px 0 rgba(255,255,255,.20),inset 0 -5px 0 rgba(0,0,0,.12)!important}
+.b3-event,.b3-breakfast{filter:none!important}
+@media(max-width:430px){
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{clip-path:polygon(0 0,94% 0,94% 39%,100% 39%,100% 61%,94% 61%,94% 100%,0 100%)!important}
+ .b2-room,.b2-friends,.b2-owner,.b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
+ .b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 39%,100% 39%,100% 61%,94% 61%,94% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
+}
