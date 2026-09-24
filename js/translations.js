@@ -84,6 +84,29 @@ const UI_TEXT = {
   // CMS 없이 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점입니다.
   homeEventLabel: { ko: "새로운 소식", en: "Latest News", zh: "最新消息", vi: "Tin tức mới", mn: "Сүүлийн үеийн мэдээ", bn: "সর্বশেষ খবর", my: "နောက်ဆုံးရသတင်း" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
+  // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
+  // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.
+  homeHeadline: {
+    ko: "오늘,\n인제대에서\n무엇을 찾으세요?",
+    en: "What are you\nlooking for at\nInje today?",
+    zh: "今天，\n在仁济大学\n您在找什么？",
+    vi: "Hôm nay,\nbạn đang tìm gì\ntại Inje?",
+    mn: "Өнөөдөр\nInje-д юу\nхайж байна?",
+    bn: "আজ, ইনজেতে\nআপনি কী\nখুঁজছেন?",
+    my: "ဒီနေ့ Inje\nတက္ကသိုလ်မှာ\nဘာရှာနေပါသလဲ?"
+  },
+  // 각 카드 하단의 짧은 한 줄 설명(작은 영문 카테고리는 번역하지 않고
+  // 고정 표기 — 카드 마크업에 직접 적음). 브랜드명 카드(밥심/후루룩찹찹/
+  // 만권화밥)는 기존 정책대로 부제 없이 "메뉴 보기"만 공용으로 씁니다.
+  homeCardSubtitle: {
+    breakfast: { ko: "오늘의 메뉴 확인하기", en: "See today's menu", zh: "查看今日菜单", vi: "Xem thực đơn hôm nay", mn: "Өнөөдрийн цэсийг харах", bn: "আজকের মেনু দেখুন", my: "ယနေ့မီနူးကြည့်ရန်" },
+    menuView: { ko: "메뉴 보기", en: "View menu", zh: "查看菜单", vi: "Xem thực đơn", mn: "Цэс харах", bn: "মেনু দেখুন", my: "မီနူးကြည့်ရန်" },
+    housing: { ko: "매물 보기", en: "View listings", zh: "查看房源", vi: "Xem phòng trọ", mn: "Байрны зар харах", bn: "তালিকা দেখুন", my: "အခန်းများကြည့်ရန်" },
+    hometown: { ko: "게시판 바로가기", en: "Go to the board", zh: "前往板块", vi: "Đến bảng tin", mn: "Хэсэг рүү очих", bn: "বোর্ডে যান", my: "ဘုတ်သို့သွားရန်" },
+    campusLife: { ko: "이야기 나누기", en: "Share your story", zh: "分享故事", vi: "Chia sẻ câu chuyện", mn: "Түүхээ хуваалцах", bn: "গল্প শেয়ার করুন", my: "ဇာတ်လမ်းမျှဝေရန်" },
+    friends: { ko: "함께 이야기해요", en: "Let's talk together", zh: "一起聊聊吧", vi: "Cùng trò chuyện nhé", mn: "Хамтдаа ярилцъя", bn: "একসাথে কথা বলি", my: "အတူတကွစကားပြောကြရအောင်" },
+    feedback: { ko: "의견 남기기", en: "Leave feedback", zh: "留下意见", vi: "Để lại ý kiến", mn: "Санал үлдээх", bn: "মতামত দিন", my: "အကြံပြုချက်ပေးရန်" }
+  },
   bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
   /* 모바일 UI 개선 8단계: 하단 내비게이션 5개(홈/검색/글쓰기/알림/MY) —
      글쓰기는 기존 COMMUNITY_POST.writeTitle을 그대로 재사용합니다. */

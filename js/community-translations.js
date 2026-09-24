@@ -38,7 +38,10 @@ var COMMUNITY_CATEGORIES = {
   // 신규 카테고리(카테고리 4개 개편 지시서) — value는 프로젝트의 기존
   // 짧은 영문 키 명명 규칙(friends/market/help/together/job/free)을 따름.
   hometown: { ko: "나의 고향 소개", zh: "我的家乡介绍", vi: "Giới thiệu quê hương tôi", en: "My Hometown", mn: "Төрсөн нутгийн танилцуулга", bn: "আমার নিজ শহরের পরিচিতি", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်" },
-  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
+  // 홈 화면 리디자인 지시서(구인·구직 → 나의 학교생활 교체 확인 후)에
+  // 따라 라벨을 교체 — 기존 typeSchool("학교생활") 번역을 그대로
+  // 재사용해 새 번역을 만들지 않았습니다.
+  job: { ko: "나의 학교생활", zh: "我的校园生活", vi: "Đời sống học đường của tôi", en: "My Campus Life", mn: "Миний сургуулийн амьдрал", bn: "আমার ক্যাম্পাস জীবন", my: "ကျွန်ုပ်၏ကျောင်းဘဝ" },
   life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
   free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
@@ -50,7 +53,7 @@ var COMMUNITY_CATEGORY_ORDER = ["together", "hometown", "job", "friends"];
 var COMMUNITY_CATEGORY_DESC = {
   together: { ko: "김해 맛집 정보와 추천", zh: "金海美食信息与推荐", vi: "Thông tin và gợi ý quán ăn ngon ở Gimhae", en: "Gimhae restaurant tips and recommendations", mn: "Гимхэ хотын амттай газрын мэдээлэл, зөвлөмж", bn: "গিমহের ভালো খাবারের তথ্য ও সুপারিশ", my: "ဂျင်ဟေးခရိုင်၏ အစားအသောက်ဆိုင်ရာ အချက်အလက်နှင့် အကြံပြုချက်" },
   hometown: { ko: "내 고향의 음식·문화·여행 이야기", zh: "介绍我家乡的美食、文化和旅行故事", vi: "Câu chuyện về ẩm thực, văn hóa và du lịch quê hương tôi", en: "Stories about my hometown's food, culture, and travel", mn: "Миний нутгийн хоол, соёл, аяллын тухай түүх", bn: "আমার শহরের খাবার, সংস্কৃতি ও ভ্রমণের গল্প", my: "ကျွန်ုပ်၏ဇာတိမြို့ရဲ့ အစားအစာ၊ ယဉ်ကျေးမှုနှင့် ခရီးသွားအကြောင်း" },
-  job: { ko: "알바와 일자리 정보", zh: "打工和工作信息", vi: "Thông tin việc làm thêm và việc làm", en: "Part-time job and work information", mn: "Цагийн ажил, ажлын байрны мэдээлэл", bn: "পার্ট-টাইম চাকরি ও কাজের তথ্য", my: "အချိန်ပိုင်းအလုပ်နှင့် အလုပ်အကိုင်ဆိုင်ရာ အချက်အလက်" },
+  job: { ko: "캠퍼스에서의 일상과 이야기를 나눠요", zh: "分享校园里的日常与故事", vi: "Chia sẻ cuộc sống và câu chuyện trong khuôn viên trường", en: "Share your everyday campus life and stories", mn: "Кампусын өдөр тутмын амьдрал, түүхээ хуваалцаарай", bn: "ক্যাম্পাস জীবনের গল্প ভাগ করুন", my: "ကျောင်းဘဝနေ့စဉ်အကြောင်းများကို မျှဝေပါ" },
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
 };
 

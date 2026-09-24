@@ -465,6 +465,22 @@
     }
     // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
     if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
+    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피 + 카드 한 줄 설명.
+    if (els.homeHeadline) els.homeHeadline.innerHTML = (UI_TEXT.homeHeadline[state.lang] || UI_TEXT.homeHeadline.ko).split("\n").join("<br>");
+    var sub = UI_TEXT.homeCardSubtitle;
+    if (els.homeCardBreakfastSub) els.homeCardBreakfastSub.textContent = sub.breakfast[state.lang] || sub.breakfast.ko;
+    if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
+    if (els.homeCardBapsimSub) els.homeCardBapsimSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
+    if (els.homeCardRoomSub) els.homeCardRoomSub.textContent = sub.housing[state.lang] || sub.housing.ko;
+    if (els.homeCardHometownSub) els.homeCardHometownSub.textContent = sub.hometown[state.lang] || sub.hometown.ko;
+    if (els.homeCardCampusLifeSub) els.homeCardCampusLifeSub.textContent = sub.campusLife[state.lang] || sub.campusLife.ko;
+    if (els.homeCardFriendsSub) els.homeCardFriendsSub.textContent = sub.friends[state.lang] || sub.friends.ko;
+    if (els.homeCardFeedbackSub) els.homeCardFeedbackSub.textContent = sub.feedback[state.lang] || sub.feedback.ko;
+    // "나의 학교생활" — 새 카테고리가 아니라 기존 COMMUNITY_CATEGORIES.job을
+    // 그대로 재사용(라벨만 "나의 학교생활"로 교체됨).
+    if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
+    }
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
     if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
     // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
@@ -1009,6 +1025,21 @@
     // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
     // 선택 언어에 맞춰 바꿉니다(교정 지시서 14번 — 새 번역 없음).
     els.homeLegoRoomTitle = qs("homeLegoRoomTitle");
+    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피 + 카드별 짧은
+    // 한 줄 설명(신규 최소 번역 UI_TEXT.homeHeadline/homeCardSubtitle)과
+    // "나의 학교생활" 카드(기존 COMMUNITY_CATEGORIES.job 카테고리를
+    // 그대로 재사용 — 라벨만 "나의 학교생활"로 교체, 새 카테고리 아님).
+    els.homeHeadline = qs("homeHeadline");
+    els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
+    els.homeCardMangwonSub = qs("homeCardMangwonSub");
+    els.homeCardBapsimSub = qs("homeCardBapsimSub");
+    els.homeCardRoomSub = qs("homeCardRoomSub");
+    els.homeCardHometownSub = qs("homeCardHometownSub");
+    els.homeLegoCampusLifeBtn = qs("homeLegoCampusLifeBtn");
+    els.homeLegoCampusLifeLabel = qs("homeLegoCampusLifeLabel");
+    els.homeCardCampusLifeSub = qs("homeCardCampusLifeSub");
+    els.homeCardFriendsSub = qs("homeCardFriendsSub");
+    els.homeCardFeedbackSub = qs("homeCardFeedbackSub");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");
@@ -1151,6 +1182,13 @@
     if (els.homeLegoFriendsBtn) {
       els.homeLegoFriendsBtn.addEventListener("click", function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("friends");
+      });
+    }
+    // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/
+    // 새 route가 아니라 hometown/friends와 동일한 기존 함수 재사용.
+    if (els.homeLegoCampusLifeBtn) {
+      els.homeLegoCampusLifeBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("job");
       });
     }
 
