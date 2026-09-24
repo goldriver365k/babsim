@@ -3111,6 +3111,29 @@ main {
  .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{margin-right:-10px!important}
 }
 
+
+/* ===== HOME V13 — clean rectangular 3D tiles, no interlocks ===== */
+.b2-grid{gap:4px!important}
+.b2-brick{clip-path:none!important;overflow:hidden!important;border-radius:18px!important}
+.b2-brick::before,.b2-brick::after,
+.b2-breakfast::before,.b2-breakfast::after,.b2-room::before,.b2-room::after,
+.b2-bapsim::before,.b2-bapsim::after,.b2-hururuk::before,.b2-hururuk::after,
+.b2-mangwon::before,.b2-mangwon::after,.b2-hometown::before,.b2-hometown::after,
+.b2-friends::before,.b2-friends::after,.b2-korean::before,.b2-korean::after,
+.b2-owner::before,.b2-owner::after{display:none!important;content:none!important}
+.b3-event-shape,.b3-breakfast-shape,.b3-room-shape{display:none!important}
+.b3-event,.b3-breakfast,.b3-room{background:initial!important;box-shadow:initial!important;border:initial!important;overflow:hidden!important}
+.b2-event{background:linear-gradient(180deg,#ff3f49 0%,#ef1723 58%,#d90d18 100%)!important}
+.b2-breakfast{background:linear-gradient(180deg,#ffd84d 0%,#ffc51a 60%,#e9aa00 100%)!important}
+.b2-room,.b2-friends{background:linear-gradient(180deg,#43a9ee 0%,#168be0 60%,#0873c1 100%)!important}
+.b2-bapsim,.b2-korean{background:linear-gradient(180deg,#35ca77 0%,#0cb15a 60%,#078d47 100%)!important}
+.b2-hururuk{background:linear-gradient(180deg,#ff554f 0%,#f42d27 60%,#cb1814 100%)!important}
+.b2-mangwon{background:linear-gradient(180deg,#9851e8 0%,#7c2bd1 60%,#5f17ad 100%)!important}
+.b2-hometown{background:linear-gradient(180deg,#fa55a0 0%,#ec2f86 60%,#c91e6d 100%)!important}
+.b2-owner{background:linear-gradient(180deg,#ffa83b 0%,#ff8112 60%,#df6500 100%)!important}
+.b2-brick{box-shadow:inset 0 3px 0 rgba(255,255,255,.28),inset 0 -7px 0 rgba(0,0,0,.13),0 3px 7px rgba(38,28,18,.16)!important}
+@media(max-width:430px){.b2-grid{gap:3px!important}.b2-brick{border-radius:15px!important}}
+
 </style>
 </head>
 <body>
