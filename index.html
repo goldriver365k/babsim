@@ -46,8 +46,7 @@
      이 프로젝트가 이미 쓰고 있는 fonts.googleapis.com으로 지시서 2순위
      Noto Sans KR 1개만 추가합니다. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
-<style>
-/* ==========================================================================
+<style>/* ==========================================================================
    모인관(인제대학교) — 키오스크 스타일 정적 메뉴판
    색상: 흰 배경 + 파란색 포인트, 회색 테두리. 그라데이션/과도한 그림자 없음.
    ========================================================================== */
@@ -2542,14 +2541,6 @@ main {
   .community-root { padding-top: 24px; }
 }
 
-
-
-
-
-
-
-
-
 /* ===== HOME V11 — studless connected block homepage ===== */
 .b2-home{background:#f7f2e8!important;padding:14px 8px 92px!important}
 .b2-grid{display:grid!important;grid-template-columns:repeat(12,1fr)!important;grid-template-rows:100px 205px 132px 142px 142px!important;gap:7px!important;max-width:560px!important;margin:0 auto!important;overflow:visible!important}
@@ -2596,6 +2587,7 @@ main {
  .b2-breakfast{padding-right:57px!important}
  .b2-breakfast .b2-small{font-size:25px!important}.b2-breakfast strong{font-size:29px!important}
 }
+
 
 
 /* ===== HOME V17 — dark-bg brand-color editorial (no photos) =====
@@ -2753,8 +2745,6 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-korean-card{margin-top:9px}
 }
 
-
-
 /* ===== 세부페이지 디자인 통일 (비용 최소화) =====
    HOME(V17)의 검정 배경+노란 BABSIM.STORE+Sans-serif+포인트 컬러를
    매장/천원의 아침밥 세부페이지 "헤더+타이틀 영역"에만 연결합니다.
@@ -2875,6 +2865,32 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
 
 @media(min-width:700px){
   body[data-bapsim-view="breakfast"] .breakfast-area{max-width:800px}
+}
+
+/* ===== 밥심커뮤니티 — 방 구하기 + 무료 한글공부 바로가기(비용 최소화) =====
+   새 컴포넌트를 만들지 않고 HOME의 기존 .home-tile.home-tile-room(방
+   구하기, 코발트 블루)을 그대로 재사용합니다. 무료 한글공부는 같은
+   가로형 바 모양(.home-tile-room)을 재사용하되, 코발트 블루와 구분되는
+   더 약한 톤인 기존 --home-paleblue로 색만 덮어씁니다(형태 CSS는
+   중복 작성하지 않음). 커뮤니티 화면 전용 클래스이므로 HOME(#homeView)의
+   .home-tile-room에는 전혀 영향을 주지 않습니다. */
+.community-room-shortcut{width:100%;margin:14px 0 18px}
+.community-korean-shortcut{width:100%;margin:16px 0 14px}
+@media (max-width: 699px) {
+  .home-tile-room.community-korean-shortcut{background:var(--home-paleblue);min-height:60px}
+  .home-tile-room.community-korean-shortcut .home-tile-eyebrow{color:var(--home-card-sub)}
+  /* HELLOKOREAN_INFO.title는 세로형 카드용 긴 문구라 일부 언어(예: 몽골어/
+     미얀마어)는 방 구하기와 같은 nowrap 한 줄에 다 안 들어갑니다. 글자
+     잘림(ellipsis) 없이 자연스럽게 줄바꿈되도록만 허용해 가로 스크롤/
+     클리핑을 막습니다(그 외 형태·색은 .home-tile-room 그대로). 보조
+     부제 "HELLO KOREAN"은 선택 요소라 이 좁은 바에서는 숨겨 제목이
+     줄바꿈될 공간을 확보합니다(브랜드명 자체는 HOME 카드에 이미 있음). */
+  .home-tile-room.community-korean-shortcut .home-tile-title{
+    color:var(--home-card-ink);white-space:normal;flex:1 1 auto;min-width:0;
+    font-size:16px;line-height:1.25;
+  }
+  .home-tile-room.community-korean-shortcut .home-tile-sub{display:none}
+  .home-tile-room.community-korean-shortcut .home-tile-arrow{color:#2457E6}
 }
 </style>
 </head>
@@ -6088,8 +6104,7 @@ var COUNTRY_LIST = [
   "Yemen", "Zambia", "Zimbabwe"
 ];
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    유학생 커뮤니티 (js/community.js)
    - babsim.store(index.html) 안에 통째로 포함되는 모듈입니다(별도 사이트
      아님). 기존 Firebase 프로젝트(Firestore/Auth/Storage), 기존 언어
@@ -7110,6 +7125,22 @@ var Community = (function () {
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
 
+    // 방 구하기 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
+    // .home-tile.home-tile-room 컴포넌트·스타일과 RoomFinder 모달을 그대로
+    // 재사용합니다(새 UI·새 URL 없음). 커뮤니티 콘텐츠 최상단에 배치.
+    var roomShortcut = el("button", "home-tile home-tile-room community-room-shortcut");
+    roomShortcut.type = "button";
+    roomShortcut.appendChild(el("span", "home-tile-eyebrow", "HOUSING"));
+    roomShortcut.appendChild(el("strong", "home-tile-title", t(ROOM_FINDER.title)));
+    roomShortcut.appendChild(el("span", "home-tile-sub", t(UI_TEXT.homeCardSubtitle.housing)));
+    var roomShortcutArrow = el("span", "home-tile-arrow", "→");
+    roomShortcutArrow.setAttribute("aria-hidden", "true");
+    roomShortcut.appendChild(roomShortcutArrow);
+    roomShortcut.addEventListener("click", function () {
+      if (window.RoomFinder && typeof RoomFinder.openModal === "function") RoomFinder.openModal();
+    });
+    wrap.appendChild(roomShortcut);
+
     // 카테고리 4개 개편: 블록형(제목+짧은 설명) UI, 새 페이지 이동 없이
     // 클릭하면 이 화면 아래 목록만 바뀝니다(기존 필터 로직 재사용).
     var catTabs = el("div", "community-category-tabs");
@@ -7184,6 +7215,22 @@ var Community = (function () {
       openOnlyInput.addEventListener("change", function () { state_jobOpenOnly = openOnlyInput.checked; renderLoadedPosts(); });
       wrap.appendChild(openOnlyRow);
     }
+
+    // 무료 한글공부 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
+    // HELLO KOREAN 링크(HELLOKOREAN_INFO.url)를 그대로 재사용합니다. 기존
+    // "글쓰기" 버튼 바로 위에 배치하고, 방 구하기(코발트 블루)보다 약한
+    // 톤인 페일 블루(.community-korean-shortcut CSS)로 구분합니다.
+    var koreanShortcut = el("a", "home-tile home-tile-room community-korean-shortcut");
+    koreanShortcut.href = HELLOKOREAN_INFO.url;
+    koreanShortcut.target = "_blank";
+    koreanShortcut.rel = "noopener noreferrer";
+    koreanShortcut.appendChild(el("span", "home-tile-eyebrow", "KOREAN STUDY"));
+    koreanShortcut.appendChild(el("strong", "home-tile-title", t(HELLOKOREAN_INFO.title)));
+    koreanShortcut.appendChild(el("span", "home-tile-sub", "HELLO KOREAN"));
+    var koreanShortcutArrow = el("span", "home-tile-arrow", "→");
+    koreanShortcutArrow.setAttribute("aria-hidden", "true");
+    koreanShortcut.appendChild(koreanShortcutArrow);
+    wrap.appendChild(koreanShortcut);
 
     var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
     writeBtn.type = "button";
@@ -9070,7 +9117,6 @@ var Community = (function () {
 document.addEventListener("DOMContentLoaded", function () {
   if (document.getElementById("communityRoot")) Community.init();
 });
-
 </script>
 <script>
 /* ==========================================================================

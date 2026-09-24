@@ -1019,6 +1019,22 @@ var Community = (function () {
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
 
+    // 방 구하기 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
+    // .home-tile.home-tile-room 컴포넌트·스타일과 RoomFinder 모달을 그대로
+    // 재사용합니다(새 UI·새 URL 없음). 커뮤니티 콘텐츠 최상단에 배치.
+    var roomShortcut = el("button", "home-tile home-tile-room community-room-shortcut");
+    roomShortcut.type = "button";
+    roomShortcut.appendChild(el("span", "home-tile-eyebrow", "HOUSING"));
+    roomShortcut.appendChild(el("strong", "home-tile-title", t(ROOM_FINDER.title)));
+    roomShortcut.appendChild(el("span", "home-tile-sub", t(UI_TEXT.homeCardSubtitle.housing)));
+    var roomShortcutArrow = el("span", "home-tile-arrow", "→");
+    roomShortcutArrow.setAttribute("aria-hidden", "true");
+    roomShortcut.appendChild(roomShortcutArrow);
+    roomShortcut.addEventListener("click", function () {
+      if (window.RoomFinder && typeof RoomFinder.openModal === "function") RoomFinder.openModal();
+    });
+    wrap.appendChild(roomShortcut);
+
     // 카테고리 4개 개편: 블록형(제목+짧은 설명) UI, 새 페이지 이동 없이
     // 클릭하면 이 화면 아래 목록만 바뀝니다(기존 필터 로직 재사용).
     var catTabs = el("div", "community-category-tabs");
@@ -1093,6 +1109,22 @@ var Community = (function () {
       openOnlyInput.addEventListener("change", function () { state_jobOpenOnly = openOnlyInput.checked; renderLoadedPosts(); });
       wrap.appendChild(openOnlyRow);
     }
+
+    // 무료 한글공부 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
+    // HELLO KOREAN 링크(HELLOKOREAN_INFO.url)를 그대로 재사용합니다. 기존
+    // "글쓰기" 버튼 바로 위에 배치하고, 방 구하기(코발트 블루)보다 약한
+    // 톤인 페일 블루(.community-korean-shortcut CSS)로 구분합니다.
+    var koreanShortcut = el("a", "home-tile home-tile-room community-korean-shortcut");
+    koreanShortcut.href = HELLOKOREAN_INFO.url;
+    koreanShortcut.target = "_blank";
+    koreanShortcut.rel = "noopener noreferrer";
+    koreanShortcut.appendChild(el("span", "home-tile-eyebrow", "KOREAN STUDY"));
+    koreanShortcut.appendChild(el("strong", "home-tile-title", t(HELLOKOREAN_INFO.title)));
+    koreanShortcut.appendChild(el("span", "home-tile-sub", "HELLO KOREAN"));
+    var koreanShortcutArrow = el("span", "home-tile-arrow", "→");
+    koreanShortcutArrow.setAttribute("aria-hidden", "true");
+    koreanShortcut.appendChild(koreanShortcutArrow);
+    wrap.appendChild(koreanShortcut);
 
     var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
     writeBtn.type = "button";

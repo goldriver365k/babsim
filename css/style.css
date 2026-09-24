@@ -2818,3 +2818,29 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
 @media(min-width:700px){
   body[data-bapsim-view="breakfast"] .breakfast-area{max-width:800px}
 }
+
+/* ===== 밥심커뮤니티 — 방 구하기 + 무료 한글공부 바로가기(비용 최소화) =====
+   새 컴포넌트를 만들지 않고 HOME의 기존 .home-tile.home-tile-room(방
+   구하기, 코발트 블루)을 그대로 재사용합니다. 무료 한글공부는 같은
+   가로형 바 모양(.home-tile-room)을 재사용하되, 코발트 블루와 구분되는
+   더 약한 톤인 기존 --home-paleblue로 색만 덮어씁니다(형태 CSS는
+   중복 작성하지 않음). 커뮤니티 화면 전용 클래스이므로 HOME(#homeView)의
+   .home-tile-room에는 전혀 영향을 주지 않습니다. */
+.community-room-shortcut{width:100%;margin:14px 0 18px}
+.community-korean-shortcut{width:100%;margin:16px 0 14px}
+@media (max-width: 699px) {
+  .home-tile-room.community-korean-shortcut{background:var(--home-paleblue);min-height:60px}
+  .home-tile-room.community-korean-shortcut .home-tile-eyebrow{color:var(--home-card-sub)}
+  /* HELLOKOREAN_INFO.title는 세로형 카드용 긴 문구라 일부 언어(예: 몽골어/
+     미얀마어)는 방 구하기와 같은 nowrap 한 줄에 다 안 들어갑니다. 글자
+     잘림(ellipsis) 없이 자연스럽게 줄바꿈되도록만 허용해 가로 스크롤/
+     클리핑을 막습니다(그 외 형태·색은 .home-tile-room 그대로). 보조
+     부제 "HELLO KOREAN"은 선택 요소라 이 좁은 바에서는 숨겨 제목이
+     줄바꿈될 공간을 확보합니다(브랜드명 자체는 HOME 카드에 이미 있음). */
+  .home-tile-room.community-korean-shortcut .home-tile-title{
+    color:var(--home-card-ink);white-space:normal;flex:1 1 auto;min-width:0;
+    font-size:16px;line-height:1.25;
+  }
+  .home-tile-room.community-korean-shortcut .home-tile-sub{display:none}
+  .home-tile-room.community-korean-shortcut .home-tile-arrow{color:#2457E6}
+}
