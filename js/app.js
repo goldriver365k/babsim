@@ -11,6 +11,10 @@
   var LANG_KEY = "foodhall_lang";
   var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
 
+  // 세부페이지 디자인 통일(비용 최소화) — 홈 카드 eyebrow와 동일한 고정
+  // 영문 라벨(번역하지 않음, 기존 정책 재사용)을 매장 타이틀 밴드에도 씀.
+  var STORE_EYEBROW = { bapsim: "BABSIM", mangwon: "MANGWONHABAP", hururuk: "HURURUK CHAPCHAP" };
+
   var state = {
     store: "bapsim",
     bapsimView: "breakfast",
@@ -269,6 +273,11 @@
   function renderHeader() {
     els.siteTitle.textContent = UI_TEXT.siteTitle[state.lang];
     document.title = UI_TEXT.siteTitle[state.lang];
+    // 세부페이지 디자인 통일 — 현재 매장을 body에 반영해 CSS(--detail-accent)가
+    // 서비스별 포인트 컬러를 고르게 하고, 타이틀 밴드의 영문 eyebrow를 채웁니다.
+    document.body.dataset.store = state.store;
+    if (els.storeEyebrow) els.storeEyebrow.textContent = STORE_EYEBROW[state.store] || "";
+    if (els.detailHomeLinkLabel) els.detailHomeLinkLabel.textContent = UI_TEXT.detailHomeLink[state.lang] || UI_TEXT.detailHomeLink.ko;
     if (els.siteTagline) {
       // 참고 이미지처럼 " · "로 구분된 3단어를 각각 다른 색으로 표시
       // (새 번역 데이터 없이 기존 UI_TEXT.siteTagline 문자열만 분리).
@@ -640,6 +649,9 @@
 
   function updateBapsimViewVisibility() {
     var showBreakfast = state.store === "bapsim" && state.bapsimView === "breakfast";
+    // 세부페이지 디자인 통일 — 천원의 아침밥 카드일 때만 라벤더 포인트
+    // 컬러(--detail-accent)를 쓰도록 body에 반영.
+    document.body.dataset.bapsimView = showBreakfast ? "breakfast" : "";
     els.breakfastArea.hidden = !showBreakfast;
     els.menuGrid.hidden = showBreakfast;
     els.groupNav.hidden = showBreakfast || getGroupsForStore(state.store).length <= 1;
@@ -1053,6 +1065,11 @@
     els.siteTagline = qs("siteTagline");
     els.siteLogo = qs("siteLogo");
     els.siteLogoBtn = qs("siteLogoBtn");
+    // 세부페이지 디자인 통일(비용 최소화) — "← HOME" 링크와 매장 타이틀
+    // 밴드의 영문 eyebrow. 새 라우팅 없이 기존 goHome()/state.store만 재사용.
+    els.detailHomeLink = qs("detailHomeLink");
+    els.detailHomeLinkLabel = qs("detailHomeLinkLabel");
+    els.storeEyebrow = qs("storeEyebrow");
     // 언어 선택 — 항상 펼쳐진 7버튼 대신 작은 🌐 토글로 여닫는 드롭다운
     // (기존 langBar/lang-bar-btn과 setLang 로직은 그대로 재사용).
     els.langCompact = qs("langCompact");
@@ -1280,6 +1297,10 @@
     // 라우팅(goHome)을 그대로 재사용합니다.
     if (els.siteLogoBtn) {
       els.siteLogoBtn.addEventListener("click", goHome);
+    }
+    // 세부페이지 "← HOME" 링크도 같은 goHome()을 재사용(새 라우팅 없음).
+    if (els.detailHomeLink) {
+      els.detailHomeLink.addEventListener("click", goHome);
     }
 
     // 하단 내비게이션(홈/검색/글쓰기/알림/MY, 모바일 UI 개선 8단계) —

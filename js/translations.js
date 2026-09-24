@@ -102,6 +102,8 @@ const UI_TEXT = {
     bn: "গোচুজাং বাটার ভলকানো পর্ক",
     my: "Gochujang Butter Volcano Pork"
   },
+  // 세부페이지 디자인 통일(비용 최소화) — 헤더의 "← HOME" 링크 라벨.
+  detailHomeLink: { ko: "홈", en: "HOME", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
   // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.

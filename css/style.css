@@ -2650,3 +2650,47 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-feedback{grid-column:5/7}
   .home-korean-card{margin-top:9px}
 }
+
+/* ===== 세부페이지 디자인 통일 (비용 최소화) =====
+   HOME(V17)의 검정 배경+노란 BABSIM.STORE+Sans-serif+포인트 컬러를
+   매장/천원의 아침밥 세부페이지 "헤더+타이틀 영역"에만 연결합니다.
+   실제 콘텐츠(메뉴 카드/가격/이미지/좋아요 등)는 기존 컴포넌트를 그대로
+   두고(오프화이트 콘텐츠 영역 원칙), 헤더와 타이틀 밴드만 다크 테마로
+   확장합니다. #homeView 관련 규칙은 전혀 건드리지 않습니다. */
+body:not(:has(#homeView:not([hidden]))) .site-header{background:var(--home-bg);border-bottom:1px solid #2A2A2A;box-shadow:none}
+/* 로고 이미지가 흰 배경 jpg라 다크 헤더와 충돌해 숨김(HOME과 동일 정책).
+   클릭 시 홈 이동 기능은 새로 추가하는 "← HOME" 링크가 대신합니다. */
+body:not(:has(#homeView:not([hidden]))) .site-logo-btn{display:none}
+body:not(:has(#homeView:not([hidden]))) .site-brand-name{color:var(--home-yellow);text-transform:uppercase}
+body:not(:has(#homeView:not([hidden]))) .site-title{color:var(--home-fg-strong)}
+body:not(:has(#homeView:not([hidden]))) .site-tagline{font-size:0}
+body:not(:has(#homeView:not([hidden]))) .site-tagline::before{content:"INJE UNIVERSITY · CAMPUS LIFE";display:block;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--home-fg-muted)}
+body:not(:has(#homeView:not([hidden]))) .lang-compact-btn{background:transparent;border:1px solid #3A3A3A;color:var(--home-fg-strong)}
+body:not(:has(#homeView:not([hidden]))) .store-tab{background:transparent;border:1px solid #3A3A3A;color:var(--home-fg-strong)}
+body:not(:has(#homeView:not([hidden]))) .store-tab-floor,
+body:not(:has(#homeView:not([hidden]))) .store-tab-pronunciation{color:var(--home-fg-muted)}
+body:not(:has(#homeView:not([hidden]))) .store-tab.active{background:var(--home-yellow);border-color:var(--home-yellow);color:#18160F}
+body:not(:has(#homeView:not([hidden]))) .store-tab.active .store-tab-floor,
+body:not(:has(#homeView:not([hidden]))) .store-tab.active .store-tab-pronunciation{color:#18160F}
+
+/* "← HOME" — 기존 goHome() 재사용, 홈에서는 숨김 */
+.detail-home-link{display:none;align-items:center;gap:4px;max-width:1200px;margin:0 auto;padding:2px 0 0;background:none;border:0;font-size:13px;font-weight:600;color:var(--home-fg-muted);letter-spacing:.02em}
+body:not(:has(#homeView:not([hidden]))) .detail-home-link{display:inline-flex}
+
+/* 매장 타이틀 밴드(영문 eyebrow + 큰 한글 제목) — 다크 배경, 서비스별
+   포인트 컬러(--detail-accent)는 js/app.js가 store/bapsimView에 따라
+   body[data-store]/[data-bapsim-view]로 얹는 값을 그대로 씁니다. */
+body[data-store="bapsim"]{--detail-accent:var(--home-offwhite)}
+body[data-store="mangwon"]{--detail-accent:var(--home-pink)}
+body[data-store="hururuk"]{--detail-accent:var(--home-mint)}
+body[data-bapsim-view="breakfast"]{--detail-accent:var(--home-lavender)}
+.detail-title-band{margin:-20px -16px 18px;padding:22px 16px 18px;background:var(--home-bg);border-bottom:2px solid var(--detail-accent,var(--home-yellow))}
+.detail-eyebrow{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--detail-accent,var(--home-yellow))}
+.detail-title-band .store-heading{margin:0;color:var(--home-fg-strong)}
+
+/* 천원의 아침밥 카드(기존 흰 카드형 컴포넌트는 유지, 상단 띠+제목
+   색상만 라벤더 포인트로 연결). */
+.breakfast-area{border-color:var(--home-lavender)}
+.ba-top-strip{background:var(--home-lavender)}
+.ba-title{color:#6B5FA8}
+.ba-eyebrow{display:block;margin:6px 0 0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#8C7FC4}
