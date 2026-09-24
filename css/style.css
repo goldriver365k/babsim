@@ -2914,3 +2914,39 @@ main {
 .b2-hometown,.b2-korean{clip-path:polygon(0 0,94% 0,94% 36%,100% 36%,100% 64%,94% 64%,94% 100%,0 100%)!important}
 .b2-friends,.b2-owner{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 64%,0 64%,0 36%,6% 36%)!important}
 .b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{border-radius:10px!important;filter:drop-shadow(0 5px 0 rgba(0,0,0,.20))!important}
+
+
+/* ===== HOME V14 — real overlapping tongue/socket geometry ===== */
+.b2-grid{gap:0!important}
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{
+ content:none!important;display:none!important
+}
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{
+ width:calc(100% + 22px)!important;max-width:none!important;z-index:3!important;
+ clip-path:polygon(0 0,calc(100% - 22px) 0,calc(100% - 22px) 36%,100% 36%,100% 64%,calc(100% - 22px) 64%,calc(100% - 22px) 100%,0 100%)!important
+}
+.b2-room,.b2-friends,.b2-owner{
+ z-index:2!important;padding-left:28px!important;
+ clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 64%,22px 64%,22px 36%,0 36%)!important
+}
+.b2-hururuk{
+ width:calc(100% + 22px)!important;max-width:none!important;z-index:3!important;padding-left:28px!important;
+ clip-path:polygon(0 0,calc(100% - 22px) 0,calc(100% - 22px) 36%,100% 36%,100% 64%,calc(100% - 22px) 64%,calc(100% - 22px) 100%,0 100%,0 64%,22px 64%,22px 36%,0 36%)!important
+}
+.b2-mangwon{
+ z-index:2!important;padding-left:28px!important;
+ clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 64%,22px 64%,22px 36%,0 36%)!important
+}
+.b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{
+ overflow:hidden!important;border-radius:12px!important;filter:drop-shadow(0 5px 0 rgba(0,0,0,.18))!important
+}
+@media(max-width:430px){
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean,.b2-hururuk{width:calc(100% + 18px)!important}
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{
+  clip-path:polygon(0 0,calc(100% - 18px) 0,calc(100% - 18px) 37%,100% 37%,100% 63%,calc(100% - 18px) 63%,calc(100% - 18px) 100%,0 100%)!important
+ }
+ .b2-room,.b2-friends,.b2-owner,.b2-mangwon{padding-left:23px!important;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 63%,18px 63%,18px 37%,0 37%)!important}
+ .b2-hururuk{padding-left:23px!important;clip-path:polygon(0 0,calc(100% - 18px) 0,calc(100% - 18px) 37%,100% 37%,100% 63%,calc(100% - 18px) 63%,calc(100% - 18px) 100%,0 100%,0 63%,18px 63%,18px 37%,0 37%)!important}
+}
+
