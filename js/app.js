@@ -444,14 +444,13 @@
   // 있는 것과 같은 내용(고추장버터/화산불백, 후루룩찹찹 이동)을 그대로
   // 재사용합니다(새 이벤트 데이터 아님). 관리자 팝업(homeHeroPopup)이
   // 없을 때 홈 히어로의 기본 내용으로 씁니다. 사진/썸네일 없이 텍스트만.
-  // 라벨/메뉴명은 다국어 화면에 한국어가 그대로 남지 않도록 UI_TEXT의
-  // homeHeroMenuLabel/homeHeroMenuTitleSub/homeHeroMenuTitleMain(기존
-  // 메뉴 번역 정책과 동일한 표기)을 language별로 조회해서 씁니다.
+  // titleSub/titleMain은 브랜드/고유 메뉴명 취급이라 다른 카드
+  // 브랜드명(후루룩찹찹/만권화밥/밥심)과 동일하게 언어와 무관하게 항상
+  // 한국어 원문 고정(번역하지 않음). eyebrow와 설명 한 줄만 UI_TEXT의
+  // homeHeroMenuLabel/homeHeroMenuDesc를 language별로 조회해서 씁니다.
   var HERO_MENU_PROMO = {
-    desc: {
-      ko: "신메뉴 출시", en: "New menu launch", zh: "新菜品上市", vi: "Ra mắt món mới",
-      mn: "Шинэ хоол гарлаа", bn: "নতুন মেনু চালু হয়েছে", my: "မီနူးအသစ်စတင်ပါပြီ"
-    }
+    titleSub: "고추장버터",
+    titleMain: "화산불백"
   };
 
   function renderHomeHero() {
@@ -470,10 +469,10 @@
     } else {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = UI_TEXT.homeHeroMenuLabel[state.lang] || UI_TEXT.homeHeroMenuLabel.ko;
       els.homeHeadline.innerHTML =
-        '<span class="home-hero-menu-sub">' + (UI_TEXT.homeHeroMenuTitleSub[state.lang] || UI_TEXT.homeHeroMenuTitleSub.ko) + '</span><br>' +
-        '<span class="home-hero-menu-main">' + (UI_TEXT.homeHeroMenuTitleMain[state.lang] || UI_TEXT.homeHeroMenuTitleMain.ko) + '</span>';
+        '<span class="home-hero-menu-sub">' + HERO_MENU_PROMO.titleSub + '</span><br>' +
+        '<span class="home-hero-menu-main">' + HERO_MENU_PROMO.titleMain + '</span>';
       if (els.homeHeroDesc) {
-        els.homeHeroDesc.textContent = HERO_MENU_PROMO.desc[state.lang] || HERO_MENU_PROMO.desc.ko;
+        els.homeHeroDesc.textContent = UI_TEXT.homeHeroMenuDesc[state.lang] || UI_TEXT.homeHeroMenuDesc.ko;
         els.homeHeroDesc.hidden = false;
       }
       if (els.homeHeroCta) {

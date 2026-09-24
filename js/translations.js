@@ -87,12 +87,21 @@ const UI_TEXT = {
   // 팝업 종류와 무관하게 쓰는 범용 라벨(새 필드 없이 기존 sitePopups
   // title/linkUrl만 재사용).
   homeHeroCta: { ko: "자세히 보기", en: "View details", zh: "查看详情", vi: "Xem chi tiết", mn: "Дэлгэрэнгүй үзэх", bn: "বিস্তারিত দেখুন", my: "အသေးစိတ်ကြည့်ရန်" },
-  // 홈 히어로의 신메뉴(고추장버터 화산불백) 홍보 — 라벨/메뉴명 모두 기존
-  // 메뉴 번역 정책(js/menu-data.js의 "고추장"→Gochujang/辣椒酱, "불백"→
-  // Bulgogi/烤肉 등 기존 표기)을 그대로 재사용해 7개 언어로 표시합니다.
+  // 홈 히어로의 신메뉴 홍보 — "고추장버터 화산불백"은 브랜드/고유 메뉴명
+  // 취급이라 언어와 무관하게 항상 한국어 원문 그대로 표시합니다(번역
+  // 대상 아님 — js/app.js의 HERO_MENU_PROMO.titleSub/titleMain에 고정
+  // 문자열로 둡니다). eyebrow와 메뉴 설명 한 줄만 7개 언어로 표시.
   homeHeroMenuLabel: { ko: "신메뉴", en: "NEW MENU", zh: "新菜品", vi: "Món mới", mn: "Шинэ хоол", bn: "নতুন মেনু", my: "မီနူးအသစ်" },
-  homeHeroMenuTitleSub: { ko: "고추장버터", en: "Gochujang Butter", zh: "辣椒酱黄油", vi: "Bơ sốt ớt cay", mn: "Гочужан цөцгийн тос", bn: "গোচুজাং মাখন", my: "ဂိုချူဂျန်ထောပတ်" },
-  homeHeroMenuTitleMain: { ko: "화산불백", en: "Volcano Bulgogi", zh: "火山烤肉", vi: "Thịt nướng núi lửa", mn: "Галт уулын шарсан мах", bn: "আগ্নেয়গিরি বুলগোগি", my: "မီးတောင်ဘူဂိုဂီ" },
+  // 외국인 학생에게 메뉴 의미를 설명하는 한 줄(메뉴명 자체가 아님).
+  homeHeroMenuDesc: {
+    ko: "매콤한 고추장 버터 돼지불백",
+    en: "Gochujang Butter Volcano Pork",
+    zh: "韩式辣酱黄油火山烤猪肉",
+    vi: "Thịt heo núi lửa bơ Gochujang",
+    mn: "Гочүжан цөцгийн тостой галт уулын гахайн мах",
+    bn: "গোচুজাং বাটার ভলকানো পর্ক",
+    my: "Gochujang Butter Volcano Pork"
+  },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
   // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.

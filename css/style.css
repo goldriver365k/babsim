@@ -2590,7 +2590,7 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-hero-copy.has-menu-promo .home-headline{line-height:1.08}
 .home-hero-menu-sub{display:inline-block;font-size:clamp(22px,5.5vw,32px);font-weight:700;letter-spacing:-.02em;color:var(--home-yellow)}
 .home-hero-menu-main{display:inline-block;margin-top:4px;font-size:clamp(38px,9vw,60px);font-weight:800;letter-spacing:-.03em;color:var(--home-fg-strong)}
-.home-hero-desc{margin:14px 0 0;font-size:14px;font-weight:400;color:var(--home-fg-muted)}
+.home-hero-desc{margin:14px 0 0;font-size:14px;font-weight:400;color:rgba(255,255,255,.72);letter-spacing:.01em}
 .home-hero-desc[hidden]{display:none}
 .home-hero-cta{
   display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:10px 18px;

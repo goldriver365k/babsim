@@ -2646,7 +2646,7 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-hero-copy.has-menu-promo .home-headline{line-height:1.08}
 .home-hero-menu-sub{display:inline-block;font-size:clamp(22px,5.5vw,32px);font-weight:700;letter-spacing:-.02em;color:var(--home-yellow)}
 .home-hero-menu-main{display:inline-block;margin-top:4px;font-size:clamp(38px,9vw,60px);font-weight:800;letter-spacing:-.03em;color:var(--home-fg-strong)}
-.home-hero-desc{margin:14px 0 0;font-size:14px;font-weight:400;color:var(--home-fg-muted)}
+.home-hero-desc{margin:14px 0 0;font-size:14px;font-weight:400;color:rgba(255,255,255,.72);letter-spacing:.01em}
 .home-hero-desc[hidden]{display:none}
 .home-hero-cta{
   display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:10px 18px;
@@ -3132,12 +3132,21 @@ const UI_TEXT = {
   // 팝업 종류와 무관하게 쓰는 범용 라벨(새 필드 없이 기존 sitePopups
   // title/linkUrl만 재사용).
   homeHeroCta: { ko: "자세히 보기", en: "View details", zh: "查看详情", vi: "Xem chi tiết", mn: "Дэлгэрэнгүй үзэх", bn: "বিস্তারিত দেখুন", my: "အသေးစိတ်ကြည့်ရန်" },
-  // 홈 히어로의 신메뉴(고추장버터 화산불백) 홍보 — 라벨/메뉴명 모두 기존
-  // 메뉴 번역 정책(js/menu-data.js의 "고추장"→Gochujang/辣椒酱, "불백"→
-  // Bulgogi/烤肉 등 기존 표기)을 그대로 재사용해 7개 언어로 표시합니다.
+  // 홈 히어로의 신메뉴 홍보 — "고추장버터 화산불백"은 브랜드/고유 메뉴명
+  // 취급이라 언어와 무관하게 항상 한국어 원문 그대로 표시합니다(번역
+  // 대상 아님 — js/app.js의 HERO_MENU_PROMO.titleSub/titleMain에 고정
+  // 문자열로 둡니다). eyebrow와 메뉴 설명 한 줄만 7개 언어로 표시.
   homeHeroMenuLabel: { ko: "신메뉴", en: "NEW MENU", zh: "新菜品", vi: "Món mới", mn: "Шинэ хоол", bn: "নতুন মেনু", my: "မီနူးအသစ်" },
-  homeHeroMenuTitleSub: { ko: "고추장버터", en: "Gochujang Butter", zh: "辣椒酱黄油", vi: "Bơ sốt ớt cay", mn: "Гочужан цөцгийн тос", bn: "গোচুজাং মাখন", my: "ဂိုချူဂျန်ထောပတ်" },
-  homeHeroMenuTitleMain: { ko: "화산불백", en: "Volcano Bulgogi", zh: "火山烤肉", vi: "Thịt nướng núi lửa", mn: "Галт уулын шарсан мах", bn: "আগ্নেয়গিরি বুলগোগি", my: "မီးတောင်ဘူဂိုဂီ" },
+  // 외국인 학생에게 메뉴 의미를 설명하는 한 줄(메뉴명 자체가 아님).
+  homeHeroMenuDesc: {
+    ko: "매콤한 고추장 버터 돼지불백",
+    en: "Gochujang Butter Volcano Pork",
+    zh: "韩式辣酱黄油火山烤猪肉",
+    vi: "Thịt heo núi lửa bơ Gochujang",
+    mn: "Гочүжан цөцгийн тостой галт уулын гахайн мах",
+    bn: "গোচুজাং বাটার ভলকানো পর্ক",
+    my: "Gochujang Butter Volcano Pork"
+  },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
   // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.
@@ -10139,14 +10148,13 @@ var RoomFinder = (function () {
   // 있는 것과 같은 내용(고추장버터/화산불백, 후루룩찹찹 이동)을 그대로
   // 재사용합니다(새 이벤트 데이터 아님). 관리자 팝업(homeHeroPopup)이
   // 없을 때 홈 히어로의 기본 내용으로 씁니다. 사진/썸네일 없이 텍스트만.
-  // 라벨/메뉴명은 다국어 화면에 한국어가 그대로 남지 않도록 UI_TEXT의
-  // homeHeroMenuLabel/homeHeroMenuTitleSub/homeHeroMenuTitleMain(기존
-  // 메뉴 번역 정책과 동일한 표기)을 language별로 조회해서 씁니다.
+  // titleSub/titleMain은 브랜드/고유 메뉴명 취급이라 다른 카드
+  // 브랜드명(후루룩찹찹/만권화밥/밥심)과 동일하게 언어와 무관하게 항상
+  // 한국어 원문 고정(번역하지 않음). eyebrow와 설명 한 줄만 UI_TEXT의
+  // homeHeroMenuLabel/homeHeroMenuDesc를 language별로 조회해서 씁니다.
   var HERO_MENU_PROMO = {
-    desc: {
-      ko: "신메뉴 출시", en: "New menu launch", zh: "新菜品上市", vi: "Ra mắt món mới",
-      mn: "Шинэ хоол гарлаа", bn: "নতুন মেনু চালু হয়েছে", my: "မီနူးအသစ်စတင်ပါပြီ"
-    }
+    titleSub: "고추장버터",
+    titleMain: "화산불백"
   };
 
   function renderHomeHero() {
@@ -10165,10 +10173,10 @@ var RoomFinder = (function () {
     } else {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = UI_TEXT.homeHeroMenuLabel[state.lang] || UI_TEXT.homeHeroMenuLabel.ko;
       els.homeHeadline.innerHTML =
-        '<span class="home-hero-menu-sub">' + (UI_TEXT.homeHeroMenuTitleSub[state.lang] || UI_TEXT.homeHeroMenuTitleSub.ko) + '</span><br>' +
-        '<span class="home-hero-menu-main">' + (UI_TEXT.homeHeroMenuTitleMain[state.lang] || UI_TEXT.homeHeroMenuTitleMain.ko) + '</span>';
+        '<span class="home-hero-menu-sub">' + HERO_MENU_PROMO.titleSub + '</span><br>' +
+        '<span class="home-hero-menu-main">' + HERO_MENU_PROMO.titleMain + '</span>';
       if (els.homeHeroDesc) {
-        els.homeHeroDesc.textContent = HERO_MENU_PROMO.desc[state.lang] || HERO_MENU_PROMO.desc.ko;
+        els.homeHeroDesc.textContent = UI_TEXT.homeHeroMenuDesc[state.lang] || UI_TEXT.homeHeroMenuDesc.ko;
         els.homeHeroDesc.hidden = false;
       }
       if (els.homeHeroCta) {
