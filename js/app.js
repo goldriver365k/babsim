@@ -440,22 +440,49 @@
   // 팝업 데이터(title/linkUrl).
   var homeHeroPopup;
 
+  // 현재 실제 진행 중인 신메뉴 홍보 — js/hometown-popup.js가 이미 쓰고
+  // 있는 것과 같은 문구(고추장버터/화산불백, 후루룩찹찹 이동)를 그대로
+  // 재사용합니다(새 이벤트 데이터 아님). 관리자 팝업(homeHeroPopup)이
+  // 없을 때 홈 히어로의 기본 내용으로 씁니다. 사진/썸네일 없이 텍스트만.
+  var HERO_MENU_PROMO = {
+    eyebrow: "NEW MENU",
+    titleSub: "고추장버터",
+    titleMain: "화산불백",
+    desc: {
+      ko: "신메뉴 출시", en: "New menu launch", zh: "新菜品上市", vi: "Ra mắt món mới",
+      mn: "Шинэ хоол гарлаа", bn: "নতুন মেনু চালু হয়েছে", my: "မီနူးအသစ်စတင်ပါပြီ"
+    }
+  };
+
   function renderHomeHero() {
     if (!els.homeHeadline) return;
     if (homeHeroPopup) {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "EVENT";
       els.homeHeadline.textContent = homeHeroPopup.title || "";
+      if (els.homeHeroDesc) els.homeHeroDesc.hidden = true;
       if (els.homeHeroCta) {
         els.homeHeroCta.textContent = (UI_TEXT.homeHeroCta[state.lang] || UI_TEXT.homeHeroCta.ko) + " →";
         els.homeHeroCta.href = homeHeroPopup.linkUrl || "#";
         els.homeHeroCta.hidden = false;
       }
+      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-menu-promo");
       if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-event");
     } else {
-      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "CAMPUS LIFE";
-      els.homeHeadline.innerHTML = (UI_TEXT.homeHeadline[state.lang] || UI_TEXT.homeHeadline.ko).split("\n").join("<br>");
-      if (els.homeHeroCta) els.homeHeroCta.hidden = true;
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = HERO_MENU_PROMO.eyebrow;
+      els.homeHeadline.innerHTML =
+        '<span class="home-hero-menu-sub">' + HERO_MENU_PROMO.titleSub + '</span><br>' +
+        '<span class="home-hero-menu-main">' + HERO_MENU_PROMO.titleMain + '</span>';
+      if (els.homeHeroDesc) {
+        els.homeHeroDesc.textContent = HERO_MENU_PROMO.desc[state.lang] || HERO_MENU_PROMO.desc.ko;
+        els.homeHeroDesc.hidden = false;
+      }
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (UI_TEXT.homeHeroCta[state.lang] || UI_TEXT.homeHeroCta.ko) + " →";
+        els.homeHeroCta.href = "#";
+        els.homeHeroCta.hidden = false;
+      }
       if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-event");
+      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-menu-promo");
     }
   }
 
@@ -1068,6 +1095,7 @@
     els.homeHeroCopy = qs("homeHeroCopy");
     els.homeHeroEyebrow = qs("homeHeroEyebrow");
     els.homeHeadline = qs("homeHeadline");
+    els.homeHeroDesc = qs("homeHeroDesc");
     els.homeHeroCta = qs("homeHeroCta");
     els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
     els.homeCardMangwonSub = qs("homeCardMangwonSub");
@@ -1230,13 +1258,20 @@
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("job");
       });
     }
-    // 홈 메인 히어로 영역의 CTA — 팝업에 linkUrl이 있으면 그 링크(기본
-    // <a href> 동작), 없으면 기존 전체 팝업(showActive)을 그대로 재사용.
+    // 홈 메인 히어로 영역의 CTA — 관리자 팝업에 linkUrl이 있으면 그
+    // 링크(기본 <a href> 동작), 관리자 팝업은 있지만 링크가 없으면 기존
+    // 전체 팝업(showActive) 재사용. 관리자 팝업이 없어 신메뉴 홍보(고추장
+    // 버터 화산불백)를 보여주는 기본 상태에서는, 그 팝업(js/hometown-
+    // popup.js)의 "메뉴 확인" 버튼과 같은 기존 이동 함수(goToStore)를
+    // 그대로 재사용해 후루룩찹찹 매장으로 이동합니다(새 링크 없음).
     if (els.homeHeroCta) {
       els.homeHeroCta.addEventListener("click", function (e) {
-        if (!homeHeroPopup || !homeHeroPopup.linkUrl) {
-          e.preventDefault();
+        if (homeHeroPopup && homeHeroPopup.linkUrl) return;
+        e.preventDefault();
+        if (homeHeroPopup) {
           if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+        } else if (typeof window.goToStore === "function") {
+          window.goToStore("hururuk");
         }
       });
     }
@@ -1450,21 +1485,17 @@
 
     // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
     // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음). 관리자가 등록한
-    // 일반 팝업(팝업 기능 2단계) → 신메뉴 예고 이벤트 팝업 → 천원의
-    // 아침밥 평가 팝업 순서로, 앞 팝업이 없거나 닫힌 뒤에만 다음 팝업을
-    // 띄워 동시에 겹치지 않게 합니다.
-    function showHometownThenBreakfast() {
-      if (window.HometownPopup && typeof window.HometownPopup.maybeShow === "function") {
-        window.HometownPopup.maybeShow(maybeShowBreakfastPopup);
-      } else {
-        maybeShowBreakfastPopup();
-      }
-    }
+    // 일반 팝업(팝업 기능 2단계) → 천원의 아침밥 평가 팝업 순서로, 앞
+    // 팝업이 없거나 닫힌 뒤에만 다음 팝업을 띄웁니다.
+    // 신메뉴 예고 팝업(HometownPopup, 고추장버터 화산불백)은 이제 홈
+    // 히어로 영역에 상시 노출되므로, 같은 내용이 모달로 또 겹쳐 뜨지
+    // 않도록 이 자동 호출 체인에서는 제외합니다(모듈 자체는 삭제하지
+    // 않고 그대로 둡니다 — window.HometownPopup.maybeShow는 여전히 존재).
     setTimeout(function () {
       if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
-        window.SitePopup.maybeShow(showHometownThenBreakfast);
+        window.SitePopup.maybeShow(maybeShowBreakfastPopup);
       } else {
-        showHometownThenBreakfast();
+        maybeShowBreakfastPopup();
       }
     }, 1000);
   }

@@ -2583,6 +2583,15 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 /* 메인 히어로가 기존 팝업 데이터(EVENT)를 보여줄 때만 카테고리를
    노란색으로 강조 + CTA 버튼 표시(검정 배경 + 노란 테두리/글자). */
 .home-hero-copy.has-event .home-hero-eyebrow{color:var(--home-yellow)}
+/* 현재 실제 진행 중인 신메뉴(고추장버터 화산불백) 홍보 — 사진 없이
+   타이포그래피만으로 표현. "고추장버터"는 작고 포인트 색(노랑),
+   "화산불백"은 더 크고 흰색으로 시각적 우선순위를 줌(검은 배경 위에
+   글자만 떠 있는 느낌, 2줄 구조). */
+.home-hero-copy.has-menu-promo .home-headline{line-height:1.08}
+.home-hero-menu-sub{display:inline-block;font-size:clamp(22px,5.5vw,32px);font-weight:700;letter-spacing:-.02em;color:var(--home-yellow)}
+.home-hero-menu-main{display:inline-block;margin-top:4px;font-size:clamp(38px,9vw,60px);font-weight:800;letter-spacing:-.03em;color:var(--home-fg-strong)}
+.home-hero-desc{margin:14px 0 0;font-size:14px;font-weight:400;color:var(--home-fg-muted)}
+.home-hero-desc[hidden]{display:none}
 .home-hero-cta{
   display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:10px 18px;
   border:1px solid var(--home-yellow);border-radius:999px;background:transparent;
