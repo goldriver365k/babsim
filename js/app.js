@@ -1066,6 +1066,7 @@
     els.siteTagline = qs("siteTagline");
     els.siteLogo = qs("siteLogo");
     els.siteLogoBtn = qs("siteLogoBtn");
+    els.siteBrandName = qs("siteBrandName");
     // 세부페이지 디자인 통일(비용 최소화) — "← HOME" 링크와 매장 타이틀
     // 밴드의 영문 eyebrow. 새 라우팅 없이 기존 goHome()/state.store만 재사용.
     els.detailHomeLink = qs("detailHomeLink");
@@ -1303,6 +1304,15 @@
     // 세부페이지 "← HOME" 링크도 같은 goHome()을 재사용(새 라우팅 없음).
     if (els.detailHomeLink) {
       els.detailHomeLink.addEventListener("click", goHome);
+    }
+    // BABSIM.STORE 텍스트 자체도 기본 홈 이동 버튼 역할(새 아이콘/새
+    // route 없이 같은 goHome()만 재사용). role="button"이라 키보드로도
+    // Enter/Space로 접근 가능하게 합니다.
+    if (els.siteBrandName) {
+      els.siteBrandName.addEventListener("click", goHome);
+      els.siteBrandName.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); }
+      });
     }
 
     // 하단 내비게이션(홈/검색/글쓰기/알림/MY, 모바일 UI 개선 8단계) —
