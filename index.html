@@ -2907,6 +2907,46 @@ main {
 .b2-hururuk,.b2-mangwon{padding-left:18px!important}
 .b2-grid{gap:0!important}
 
+
+/* ===== HOME V13 — true silhouette interlocks; no attached tabs ===== */
+.b2-grid{gap:0!important}
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{
+ display:none!important;content:none!important
+}
+/* The connector is now part of each tile's own outer silhouette.
+   Left tiles include a 7% tongue; right tiles contain the matching 7% socket. */
+.b2-breakfast,.b2-hometown,.b2-korean{
+ clip-path:polygon(0 0,93% 0,93% 38%,100% 38%,100% 62%,93% 62%,93% 100%,0 100%)!important;
+ margin-right:-7%!important
+}
+.b2-room,.b2-friends,.b2-owner{
+ clip-path:polygon(7% 0,100% 0,100% 100%,7% 100%,7% 62%,0 62%,0 38%,7% 38%)!important;
+ padding-left:9%!important
+}
+.b2-bapsim{
+ clip-path:polygon(0 0,93% 0,93% 38%,100% 38%,100% 62%,93% 62%,93% 100%,0 100%)!important;
+ margin-right:-7%!important
+}
+.b2-hururuk{
+ clip-path:polygon(7% 0,93% 0,93% 38%,100% 38%,100% 62%,93% 62%,93% 100%,7% 100%,7% 62%,0 62%,0 38%,7% 38%)!important;
+ margin-right:-7%!important;padding-left:9%!important
+}
+.b2-mangwon{
+ clip-path:polygon(7% 0,100% 0,100% 100%,7% 100%,7% 62%,0 62%,0 38%,7% 38%)!important;
+ padding-left:9%!important
+}
+/* keep the premium 3D face, but let the silhouette itself carry the joint */
+.b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{
+ overflow:hidden!important;border-radius:0!important
+}
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{filter:drop-shadow(0 6px 0 rgba(0,0,0,.16))}
+.b2-room,.b2-hururuk,.b2-mangwon,.b2-friends,.b2-owner{filter:drop-shadow(0 6px 0 rgba(0,0,0,.16))}
+@media(max-width:430px){
+ .b2-breakfast,.b2-hometown,.b2-korean,.b2-bapsim,.b2-hururuk{margin-right:-6%!important}
+ .b2-room,.b2-friends,.b2-owner,.b2-hururuk,.b2-mangwon{padding-left:8%!important}
+}
+
 </style>
 </head>
 <body>
