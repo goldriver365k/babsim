@@ -25,7 +25,7 @@ html, body {
 }
 
 body {
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", sans-serif;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", "Noto Sans", sans-serif;
   background: var(--bg-page);
   color: var(--text-dark);
   font-size: 16px;
@@ -2563,7 +2563,7 @@ body:has(#homeView:not([hidden])) .site-logo-btn,body:has(#homeView:not([hidden]
    쓰이므로 JS 텍스트는 그대로 두고, 홈 화면일 때만 font-size:0으로
    숨기고 ::before로 새 문구를 얹습니다(다국어/언어선택 로직 무변경). */
 body:has(#homeView:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:0}
-body:has(#homeView:not([hidden])) .site-brand-name::before{content:"BABSIM.STORE";font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--home-yellow)}
+body:has(#homeView:not([hidden])) .site-brand-name::before{content:"BABSIM.STORE";font-size:23px;font-weight:800;letter-spacing:-.03em;color:var(--home-yellow)}
 body:has(#homeView:not([hidden])) .site-tagline{display:block!important;margin:4px 0 0;font-size:0}
 body:has(#homeView:not([hidden])) .site-tagline::before{content:"INJE UNIVERSITY · CAMPUS LIFE";display:block;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--home-fg-muted)}
 body:has(#homeView:not([hidden])) .lang-compact-btn{min-height:36px;background:transparent;border:1px solid #3A3A3A;border-radius:999px;font-size:13px;font-weight:600;color:var(--home-fg-strong);box-shadow:none}
@@ -2578,26 +2578,36 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 #homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
 
 .home-hero-copy{margin:0 0 28px}
-.home-hero-eyebrow{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.22em;color:var(--home-fg-muted);text-transform:uppercase}
-.home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.32;letter-spacing:-.02em;color:var(--home-fg-strong)}
+.home-hero-eyebrow{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.18em;color:var(--home-fg-muted);text-transform:uppercase;transition:color .12s ease}
+.home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.28;letter-spacing:-.03em;color:var(--home-fg-strong)}
+/* 메인 히어로가 기존 팝업 데이터(EVENT)를 보여줄 때만 카테고리를
+   노란색으로 강조 + CTA 버튼 표시(검정 배경 + 노란 테두리/글자). */
+.home-hero-copy.has-event .home-hero-eyebrow{color:var(--home-yellow)}
+.home-hero-cta{
+  display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:10px 18px;
+  border:1px solid var(--home-yellow);border-radius:999px;background:transparent;
+  color:var(--home-yellow);font-size:13px;font-weight:700;letter-spacing:.02em;text-decoration:none;
+}
+.home-hero-cta[hidden]{display:none}
 
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{
   position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;
-  min-height:132px;padding:20px;border:0;border-radius:8px;
+  min-height:132px;padding:22px;border:0;border-radius:8px;
   text-align:left;text-decoration:none;color:var(--home-card-ink);background:var(--home-offwhite);
   font-family:inherit;box-shadow:none;transition:transform .12s ease;
 }
 .home-tile:active{transform:translateY(2px)}
 .home-tile:focus-visible{outline:2px solid var(--home-yellow);outline-offset:2px}
-.home-tile-eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--home-card-sub);text-transform:uppercase}
-.home-tile-title{display:block;margin:10px 0 0;font-size:clamp(19px,4.6vw,24px);font-weight:650;line-height:1.22;letter-spacing:-.01em;word-break:keep-all;color:var(--home-card-ink)}
-.home-tile-sub{display:block;margin-top:14px;font-size:13px;font-weight:500;color:var(--home-card-sub)}
-.home-tile-arrow{position:absolute;right:18px;bottom:16px;font-size:17px;font-weight:500;color:var(--home-card-ink)}
+.home-tile-eyebrow{font-size:12px;font-weight:600;letter-spacing:.16em;color:var(--home-card-sub);text-transform:uppercase}
+.home-tile-title{display:block;margin:16px 0 0;font-size:clamp(25px,2.2vw,38px);font-weight:600;line-height:1.2;letter-spacing:-.03em;word-break:keep-all;color:var(--home-card-ink)}
+.home-tile-sub{display:block;margin-top:14px;font-size:13px;font-weight:400;color:var(--home-card-sub)}
+.home-tile-arrow{position:absolute;right:18px;bottom:16px;font-size:15px;font-weight:400;color:var(--home-card-ink)}
 
-.home-tile-breakfast{grid-column:1/3;min-height:216px;background:var(--home-lavender)}
-.home-tile-breakfast .home-tile-title{font-size:clamp(30px,8vw,44px);font-weight:650}
+.home-tile-breakfast{grid-column:1/3;min-height:216px;padding:28px;background:var(--home-lavender)}
+.home-tile-breakfast .home-tile-title{font-size:clamp(34px,3vw,56px);font-weight:600}
 .home-tile-hururuk{background:var(--home-mint);min-height:160px}
+.home-tile-hururuk .home-tile-title{font-size:clamp(28px,2.6vw,44px)}
 .home-tile-mangwon{background:var(--home-pink);min-height:160px}
 .home-tile-bapsim{background:var(--home-offwhite)}
 .home-tile-room{background:var(--home-paleblue)}

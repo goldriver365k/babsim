@@ -83,6 +83,10 @@ const UI_TEXT = {
   // 홈 MZ LEGO 보드(리뉴얼 1단계) EVENT 블록의 제목 문구 — 새 이벤트
   // CMS 없이 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점입니다.
   homeEventLabel: { ko: "새로운 소식", en: "Latest News", zh: "最新消息", vi: "Tin tức mới", mn: "Сүүлийн үеийн мэдээ", bn: "সর্বশেষ খবর", my: "နောက်ဆုံးရသတင်း" },
+  // 홈 메인 히어로 영역(EVENT/NOTICE/SURVEY 미리보기)의 CTA 버튼 문구 —
+  // 팝업 종류와 무관하게 쓰는 범용 라벨(새 필드 없이 기존 sitePopups
+  // title/linkUrl만 재사용).
+  homeHeroCta: { ko: "자세히 보기", en: "View details", zh: "查看详情", vi: "Xem chi tiết", mn: "Дэлгэрэнгүй үзэх", bn: "বিস্তারিত দেখুন", my: "အသေးစိတ်ကြည့်ရန်" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
   // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.

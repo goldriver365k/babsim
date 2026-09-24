@@ -434,6 +434,41 @@
     }).catch(function () { /* 홈 화면 미리보기는 실패해도 조용히 무시(핵심 기능 아님) */ });
   }
 
+  // 홈 메인 히어로 영역(타이포그래피 지시서) — 기존 sitePopups 데이터를
+  // 새 컬렉션/새 조건 없이 그대로 재사용합니다. undefined=아직 조회
+  // 전(기본 문구 표시), null=조회했지만 활성 팝업 없음, object=활성
+  // 팝업 데이터(title/linkUrl).
+  var homeHeroPopup;
+
+  function renderHomeHero() {
+    if (!els.homeHeadline) return;
+    if (homeHeroPopup) {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "EVENT";
+      els.homeHeadline.textContent = homeHeroPopup.title || "";
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (UI_TEXT.homeHeroCta[state.lang] || UI_TEXT.homeHeroCta.ko) + " →";
+        els.homeHeroCta.href = homeHeroPopup.linkUrl || "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-event");
+    } else {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "CAMPUS LIFE";
+      els.homeHeadline.innerHTML = (UI_TEXT.homeHeadline[state.lang] || UI_TEXT.homeHeadline.ko).split("\n").join("<br>");
+      if (els.homeHeroCta) els.homeHeroCta.hidden = true;
+      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-event");
+    }
+  }
+
+  // 페이지당 한 번만 조회(Firestore 비용 최소화) — 결과는 renderHome()이
+  // 언어 전환 때마다 다시 그릴 수 있도록 homeHeroPopup에 캐시합니다.
+  function loadHomeHeroPopup() {
+    if (!window.SitePopup || typeof window.SitePopup.getActive !== "function") return;
+    window.SitePopup.getActive(function (data) {
+      homeHeroPopup = data;
+      renderHomeHero();
+    });
+  }
+
   function renderHome() {
     if (!els.homeView) return;
     if (els.homeServicesTitle) els.homeServicesTitle.textContent = UI_TEXT.homeServicesTitle[state.lang];
@@ -465,8 +500,9 @@
     }
     // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
     if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
-    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피 + 카드 한 줄 설명.
-    if (els.homeHeadline) els.homeHeadline.innerHTML = (UI_TEXT.homeHeadline[state.lang] || UI_TEXT.homeHeadline.ko).split("\n").join("<br>");
+    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(활성 이벤트/공지
+    // 팝업이 있으면 그 내용, 없으면 기본 문구) + 카드 한 줄 설명.
+    renderHomeHero();
     var sub = UI_TEXT.homeCardSubtitle;
     if (els.homeCardBreakfastSub) els.homeCardBreakfastSub.textContent = sub.breakfast[state.lang] || sub.breakfast.ko;
     if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
@@ -1029,7 +1065,10 @@
     // 한 줄 설명(신규 최소 번역 UI_TEXT.homeHeadline/homeCardSubtitle)과
     // "나의 학교생활" 카드(기존 COMMUNITY_CATEGORIES.job 카테고리를
     // 그대로 재사용 — 라벨만 "나의 학교생활"로 교체, 새 카테고리 아님).
+    els.homeHeroCopy = qs("homeHeroCopy");
+    els.homeHeroEyebrow = qs("homeHeroEyebrow");
     els.homeHeadline = qs("homeHeadline");
+    els.homeHeroCta = qs("homeHeroCta");
     els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
     els.homeCardMangwonSub = qs("homeCardMangwonSub");
     els.homeCardBapsimSub = qs("homeCardBapsimSub");
@@ -1191,6 +1230,17 @@
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("job");
       });
     }
+    // 홈 메인 히어로 영역의 CTA — 팝업에 linkUrl이 있으면 그 링크(기본
+    // <a href> 동작), 없으면 기존 전체 팝업(showActive)을 그대로 재사용.
+    if (els.homeHeroCta) {
+      els.homeHeroCta.addEventListener("click", function (e) {
+        if (!homeHeroPopup || !homeHeroPopup.linkUrl) {
+          e.preventDefault();
+          if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+        }
+      });
+    }
+    loadHomeHeroPopup();
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
     // 라우팅(goHome)을 그대로 재사용합니다.

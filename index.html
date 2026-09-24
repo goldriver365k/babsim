@@ -39,6 +39,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&family=Noto+Sans+Myanmar:wght@400;700&display=swap">
+<!-- 한글 제목 타이포그래피 고급화(홈 화면 타이포그래피 수정 지시서) —
+     기존 font-family에 "Pretendard"가 1순위로 적혀 있었지만 실제 웹폰트가
+     로드되고 있지 않아 시스템 기본 서체로만 표시되고 있었습니다. jsdelivr
+     CDN은 이 환경의 프록시에서 막혀 있어(개발 샌드박스 한정 이슈),
+     이 프로젝트가 이미 쓰고 있는 fonts.googleapis.com으로 지시서 2순위
+     Noto Sans KR 1개만 추가합니다. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
 <style>
 /* ==========================================================================
    모인관(인제대학교) — 키오스크 스타일 정적 메뉴판
@@ -67,7 +74,7 @@ html, body {
 }
 
 body {
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", sans-serif;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", "Noto Sans", sans-serif;
   background: var(--bg-page);
   color: var(--text-dark);
   font-size: 16px;
@@ -2612,7 +2619,7 @@ body:has(#homeView:not([hidden])) .site-logo-btn,body:has(#homeView:not([hidden]
    쓰이므로 JS 텍스트는 그대로 두고, 홈 화면일 때만 font-size:0으로
    숨기고 ::before로 새 문구를 얹습니다(다국어/언어선택 로직 무변경). */
 body:has(#homeView:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:0}
-body:has(#homeView:not([hidden])) .site-brand-name::before{content:"BABSIM.STORE";font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--home-yellow)}
+body:has(#homeView:not([hidden])) .site-brand-name::before{content:"BABSIM.STORE";font-size:23px;font-weight:800;letter-spacing:-.03em;color:var(--home-yellow)}
 body:has(#homeView:not([hidden])) .site-tagline{display:block!important;margin:4px 0 0;font-size:0}
 body:has(#homeView:not([hidden])) .site-tagline::before{content:"INJE UNIVERSITY · CAMPUS LIFE";display:block;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--home-fg-muted)}
 body:has(#homeView:not([hidden])) .lang-compact-btn{min-height:36px;background:transparent;border:1px solid #3A3A3A;border-radius:999px;font-size:13px;font-weight:600;color:var(--home-fg-strong);box-shadow:none}
@@ -2627,26 +2634,36 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 #homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
 
 .home-hero-copy{margin:0 0 28px}
-.home-hero-eyebrow{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.22em;color:var(--home-fg-muted);text-transform:uppercase}
-.home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.32;letter-spacing:-.02em;color:var(--home-fg-strong)}
+.home-hero-eyebrow{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.18em;color:var(--home-fg-muted);text-transform:uppercase;transition:color .12s ease}
+.home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.28;letter-spacing:-.03em;color:var(--home-fg-strong)}
+/* 메인 히어로가 기존 팝업 데이터(EVENT)를 보여줄 때만 카테고리를
+   노란색으로 강조 + CTA 버튼 표시(검정 배경 + 노란 테두리/글자). */
+.home-hero-copy.has-event .home-hero-eyebrow{color:var(--home-yellow)}
+.home-hero-cta{
+  display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:10px 18px;
+  border:1px solid var(--home-yellow);border-radius:999px;background:transparent;
+  color:var(--home-yellow);font-size:13px;font-weight:700;letter-spacing:.02em;text-decoration:none;
+}
+.home-hero-cta[hidden]{display:none}
 
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{
   position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;
-  min-height:132px;padding:20px;border:0;border-radius:8px;
+  min-height:132px;padding:22px;border:0;border-radius:8px;
   text-align:left;text-decoration:none;color:var(--home-card-ink);background:var(--home-offwhite);
   font-family:inherit;box-shadow:none;transition:transform .12s ease;
 }
 .home-tile:active{transform:translateY(2px)}
 .home-tile:focus-visible{outline:2px solid var(--home-yellow);outline-offset:2px}
-.home-tile-eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--home-card-sub);text-transform:uppercase}
-.home-tile-title{display:block;margin:10px 0 0;font-size:clamp(19px,4.6vw,24px);font-weight:650;line-height:1.22;letter-spacing:-.01em;word-break:keep-all;color:var(--home-card-ink)}
-.home-tile-sub{display:block;margin-top:14px;font-size:13px;font-weight:500;color:var(--home-card-sub)}
-.home-tile-arrow{position:absolute;right:18px;bottom:16px;font-size:17px;font-weight:500;color:var(--home-card-ink)}
+.home-tile-eyebrow{font-size:12px;font-weight:600;letter-spacing:.16em;color:var(--home-card-sub);text-transform:uppercase}
+.home-tile-title{display:block;margin:16px 0 0;font-size:clamp(25px,2.2vw,38px);font-weight:600;line-height:1.2;letter-spacing:-.03em;word-break:keep-all;color:var(--home-card-ink)}
+.home-tile-sub{display:block;margin-top:14px;font-size:13px;font-weight:400;color:var(--home-card-sub)}
+.home-tile-arrow{position:absolute;right:18px;bottom:16px;font-size:15px;font-weight:400;color:var(--home-card-ink)}
 
-.home-tile-breakfast{grid-column:1/3;min-height:216px;background:var(--home-lavender)}
-.home-tile-breakfast .home-tile-title{font-size:clamp(30px,8vw,44px);font-weight:650}
+.home-tile-breakfast{grid-column:1/3;min-height:216px;padding:28px;background:var(--home-lavender)}
+.home-tile-breakfast .home-tile-title{font-size:clamp(34px,3vw,56px);font-weight:600}
 .home-tile-hururuk{background:var(--home-mint);min-height:160px}
+.home-tile-hururuk .home-tile-title{font-size:clamp(28px,2.6vw,44px)}
 .home-tile-mangwon{background:var(--home-pink);min-height:160px}
 .home-tile-bapsim{background:var(--home-offwhite)}
 .home-tile-room{background:var(--home-paleblue)}
@@ -2740,9 +2757,10 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
      보이는 화면이며, 매장(밥심 등)을 고르거나 커뮤니티로 이동하면
      숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
 <section class="home-view" id="homeView">
-  <div class="home-hero-copy">
-    <p class="home-hero-eyebrow">CAMPUS LIFE</p>
+  <div class="home-hero-copy" id="homeHeroCopy">
+    <p class="home-hero-eyebrow" id="homeHeroEyebrow">CAMPUS LIFE</p>
     <h2 class="home-headline" id="homeHeadline">오늘,<br>인제대에서<br>무엇을 찾으세요?</h2>
+    <a class="home-hero-cta" id="homeHeroCta" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
   </div>
   <div class="home-bento" id="homeLegoBoard">
     <button type="button" class="home-tile home-tile-breakfast" id="homeCardBreakfast">
@@ -3100,6 +3118,10 @@ const UI_TEXT = {
   // 홈 MZ LEGO 보드(리뉴얼 1단계) EVENT 블록의 제목 문구 — 새 이벤트
   // CMS 없이 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점입니다.
   homeEventLabel: { ko: "새로운 소식", en: "Latest News", zh: "最新消息", vi: "Tin tức mới", mn: "Сүүлийн үеийн мэдээ", bn: "সর্বশেষ খবর", my: "နောက်ဆုံးရသတင်း" },
+  // 홈 메인 히어로 영역(EVENT/NOTICE/SURVEY 미리보기)의 CTA 버튼 문구 —
+  // 팝업 종류와 무관하게 쓰는 범용 라벨(새 필드 없이 기존 sitePopups
+  // title/linkUrl만 재사용).
+  homeHeroCta: { ko: "자세히 보기", en: "View details", zh: "查看详情", vi: "Xem chi tiết", mn: "Дэлгэрэнгүй үзэх", bn: "বিস্তারিত দেখুন", my: "အသေးစိတ်ကြည့်ရန်" },
   homeCommunityLatestEmpty: { ko: "아직 등록된 글이 없습니다.", en: "No posts yet.", zh: "还没有帖子。", vi: "Chưa có bài viết nào.", mn: "Одоогоор нийтлэл алга.", bn: "এখনও কোনো পোস্ট নেই।", my: "ပို့စ်မရှိသေးပါ။" },
   // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(사진 없이 타이포그래피
   // 중심). 줄바꿈은 \n으로 표시하고 렌더링 시 <br>로 바꿉니다.
@@ -8977,9 +8999,24 @@ var SitePopup = (function () {
   // 이벤트 목록 화면을 만들지 않음).
   function showActive(done) { showPopup(true, done); }
 
-  return { maybeShow: maybeShow, showActive: showActive };
-})();
+  // 홈 화면 메인 히어로 영역(타이포그래피 지시서)이 쓰는 조회 전용
+  // 함수 — 모달을 띄우지 않고 활성 팝업의 데이터(title/linkUrl)만
+  // callback으로 넘깁니다. 새 컬렉션/새 조건 없이 위와 똑같은
+  // sitePopups 조회 + isEligible 조건을 그대로 재사용합니다.
+  function getActive(callback) {
+    var cb = typeof callback === "function" ? callback : function () {};
+    var d = db();
+    if (!d) { cb(null); return; }
+    d.collection("sitePopups").orderBy("createdAt", "desc").limit(20).get().then(function (snap) {
+      var docs = [];
+      snap.forEach(function (doc) { docs.push({ id: doc.id, data: doc.data() }); });
+      var chosen = pickPopup(docs, true);
+      cb(chosen ? chosen.data : null);
+    }).catch(function () { cb(null); });
+  }
 
+  return { maybeShow: maybeShow, showActive: showActive, getActive: getActive };
+})();
 </script>
 <script>
 /* ==========================================================================
@@ -10070,6 +10107,41 @@ var RoomFinder = (function () {
     }).catch(function () { /* 홈 화면 미리보기는 실패해도 조용히 무시(핵심 기능 아님) */ });
   }
 
+  // 홈 메인 히어로 영역(타이포그래피 지시서) — 기존 sitePopups 데이터를
+  // 새 컬렉션/새 조건 없이 그대로 재사용합니다. undefined=아직 조회
+  // 전(기본 문구 표시), null=조회했지만 활성 팝업 없음, object=활성
+  // 팝업 데이터(title/linkUrl).
+  var homeHeroPopup;
+
+  function renderHomeHero() {
+    if (!els.homeHeadline) return;
+    if (homeHeroPopup) {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "EVENT";
+      els.homeHeadline.textContent = homeHeroPopup.title || "";
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (UI_TEXT.homeHeroCta[state.lang] || UI_TEXT.homeHeroCta.ko) + " →";
+        els.homeHeroCta.href = homeHeroPopup.linkUrl || "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-event");
+    } else {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "CAMPUS LIFE";
+      els.homeHeadline.innerHTML = (UI_TEXT.homeHeadline[state.lang] || UI_TEXT.homeHeadline.ko).split("\n").join("<br>");
+      if (els.homeHeroCta) els.homeHeroCta.hidden = true;
+      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-event");
+    }
+  }
+
+  // 페이지당 한 번만 조회(Firestore 비용 최소화) — 결과는 renderHome()이
+  // 언어 전환 때마다 다시 그릴 수 있도록 homeHeroPopup에 캐시합니다.
+  function loadHomeHeroPopup() {
+    if (!window.SitePopup || typeof window.SitePopup.getActive !== "function") return;
+    window.SitePopup.getActive(function (data) {
+      homeHeroPopup = data;
+      renderHomeHero();
+    });
+  }
+
   function renderHome() {
     if (!els.homeView) return;
     if (els.homeServicesTitle) els.homeServicesTitle.textContent = UI_TEXT.homeServicesTitle[state.lang];
@@ -10101,8 +10173,9 @@ var RoomFinder = (function () {
     }
     // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
     if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
-    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피 + 카드 한 줄 설명.
-    if (els.homeHeadline) els.homeHeadline.innerHTML = (UI_TEXT.homeHeadline[state.lang] || UI_TEXT.homeHeadline.ko).split("\n").join("<br>");
+    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(활성 이벤트/공지
+    // 팝업이 있으면 그 내용, 없으면 기본 문구) + 카드 한 줄 설명.
+    renderHomeHero();
     var sub = UI_TEXT.homeCardSubtitle;
     if (els.homeCardBreakfastSub) els.homeCardBreakfastSub.textContent = sub.breakfast[state.lang] || sub.breakfast.ko;
     if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
@@ -10665,7 +10738,10 @@ var RoomFinder = (function () {
     // 한 줄 설명(신규 최소 번역 UI_TEXT.homeHeadline/homeCardSubtitle)과
     // "나의 학교생활" 카드(기존 COMMUNITY_CATEGORIES.job 카테고리를
     // 그대로 재사용 — 라벨만 "나의 학교생활"로 교체, 새 카테고리 아님).
+    els.homeHeroCopy = qs("homeHeroCopy");
+    els.homeHeroEyebrow = qs("homeHeroEyebrow");
     els.homeHeadline = qs("homeHeadline");
+    els.homeHeroCta = qs("homeHeroCta");
     els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
     els.homeCardMangwonSub = qs("homeCardMangwonSub");
     els.homeCardBapsimSub = qs("homeCardBapsimSub");
@@ -10827,6 +10903,17 @@ var RoomFinder = (function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("job");
       });
     }
+    // 홈 메인 히어로 영역의 CTA — 팝업에 linkUrl이 있으면 그 링크(기본
+    // <a href> 동작), 없으면 기존 전체 팝업(showActive)을 그대로 재사용.
+    if (els.homeHeroCta) {
+      els.homeHeroCta.addEventListener("click", function (e) {
+        if (!homeHeroPopup || !homeHeroPopup.linkUrl) {
+          e.preventDefault();
+          if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+        }
+      });
+    }
+    loadHomeHeroPopup();
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
     // 라우팅(goHome)을 그대로 재사용합니다.

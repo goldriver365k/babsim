@@ -157,5 +157,21 @@ var SitePopup = (function () {
   // 이벤트 목록 화면을 만들지 않음).
   function showActive(done) { showPopup(true, done); }
 
-  return { maybeShow: maybeShow, showActive: showActive };
+  // 홈 화면 메인 히어로 영역(타이포그래피 지시서)이 쓰는 조회 전용
+  // 함수 — 모달을 띄우지 않고 활성 팝업의 데이터(title/linkUrl)만
+  // callback으로 넘깁니다. 새 컬렉션/새 조건 없이 위와 똑같은
+  // sitePopups 조회 + isEligible 조건을 그대로 재사용합니다.
+  function getActive(callback) {
+    var cb = typeof callback === "function" ? callback : function () {};
+    var d = db();
+    if (!d) { cb(null); return; }
+    d.collection("sitePopups").orderBy("createdAt", "desc").limit(20).get().then(function (snap) {
+      var docs = [];
+      snap.forEach(function (doc) { docs.push({ id: doc.id, data: doc.data() }); });
+      var chosen = pickPopup(docs, true);
+      cb(chosen ? chosen.data : null);
+    }).catch(function () { cb(null); });
+  }
+
+  return { maybeShow: maybeShow, showActive: showActive, getActive: getActive };
 })();
