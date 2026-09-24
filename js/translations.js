@@ -105,7 +105,9 @@ const UI_TEXT = {
   homeCardSubtitle: {
     breakfast: { ko: "오늘의 메뉴 확인하기", en: "See today's menu", zh: "查看今日菜单", vi: "Xem thực đơn hôm nay", mn: "Өнөөдрийн цэсийг харах", bn: "আজকের মেনু দেখুন", my: "ယနေ့မီနူးကြည့်ရန်" },
     menuView: { ko: "메뉴 보기", en: "View menu", zh: "查看菜单", vi: "Xem thực đơn", mn: "Цэс харах", bn: "মেনু দেখুন", my: "မီနူးကြည့်ရန်" },
-    housing: { ko: "매물 보기", en: "View listings", zh: "查看房源", vi: "Xem phòng trọ", mn: "Байрны зар харах", bn: "তালিকা দেখুন", my: "အခန်းများကြည့်ရန်" },
+    koreanFood: { ko: "한국요리", en: "Korean Cuisine", zh: "韩国料理", vi: "Ẩm thực Hàn Quốc", mn: "Солонгос хоол", bn: "কোরিয়ান খাবার", my: "ကိုရီးယားအစားအစာ" },
+    buffetStyle: { ko: "뷔페 스타일", en: "Buffet style", zh: "自助餐式", vi: "Kiểu buffet", mn: "Буфет маягийн", bn: "বুফে স্টাইল", my: "ဗူဖေးပုံစံ" },
+    housing: { ko: "문의하기", en: "Inquire", zh: "咨询", vi: "Liên hệ hỏi", mn: "Асуух", bn: "জিজ্ঞাসা করুন", my: "မေးမြန်းရန်" },
     hometown: { ko: "게시판 바로가기", en: "Go to the board", zh: "前往板块", vi: "Đến bảng tin", mn: "Хэсэг рүү очих", bn: "বোর্ডে যান", my: "ဘုတ်သို့သွားရန်" },
     campusLife: { ko: "이야기 나누기", en: "Share your story", zh: "分享故事", vi: "Chia sẻ câu chuyện", mn: "Түүхээ хуваалцах", bn: "গল্প শেয়ার করুন", my: "ဇာတ်လမ်းမျှဝေရန်" },
     friends: { ko: "함께 이야기해요", en: "Let's talk together", zh: "一起聊聊吧", vi: "Cùng trò chuyện nhé", mn: "Хамтдаа ярилцъя", bn: "একসাথে কথা বলি", my: "အတူတကွစကားပြောကြရအောင်" },

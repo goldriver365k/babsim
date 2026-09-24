@@ -2780,21 +2780,21 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
     <button type="button" class="home-service-card home-tile home-tile-mangwon" data-store="mangwon">
       <span class="home-tile-eyebrow">MANGWONHABAP</span>
       <strong class="home-tile-title">만권화밥</strong>
-      <span class="home-tile-sub" id="homeCardMangwonSub">메뉴 보기</span>
+      <span class="home-tile-sub" id="homeCardMangwonSub">한국요리</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
       <span id="homeCardMangwonLoc" hidden></span>
     </button>
     <button type="button" class="home-service-card home-tile home-tile-bapsim" data-store="bapsim">
       <span class="home-tile-eyebrow">BABSIM</span>
       <strong class="home-tile-title">밥심</strong>
-      <span class="home-tile-sub" id="homeCardBapsimSub">메뉴 보기</span>
+      <span class="home-tile-sub" id="homeCardBapsimSub">뷔페 스타일</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
       <span id="homeCardBapsimLoc" hidden></span>
     </button>
     <button type="button" class="home-tile home-tile-room" id="roomFinderCardBtn" aria-label="방 구하기">
       <span class="home-tile-eyebrow">HOUSING</span>
       <strong class="home-tile-title" id="homeLegoRoomTitle">방 구하기</strong>
-      <span class="home-tile-sub" id="homeCardRoomSub">매물 보기</span>
+      <span class="home-tile-sub" id="homeCardRoomSub">문의하기</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
     </button>
     <button type="button" class="home-tile home-tile-hometown" id="homeLegoHometownBtn">
@@ -3140,7 +3140,9 @@ const UI_TEXT = {
   homeCardSubtitle: {
     breakfast: { ko: "오늘의 메뉴 확인하기", en: "See today's menu", zh: "查看今日菜单", vi: "Xem thực đơn hôm nay", mn: "Өнөөдрийн цэсийг харах", bn: "আজকের মেনু দেখুন", my: "ယနေ့မီနူးကြည့်ရန်" },
     menuView: { ko: "메뉴 보기", en: "View menu", zh: "查看菜单", vi: "Xem thực đơn", mn: "Цэс харах", bn: "মেনু দেখুন", my: "မီနူးကြည့်ရန်" },
-    housing: { ko: "매물 보기", en: "View listings", zh: "查看房源", vi: "Xem phòng trọ", mn: "Байрны зар харах", bn: "তালিকা দেখুন", my: "အခန်းများကြည့်ရန်" },
+    koreanFood: { ko: "한국요리", en: "Korean Cuisine", zh: "韩国料理", vi: "Ẩm thực Hàn Quốc", mn: "Солонгос хоол", bn: "কোরিয়ান খাবার", my: "ကိုရီးယားအစားအစာ" },
+    buffetStyle: { ko: "뷔페 스타일", en: "Buffet style", zh: "自助餐式", vi: "Kiểu buffet", mn: "Буфет маягийн", bn: "বুফে স্টাইল", my: "ဗူဖေးပုံစံ" },
+    housing: { ko: "문의하기", en: "Inquire", zh: "咨询", vi: "Liên hệ hỏi", mn: "Асуух", bn: "জিজ্ঞাসা করুন", my: "မေးမြန်းရန်" },
     hometown: { ko: "게시판 바로가기", en: "Go to the board", zh: "前往板块", vi: "Đến bảng tin", mn: "Хэсэг рүү очих", bn: "বোর্ডে যান", my: "ဘုတ်သို့သွားရန်" },
     campusLife: { ko: "이야기 나누기", en: "Share your story", zh: "分享故事", vi: "Chia sẻ câu chuyện", mn: "Түүхээ хуваалцах", bn: "গল্প শেয়ার করুন", my: "ဇာတ်လမ်းမျှဝေရန်" },
     friends: { ko: "함께 이야기해요", en: "Let's talk together", zh: "一起聊聊吧", vi: "Cùng trò chuyện nhé", mn: "Хамтдаа ярилцъя", bn: "একসাথে কথা বলি", my: "အတူတကွစကားပြောကြရအောင်" },
@@ -10178,8 +10180,8 @@ var RoomFinder = (function () {
     renderHomeHero();
     var sub = UI_TEXT.homeCardSubtitle;
     if (els.homeCardBreakfastSub) els.homeCardBreakfastSub.textContent = sub.breakfast[state.lang] || sub.breakfast.ko;
-    if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
-    if (els.homeCardBapsimSub) els.homeCardBapsimSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
+    if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.koreanFood[state.lang] || sub.koreanFood.ko;
+    if (els.homeCardBapsimSub) els.homeCardBapsimSub.textContent = sub.buffetStyle[state.lang] || sub.buffetStyle.ko;
     if (els.homeCardRoomSub) els.homeCardRoomSub.textContent = sub.housing[state.lang] || sub.housing.ko;
     if (els.homeCardHometownSub) els.homeCardHometownSub.textContent = sub.hometown[state.lang] || sub.hometown.ko;
     if (els.homeCardCampusLifeSub) els.homeCardCampusLifeSub.textContent = sub.campusLife[state.lang] || sub.campusLife.ko;

@@ -505,8 +505,8 @@
     renderHomeHero();
     var sub = UI_TEXT.homeCardSubtitle;
     if (els.homeCardBreakfastSub) els.homeCardBreakfastSub.textContent = sub.breakfast[state.lang] || sub.breakfast.ko;
-    if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
-    if (els.homeCardBapsimSub) els.homeCardBapsimSub.textContent = sub.menuView[state.lang] || sub.menuView.ko;
+    if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.koreanFood[state.lang] || sub.koreanFood.ko;
+    if (els.homeCardBapsimSub) els.homeCardBapsimSub.textContent = sub.buffetStyle[state.lang] || sub.buffetStyle.ko;
     if (els.homeCardRoomSub) els.homeCardRoomSub.textContent = sub.housing[state.lang] || sub.housing.ko;
     if (els.homeCardHometownSub) els.homeCardHometownSub.textContent = sub.hometown[state.lang] || sub.hometown.ko;
     if (els.homeCardCampusLifeSub) els.homeCardCampusLifeSub.textContent = sub.campusLife[state.lang] || sub.campusLife.ko;
