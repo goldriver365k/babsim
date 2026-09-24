@@ -2597,15 +2597,6 @@ main {
 .b12-card{border-radius:16px!important;border:1px solid rgba(255,255,255,.38)!important;overflow:hidden!important;box-shadow:inset 2px 2px 1px rgba(255,255,255,.38),inset -3px -7px 2px rgba(0,0,0,.13),0 5px 0 var(--edge),0 8px 10px rgba(40,28,12,.14)!important}
 .b12-card::before{left:4%!important;right:4%!important;top:2px!important;height:22%!important;border-radius:14px 14px 45% 45%!important}
 .b12-event{margin-bottom:5px!important}
-.b12-breakfast{clip-path:polygon(0 0,100% 0,100% 36%,94% 36%,94% 64%,100% 64%,100% 100%,0 100%)}
-.b12-room{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 64%,7% 64%,7% 36%,0 36%)}
-.b12-bapsim{clip-path:polygon(0 0,100% 0,100% 35%,92% 35%,92% 65%,100% 65%,100% 100%,0 100%)}
-.b12-hururuk{clip-path:polygon(0 0,100% 0,100% 35%,92% 35%,92% 65%,100% 65%,100% 100%,0 100%,0 65%,8% 65%,8% 35%,0 35%)}
-.b12-mangwon{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 65%,8% 65%,8% 35%,0 35%)}
-.b12-hometown{clip-path:polygon(0 0,100% 0,100% 36%,94% 36%,94% 64%,100% 64%,100% 100%,0 100%)}
-.b12-friends{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 64%,7% 64%,7% 36%,0 36%)}
-.b12-korean{clip-path:polygon(0 0,100% 0,100% 36%,94% 36%,94% 64%,100% 64%,100% 100%,0 100%)}
-.b12-owner{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 64%,7% 64%,7% 36%,0 36%)}
 /* vertical joints: rows visually lock together with shallow overlap */
 .b12-bapsim,.b12-hururuk,.b12-mangwon,.b12-hometown,.b12-friends,.b12-korean,.b12-owner{margin-top:-1px!important}
 .b12-card strong{z-index:4!important}.b12-desc,.b12-eyebrow,.b12-price,.b12-arrow{z-index:5!important}
@@ -2728,20 +2719,48 @@ main {
 .b12-korean{z-index:11!important}.b12-owner{z-index:10!important}
 /* glossy highlight stays inside each tile */
 .b12-card::before{z-index:1!important;pointer-events:none!important}
-/* colored tabs bridge each shared edge; no cream/white connector pieces */
-.b12-breakfast::after,.b12-bapsim::after,.b12-hururuk::after,.b12-hometown::after,.b12-korean::after{
- content:"";position:absolute;right:-18px;top:50%;transform:translateY(-50%);width:36px;height:62px;
- border-radius:0 15px 15px 0;z-index:2;border:1px solid rgba(255,255,255,.22);
- box-shadow:inset 0 3px 1px rgba(255,255,255,.22),inset 0 -5px 1px rgba(0,0,0,.13),3px 4px 5px rgba(0,0,0,.12)
-}
-.b12-breakfast::after{background:#ffc20b}.b12-bapsim::after{background:#08a84d}.b12-hururuk::after{background:#ed2d26}.b12-hometown::after{background:#e92f82}.b12-korean::after{background:#09a99b}
-/* subtle receiving seam makes the protrusion read as a fitted joint */
-.b12-room,.b12-hururuk,.b12-mangwon,.b12-friends,.b12-owner{border-left:2px solid rgba(0,0,0,.10)!important}
 .b12-card strong,.b12-card .b12-desc,.b12-card .b12-eyebrow,.b12-card .b12-price,.b12-card .b12-arrow{z-index:5!important}
 @media(max-width:430px){
  .b12-grid{gap:0!important;padding:2px!important}
- .b12-breakfast::after,.b12-bapsim::after,.b12-hururuk::after,.b12-hometown::after,.b12-korean::after{right:-14px;width:28px;height:54px;border-radius:0 12px 12px 0}
  .b12-card{border-radius:15px!important}
+}
+
+/* ===== HOME V15 — real interlocking silhouette (CSS mask, no overlay tabs) =====
+   ::after로 덧붙인 색깔 사각형 탭과, 받는 쪽에 실제 홈이 없던 문제를
+   해결. 블록 자신의 외곽선을 mask로 볼록(凸)/오목(凹) 처리해 두 블록이
+   실제로 맞물리게 합니다. 탭 쪽은 폭을 --jr만큼 넓혀 옆 블록 영역으로
+   반원이 튀어나오고, 홈 쪽은 같은 반지름의 반원을 자기 폭 안에서
+   파냅니다 — 두 반지름·Y위치가 항상 같아 정확히 맞물립니다. */
+:root{--jr:22px;--jy:50%}
+@media(max-width:430px){:root{--jr:18px}}
+@media(max-width:360px){:root{--jr:16px}}
+
+.b12-breakfast,.b12-bapsim,.b12-hometown,.b12-korean{
+ width:calc(100% + var(--jr));
+ mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--jr) at calc(100% - var(--jr)) var(--jy),#000 100%,transparent 100%);
+ -webkit-mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--jr) at calc(100% - var(--jr)) var(--jy),#000 100%,transparent 100%);
+ mask-size:calc(100% - var(--jr)) 100%,100% 100%;
+ -webkit-mask-size:calc(100% - var(--jr)) 100%,100% 100%;
+ mask-repeat:no-repeat,no-repeat;-webkit-mask-repeat:no-repeat,no-repeat;
+ mask-position:left top,left top;-webkit-mask-position:left top,left top;
+ mask-composite:add,add;-webkit-mask-composite:source-over,source-over;
+}
+.b12-room,.b12-mangwon,.b12-friends,.b12-owner{
+ mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--jr) at 0 var(--jy),#000 100%,transparent 100%);
+ -webkit-mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--jr) at 0 var(--jy),#000 100%,transparent 100%);
+ mask-repeat:no-repeat,no-repeat;-webkit-mask-repeat:no-repeat,no-repeat;
+ mask-position:left top,left top;-webkit-mask-position:left top,left top;
+ mask-composite:add,subtract;-webkit-mask-composite:source-over,xor;
+}
+.b12-hururuk{
+ width:calc(100% + var(--jr));
+ mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--jr) at calc(100% - var(--jr)) var(--jy),#000 100%,transparent 100%),radial-gradient(circle var(--jr) at 0 var(--jy),#000 100%,transparent 100%);
+ -webkit-mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--jr) at calc(100% - var(--jr)) var(--jy),#000 100%,transparent 100%),radial-gradient(circle var(--jr) at 0 var(--jy),#000 100%,transparent 100%);
+ mask-size:calc(100% - var(--jr)) 100%,100% 100%,100% 100%;
+ -webkit-mask-size:calc(100% - var(--jr)) 100%,100% 100%,100% 100%;
+ mask-repeat:no-repeat,no-repeat,no-repeat;-webkit-mask-repeat:no-repeat,no-repeat,no-repeat;
+ mask-position:left top,left top,left top;-webkit-mask-position:left top,left top,left top;
+ mask-composite:add,add,subtract;-webkit-mask-composite:source-over,source-over,xor;
 }
 
 
