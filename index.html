@@ -2849,6 +2849,39 @@ main {
  filter:drop-shadow(0 5px 0 rgba(0,0,0,.18)) drop-shadow(0 7px 5px rgba(0,0,0,.10))!important;
 }
 
+
+/* ===== HOME V13 — true body-cut interlocks, no attached tabs ===== */
+.b2-grid{gap:0!important}
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{display:none!important;content:none!important}
+
+/* paired body silhouettes: 18px tongue/socket, centered */
+.b2-breakfast{
+ clip-path:path("M 14 0 H 390 Q 404 0 404 14 V 119 H 420 Q 432 119 432 131 V 181 Q 432 193 420 193 H 404 V 286 Q 404 300 390 300 H 14 Q 0 300 0 286 V 14 Q 0 0 14 0 Z")!important
+}
+.b2-room{
+ clip-path:path("M 18 0 H 286 Q 300 0 300 14 V 286 Q 300 300 286 300 H 18 Q 4 300 4 286 V 193 H 18 Q 30 193 30 181 V 131 Q 30 119 18 119 H 4 V 14 Q 4 0 18 0 Z")!important
+}
+.b2-bapsim{
+ clip-path:path("M 14 0 H 214 Q 228 0 228 14 V 78 H 242 Q 254 78 254 90 V 132 Q 254 144 242 144 H 228 V 186 Q 228 200 214 200 H 14 Q 0 200 0 186 V 14 Q 0 0 14 0 Z")!important
+}
+.b2-hururuk{
+ clip-path:path("M 16 0 H 214 Q 228 0 228 14 V 78 H 242 Q 254 78 254 90 V 132 Q 254 144 242 144 H 228 V 186 Q 228 200 214 200 H 16 Q 2 200 2 186 V 144 H 16 Q 28 144 28 132 V 90 Q 28 78 16 78 H 2 V 14 Q 2 0 16 0 Z")!important
+}
+.b2-mangwon{
+ clip-path:path("M 16 0 H 214 Q 228 0 228 14 V 186 Q 228 200 214 200 H 16 Q 2 200 2 186 V 144 H 16 Q 28 144 28 132 V 90 Q 28 78 16 78 H 2 V 14 Q 2 0 16 0 Z")!important
+}
+.b2-hometown,.b2-korean{
+ clip-path:path("M 14 0 H 332 Q 346 0 346 14 V 82 H 360 Q 372 82 372 94 V 126 Q 372 138 360 138 H 346 V 186 Q 346 200 332 200 H 14 Q 0 200 0 186 V 14 Q 0 0 14 0 Z")!important
+}
+.b2-friends,.b2-owner{
+ clip-path:path("M 16 0 H 332 Q 346 0 346 14 V 186 Q 346 200 332 200 H 16 Q 2 200 2 186 V 138 H 16 Q 28 138 28 126 V 94 Q 28 82 16 82 H 2 V 14 Q 2 0 16 0 Z")!important
+}
+/* clip-path path coordinates scale via element reference box where supported; fallback is clean touching cards */
+@supports not (clip-path:path("M0 0H10V10H0Z")){
+ .b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{clip-path:none!important}
+}
+
 </style>
 </head>
 <body>
