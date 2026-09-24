@@ -2976,7 +2976,7 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
     <button type="button" class="home-tile home-tile-room" id="roomFinderCardBtn" aria-label="방 구하기">
       <span class="home-tile-eyebrow">HOUSING</span>
       <strong class="home-tile-title" id="homeLegoRoomTitle">방 구하기</strong>
-      <span class="home-tile-sub" id="homeCardRoomSub">문의하기</span>
+      <span class="home-tile-sub" id="homeCardRoomSub">원룸 · 자취방 문의</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
     </button>
     <button type="button" class="home-tile home-tile-hometown" id="homeLegoHometownBtn">
@@ -3357,7 +3357,9 @@ const UI_TEXT = {
     menuView: { ko: "메뉴 보기", en: "View menu", zh: "查看菜单", vi: "Xem thực đơn", mn: "Цэс харах", bn: "মেনু দেখুন", my: "မီနူးကြည့်ရန်" },
     koreanFood: { ko: "한국요리", en: "Korean Cuisine", zh: "韩国料理", vi: "Ẩm thực Hàn Quốc", mn: "Солонгос хоол", bn: "কোরিয়ান খাবার", my: "ကိုရီးယားအစားအစာ" },
     buffetStyle: { ko: "뷔페 스타일", en: "Buffet style", zh: "自助餐式", vi: "Kiểu buffet", mn: "Буфет маягийн", bn: "বুফে স্টাইল", my: "ဗူဖေးပုံစံ" },
-    housing: { ko: "문의하기", en: "Inquire", zh: "咨询", vi: "Liên hệ hỏi", mn: "Асуух", bn: "জিজ্ঞাসা করুন", my: "မေးမြန်းရန်" },
+    // "방 구하기" 보조문구 — 외국인 유학생이 서비스 목적을 바로 이해하도록
+    // 각 언어권 대학생이 실제로 쓰는 표현으로 다듬음(단순 직역 아님).
+    housing: { ko: "원룸 · 자취방 문의", en: "Room & Studio Inquiry", zh: "单间 · 租房咨询", vi: "Tư vấn phòng trọ", mn: "Өрөөний талаар лавлах", bn: "রুম সম্পর্কে জিজ্ঞাসা", my: "အခန်းအကြောင်း စုံစမ်းရန်" },
     hometown: { ko: "게시판 바로가기", en: "Go to the board", zh: "前往板块", vi: "Đến bảng tin", mn: "Хэсэг рүү очих", bn: "বোর্ডে যান", my: "ဘုတ်သို့သွားရန်" },
     campusLife: { ko: "이야기 나누기", en: "Share your story", zh: "分享故事", vi: "Chia sẻ câu chuyện", mn: "Түүхээ хуваалцах", bn: "গল্প শেয়ার করুন", my: "ဇာတ်လမ်းမျှဝေရန်" },
     friends: { ko: "함께 이야기해요", en: "Let's talk together", zh: "一起聊聊吧", vi: "Cùng trò chuyện nhé", mn: "Хамтдаа ярилцъя", bn: "একসাথে কথা বলি", my: "အတူတကွစကားပြောကြရအောင်" },
@@ -3537,11 +3539,11 @@ const ROOM_FINDER = {
     ko: "언어를 선택해주세요", en: "Please select a language",
     vi: "Vui lòng chọn ngôn ngữ", zh: "请选择语言"
   },
-  // title은 홈 화면 카드 제목(#homeLegoRoomTitle)에도 쓰여서, mn/bn/my가
-  // 없어 그 언어로 홈을 보면 한국어로 fallback되던 문제를 여기서만
-  // 최소로 보완합니다(같은 문구를 쓰는 langStepTitle 등 방 구하기 입력
-  // 폼 쪽은 홈 화면이 아니라 이번 수정 범위 밖이라 그대로 둠).
-  title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房", mn: "Байр хайх", bn: "রুম খুঁজুন", my: "အခန်းရှာရန်" },
+  // title은 홈 화면 카드 제목(#homeLegoRoomTitle)에도 쓰입니다. 외국인
+  // 유학생이 바로 이해하는 생활 표현으로 7개 언어를 다듬었습니다(같은
+  // 문구를 쓰는 langStepTitle 등 방 구하기 입력 폼 쪽은 홈 화면이 아니라
+  // 이번 수정 범위 밖이라 그대로 둠).
+  title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng trọ", zh: "找房子", mn: "Өрөө хайх", bn: "বাসা খুঁজুন", my: "အခန်းရှာရန်" },
   field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名" },
   field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码" },
   field_moveInDate: { ko: "입주예정일", en: "Expected Move-in Date", vi: "Ngày dự kiến chuyển vào", zh: "预计入住日期" },
