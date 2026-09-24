@@ -3127,3 +3127,43 @@ main {
  .b2-room,.b2-friends,.b2-owner,.b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
  .b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 39%,100% 39%,100% 61%,94% 61%,94% 100%,6% 100%,6% 61%,0 61%,0 39%,6% 39%)!important}
 }
+
+
+/* ===== HOME V13 — true paired interlock silhouettes ===== */
+/* remove every pasted-on connector */
+.b2-breakfast:after,.b2-bapsim:after,.b2-hururuk:after,.b2-hometown:after,.b2-korean:after,
+.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,.b2-friends:before,.b2-owner:before{
+ display:none!important;content:none!important
+}
+/* actual body silhouettes: 8% deep centered tongue/socket */
+.b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{
+ clip-path:polygon(0 0,92% 0,92% 36%,100% 36%,100% 64%,92% 64%,92% 100%,0 100%)!important
+}
+.b2-room,.b2-friends,.b2-owner{
+ clip-path:polygon(8% 0,100% 0,100% 100%,8% 100%,8% 64%,0 64%,0 36%,8% 36%)!important
+}
+.b2-hururuk{
+ clip-path:polygon(8% 0,92% 0,92% 36%,100% 36%,100% 64%,92% 64%,92% 100%,8% 100%,8% 64%,0 64%,0 36%,8% 36%)!important
+}
+.b2-mangwon{
+ clip-path:polygon(8% 0,100% 0,100% 100%,8% 100%,8% 64%,0 64%,0 36%,8% 36%)!important
+}
+/* overlap the paired bodies so convex areas occupy the matching socket footprint */
+.b2-breakfast{width:calc(100% + 8%)!important}
+.b2-room{margin-left:-8%!important;width:108%!important}
+.b2-bapsim{width:108%!important}
+.b2-hururuk{margin-left:-8%!important;width:116%!important}
+.b2-mangwon{margin-left:-8%!important;width:108%!important}
+.b2-hometown,.b2-korean{width:108%!important}
+.b2-friends,.b2-owner{margin-left:-8%!important;width:108%!important}
+/* preserve typography above clipped body */
+.b2-brick{isolation:isolate}
+@media(max-width:430px){
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{clip-path:polygon(0 0,94% 0,94% 38%,100% 38%,100% 62%,94% 62%,94% 100%,0 100%)!important}
+ .b2-room,.b2-friends,.b2-owner{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 62%,0 62%,0 38%,6% 38%)!important}
+ .b2-hururuk{clip-path:polygon(6% 0,94% 0,94% 38%,100% 38%,100% 62%,94% 62%,94% 100%,6% 100%,6% 62%,0 62%,0 38%,6% 38%)!important}
+ .b2-mangwon{clip-path:polygon(6% 0,100% 0,100% 100%,6% 100%,6% 62%,0 62%,0 38%,6% 38%)!important}
+ .b2-breakfast,.b2-bapsim,.b2-hometown,.b2-korean{width:106%!important}
+ .b2-room,.b2-mangwon,.b2-friends,.b2-owner{margin-left:-6%!important;width:106%!important}
+ .b2-hururuk{margin-left:-6%!important;width:112%!important}
+}
