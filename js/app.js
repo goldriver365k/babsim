@@ -760,6 +760,7 @@
 
     els.baTitle.textContent = info.title[lang];
     els.baPriceValue.textContent = info.price[lang];
+    if (els.baHeroTagline) els.baHeroTagline.textContent = (info.heroTagline && (info.heroTagline[lang] || info.heroTagline.ko)) || "";
 
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
@@ -1155,6 +1156,7 @@
     els.breakfastArea = qs("breakfastArea");
     els.baTitle = qs("baTitle");
     els.baPriceValue = qs("baPriceValue");
+    els.baHeroTagline = qs("baHeroTagline");
     els.baTodayMenuTitle = qs("baTodayMenuTitle");
     els.baTodayDateValue = qs("baTodayDateValue");
     els.todayMealList = qs("todayMealList");

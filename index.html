@@ -2746,12 +2746,61 @@ body[data-bapsim-view="breakfast"]{--detail-accent:var(--home-lavender)}
 .detail-eyebrow{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--detail-accent,var(--home-yellow))}
 .detail-title-band .store-heading{margin:0;color:var(--home-fg-strong)}
 
-/* 천원의 아침밥 카드(기존 흰 카드형 컴포넌트는 유지, 상단 띠+제목
-   색상만 라벤더 포인트로 연결). */
-.breakfast-area{border-color:var(--home-lavender)}
-.ba-top-strip{background:var(--home-lavender)}
-.ba-title{color:#6B5FA8}
-.ba-eyebrow{display:block;margin:6px 0 0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#8C7FC4}
+/* ===== 천원의 아침밥 세부페이지 리디자인(비용 최소화, 이 화면 전용) =====
+   data-bapsim-view="breakfast"(js/app.js의 updateBapsimViewVisibility가
+   이 서브탭일 때만 표시)로 범위를 정확히 제한해 다른 세부페이지(일반
+   메뉴/만권화밥/후루룩찹찹 등)는 건드리지 않습니다. 메뉴/운영시간/
+   이용대상/이용방법 데이터와 DOM id, JS 로직은 그대로 두고 배경/배치/
+   색상만 HOME의 라벤더+오프화이트+검정 언어로 교체합니다(새 파란색 없음). */
+body[data-bapsim-view="breakfast"]{background:var(--home-bg)}
+/* 상단 "BABSIM/밥심1층" 밴드는 아래 라벤더 히어로와 중복되므로 이
+   화면에서만 숨김(요소 자체는 삭제하지 않고, 다른 화면은 그대로 노출). */
+body[data-bapsim-view="breakfast"] .detail-title-band{display:none}
+/* 매장 전환 탭 — 이 화면에서만 두꺼운 박스 대신 얇은 underline nav로
+   (기존 클릭/링크는 그대로 재사용, 다른 화면의 박스형 탭은 그대로 유지). */
+body[data-bapsim-view="breakfast"] .store-tab{min-width:auto;min-height:auto;padding:8px 12px;background:none;border:0;border-bottom:2px solid transparent;border-radius:0;flex-direction:row;gap:5px}
+body[data-bapsim-view="breakfast"] .store-tab-brand{font-size:14px}
+body[data-bapsim-view="breakfast"] .store-tab-floor{font-size:11px}
+body[data-bapsim-view="breakfast"] .store-tab.active{background:none;border-bottom-color:var(--home-yellow);color:var(--home-fg-strong)}
+body[data-bapsim-view="breakfast"] .store-tab.active .store-tab-floor{color:var(--home-fg-muted)}
+/* 밥심 서브탭(1,000원 아침밥/일반 메뉴) — 파란 박스 대신 얇은 밑줄. */
+body[data-bapsim-view="breakfast"] .bapsim-subtabs{margin-bottom:0;border-bottom:1px solid #2A2A2A}
+body[data-bapsim-view="breakfast"] .bapsim-subtab{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--home-fg-muted);font-size:13px}
+body[data-bapsim-view="breakfast"] .bapsim-subtab.active{background:none;border-color:var(--home-lavender);color:var(--home-fg-strong)}
+/* 사장님께 말해요(footer)도 이 화면에서만 다크 배경에 맞춤(HOME과 동일
+   처리, 다른 화면은 기존 밝은 배경 스타일 그대로). */
+body[data-bapsim-view="breakfast"] .owner-chat-banner{border-top:1px solid #2A2A2A}
+body[data-bapsim-view="breakfast"] .owner-chat-title{color:var(--home-fg-strong)}
+body[data-bapsim-view="breakfast"] .owner-chat-desc{color:var(--home-fg-muted)}
+
+/* 히어로(라벤더)+콘텐츠(오프화이트) — .ba-* 클래스는 이 화면에서만
+   쓰이므로(다른 화면 재사용 없음) 별도 스코프 없이 바로 교체합니다. */
+body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padding:0;text-align:left;max-width:760px;margin:18px auto 0}
+.ba-top-strip{display:none}
+.ba-hero{background:var(--home-lavender);border-radius:16px;padding:26px 22px}
+.ba-eyebrow{display:block;margin:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#5C4FA0}
+.ba-title{margin:8px 0 2px;font-size:clamp(26px,5vw,34px);font-weight:600;color:#2E2750;text-align:left;overflow-wrap:anywhere}
+.ba-price{margin:0;font-size:clamp(30px,6vw,42px);font-weight:800;color:#2E2750;line-height:1.2;text-align:left}
+.ba-hero-tagline{margin:10px 0 0;font-size:14px;font-weight:400;color:#5C4FA0;overflow-wrap:anywhere}
+
+.ba-content{background:var(--home-offwhite);border-radius:16px;padding:22px;margin-top:14px;color:#18160F}
+.ba-meal-cards{margin:0 0 18px;max-width:none}
+.ba-meal-card-today{background:#fff;border:1px solid var(--home-lavender)}
+.ba-meal-card-tomorrow{background:#fff;border:1px solid #E3DEEF}
+.ba-meal-card-today .ba-meal-card-title{color:#5C4FA0}
+.ba-block{max-width:none;border-top-color:#E3DEEF}
+.ba-label{color:#8C7FC4;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.ba-value{margin:0;font-size:24px;font-weight:700;color:#18160F}
+.ba-list:not(.ba-steps-list){list-style:none;padding-left:0}
+.ba-list:not(.ba-steps-list) li{padding:8px 0;border-top:1px solid #E3DEEF}
+.ba-list:not(.ba-steps-list) li:first-child{border-top:0}
+.ba-steps-list li{border:0;border-top:1px solid #E3DEEF;border-radius:0;padding:12px 0 12px 40px}
+.ba-steps-list li:first-child{border-top:0}
+.ba-steps-list li::before{background:none;color:#5C4FA0;font-size:13px;font-weight:800;width:auto;height:auto;left:0;border-radius:0;transform:translateY(-50%)}
+
+@media(min-width:700px){
+  body[data-bapsim-view="breakfast"] .breakfast-area{max-width:800px}
+}
 </style>
 </head>
 <body>
@@ -2966,40 +3015,49 @@ body[data-bapsim-view="breakfast"]{--detail-accent:var(--home-lavender)}
 
   <section class="breakfast-area" id="breakfastArea" hidden aria-labelledby="baTitle">
     <div class="ba-top-strip"></div>
-    <span class="ba-eyebrow">CAMPUS MEAL</span>
-    <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
-    <p class="ba-price" id="baPriceValue">1,000원</p>
+    <!-- 천원의 아침밥 리디자인(비용 최소화) — 라벤더 히어로(eyebrow/제목/
+         가격/한 줄 설명)와 오프화이트 콘텐츠(오늘·내일 메뉴/운영시간/
+         이용대상/이용방법)로 감쌌습니다. 기존 id·데이터·JS 로직은 전혀
+         바꾸지 않고 배치만 두 블록으로 나눴습니다. -->
+    <div class="ba-hero">
+      <span class="ba-eyebrow">CAMPUS MEAL</span>
+      <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
+      <p class="ba-price" id="baPriceValue">1,000원</p>
+      <p class="ba-hero-tagline" id="baHeroTagline"></p>
+    </div>
 
     <!-- 평가 위젯은 더 이상 이 화면 본문에 표시하지 않습니다(평가 UI
          수정 단계) — 당일 첫 방문 팝업(#breakfastPopupOverlay)에서만
          보여줍니다. -->
 
-    <div class="ba-meal-cards">
-      <div class="ba-meal-card ba-meal-card-today">
-        <h4 class="ba-meal-card-title" id="baTodayMenuTitle">오늘의 아침 메뉴</h4>
-        <p class="ba-meal-card-date" id="baTodayDateValue"></p>
-        <ul class="ba-today-meal" id="todayMealList"></ul>
+    <div class="ba-content">
+      <div class="ba-meal-cards">
+        <div class="ba-meal-card ba-meal-card-today">
+          <h4 class="ba-meal-card-title" id="baTodayMenuTitle">오늘의 아침 메뉴</h4>
+          <p class="ba-meal-card-date" id="baTodayDateValue"></p>
+          <ul class="ba-today-meal" id="todayMealList"></ul>
+        </div>
+        <div class="ba-meal-card ba-meal-card-tomorrow">
+          <h4 class="ba-meal-card-title" id="baTomorrowMenuTitle">내일의 아침 메뉴</h4>
+          <p class="ba-meal-card-date" id="baTomorrowDateValue"></p>
+          <ul class="ba-today-meal" id="tomorrowMealList"></ul>
+        </div>
       </div>
-      <div class="ba-meal-card ba-meal-card-tomorrow">
-        <h4 class="ba-meal-card-title" id="baTomorrowMenuTitle">내일의 아침 메뉴</h4>
-        <p class="ba-meal-card-date" id="baTomorrowDateValue"></p>
-        <ul class="ba-today-meal" id="tomorrowMealList"></ul>
+
+      <div class="ba-block">
+        <span class="ba-label" id="baHoursLabel"></span>
+        <p class="ba-value" id="baHoursValue"></p>
       </div>
-    </div>
 
-    <div class="ba-block">
-      <span class="ba-label" id="baHoursLabel"></span>
-      <p class="ba-value" id="baHoursValue"></p>
-    </div>
+      <div class="ba-block">
+        <span class="ba-label" id="baEligLabel"></span>
+        <ul class="ba-list" id="baEligList"></ul>
+      </div>
 
-    <div class="ba-block">
-      <span class="ba-label" id="baEligLabel"></span>
-      <ul class="ba-list" id="baEligList"></ul>
-    </div>
-
-    <div class="ba-block">
-      <span class="ba-label" id="baStepsLabel"></span>
-      <ol class="ba-list ba-steps-list" id="baStepsList"></ol>
+      <div class="ba-block">
+        <span class="ba-label" id="baStepsLabel"></span>
+        <ol class="ba-list ba-steps-list" id="baStepsList"></ol>
+      </div>
     </div>
   </section>
 
@@ -4002,6 +4060,17 @@ const MENU_DATA = [
 /* 천원의 아침밥 안내 (밥심 화면 상단 고정 안내칸 + 상세 모달 공용 데이터) */
 const BREAKFAST_INFO = {
   title: { ko: "천원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐", vi: "Bữa sáng 1.000 won", mn: "1,000 воны өглөөний хоол", bn: "১,০০০ ওনের সকালের খাবার", my: "ဝမ် ၁,၀၀၀ နံနက်စာ" },
+  // 세부페이지 리디자인(비용 최소화)의 라벤더 히어로용 한 줄 설명 —
+  // 새 이벤트/데이터가 아니라 title/price와 같은 자리에 놓이는 문구.
+  heroTagline: {
+    ko: "아침을 여는 가장 든든한 한 끼",
+    en: "A hearty meal to start your morning",
+    zh: "开启元气满满的一天",
+    vi: "Bữa sáng no đủ để bắt đầu ngày mới",
+    mn: "Өглөөг эрч хүчтэй эхлүүлэх хамгийн шимтэй хоол",
+    bn: "সকালকে শক্তিশালীভাবে শুরু করার সবচেয়ে পরিতৃপ্তিকর খাবার",
+    my: "မနက်ခင်းကို အားအင်ပြည့်ဝစွာ စတင်ဖို့ အကောင်းဆုံးအစားအစာ"
+  },
   tabLabel: { ko: "일반 메뉴", en: "Menu", zh: "普通菜单", vi: "Thực đơn thường", mn: "Ерөнхий цэс", bn: "সাধারণ মেনু", my: "ယေဘုယျမီနူး" },
   todayMenuTitle: { ko: "오늘의 아침 메뉴", en: "Today\u2019s Breakfast Menu", zh: "今日早餐菜单", vi: "Thực đơn bữa sáng hôm nay", mn: "Өнөөдрийн өглөөний цэс", bn: "আজকের সকালের খাবারের মেনু", my: "ယနေ့ နံနက်စာမီနူး" },
   tomorrowMenuTitle: { ko: "내일의 아침 메뉴", en: "Tomorrow\u2019s Breakfast Menu", zh: "明日早餐菜单", vi: "Thực đơn bữa sáng ngày mai", mn: "Маргаашийн өглөөний цэс", bn: "আগামীকালের সকালের খাবারের মেনু", my: "မနက်ဖြန် နံနက်စာမီနူး" },
@@ -4209,7 +4278,6 @@ const OWNER_CHAT = {
   },
   button: { ko: "카카오톡으로 말하기", en: "Chat on KakaoTalk", zh: "通过KakaoTalk联系", vi: "Trò chuyện qua KakaoTalk", mn: "KakaoTalk-аар холбогдох", bn: "কাকাওটক-এ কথা বলুন", my: "KakaoTalk ဖြင့်ပြောရန်" }
 };
-
 </script>
 <script>
 /* ==========================================================================
@@ -10521,6 +10589,7 @@ var RoomFinder = (function () {
 
     els.baTitle.textContent = info.title[lang];
     els.baPriceValue.textContent = info.price[lang];
+    if (els.baHeroTagline) els.baHeroTagline.textContent = (info.heroTagline && (info.heroTagline[lang] || info.heroTagline.ko)) || "";
 
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
@@ -10916,6 +10985,7 @@ var RoomFinder = (function () {
     els.breakfastArea = qs("breakfastArea");
     els.baTitle = qs("baTitle");
     els.baPriceValue = qs("baPriceValue");
+    els.baHeroTagline = qs("baHeroTagline");
     els.baTodayMenuTitle = qs("baTodayMenuTitle");
     els.baTodayDateValue = qs("baTodayDateValue");
     els.todayMealList = qs("todayMealList");
