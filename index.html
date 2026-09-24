@@ -2882,6 +2882,31 @@ main {
  .b2-breakfast,.b2-room,.b2-bapsim,.b2-hururuk,.b2-mangwon,.b2-hometown,.b2-friends,.b2-korean,.b2-owner{clip-path:none!important}
 }
 
+
+/* ===== HOME V13 — true body-cut interlocks, no overlay tabs ===== */
+/* remove every old pseudo tab/socket */
+.b2-breakfast:after,.b2-bapsim:after,.b2-hometown:after,.b2-korean:after,
+.b2-hururuk:after,.b2-room:before,.b2-hururuk:before,.b2-mangwon:before,
+.b2-friends:before,.b2-owner:before{content:none!important;display:none!important}
+
+/* actual silhouettes: matching rectangular puzzle tongue/socket */
+.b2-breakfast{clip-path:polygon(0 0,calc(100% - 18px) 0,calc(100% - 18px) 37%,100% 37%,100% 63%,calc(100% - 18px) 63%,calc(100% - 18px) 100%,0 100%)!important}
+.b2-room{clip-path:polygon(18px 0,100% 0,100% 100%,18px 100%,18px 63%,0 63%,0 37%,18px 37%)!important}
+
+.b2-bapsim{clip-path:polygon(0 0,calc(100% - 14px) 0,calc(100% - 14px) 37%,100% 37%,100% 63%,calc(100% - 14px) 63%,calc(100% - 14px) 100%,0 100%)!important}
+.b2-hururuk{clip-path:polygon(14px 0,calc(100% - 14px) 0,calc(100% - 14px) 37%,100% 37%,100% 63%,calc(100% - 14px) 63%,calc(100% - 14px) 100%,14px 100%,14px 63%,0 63%,0 37%,14px 37%)!important}
+.b2-mangwon{clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,14px 63%,0 63%,0 37%,14px 37%)!important}
+
+.b2-hometown{clip-path:polygon(0 0,calc(100% - 16px) 0,calc(100% - 16px) 37%,100% 37%,100% 63%,calc(100% - 16px) 63%,calc(100% - 16px) 100%,0 100%)!important}
+.b2-friends{clip-path:polygon(16px 0,100% 0,100% 100%,16px 100%,16px 63%,0 63%,0 37%,16px 37%)!important}
+.b2-korean{clip-path:polygon(0 0,calc(100% - 16px) 0,calc(100% - 16px) 37%,100% 37%,100% 63%,calc(100% - 16px) 63%,calc(100% - 16px) 100%,0 100%)!important}
+.b2-owner{clip-path:polygon(16px 0,100% 0,100% 100%,16px 100%,16px 63%,0 63%,0 37%,16px 37%)!important}
+
+/* compensate for the cut so text stays dominant */
+.b2-room,.b2-friends,.b2-owner{padding-left:24px!important}
+.b2-hururuk,.b2-mangwon{padding-left:18px!important}
+.b2-grid{gap:0!important}
+
 </style>
 </head>
 <body>
