@@ -2681,6 +2681,9 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-tile-campuslife{background:var(--home-softgreen)}
 .home-tile-friends{background:var(--home-lightpurple)}
 .home-tile-feedback{background:var(--home-softpeach)}
+/* "주말에 가볼 만한 곳" — 삭제된 상단 FEEDBACK 카드가 쓰던 softpeach를
+   재사용(새 팔레트 색 추가 없음, 기존 카드들과 명확히 구분됨). */
+.home-tile-weekend{background:var(--home-softpeach)}
 
 .home-korean-card{
   display:flex;flex-direction:column;gap:6px;margin-top:7px;padding:22px;
@@ -2702,10 +2705,15 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-hururuk{order:3}
   .home-tile-mangwon{order:4}
   .home-tile-bapsim{order:5}
-  .home-tile-hometown{order:6}
-  .home-tile-campuslife{order:7}
-  .home-tile-friends{order:8}
-  .home-tile-feedback{order:9;grid-column:1/3}
+  /* "주말에 가볼 만한 곳"(WEEKEND) — 학생 생활/커뮤니티 콘텐츠라 핵심
+     식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) 다음, 나의 고향
+     이야기 앞에 배치. 다른 카드는 order 번호만 하나씩 밀렸을 뿐
+     DOM·색상·링크는 그대로다. */
+  .home-tile-weekend{order:6;grid-column:1/3}
+  .home-tile-hometown{order:7}
+  .home-tile-campuslife{order:8}
+  .home-tile-friends{order:9}
+  .home-tile-feedback{order:10;grid-column:1/3}
 
   /* 방 구하기 — 좁고 긴 가로형 "Quick Access" 카드(세로 스택 대신 한 줄
      배치). 주변 파스텔 카드와 다르게 코발트 블루 단색 + 흰색 글자 +
@@ -2742,6 +2750,9 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-campuslife{grid-column:1/3}
   .home-tile-friends{grid-column:3/5}
   .home-tile-feedback{grid-column:5/7}
+  /* 삭제된 FEEDBACK 카드가 쓰던 자리를 그대로 재사용(다른 카드 열 배치
+     변경 없음). */
+  .home-tile-weekend{grid-column:5/7}
   .home-korean-card{margin-top:9px}
 }
 
@@ -3013,6 +3024,12 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <span class="home-tile-sub" id="homeCardFriendsSub">함께 이야기해요</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
     </button>
+    <button type="button" class="home-tile home-tile-weekend" id="homeLegoWeekendBtn">
+      <span class="home-tile-eyebrow">WEEKEND</span>
+      <strong class="home-tile-title" id="homeLegoWeekendLabel">주말에 가볼 만한 곳</strong>
+      <span class="home-tile-sub" id="homeCardWeekendSub">김해 · 부산 둘러보기</span>
+      <span class="home-tile-arrow" aria-hidden="true">→</span>
+    </button>
   </div>
   <a class="home-korean-card" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer">
     <span class="home-tile-eyebrow">KOREAN STUDY</span>
@@ -3240,8 +3257,7 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
   </div>
 </div>
 
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    공통 UI 문구 번역 (매장명, 버튼, 안내문, 오류문)
    ========================================================================== */
 
@@ -3373,7 +3389,10 @@ const UI_TEXT = {
     hometown: { ko: "게시판 바로가기", en: "Go to the board", zh: "前往板块", vi: "Đến bảng tin", mn: "Хэсэг рүү очих", bn: "বোর্ডে যান", my: "ဘုတ်သို့သွားရန်" },
     campusLife: { ko: "이야기 나누기", en: "Share your story", zh: "分享故事", vi: "Chia sẻ câu chuyện", mn: "Түүхээ хуваалцах", bn: "গল্প শেয়ার করুন", my: "ဇာတ်လမ်းမျှဝေရန်" },
     friends: { ko: "함께 이야기해요", en: "Let's talk together", zh: "一起聊聊吧", vi: "Cùng trò chuyện nhé", mn: "Хамтдаа ярилцъя", bn: "একসাথে কথা বলি", my: "အတူတကွစကားပြောကြရအောင်" },
-    feedback: { ko: "의견 남기기", en: "Leave feedback", zh: "留下意见", vi: "Để lại ý kiến", mn: "Санал үлдээх", bn: "মতামত দিন", my: "အကြံပြုချက်ပေးရန်" }
+    feedback: { ko: "의견 남기기", en: "Leave feedback", zh: "留下意见", vi: "Để lại ý kiến", mn: "Санал үлдээх", bn: "মতামত দিন", my: "အကြံပြုချက်ပေးရန်" },
+    // "주말에 가볼 만한 곳" HOME 카드 보조문구(2026-09 지시서) — 커뮤니티
+    // together 카테고리와 같은 목적지를 가리키므로 지역명만 짧게 표기.
+    weekend: { ko: "김해 · 부산 둘러보기", en: "Explore Gimhae & Busan", zh: "游览金海 · 釜山", vi: "Khám phá Gimhae · Busan", mn: "Гимхэ · Бусан хотыг үзэх", bn: "গিমহে · বুসান ঘুরে দেখুন", my: "ဂျင်ဟေး · ပူဆန် ကို လေ့လာလည်ပတ်ပါ" }
   },
   bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
   /* 모바일 UI 개선 8단계: 하단 내비게이션 5개(홈/검색/글쓰기/알림/MY) —
@@ -5677,8 +5696,7 @@ var PwaManager = (function () {
 document.addEventListener("DOMContentLoaded", PwaManager.init);
 
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    유학생 커뮤니티 다국어 문구 (js/community-translations.js)
    - js/translations.js와 같은 패턴({ko,zh,vi,en,mn,bn,my})을 그대로 따릅니다.
    - babsim.store에서 선택한 언어(js/app.js state.lang, localStorage
@@ -5714,7 +5732,10 @@ var COMMUNITY_CATEGORIES = {
   friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
   market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа", bn: "পুরোনো পণ্য কেনাবেচা", my: "တစ်ပတ်ရစ်ပစ္စည်း အရောင်းအဝယ်" },
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
-  together: { ko: "김해맛집 추천", zh: "金海美食推荐", vi: "Gợi ý quán ăn Gimhae", en: "Gimhae Food Picks", mn: "Гимхэ хоолны зөвлөмж", bn: "গিমহে খাবারের সুপারিশ", my: "ဂျင်ဟေး အစားအစာ အကြံပြုချက်" },
+  // "김해맛집 추천" → "주말에 가볼 만한 곳"으로 명칭 변경(2026-09 지시서).
+  // category value("together")와 기존 게시글 데이터는 그대로 유지하고
+  // 라벨(7개 언어)만 교체 — 맛집도 주말 나들이 장소의 하나로 포함됨.
+  together: { ko: "주말에 가볼 만한 곳", zh: "周末去处推荐", vi: "Nơi đáng đi vào cuối tuần", en: "Weekend Spots to Visit", mn: "Амралтын өдрүүдэд зочлох газрууд", bn: "সাপ্তাহিক ছুটিতে ঘোরার জায়গা", my: "စနေ၊တနင်္ဂနွေ သွားရောက်လည်ပတ်စရာနေရာများ" },
   // 신규 카테고리(카테고리 4개 개편 지시서) — value는 프로젝트의 기존
   // 짧은 영문 키 명명 규칙(friends/market/help/together/job/free)을 따름.
   hometown: { ko: "나의 고향 소개", zh: "我的家乡介绍", vi: "Giới thiệu quê hương tôi", en: "My Hometown", mn: "Төрсөн нутгийн танилцуулга", bn: "আমার নিজ শহরের পরিচিতি", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်" },
@@ -5731,7 +5752,7 @@ var COMMUNITY_CATEGORY_ORDER = ["together", "hometown", "job", "friends"];
 
 // 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명 — 선택 목록 4개만.
 var COMMUNITY_CATEGORY_DESC = {
-  together: { ko: "김해 맛집 정보와 추천", zh: "金海美食信息与推荐", vi: "Thông tin và gợi ý quán ăn ngon ở Gimhae", en: "Gimhae restaurant tips and recommendations", mn: "Гимхэ хотын амттай газрын мэдээлэл, зөвлөмж", bn: "গিমহের ভালো খাবারের তথ্য ও সুপারিশ", my: "ဂျင်ဟေးခရိုင်၏ အစားအသောက်ဆိုင်ရာ အချက်အလက်နှင့် အကြံပြုချက်" },
+  together: { ko: "김해·부산 맛집, 카페, 나들이 장소 추천", zh: "金海·釜山美食、咖啡厅、周边景点推荐", vi: "Gợi ý quán ăn, quán cà phê, địa điểm dạo chơi ở Gimhae · Busan", en: "Gimhae & Busan food, cafes, and weekend spots", mn: "Гимхэ · Бусан хотын хоол, кафе, амралтын газрын зөвлөмж", bn: "গিমহে · বুসানের খাবার, ক্যাফে ও ঘোরার জায়গার সুপারিশ", my: "ဂျင်ဟေး · ပူဆန်၏ အစားအစာ၊ ကော်ဖီဆိုင်နှင့် လည်ပတ်စရာနေရာများ" },
   hometown: { ko: "내 고향의 음식·문화·여행 이야기", zh: "介绍我家乡的美食、文化和旅行故事", vi: "Câu chuyện về ẩm thực, văn hóa và du lịch quê hương tôi", en: "Stories about my hometown's food, culture, and travel", mn: "Миний нутгийн хоол, соёл, аяллын тухай түүх", bn: "আমার শহরের খাবার, সংস্কৃতি ও ভ্রমণের গল্প", my: "ကျွန်ုပ်၏ဇာတိမြို့ရဲ့ အစားအစာ၊ ယဉ်ကျေးမှုနှင့် ခရီးသွားအကြောင်း" },
   job: { ko: "캠퍼스에서의 일상과 이야기를 나눠요", zh: "分享校园里的日常与故事", vi: "Chia sẻ cuộc sống và câu chuyện trong khuôn viên trường", en: "Share your everyday campus life and stories", mn: "Кампусын өдөр тутмын амьдрал, түүхээ хуваалцаарай", bn: "ক্যাম্পাস জীবনের গল্প ভাগ করুন", my: "ကျောင်းဘဝနေ့စဉ်အကြောင်းများကို မျှဝေပါ" },
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
@@ -9943,8 +9964,7 @@ var RoomFinder = (function () {
 })();
 
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    모인관(인제대학교) app.js
    - 매장 선택 / 언어 선택 / 메뉴 그룹 이전·다음 / 천원의 아침밥 모달
    - 외부 라이브러리 없이 순수 JavaScript로 동작합니다.
@@ -10476,6 +10496,11 @@ var RoomFinder = (function () {
     if (els.homeLegoFriendsLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoFriendsLabel.textContent = COMMUNITY_CATEGORIES.friends[state.lang] || COMMUNITY_CATEGORIES.friends.ko;
     }
+    // "주말에 가볼 만한 곳" — 커뮤니티 together 카테고리(옛 "김해맛집
+    // 추천")와 같은 COMMUNITY_CATEGORIES.together 라벨을 그대로 재사용.
+    if (els.homeLegoWeekendLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoWeekendLabel.textContent = COMMUNITY_CATEGORIES.together[state.lang] || COMMUNITY_CATEGORIES.together.ko;
+    }
     if (els.homeLegoRoomTitle) {
       els.homeLegoRoomTitle.textContent = ROOM_FINDER.title[state.lang] || ROOM_FINDER.title.ko;
     }
@@ -10493,6 +10518,7 @@ var RoomFinder = (function () {
     if (els.homeCardCampusLifeSub) els.homeCardCampusLifeSub.textContent = sub.campusLife[state.lang] || sub.campusLife.ko;
     if (els.homeCardFriendsSub) els.homeCardFriendsSub.textContent = sub.friends[state.lang] || sub.friends.ko;
     if (els.homeCardFeedbackSub) els.homeCardFeedbackSub.textContent = sub.feedback[state.lang] || sub.feedback.ko;
+    if (els.homeCardWeekendSub) els.homeCardWeekendSub.textContent = sub.weekend[state.lang] || sub.weekend.ko;
     // "나의 학교생활" — 새 카테고리가 아니라 기존 COMMUNITY_CATEGORIES.job을
     // 그대로 재사용(라벨만 "나의 학교생활"로 교체됨).
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
@@ -11047,6 +11073,11 @@ var RoomFinder = (function () {
     els.homeLegoHometownLabel = qs("homeLegoHometownLabel");
     els.homeLegoFriendsBtn = qs("homeLegoFriendsBtn");
     els.homeLegoFriendsLabel = qs("homeLegoFriendsLabel");
+    // "주말에 가볼 만한 곳"(2026-09 지시서) — 커뮤니티 together 카테고리로
+    // 바로 이동하는 새 HOME 카드. 새 라우트/새 게시판 없음.
+    els.homeLegoWeekendBtn = qs("homeLegoWeekendBtn");
+    els.homeLegoWeekendLabel = qs("homeLegoWeekendLabel");
+    els.homeCardWeekendSub = qs("homeCardWeekendSub");
     els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
     // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
@@ -11214,6 +11245,13 @@ var RoomFinder = (function () {
     if (els.homeLegoFriendsBtn) {
       els.homeLegoFriendsBtn.addEventListener("click", function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("friends");
+      });
+    }
+    // "주말에 가볼 만한 곳" — 옛 "김해맛집 추천"(together) 카테고리를 그대로
+    // 재사용. 새 route/새 카테고리를 만들지 않고 기존 이동 함수만 재사용.
+    if (els.homeLegoWeekendBtn) {
+      els.homeLegoWeekendBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("together");
       });
     }
     // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/

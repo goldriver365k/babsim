@@ -130,7 +130,10 @@ const UI_TEXT = {
     hometown: { ko: "게시판 바로가기", en: "Go to the board", zh: "前往板块", vi: "Đến bảng tin", mn: "Хэсэг рүү очих", bn: "বোর্ডে যান", my: "ဘုတ်သို့သွားရန်" },
     campusLife: { ko: "이야기 나누기", en: "Share your story", zh: "分享故事", vi: "Chia sẻ câu chuyện", mn: "Түүхээ хуваалцах", bn: "গল্প শেয়ার করুন", my: "ဇာတ်လမ်းမျှဝေရန်" },
     friends: { ko: "함께 이야기해요", en: "Let's talk together", zh: "一起聊聊吧", vi: "Cùng trò chuyện nhé", mn: "Хамтдаа ярилцъя", bn: "একসাথে কথা বলি", my: "အတူတကွစကားပြောကြရအောင်" },
-    feedback: { ko: "의견 남기기", en: "Leave feedback", zh: "留下意见", vi: "Để lại ý kiến", mn: "Санал үлдээх", bn: "মতামত দিন", my: "အကြံပြုချက်ပေးရန်" }
+    feedback: { ko: "의견 남기기", en: "Leave feedback", zh: "留下意见", vi: "Để lại ý kiến", mn: "Санал үлдээх", bn: "মতামত দিন", my: "အကြံပြုချက်ပေးရန်" },
+    // "주말에 가볼 만한 곳" HOME 카드 보조문구(2026-09 지시서) — 커뮤니티
+    // together 카테고리와 같은 목적지를 가리키므로 지역명만 짧게 표기.
+    weekend: { ko: "김해 · 부산 둘러보기", en: "Explore Gimhae & Busan", zh: "游览金海 · 釜山", vi: "Khám phá Gimhae · Busan", mn: "Гимхэ · Бусан хотыг үзэх", bn: "গিমহে · বুসান ঘুরে দেখুন", my: "ဂျင်ဟေး · ပူဆန် ကို လေ့လာလည်ပတ်ပါ" }
   },
   bottomNavHome: { ko: "홈", en: "Home", zh: "首页", vi: "Trang chủ", mn: "Нүүр", bn: "হোম", my: "ပင်မစာမျက်နှာ" },
   /* 모바일 UI 개선 8단계: 하단 내비게이션 5개(홈/검색/글쓰기/알림/MY) —

@@ -34,7 +34,10 @@ var COMMUNITY_CATEGORIES = {
   friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
   market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа", bn: "পুরোনো পণ্য কেনাবেচা", my: "တစ်ပတ်ရစ်ပစ္စည်း အရောင်းအဝယ်" },
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
-  together: { ko: "김해맛집 추천", zh: "金海美食推荐", vi: "Gợi ý quán ăn Gimhae", en: "Gimhae Food Picks", mn: "Гимхэ хоолны зөвлөмж", bn: "গিমহে খাবারের সুপারিশ", my: "ဂျင်ဟေး အစားအစာ အကြံပြုချက်" },
+  // "김해맛집 추천" → "주말에 가볼 만한 곳"으로 명칭 변경(2026-09 지시서).
+  // category value("together")와 기존 게시글 데이터는 그대로 유지하고
+  // 라벨(7개 언어)만 교체 — 맛집도 주말 나들이 장소의 하나로 포함됨.
+  together: { ko: "주말에 가볼 만한 곳", zh: "周末去处推荐", vi: "Nơi đáng đi vào cuối tuần", en: "Weekend Spots to Visit", mn: "Амралтын өдрүүдэд зочлох газрууд", bn: "সাপ্তাহিক ছুটিতে ঘোরার জায়গা", my: "စနေ၊တနင်္ဂနွေ သွားရောက်လည်ပတ်စရာနေရာများ" },
   // 신규 카테고리(카테고리 4개 개편 지시서) — value는 프로젝트의 기존
   // 짧은 영문 키 명명 규칙(friends/market/help/together/job/free)을 따름.
   hometown: { ko: "나의 고향 소개", zh: "我的家乡介绍", vi: "Giới thiệu quê hương tôi", en: "My Hometown", mn: "Төрсөн нутгийн танилцуулга", bn: "আমার নিজ শহরের পরিচিতি", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်" },
@@ -51,7 +54,7 @@ var COMMUNITY_CATEGORY_ORDER = ["together", "hometown", "job", "friends"];
 
 // 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명 — 선택 목록 4개만.
 var COMMUNITY_CATEGORY_DESC = {
-  together: { ko: "김해 맛집 정보와 추천", zh: "金海美食信息与推荐", vi: "Thông tin và gợi ý quán ăn ngon ở Gimhae", en: "Gimhae restaurant tips and recommendations", mn: "Гимхэ хотын амттай газрын мэдээлэл, зөвлөмж", bn: "গিমহের ভালো খাবারের তথ্য ও সুপারিশ", my: "ဂျင်ဟေးခရိုင်၏ အစားအသောက်ဆိုင်ရာ အချက်အလက်နှင့် အကြံပြုချက်" },
+  together: { ko: "김해·부산 맛집, 카페, 나들이 장소 추천", zh: "金海·釜山美食、咖啡厅、周边景点推荐", vi: "Gợi ý quán ăn, quán cà phê, địa điểm dạo chơi ở Gimhae · Busan", en: "Gimhae & Busan food, cafes, and weekend spots", mn: "Гимхэ · Бусан хотын хоол, кафе, амралтын газрын зөвлөмж", bn: "গিমহে · বুসানের খাবার, ক্যাফে ও ঘোরার জায়গার সুপারিশ", my: "ဂျင်ဟေး · ပူဆန်၏ အစားအစာ၊ ကော်ဖီဆိုင်နှင့် လည်ပတ်စရာနေရာများ" },
   hometown: { ko: "내 고향의 음식·문화·여행 이야기", zh: "介绍我家乡的美食、文化和旅行故事", vi: "Câu chuyện về ẩm thực, văn hóa và du lịch quê hương tôi", en: "Stories about my hometown's food, culture, and travel", mn: "Миний нутгийн хоол, соёл, аяллын тухай түүх", bn: "আমার শহরের খাবার, সংস্কৃতি ও ভ্রমণের গল্প", my: "ကျွန်ုပ်၏ဇာတိမြို့ရဲ့ အစားအစာ၊ ယဉ်ကျေးမှုနှင့် ခရီးသွားအကြောင်း" },
   job: { ko: "캠퍼스에서의 일상과 이야기를 나눠요", zh: "分享校园里的日常与故事", vi: "Chia sẻ cuộc sống và câu chuyện trong khuôn viên trường", en: "Share your everyday campus life and stories", mn: "Кампусын өдөр тутмын амьдрал, түүхээ хуваалцаарай", bn: "ক্যাম্পাস জীবনের গল্প ভাগ করুন", my: "ကျောင်းဘဝနေ့စဉ်အကြောင်းများကို မျှဝေပါ" },
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }

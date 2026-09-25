@@ -530,6 +530,11 @@
     if (els.homeLegoFriendsLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoFriendsLabel.textContent = COMMUNITY_CATEGORIES.friends[state.lang] || COMMUNITY_CATEGORIES.friends.ko;
     }
+    // "주말에 가볼 만한 곳" — 커뮤니티 together 카테고리(옛 "김해맛집
+    // 추천")와 같은 COMMUNITY_CATEGORIES.together 라벨을 그대로 재사용.
+    if (els.homeLegoWeekendLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoWeekendLabel.textContent = COMMUNITY_CATEGORIES.together[state.lang] || COMMUNITY_CATEGORIES.together.ko;
+    }
     if (els.homeLegoRoomTitle) {
       els.homeLegoRoomTitle.textContent = ROOM_FINDER.title[state.lang] || ROOM_FINDER.title.ko;
     }
@@ -547,6 +552,7 @@
     if (els.homeCardCampusLifeSub) els.homeCardCampusLifeSub.textContent = sub.campusLife[state.lang] || sub.campusLife.ko;
     if (els.homeCardFriendsSub) els.homeCardFriendsSub.textContent = sub.friends[state.lang] || sub.friends.ko;
     if (els.homeCardFeedbackSub) els.homeCardFeedbackSub.textContent = sub.feedback[state.lang] || sub.feedback.ko;
+    if (els.homeCardWeekendSub) els.homeCardWeekendSub.textContent = sub.weekend[state.lang] || sub.weekend.ko;
     // "나의 학교생활" — 새 카테고리가 아니라 기존 COMMUNITY_CATEGORIES.job을
     // 그대로 재사용(라벨만 "나의 학교생활"로 교체됨).
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
@@ -1101,6 +1107,11 @@
     els.homeLegoHometownLabel = qs("homeLegoHometownLabel");
     els.homeLegoFriendsBtn = qs("homeLegoFriendsBtn");
     els.homeLegoFriendsLabel = qs("homeLegoFriendsLabel");
+    // "주말에 가볼 만한 곳"(2026-09 지시서) — 커뮤니티 together 카테고리로
+    // 바로 이동하는 새 HOME 카드. 새 라우트/새 게시판 없음.
+    els.homeLegoWeekendBtn = qs("homeLegoWeekendBtn");
+    els.homeLegoWeekendLabel = qs("homeLegoWeekendLabel");
+    els.homeCardWeekendSub = qs("homeCardWeekendSub");
     els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
     // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
@@ -1268,6 +1279,13 @@
     if (els.homeLegoFriendsBtn) {
       els.homeLegoFriendsBtn.addEventListener("click", function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("friends");
+      });
+    }
+    // "주말에 가볼 만한 곳" — 옛 "김해맛집 추천"(together) 카테고리를 그대로
+    // 재사용. 새 route/새 카테고리를 만들지 않고 기존 이동 함수만 재사용.
+    if (els.homeLegoWeekendBtn) {
+      els.homeLegoWeekendBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("together");
       });
     }
     // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/
