@@ -308,6 +308,10 @@ table.results-table {
 .results-table tbody tr { cursor: pointer; }
 .results-table tbody tr:hover { background: #f4f7fd; }
 .results-table tbody tr.selected { background: #eaf1fc; }
+/* 방 구하기 문의 — "신규" 문의를 목록에서 쉽게 구분(굵은 글씨만, 새
+   애니메이션/라이브러리 없음). */
+.results-table tbody tr.room-inquiry-new { font-weight: 700; }
+.results-table tbody tr.room-inquiry-new.selected { background: #eaf1fc; }
 
 .empty-note { color: var(--text-mid); font-size: 13px; padding: 10px 2px; }
 
@@ -1360,7 +1364,13 @@ table.results-table {
 
       <div class="admin-card">
         <h2>문의 목록</h2>
+        <p class="empty-note" style="padding:0 0 10px;">행을 클릭하면 아래에 상세 내용이 표시됩니다.</p>
         <div class="table-scroll" id="roomInquiryListBody"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>문의 상세보기</h2>
+        <div id="roomInquiryDetailBody"><p class="empty-note">문의를 선택해주세요.</p></div>
       </div>
     </section>
   </main>
@@ -6362,8 +6372,7 @@ var AdminMenu = (function () {
 })();
 
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    관리자 페이지 - 방 구하기 문의 (js/admin-room-inquiry.js)
    - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
      "방 구하기 문의" 탭 하나를 추가합니다(새 관리자 사이트 아님).
@@ -6372,6 +6381,11 @@ var AdminMenu = (function () {
    - 문자(SMS) 수신번호(roomInquiryPhone)는 siteSettings/main 문서
      하나에 저장합니다(전화번호 하나만을 위한 새 설정 시스템을 만들지
      않음 — 기존 문서·필드 재사용).
+   - 2026-09 "관리자 저장 기능 추가" 지시서 — 목록 컬럼(접수일/이름/국적/
+     지역/입주일/인원/보증금/월세/상태)과 클릭 시 상세보기를 추가합니다.
+     상세보기는 새 모달 라이브러리 없이 기존 ratings 탭의 "행 클릭 →
+     .selected 표시 → 아래 패널 갱신" 패턴(admin.html selectRatingDate)을
+     그대로 재사용합니다.
    ========================================================================== */
 
 var AdminRoomInquiry = (function () {
@@ -6380,8 +6394,14 @@ var AdminRoomInquiry = (function () {
   var els = {};
   // siteSettings/main 캐시(같은 화면에서 반복 read 방지). null=아직 안 읽음.
   var cachedPhone = null;
-  var STATUS_LABEL = { new: "신규", processing: "처리중", completed: "완료" };
+  var inquiryCache = {}; // doc.id -> 마지막으로 불러온 문의 데이터(상세 패널 재사용)
+  var selectedId = null;
+  // "확인" 단계는 기존에 processing 값으로 저장되어 있어 값은 그대로 두고
+  // 화면에 보이는 한글 라벨만 지시서 6번(신규/확인/완료)에 맞춥니다.
+  var STATUS_LABEL = { new: "신규", processing: "확인", completed: "완료" };
   var STATUS_ORDER = ["new", "processing", "completed"];
+  var REGION_LABEL = { injeUniv: "인제대학교 근처", gimhae: "김해", busan: "부산", etc: "기타" };
+  var OCCUPANTS_LABEL = { "1": "1명", "2": "2명" };
 
   function qs(id) { return document.getElementById(id); }
   function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
@@ -6398,6 +6418,10 @@ var AdminRoomInquiry = (function () {
   }
 
   function normalizePhoneDigits(v) { return (v || "").replace(/[^0-9]/g, ""); }
+
+  function regionText(v) { return REGION_LABEL[v] || v || "-"; }
+  function occupantsText(v) { return OCCUPANTS_LABEL[v] || v || "-"; }
+  function moneyText(v) { return v ? (v + "만원") : "-"; }
 
   // 지나치게 복잡한 검증은 만들지 않습니다 — 하이픈 유무만 허용하고
   // 자릿수만 느슨하게 확인합니다.
@@ -6454,11 +6478,84 @@ var AdminRoomInquiry = (function () {
       return;
     }
     selectEl.disabled = true;
-    d.collection("roomInquiries").doc(id).update({ status: next }).catch(function () {
+    d.collection("roomInquiries").doc(id).update({ status: next }).then(function () {
+      if (inquiryCache[id]) inquiryCache[id].status = next;
+      // 목록의 상태 텍스트·"신규" 강조(굵게 표시)를 재조회 없이 바로 갱신.
+      var row = els.listBody && els.listBody.querySelector('tr[data-id="' + id + '"]');
+      if (row) {
+        row.classList.toggle("room-inquiry-new", next === "new");
+        var statusCell = row.querySelector("td:last-child");
+        if (statusCell) statusCell.textContent = STATUS_LABEL[next];
+      }
+    }).catch(function () {
       selectEl.value = prevValue;
     }).finally(function () {
       selectEl.disabled = false;
     });
+  }
+
+  // ratings 탭의 "행 클릭 → 선택 표시 → 아래 패널 갱신" 패턴을 그대로
+  // 재사용(selectRatingDate와 같은 방식, 새 모달 없음).
+  function selectInquiry(id) {
+    selectedId = id;
+    Array.prototype.forEach.call(els.listBody.querySelectorAll("tr[data-id]"), function (tr) {
+      tr.classList.toggle("selected", tr.dataset.id === id);
+    });
+    renderDetail(inquiryCache[id]);
+  }
+
+  function renderDetail(r) {
+    if (!els.detailBody) return;
+    if (!r) { els.detailBody.innerHTML = "<p class=\"empty-note\">문의를 선택해주세요.</p>"; return; }
+
+    els.detailBody.innerHTML = "";
+    var rows = [
+      ["접수일", fmtDateTime(r.createdAt)],
+      ["이름", r.name || "-"],
+      ["국적", r.nationality || "-"],
+      ["희망지역", regionText(r.region)],
+      ["입주 희망일", r.moveInDate || "-"],
+      ["입주인원", occupantsText(r.occupants)],
+      ["보증금", moneyText(r.deposit)],
+      ["월세", moneyText(r.rent)]
+    ];
+    rows.forEach(function (pair) {
+      var p = document.createElement("p");
+      p.innerHTML = "<strong>" + pair[0] + ":</strong> ";
+      p.appendChild(document.createTextNode(pair[1]));
+      els.detailBody.appendChild(p);
+    });
+
+    // 전화번호만 tel: 링크(모바일 기본 전화 기능 재사용, 새 전화 API 없음).
+    var phoneP = document.createElement("p");
+    phoneP.innerHTML = "<strong>전화번호:</strong> ";
+    if (r.phone) {
+      var a = document.createElement("a");
+      a.href = "tel:" + normalizePhoneDigits(r.phone);
+      a.textContent = r.phone;
+      phoneP.appendChild(a);
+    } else {
+      phoneP.appendChild(document.createTextNode("-"));
+    }
+    els.detailBody.appendChild(phoneP);
+
+    var statusRow = document.createElement("p");
+    statusRow.innerHTML = "<strong>처리상태:</strong> ";
+    var select = document.createElement("select");
+    STATUS_ORDER.forEach(function (s) {
+      var opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = STATUS_LABEL[s];
+      if ((r.status || "new") === s) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", function () {
+      var prev = r.status || "new";
+      r.status = select.value;
+      updateStatus(r.id, select.value, select, prev);
+    });
+    statusRow.appendChild(select);
+    els.detailBody.appendChild(statusRow);
   }
 
   function loadInquiries() {
@@ -6469,61 +6566,38 @@ var AdminRoomInquiry = (function () {
 
     d.collection("roomInquiries").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
       body.innerHTML = "";
+      inquiryCache = {};
+      selectedId = null;
+      renderDetail(null);
       if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">등록된 문의가 없습니다.</p>"; return; }
 
       var table = document.createElement("table");
       table.className = "results-table";
       table.innerHTML = "<thead><tr>" +
-        "<th>접수일시</th><th>이름</th><th>전화번호</th><th>입주예정일</th><th>상태</th>" +
+        "<th>접수일</th><th>이름</th><th>국적</th><th>지역</th><th>입주일</th><th>인원</th><th>보증금</th><th>월세</th><th>상태</th>" +
         "</tr></thead>";
       var tbody = document.createElement("tbody");
 
       snap.forEach(function (doc) {
         var r = doc.data();
+        r.id = doc.id;
+        inquiryCache[doc.id] = r;
+
         var tr = document.createElement("tr");
-
-        var tdDate = document.createElement("td");
-        tdDate.textContent = fmtDateTime(r.createdAt);
-        tr.appendChild(tdDate);
-
-        var tdName = document.createElement("td");
-        tdName.textContent = r.name || "-";
-        tr.appendChild(tdName);
-
-        // 문의자 본인 전화번호(사용자가 입력한 phone 필드) — 관리자
-        // 수신번호(roomInquiryPhone)와 절대 혼동하지 않습니다.
-        var tdPhone = document.createElement("td");
-        if (r.phone) {
-          var phoneLink = document.createElement("a");
-          phoneLink.href = "tel:" + normalizePhoneDigits(r.phone);
-          phoneLink.textContent = r.phone;
-          tdPhone.appendChild(phoneLink);
-        } else {
-          tdPhone.textContent = "-";
-        }
-        tr.appendChild(tdPhone);
-
-        var tdMoveIn = document.createElement("td");
-        tdMoveIn.textContent = r.moveInDate || "-";
-        tr.appendChild(tdMoveIn);
-
-        var tdStatus = document.createElement("td");
-        var select = document.createElement("select");
-        STATUS_ORDER.forEach(function (s) {
-          var opt = document.createElement("option");
-          opt.value = s;
-          opt.textContent = STATUS_LABEL[s];
-          if ((r.status || "new") === s) opt.selected = true;
-          select.appendChild(opt);
-        });
-        select.addEventListener("change", function () {
-          var prev = r.status || "new";
-          r.status = select.value;
-          updateStatus(doc.id, select.value, select, prev);
-        });
-        tdStatus.appendChild(select);
-        tr.appendChild(tdStatus);
-
+        tr.dataset.id = doc.id;
+        // 신규 문의는 굵게 표시해 눈에 띄게 합니다(새 라이브러리/애니메이션 없음).
+        if ((r.status || "new") === "new") tr.classList.add("room-inquiry-new");
+        tr.innerHTML =
+          "<td>" + fmtDateTime(r.createdAt) + "</td>" +
+          "<td>" + (r.name || "-") + "</td>" +
+          "<td>" + (r.nationality || "-") + "</td>" +
+          "<td>" + regionText(r.region) + "</td>" +
+          "<td>" + (r.moveInDate || "-") + "</td>" +
+          "<td>" + occupantsText(r.occupants) + "</td>" +
+          "<td>" + moneyText(r.deposit) + "</td>" +
+          "<td>" + moneyText(r.rent) + "</td>" +
+          "<td>" + STATUS_LABEL[r.status || "new"] + "</td>";
+        tr.addEventListener("click", function () { selectInquiry(doc.id); });
         tbody.appendChild(tr);
       });
       table.appendChild(tbody);
@@ -6540,16 +6614,17 @@ var AdminRoomInquiry = (function () {
     els.phoneSaveBtn = qs("roomInquiryPhoneSaveBtn");
     els.phoneStatus = qs("roomInquiryPhoneStatus");
     els.listBody = qs("roomInquiryListBody");
+    els.detailBody = qs("roomInquiryDetailBody");
 
     els.phoneForm.addEventListener("submit", handlePhoneSave);
 
     loadPhone();
     loadInquiries();
+    renderDetail(null);
   }
 
   return { init: init };
 })();
-
 </script>
 </body>
 </html>

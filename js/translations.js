@@ -304,45 +304,88 @@ const HOMETOWN_POPUP = {
      지역/예산/보증금/월세 문구는 삭제).
    ========================================================================== */
 const ROOM_FINDER = {
-  langStepTitle: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房" },
+  langStepTitle: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng", zh: "找房", mn: "Өрөө хайх", bn: "বাসা খোঁজা", my: "အခန်းရှာခြင်း" },
   langStepDesc: {
     ko: "언어를 선택해주세요", en: "Please select a language",
-    vi: "Vui lòng chọn ngôn ngữ", zh: "请选择语言"
+    vi: "Vui lòng chọn ngôn ngữ", zh: "请选择语言",
+    mn: "Хэлээ сонгоно уу", bn: "ভাষা নির্বাচন করুন", my: "ဘာသာစကား ရွေးချယ်ပါ"
   },
   // title은 홈 화면 카드 제목(#homeLegoRoomTitle)에도 쓰입니다. 외국인
-  // 유학생이 바로 이해하는 생활 표현으로 7개 언어를 다듬었습니다(같은
-  // 문구를 쓰는 langStepTitle 등 방 구하기 입력 폼 쪽은 홈 화면이 아니라
-  // 이번 수정 범위 밖이라 그대로 둠).
+  // 유학생이 바로 이해하는 생활 표현으로 7개 언어를 다듬었습니다.
   title: { ko: "방 구하기", en: "Find a Room", vi: "Tìm phòng trọ", zh: "找房子", mn: "Өрөө хайх", bn: "বাসা খুঁজুন", my: "အခန်းရှာရန်" },
-  field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名" },
-  field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码" },
-  field_moveInDate: { ko: "입주예정일", en: "Expected Move-in Date", vi: "Ngày dự kiến chuyển vào", zh: "预计入住日期" },
-  submitButton: { ko: "문자로 문의하기", en: "Send Inquiry by SMS", vi: "Gửi yêu cầu qua SMS", zh: "短信咨询" },
+  // 2026-09 "관리자 저장" 지시서 — 입력항목을 8개(지역/입주희망일/입주인원/
+  // 보증금/월세/이름/전화번호/국적)로 확정. field_name/field_phone/
+  // field_moveInDate는 기존 키를 그대로 재사용(값만 mn/bn/my 보강).
+  field_name: { ko: "이름", en: "Name", vi: "Họ và tên", zh: "姓名", mn: "Нэр", bn: "নাম", my: "အမည်" },
+  field_phone: { ko: "전화번호", en: "Phone Number", vi: "Số điện thoại", zh: "电话号码", mn: "Утасны дугаар", bn: "ফোন নম্বর", my: "ဖုန်းနံပါတ်" },
+  field_moveInDate: { ko: "입주 희망일", en: "Preferred Move-in Date", vi: "Ngày dự kiến chuyển vào", zh: "预计入住日期", mn: "Орох хүсэлт гаргасан огноо", bn: "প্রবেশের প্রত্যাশিত তারিখ", my: "အခန်းဝင်ရန် မျှော်မှန်းရက်" },
+  field_region: { ko: "희망 지역", en: "Preferred Area", vi: "Khu vực mong muốn", zh: "意向地区", mn: "Хүссэн бүс нутаг", bn: "পছন্দের এলাকা", my: "နှစ်သက်သောဒေသ" },
+  field_occupants: { ko: "입주 인원", en: "Number of Occupants", vi: "Số người ở", zh: "入住人数", mn: "Оршин суух хүний тоо", bn: "বসবাসকারীর সংখ্যা", my: "နေထိုင်မည့်လူဦးရေ" },
+  field_deposit: { ko: "희망 보증금 (만원)", en: "Desired Deposit (10,000 KRW)", vi: "Tiền đặt cọc mong muốn (vạn KRW)", zh: "意向押金（万韩元）", mn: "Хүссэн барьцаа (10,000 вон)", bn: "পছন্দের জামানত (১০,০০০ ওন)", my: "လိုချင်သောအာမခံငွေ (၁၀,၀၀၀ ဝမ်)" },
+  field_rent: { ko: "희망 월세 (만원/월)", en: "Desired Monthly Rent (10,000 KRW/mo)", vi: "Tiền thuê hàng tháng mong muốn (vạn KRW/tháng)", zh: "意向月租（万韩元/月）", mn: "Хүссэн сарын түрээс (10,000 вон/сар)", bn: "পছন্দের মাসিক ভাড়া (১০,০০০ ওন/মাস)", my: "လိုချင်သောလစဉ်အိမ်ငှားခ (၁၀,၀၀၀ ဝမ်/လ)" },
+  // 희망 지역 선택지 — 내부 저장값(injeUniv/gimhae/busan/etc)과 화면
+  // 표시문구를 분리(비용 최소화 지시서 16번).
+  regionOptions: {
+    injeUniv: { ko: "인제대학교 근처", en: "Near Inje University", vi: "Gần Đại học Inje", zh: "仁济大学附近", mn: "Инже их сургуулийн ойролцоо", bn: "ইনজে বিশ্ববিদ্যালয়ের কাছাকাছি", my: "အင်ဂျီတက္ကသိုလ်အနီး" },
+    gimhae: { ko: "김해", en: "Gimhae", vi: "Gimhae", zh: "金海", mn: "Гимхэ", bn: "গিমহে", my: "ဂျင်ဟေး" },
+    busan: { ko: "부산", en: "Busan", vi: "Busan", zh: "釜山", mn: "Бусан", bn: "বুসান", my: "ပူဆန်" },
+    etc: { ko: "기타", en: "Other", vi: "Khác", zh: "其他", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" }
+  },
+  // 입주 인원 선택지 — 저장값은 "1"/"2"(문자열)만 씁니다.
+  occupantOptions: {
+    "1": { ko: "1명", en: "1 person", vi: "1 người", zh: "1人", mn: "1 хүн", bn: "১ জন", my: "၁ ဦး" },
+    "2": { ko: "2명", en: "2 people", vi: "2 người", zh: "2人", mn: "2 хүн", bn: "২ জন", my: "၂ ဦး" }
+  },
+  submitButton: { ko: "이 조건으로 방 문의하기 →", en: "Send Inquiry with These Details →", vi: "Gửi yêu cầu theo điều kiện này →", zh: "以此条件提交咨询 →", mn: "Энэ нөхцлөөр асуулт илгээх →", bn: "এই শর্তে অনুসন্ধান পাঠান →", my: "ဤအခြေအနေဖြင့် စုံစမ်းမေးမြန်းပါ →" },
   privacy: {
     ko: "입력한 문의 내용은 상담을 위해 관리자에게 전달됩니다.",
     en: "Your inquiry information will be sent to the administrator for consultation.",
     vi: "Thông tin yêu cầu của bạn sẽ được gửi đến quản trị viên để tư vấn.",
-    zh: "您填写的咨询内容将发送给管理员以便咨询。"
+    zh: "您填写的咨询内容将发送给管理员以便咨询。",
+    mn: "Оруулсан лавлагааны мэдээллийг зөвлөгөө өгөхийн тулд админд илгээнэ.",
+    bn: "আপনার প্রদত্ত অনুসন্ধানের তথ্য পরামর্শের জন্য প্রশাসকের কাছে পাঠানো হবে।",
+    my: "သင်ထည့်သွင်းသော မေးမြန်းချက်အချက်အလက်များကို အကြံဉာဏ်ပေးရန်အတွက် စီမံခန့်ခွဲသူထံ ပေးပို့ပါမည်။"
   },
+  // 8개 항목 전부 필수(비용 최소화 지시서) — 문구도 "모든 항목"으로 갱신.
   requiredError: {
-    ko: "이름, 전화번호, 입주예정일을 모두 입력해주세요.",
-    en: "Please enter your name, phone number, and move-in date.",
-    vi: "Vui lòng nhập đầy đủ họ tên, số điện thoại và ngày dự kiến chuyển vào.",
-    zh: "请填写姓名、电话号码和预计入住日期。"
+    ko: "모든 항목을 입력해주세요.",
+    en: "Please fill in all fields.",
+    vi: "Vui lòng điền đầy đủ tất cả các mục.",
+    zh: "请填写所有项目。",
+    mn: "Бүх талбарыг бөглөнө үү.",
+    bn: "সব ঘর পূরণ করুন।",
+    my: "အကွက်အားလုံးကို ဖြည့်ပါ။"
   },
   saveError: {
-    ko: "문의 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    ko: "문의 접수에 실패했습니다. 다시 시도해 주세요.",
     en: "Failed to save your inquiry. Please try again shortly.",
     vi: "Không thể lưu yêu cầu. Vui lòng thử lại sau.",
-    zh: "咨询保存失败，请稍后重试。"
+    zh: "咨询保存失败，请稍后重试。",
+    mn: "Асуултыг хадгалж чадсангүй. Түр хүлээгээд дахин оролдоно уу.",
+    bn: "অনুসন্ধান সংরক্ষণ ব্যর্থ হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
+    my: "မေးမြန်းချက်ကို သိမ်းဆည်းရန် မအောင်မြင်ပါ။ ခဏနေ ထပ်ကြိုးစားပါ။"
+  },
+  // 저장(Firestore) 성공을 확인한 뒤에만 보여주는 접수 완료 메시지
+  // (2026-09 "관리자 저장" 지시서 9번 — 무조건 완료 표시 금지).
+  submitSuccess: {
+    ko: "방 구하기 문의가 접수되었습니다.",
+    en: "Your room inquiry has been submitted.",
+    vi: "Yêu cầu tìm phòng của bạn đã được gửi.",
+    zh: "您的租房咨询已提交。",
+    mn: "Таны өрөө хайх хүсэлт хүлээн авагдлаа.",
+    bn: "আপনার রুম অনুসন্ধান জমা দেওয়া হয়েছে।",
+    my: "သင့်အခန်းရှာဖွေမှု မေးမြန်းချက်ကို လက်ခံရရှိပါပြီ။"
   },
   phoneNotReady: {
     ko: "문자 문의를 준비 중입니다.",
     en: "SMS inquiries are being prepared.",
     vi: "Chức năng nhắn tin đang được chuẩn bị.",
-    zh: "短信咨询功能正在准备中。"
+    zh: "短信咨询功能正在准备中。",
+    mn: "Мессежээр лавлах бэлтгэгдэж байна.",
+    bn: "এসএমএস অনুসন্ধান প্রস্তুত করা হচ্ছে।",
+    my: "SMS မေးမြန်းမှုကို ပြင်ဆင်နေပါသည်။"
   },
-  closeAriaLabel: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭" }
+  closeAriaLabel: { ko: "닫기", en: "Close", vi: "Đóng", zh: "关闭", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" }
 };
 
 /* ==========================================================================

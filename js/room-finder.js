@@ -5,18 +5,23 @@
      (.modal-overlay/.modal, 새 팝업 라이브러리 없음)을 재사용합니다.
    - 입력폼은 기존 커뮤니티 폼 스타일(.community-form/.community-field/
      .community-label/.community-btn-primary)을 그대로 재사용합니다.
-   - 사용자 입력항목은 정확히 3개(이름/전화번호/입주예정일)입니다. Firestore
-     roomInquiries에 이 3개 정보(+운영용 language/status/createdAt)를
-     저장하고, 관리자가 설정한 SMS 수신번호(siteSettings/main의
+   - 2026-09 "관리자 저장" 지시서 — 사용자 입력항목은 정확히 8개(희망지역/
+     입주희망일/입주인원/희망보증금/희망월세/이름/전화번호/국적)입니다.
+     Firestore roomInquiries에 이 8개 정보(+운영용 language/status/
+     createdAt)를 저장하고, 저장이 실제로 성공한 뒤에만 접수 완료 문구를
+     보여줍니다. 그 다음 관리자가 설정한 SMS 수신번호(siteSettings/main의
      roomInquiryPhone)를 읽어 휴대폰 기본 문자 앱을 엽니다(sms: 링크,
-     유료 SMS API 없음). 문자 내용도 이 3개만 짧게 채워 넣습니다.
+     유료 SMS API 없음, 기존 문자 전달 기능 그대로 유지).
+   - 국적 입력은 밥심커뮤니티 회원가입 화면(js/community.js
+     renderCompleteProfile 등)과 같은 방식(text input + datalist +
+     전역 COUNTRY_LIST)을 그대로 재사용합니다.
    ========================================================================== */
 
 var RoomFinder = (function () {
   "use strict";
 
-  var LANGS = ["ko", "en", "vi", "zh"];
-  var LANG_LABEL = { ko: "한국어", en: "English", vi: "Tiếng Việt", zh: "中文" };
+  var LANGS = ["ko", "en", "vi", "zh", "mn", "bn", "my"];
+  var LANG_LABEL = { ko: "한국어", en: "English", vi: "Tiếng Việt", zh: "中文", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" };
 
   var els = {};
   var selectedLang = "ko";
@@ -30,6 +35,14 @@ var RoomFinder = (function () {
 
   function t(key) {
     var entry = (typeof ROOM_FINDER !== "undefined") ? ROOM_FINDER[key] : null;
+    if (!entry) return "";
+    return entry[selectedLang] || entry.ko || "";
+  }
+
+  // regionOptions/occupantOptions처럼 ROOM_FINDER 안에 중첩된 언어별
+  // 사전을 조회할 때 씁니다(예: tNested(ROOM_FINDER.regionOptions, "gimhae")).
+  function tNested(dict, key) {
+    var entry = dict ? dict[key] : null;
     if (!entry) return "";
     return entry[selectedLang] || entry.ko || "";
   }
@@ -99,12 +112,30 @@ var RoomFinder = (function () {
     body.appendChild(list);
   }
 
-  // 입력항목 정확히 3개(이름/전화번호/입주예정일) — 임의 추가/삭제 금지.
+  // 입력항목 정확히 8개(희망지역/입주희망일/입주인원/희망보증금/희망월세/
+  // 이름/전화번호/국적) — 2026-09 "관리자 저장" 지시서로 확정. 임의
+  // 추가/삭제 금지.
   var FIELDS = [
-    { key: "name", type: "text" },
-    { key: "phone", type: "tel" },
-    { key: "moveInDate", type: "date" }
+    { key: "region", kind: "select", options: ["injeUniv", "gimhae", "busan", "etc"] },
+    { key: "moveInDate", kind: "date" },
+    { key: "occupants", kind: "select", options: ["1", "2"] },
+    { key: "deposit", kind: "number" },
+    { key: "rent", kind: "number" },
+    { key: "name", kind: "text" },
+    { key: "phone", kind: "tel" },
+    { key: "nationality", kind: "nationality" }
   ];
+
+  function fieldLabel(f) {
+    // 국적 라벨은 밥심커뮤니티 회원가입 화면의 기존 번역 키(COMMUNITY_AUTH.
+    // nationalityLabel)를 그대로 재사용합니다(새 번역 키 없음).
+    if (f.key === "nationality") {
+      return (typeof COMMUNITY_AUTH !== "undefined" && COMMUNITY_AUTH.nationalityLabel)
+        ? (COMMUNITY_AUTH.nationalityLabel[selectedLang] || COMMUNITY_AUTH.nationalityLabel.ko)
+        : "";
+    }
+    return t("field_" + f.key);
+  }
 
   function renderFormStep() {
     var body = qs("roomFinderBody");
@@ -119,18 +150,50 @@ var RoomFinder = (function () {
     FIELDS.forEach(function (f) {
       var wrap = el("div", "community-field");
       var inputId = "roomFinderField_" + f.key;
-      var label = el("label", "community-label", t("field_" + f.key));
+      var label = el("label", "community-label", fieldLabel(f));
       label.setAttribute("for", inputId);
       wrap.appendChild(label);
 
-      var input = document.createElement("input");
-      input.type = f.type;
+      var input;
+      if (f.kind === "select") {
+        input = document.createElement("select");
+        var optDict = (f.key === "region") ? ROOM_FINDER.regionOptions : ROOM_FINDER.occupantOptions;
+        f.options.forEach(function (optKey) {
+          var opt = document.createElement("option");
+          opt.value = optKey;
+          opt.textContent = tNested(optDict, optKey);
+          input.appendChild(opt);
+        });
+      } else {
+        input = document.createElement("input");
+        input.type = (f.kind === "nationality") ? "text" : f.kind;
+        if (f.kind === "nationality" && typeof COUNTRY_LIST !== "undefined") {
+          input.setAttribute("list", "roomFinderNationalityList");
+        }
+        if (f.kind === "number") {
+          input.setAttribute("inputmode", "numeric");
+          input.min = "0";
+        }
+      }
       input.id = inputId;
       wrap.appendChild(input);
 
       form.appendChild(wrap);
       inputs[f.key] = input;
     });
+
+    // 국적 자동완성 — 밥심커뮤니티 회원가입 화면과 같은 전역 COUNTRY_LIST
+    // datalist를 그대로 재사용(새 국가 목록 없음).
+    if (typeof COUNTRY_LIST !== "undefined") {
+      var datalist = document.createElement("datalist");
+      datalist.id = "roomFinderNationalityList";
+      COUNTRY_LIST.forEach(function (c) {
+        var opt = document.createElement("option");
+        opt.value = c;
+        datalist.appendChild(opt);
+      });
+      form.appendChild(datalist);
+    }
 
     var statusP = el("p", "community-form-error");
     form.appendChild(statusP);
@@ -147,10 +210,10 @@ var RoomFinder = (function () {
       e.preventDefault();
       if (submitting) return; // 버튼 중복 클릭 방지(같은 문의 중복 등록 방지)
 
-      var name = inputs.name.value.trim();
-      var phone = inputs.phone.value.trim();
-      var moveInDate = inputs.moveInDate.value.trim();
-      if (!name || !phone || !moveInDate) {
+      var values = {};
+      FIELDS.forEach(function (f) { values[f.key] = inputs[f.key].value.trim(); });
+      var allFilled = FIELDS.every(function (f) { return !!values[f.key]; });
+      if (!allFilled) {
         statusP.textContent = t("requiredError");
         return;
       }
@@ -165,21 +228,27 @@ var RoomFinder = (function () {
       submitting = true;
       submitBtn.disabled = true;
 
-      // 사용자에게 입력받는 개인정보는 정확히 3개(이름/전화번호/입주예정일)만
-      // 저장합니다 — language/status/createdAt은 운영용 최소 메타데이터.
+      // 사용자 입력 8개 + 운영용 최소 메타데이터(language/status/createdAt).
       var data = {
-        name: name,
-        phone: phone,
-        moveInDate: moveInDate,
+        region: values.region,
+        moveInDate: values.moveInDate,
+        occupants: values.occupants,
+        deposit: values.deposit,
+        rent: values.rent,
+        name: values.name,
+        phone: values.phone,
+        nationality: values.nationality,
         language: selectedLang,
         status: "new",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      // 1) Firestore 저장 먼저(성공해야만 문자 앱을 엽니다) → 2) 관리자
-      // 수신번호 확인 → 3) 문자 앱 실행. 저장에 실패했는데 성공한 것처럼
-      // 처리하지 않습니다.
+      // 1) Firestore 저장 먼저(성공해야만 접수 완료 문구를 보여주고 문자
+      // 앱을 엽니다) → 2) 접수 완료 문구 표시 → 3) 관리자 수신번호 확인 →
+      // 4) 문자 앱 실행. 저장에 실패했는데 성공한 것처럼 처리하지 않습니다
+      // (비용 최소화 지시서 9번).
       d.collection("roomInquiries").add(data).then(function () {
+        statusP.textContent = t("submitSuccess");
         return sendSms(data, statusP, submitBtn);
       }).catch(function () {
         submitting = false;
@@ -204,16 +273,21 @@ var RoomFinder = (function () {
     });
   }
 
-  // 문자 내용은 짧게 유지합니다 — 이름/전화번호/입주예정일 3개만(선택
-  // 언어·접수시간 등 긴 안내문은 넣지 않음). 사용자 입력항목 자체가
-  // 이 3개뿐이므로 그 외 항목은 애초에 존재하지 않습니다.
+  // 문자 내용은 짧게 유지합니다(선택 언어·접수시간 등 긴 안내문은 넣지
+  // 않음). 문자를 받는 쪽은 관리자이므로 한국어 라벨로 고정 표기합니다.
   function buildSmsBody(data) {
+    var regionKo = (ROOM_FINDER.regionOptions[data.region] && ROOM_FINDER.regionOptions[data.region].ko) || data.region;
     var lines = [
       "[방 구하기 문의]",
       "",
       "이름: " + data.name,
       "전화번호: " + data.phone,
-      "입주예정일: " + (data.moveInDate || "-")
+      "국적: " + (data.nationality || "-"),
+      "희망지역: " + regionKo,
+      "입주희망일: " + (data.moveInDate || "-"),
+      "입주인원: " + (data.occupants || "-") + "명",
+      "보증금: " + (data.deposit || "-") + "만원",
+      "월세: " + (data.rent || "-") + "만원"
     ];
     return lines.join("\n");
   }
@@ -233,13 +307,20 @@ var RoomFinder = (function () {
       if (!phone) {
         // 수신번호 미설정: 임의 번호로 문자 앱을 열지 않습니다. 문의는 이미
         // Firestore에 저장되어 관리자 문의 목록에는 그대로 남아 있습니다.
-        statusP.textContent = t("phoneNotReady");
+        // 접수 완료 문구(submitSuccess)는 이미 표시되어 있으므로 지우지
+        // 않고 안내만 이어 붙입니다.
+        statusP.textContent = t("submitSuccess") + " " + t("phoneNotReady");
         submitBtn.disabled = true;
         return;
       }
       var smsLink = buildSmsLink(phone, buildSmsBody(data));
-      window.location.href = smsLink;
-      closeModal();
+      // 접수 완료 문구(submitSuccess)를 사용자가 실제로 읽을 수 있도록
+      // 잠깐 보여준 뒤 문자 앱으로 이동합니다(새 라이브러리 없이
+      // setTimeout만 사용).
+      window.setTimeout(function () {
+        window.location.href = smsLink;
+        closeModal();
+      }, 600);
     });
   }
 
