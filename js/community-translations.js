@@ -40,7 +40,10 @@ var COMMUNITY_CATEGORIES = {
   together: { ko: "주말에 가볼 만한 곳", zh: "周末去处推荐", vi: "Nơi đáng đi vào cuối tuần", en: "Weekend Spots to Visit", mn: "Амралтын өдрүүдэд зочлох газрууд", bn: "সাপ্তাহিক ছুটিতে ঘোরার জায়গা", my: "စနေ၊တနင်္ဂနွေ သွားရောက်လည်ပတ်စရာနေရာများ" },
   // 신규 카테고리(카테고리 4개 개편 지시서) — value는 프로젝트의 기존
   // 짧은 영문 키 명명 규칙(friends/market/help/together/job/free)을 따름.
-  hometown: { ko: "나의 고향 소개", zh: "我的家乡介绍", vi: "Giới thiệu quê hương tôi", en: "My Hometown", mn: "Төрсөн нутгийн танилцуулга", bn: "আমার নিজ শহরের পরিচিতি", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်" },
+  // "나의 고향 소개"/"나의 고향 이야기" 등 혼재된 명칭을 "나의 고향
+  // 알리기"로 통일(2026-09 지시서). category value(hometown)와 기존
+  // 게시글 데이터는 그대로 유지하고 라벨(7개 언어)만 교체.
+  hometown: { ko: "나의 고향 알리기", zh: "分享我的家乡", vi: "Giới thiệu quê hương tôi", en: "Share My Hometown", mn: "Төрсөн нутгаа танилцуулах", bn: "আমার নিজ শহর জানাই", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်ပါ" },
   // 홈 화면 리디자인 지시서(구인·구직 → 나의 학교생활 교체 확인 후)에
   // 따라 라벨을 교체 — 기존 typeSchool("학교생활") 번역을 그대로
   // 재사용해 새 번역을 만들지 않았습니다.
@@ -55,7 +58,9 @@ var COMMUNITY_CATEGORY_ORDER = ["together", "hometown", "job", "friends"];
 // 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명 — 선택 목록 4개만.
 var COMMUNITY_CATEGORY_DESC = {
   together: { ko: "김해·부산 맛집, 카페, 나들이 장소 추천", zh: "金海·釜山美食、咖啡厅、周边景点推荐", vi: "Gợi ý quán ăn, quán cà phê, địa điểm dạo chơi ở Gimhae · Busan", en: "Gimhae & Busan food, cafes, and weekend spots", mn: "Гимхэ · Бусан хотын хоол, кафе, амралтын газрын зөвлөмж", bn: "গিমহে · বুসানের খাবার, ক্যাফে ও ঘোরার জায়গার সুপারিশ", my: "ဂျင်ဟေး · ပူဆန်၏ အစားအစာ၊ ကော်ဖီဆိုင်နှင့် လည်ပတ်စရာနေရာများ" },
-  hometown: { ko: "내 고향의 음식·문화·여행 이야기", zh: "介绍我家乡的美食、文化和旅行故事", vi: "Câu chuyện về ẩm thực, văn hóa và du lịch quê hương tôi", en: "Stories about my hometown's food, culture, and travel", mn: "Миний нутгийн хоол, соёл, аяллын тухай түүх", bn: "আমার শহরের খাবার, সংস্কৃতি ও ভ্রমণের গল্প", my: "ကျွန်ုပ်၏ဇာတိမြို့ရဲ့ အစားအစာ၊ ယဉ်ကျေးမှုနှင့် ခရီးသွားအကြောင်း" },
+  // "여러분의 고향을 소개해 주세요."(2026-09 "나의 고향 알리기 정상화"
+  // 지시서 3번) — 구인구직이 아니라 고향 소개 게시판임을 분명히 함.
+  hometown: { ko: "여러분의 고향을 소개해 주세요.", zh: "向大家介绍一下你的家乡吧。", vi: "Hãy giới thiệu quê hương của bạn nhé.", en: "Introduce your hometown to everyone.", mn: "Төрсөн нутгаа танилцуулаарай.", bn: "তোমার নিজ শহরের পরিচয় দাও।", my: "သင့်ဇာတိမြို့ကို မိတ်ဆက်ပေးပါ။" },
   job: { ko: "캠퍼스에서의 일상과 이야기를 나눠요", zh: "分享校园里的日常与故事", vi: "Chia sẻ cuộc sống và câu chuyện trong khuôn viên trường", en: "Share your everyday campus life and stories", mn: "Кампусын өдөр тутмын амьдрал, түүхээ хуваалцаарай", bn: "ক্যাম্পাস জীবনের গল্প ভাগ করুন", my: "ကျောင်းဘဝနေ့စဉ်အကြောင်းများကို မျှဝေပါ" },
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
 };
@@ -282,6 +287,23 @@ var COMMUNITY_SPOT = {
   typeCafe: { ko: "카페", zh: "咖啡厅", vi: "Cà phê", en: "Cafe", mn: "Кафе", bn: "ক্যাফে", my: "ကော်ဖီဆိုင်" },
   typeRestaurant: { ko: "음식점", zh: "餐厅", vi: "Nhà hàng", en: "Restaurant", mn: "Хоолны газар", bn: "রেস্তোরাঁ", my: "စားသောက်ဆိုင်" },
   typeTour: { ko: "관광지", zh: "旅游景点", vi: "Điểm du lịch", en: "Tourist Spot", mn: "Аялал жуулчлалын газар", bn: "পর্যটন স্থান", my: "ဧည့်လမ်းညွှန်ခရီးစဉ်" }
+};
+
+/* "나의 고향 알리기"(hometown) — 국가/도시는 선택 입력, 안내문만 재사용
+   가능한 최소 구조(2026-09 "나의 고향 알리기 정상화" 지시서). 새 국가
+   라이브러리 없이 기존 COUNTRY_LIST(datalist)만 재사용합니다. */
+var COMMUNITY_HOMETOWN = {
+  countryLabel: { ko: "나라(선택)", zh: "国家（选填）", vi: "Quốc gia (không bắt buộc)", en: "Country (optional)", mn: "Улс (сонголт)", bn: "দেশ (ঐচ্ছিক)", my: "နိုင်ငံ (ရွေးချယ်ခွင့်)" },
+  cityLabel: { ko: "도시/지역(선택)", zh: "城市/地区（选填）", vi: "Thành phố / khu vực (không bắt buộc)", en: "City / Region (optional)", mn: "Хот / бүс нутаг (сонголт)", bn: "শহর/অঞ্চল (ঐচ্ছিক)", my: "မြို့ / ဒေသ (ရွေးချယ်ခွင့်)" },
+  contentGuide: {
+    ko: "내 고향의 음식, 관광지, 문화, 축제와 이야기를 친구들에게 소개해 주세요.",
+    zh: "向朋友们介绍一下你家乡的美食、景点、文化和节日吧。",
+    vi: "Hãy giới thiệu ẩm thực, danh lam thắng cảnh, văn hóa và lễ hội quê hương bạn cho bạn bè.",
+    en: "Introduce your hometown's food, sights, culture, and festivals to your friends.",
+    mn: "Найзууддаа төрсөн нутгийнхаа хоол, үзмэр, соёл, наадмын тухай танилцуулаарай.",
+    bn: "তোমার শহরের খাবার, দর্শনীয় স্থান, সংস্কৃতি ও উৎসবের গল্প বন্ধুদের সাথে শেয়ার করো।",
+    my: "သင့်ဇာတိမြို့၏ အစားအစာ၊ ကြည့်ရှုစရာနေရာများ၊ ယဉ်ကျေးမှုနှင့် ပွဲတော်များကို သူငယ်ချင်းများကို မိတ်ဆက်ပေးပါ။"
+  }
 };
 
 /* 구인·구직 (2026-09-10, "생활정보" 카테고리를 대체) */

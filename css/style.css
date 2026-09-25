@@ -2457,12 +2457,14 @@ main {
 .community-help-fields,
 .community-job-fields,
 .community-job-hiring-fields,
-.community-job-seeking-fields { display: flex; flex-direction: column; gap: 14px; }
+.community-job-seeking-fields,
+.community-hometown-fields { display: flex; flex-direction: column; gap: 14px; }
 .community-market-fields[hidden],
 .community-help-fields[hidden],
 .community-job-fields[hidden],
 .community-job-hiring-fields[hidden],
-.community-job-seeking-fields[hidden] { display: none; }
+.community-job-seeking-fields[hidden],
+.community-hometown-fields[hidden] { display: none; }
 
 /* 문서(규칙/개인정보) 화면 */
 .community-doc-body { font-size: 14px; line-height: 1.7; }

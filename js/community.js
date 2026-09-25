@@ -1158,6 +1158,26 @@ var Community = (function () {
   // 나머지(hometown/friends)는 이미 안정적인 기존 값을 그대로 재사용.
   var GA_COMMUNITY_CATEGORY_MAP = { together: "gimhae_food", hometown: "hometown", job: "jobs", friends: "friends" };
 
+  // "나의 고향 알리기" 카드/상세에 나라 국기를 붙일 때만 쓰는 아주 작은
+  // 표(2026-09 지시서 8번) — 기존 COUNTRY_LIST(국가명 문자열) 값과
+  // 정확히 일치하는 표기만 다룹니다. 새 국가 라이브러리/API 없음이며,
+  // 매핑에 없는 나라는 국기 없이 이름만 표시합니다(조용히 무시).
+  var HOMETOWN_COUNTRY_FLAG = {
+    "Vietnam": "🇻🇳", "China": "🇨🇳", "Mongolia": "🇲🇳", "South Korea": "🇰🇷", "North Korea": "🇰🇵",
+    "Bangladesh": "🇧🇩", "Myanmar": "🇲🇲"
+  };
+
+  // 나라/도시가 입력되어 있으면 "🇻🇳 Vietnam · 다낭" 형태의 1줄로,
+  // 없으면 빈 문자열을 돌려줍니다(호출부에서 작성일로 대체).
+  function hometownKeyInfo(post) {
+    var country = (post.spotCountry || "").trim();
+    var city = (post.spotCity || "").trim();
+    if (!country && !city) return "";
+    var flag = HOMETOWN_COUNTRY_FLAG[country] || "";
+    var parts = [country, city].filter(Boolean);
+    return (flag ? flag + " " : "") + parts.join(" · ");
+  }
+
   // GA4 커뮤니티 화면 방문 기록 공통 헬퍼 — 실제 화면이 표시되는 시점에만
   // 호출합니다. 직전에 기록한 화면과 같으면(단순 재렌더링) 다시 보내지
   // 않고, 다른 화면을 거쳐 돌아오면 새로 기록합니다. dedupKey를 따로 주면
@@ -1467,8 +1487,11 @@ var Community = (function () {
 
     card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
 
-    // 핵심 정보 1줄 — 구인·구직은 위치, 그 외에는 작성일만(부가정보 남발 금지).
-    var keyInfo = post.category === "job" ? (post.workLocation || post.desiredLocation || "") : (post.isStaticContent ? t(MZ_CAFE_LIST_META) : "");
+    // 핵심 정보 1줄 — 구인·구직은 위치, 고향 알리기는 나라·도시, 그 외에는
+    // 작성일만(부가정보 남발 금지).
+    var keyInfo = post.category === "job" ? (post.workLocation || post.desiredLocation || "")
+      : post.category === "hometown" ? hometownKeyInfo(post)
+      : (post.isStaticContent ? t(MZ_CAFE_LIST_META) : "");
     if (!keyInfo) keyInfo = formatDate(post.createdAt);
     if (keyInfo) card.appendChild(el("p", "community-post-card-meta", keyInfo));
 
@@ -1664,6 +1687,7 @@ var Community = (function () {
     if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
     if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
     if (post.category === "together") wrap.appendChild(buildTogetherPanel(post));
+    if (post.category === "hometown") wrap.appendChild(buildHometownPanel(post));
     if (post.category === "job") {
       jobPanelEl = buildJobPanel(post, isOriginalLang || detailShowOriginal);
       wrap.appendChild(jobPanelEl);
@@ -1837,6 +1861,15 @@ var Community = (function () {
     var panel = el("div", "community-help-panel");
     var spotMap = { cafe: COMMUNITY_SPOT.typeCafe, restaurant: COMMUNITY_SPOT.typeRestaurant, tour: COMMUNITY_SPOT.typeTour };
     if (post.spotType) panel.appendChild(el("p", null, t(COMMUNITY_SPOT.typeLabel) + ": " + t(spotMap[post.spotType])));
+    return panel;
+  }
+
+  /* "나의 고향 알리기"(hometown) — 나라/도시가 있으면 국기와 함께 한 줄로
+     보여줍니다(상태·구인구직 필드 없음). */
+  function buildHometownPanel(post) {
+    var panel = el("div", "community-help-panel");
+    var line = hometownKeyInfo(post);
+    if (line) panel.appendChild(el("p", null, line));
     return panel;
   }
 
@@ -2502,6 +2535,24 @@ var Community = (function () {
     togetherFields.appendChild(formField(COMMUNITY_SPOT.typeLabel, spotTypeSelect));
     form.appendChild(togetherFields);
 
+    /* "나의 고향 알리기"(hometown) — 구인구직이 아니라 고향 소개 게시판.
+       복잡한 입력폼 없이 나라/도시(둘 다 선택 입력)만 추가합니다(2026-09
+       "나의 고향 알리기 정상화" 지시서 4번). 나라는 회원가입 화면과 같은
+       text+datalist(COUNTRY_LIST)를 재사용, 새 국가 데이터 없음. */
+    var hometownFields = el("div", "community-hometown-fields");
+    hometownFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HOMETOWN.contentGuide)));
+    var hCountry = el("input"); hCountry.type = "text";
+    if (typeof COUNTRY_LIST !== "undefined") hCountry.setAttribute("list", "communityHometownCountryList");
+    hometownFields.appendChild(formField(COMMUNITY_HOMETOWN.countryLabel, hCountry));
+    if (typeof COUNTRY_LIST !== "undefined") {
+      var hCountryDatalist = el("datalist"); hCountryDatalist.id = "communityHometownCountryList";
+      COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; hCountryDatalist.appendChild(o); });
+      hometownFields.appendChild(hCountryDatalist);
+    }
+    var hCity = el("input"); hCity.type = "text";
+    hometownFields.appendChild(formField(COMMUNITY_HOMETOWN.cityLabel, hCity));
+    form.appendChild(hometownFields);
+
     /* 구인·구직 */
     var jobFields = el("div", "community-job-fields");
     var jobTypeSelect = el("select");
@@ -2616,6 +2667,9 @@ var Community = (function () {
         helpTypeSelect.value = editingPost.helpType || "etc";
       } else if (editingPost.category === "together") {
         spotTypeSelect.value = editingPost.spotType || "restaurant";
+      } else if (editingPost.category === "hometown") {
+        hCountry.value = editingPost.spotCountry || "";
+        hCity.value = editingPost.spotCity || "";
       } else if (editingPost.category === "job") {
         jobTypeSelect.value = editingPost.jobType || "hiring";
         if (editingPost.jobType === "seeking") {
@@ -2679,6 +2733,7 @@ var Community = (function () {
       helpFields.hidden = catSelect.value !== "help";
       togetherFields.hidden = catSelect.value !== "together";
       jobFields.hidden = catSelect.value !== "job";
+      hometownFields.hidden = catSelect.value !== "hometown";
       updateContentMaxLength();
       while (pendingFiles.length > currentMaxPhotos()) {
         pendingFiles.pop();
@@ -2713,6 +2768,8 @@ var Community = (function () {
         extra = { helpType: helpTypeSelect.value, helpStatus: "needed" };
       } else if (catSelect.value === "together") {
         extra = { spotType: spotTypeSelect.value };
+      } else if (catSelect.value === "hometown") {
+        extra = { spotCountry: hCountry.value.trim() || null, spotCity: hCity.value.trim() || null };
       } else if (catSelect.value === "job") {
         if (jobTypeSelect.value === "hiring") {
           if (!jIndustry.value.trim() || !jWorkLocation.value.trim() || !jJobDescription.value.trim() ||
