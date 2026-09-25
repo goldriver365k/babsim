@@ -396,21 +396,18 @@ var Community = (function () {
     }
 
     // MY는 "가입해야만 쓸 수 있는" 기능이 아니라 "가입하면 더 좋은"
-    // 기능입니다(5단계 지시서) — 비회원도 그대로 볼 수 있게 하되, 계정이
-    // 있으면 활동을 계속 보관할 수 있다는 가벼운 안내만 띄웁니다. [나중에]를
-    // 누르면 안내만 닫히고 MY 화면은 비회원(익명) 상태로 계속 씁니다.
+    // 기능입니다 — 비회원도 그대로 볼 수 있습니다. 2026-09 "비회원제
+    // 전환" 지시서 13번에 따라 가입 유도 팝업(showSignupInviteModal)은
+    // 더 이상 띄우지 않습니다(로그인/회원가입 자체는 커뮤니티 상단의
+    // 기존 버튼으로 여전히 가능 — 강제/유도만 제거).
     if (currentRoute.name === "my") {
       if (!user) {
         // 아직 아무 활동도 없는 완전 신규 방문자는 MY에서 보여줄 것이
-        // 없으므로, 굳이 익명 로그인까지 만들지 않고 목록 + 가입 유도
-        // 안내만 보여줍니다(로그아웃 직후 등 일시적으로 user가 비어있는
-        // 순간에 불필요한 익명 세션이 새로 생기는 것도 함께 막아줍니다).
+        // 없으므로, 굳이 익명 로그인까지 만들지 않고 목록만 보여줍니다.
         renderList();
-        showSignupInviteModal(location.pathname);
         return;
       }
       renderMyPage();
-      if (profile && profile.isAnonymous) showSignupInviteModal(location.pathname);
       return;
     }
     if (currentRoute.name === "write") { renderWrite(); return; }
@@ -1616,7 +1613,12 @@ var Community = (function () {
     head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
     var title = el("h2", "community-detail-title", "");
     head.appendChild(title);
-    var meta = el("p", "community-post-card-meta", "");
+    // 작성자 닉네임(2026-09 "비회원제 전환" 지시서 7번) — 실명 대신
+    // 닉네임만 표시합니다. 목록 카드 미리보기(fetchLatestPostsForHome)·
+    // 댓글과 같은 마스킹 규칙을 그대로 재사용(회원 실명은 maskName으로
+    // 가리고, 비회원/닉네임 글은 그대로 노출 — UID·이메일은 절대 노출 없음).
+    var authorDisplay = (post.authorIsAnonymous || post.authorNameIsNickname) ? (post.authorNameMasked || "") : maskName(post.authorNameMasked);
+    var meta = el("p", "community-post-card-meta", [authorDisplay, formatDate(post.createdAt)].filter(Boolean).join(" · "));
     head.appendChild(meta);
     wrap.appendChild(head);
 
@@ -2464,6 +2466,16 @@ var Community = (function () {
     wrap.appendChild(el("h2", "community-page-title", isEdit ? t(COMMUNITY_POST.editPostTitle) : t(COMMUNITY_POST.writeTitle)));
 
     var form = el("form", "community-form");
+
+    // 닉네임(2026-09 "비회원제 전환" 지시서) — 회원가입 없이도 글쓰기
+    // 화면에서 바로 원하는 닉네임을 정할 수 있게 합니다. 기존 MY 페이지
+    // "닉네임 수정"과 같은 필드(profile.name/nickname)를 그대로 재사용
+    // (새 필드·새 컬렉션 없음). 현재 닉네임(자동 생성값 포함)을 기본값으로
+    // 채워 두고, 제출 시 바뀐 경우에만 저장합니다.
+    var nicknameInput = el("input"); nicknameInput.type = "text"; nicknameInput.maxLength = 20; nicknameInput.required = true;
+    nicknameInput.value = currentDisplayNickname();
+    form.appendChild(formField(COMMUNITY_POST.nicknameLabel, nicknameInput));
+
     var catSelect = el("select");
     COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
       var o = el("option", null, t(COMMUNITY_CATEGORIES[cat])); o.value = cat;
@@ -2805,7 +2817,7 @@ var Community = (function () {
       e.preventDefault();
       errorP.textContent = "";
       jobWarningP.textContent = "";
-      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      if (!nicknameInput.value.trim() || !titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
 
       var extra = {};
       if (catSelect.value === "market") {
@@ -2865,18 +2877,33 @@ var Community = (function () {
       }
 
       submitBtn.disabled = true;
+      // 닉네임을 바꿨으면(비회원은 profile.name, 회원은 profile.nickname)
+      // 게시글을 저장하기 전에 먼저 반영합니다 — MY 페이지 "닉네임 수정"과
+      // 같은 필드를 그대로 재사용(새 필드 없음). 실패해도 글쓰기 자체는
+      // 막지 않고 이전 닉네임으로 계속 진행합니다.
+      var newNickname = nicknameInput.value.trim();
+      var nicknameSave = Promise.resolve();
+      if (newNickname && newNickname !== currentDisplayNickname()) {
+        var isAnonNow = !!(profile && profile.isAnonymous);
+        var nicknamePayload = isAnonNow ? { name: newNickname } : { nickname: newNickname };
+        nicknameSave = db().collection("communityUsers").doc(authUser.uid).update(nicknamePayload).then(function () {
+          if (isAnonNow) profile.name = newNickname; else profile.nickname = newNickname;
+        }).catch(function () { /* 실패해도 글쓰기는 계속 진행 */ });
+      }
       // 큰 사진을 고른 경우 압축/업로드에 시간이 걸릴 수 있어, 멈춘 것으로
       // 오해하지 않도록 단계별 상태 문구를 보여줍니다(비용 최소화 지시서
       // 13번) — 등록 버튼은 이미 비활성화되어 중복 제출도 막습니다.
       if (pendingFiles.length) errorP.textContent = t(COMMUNITY_MSG.photoCompressing);
-      createOrUpdatePost({
-        category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
-        originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null,
-        contactViaOwnerKakao: ownerKakaoInput.checked, extra: extra,
-        photoFiles: pendingFiles, photosRemoved: photosRemoved,
-        onPhotoStatus: function (phase) {
-          errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
-        }
+      nicknameSave.then(function () {
+        return createOrUpdatePost({
+          category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
+          originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null,
+          contactViaOwnerKakao: ownerKakaoInput.checked, extra: extra,
+          photoFiles: pendingFiles, photosRemoved: photosRemoved,
+          onPhotoStatus: function (phase) {
+            errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
+          }
+        });
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
       }).catch(function (err) {
