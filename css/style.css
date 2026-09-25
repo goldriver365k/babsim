@@ -2365,17 +2365,14 @@ main {
 .community-detail-content { font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .community-ai-notice { font-size: 12px; color: #94A3B8; margin-top: 6px; }
 
-.community-detail-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 8px;
-  margin-bottom: 14px;
-}
+.community-detail-gallery { margin-bottom: 14px; }
 
+/* 게시글당 사진 최대 1장이라 자르지 않고 원본 비율 그대로 보여줍니다
+   (2026-09 "커뮤니티 이미지 업로드" 지시서 10번 — width:100%;height:auto). */
 .community-detail-gallery img {
+  display: block;
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
+  height: auto;
   border-radius: 10px;
   border: 1px solid var(--comm-border);
 }
@@ -2452,6 +2449,10 @@ main {
 /* 사진 미리보기 */
 .community-photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .community-photo-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--comm-border); }
+/* 사진 미리보기 아래 [사진 변경]/[사진 삭제] 버튼 행(2026-09 "커뮤니티
+   이미지 업로드" 지시서 7번) — 사진이 없을 때는 hidden으로 숨김. */
+.community-photo-actions { display: flex; gap: 14px; margin-top: 6px; }
+.community-photo-actions[hidden] { display: none; }
 
 .community-market-fields,
 .community-help-fields,

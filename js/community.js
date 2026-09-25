@@ -1620,6 +1620,19 @@ var Community = (function () {
     head.appendChild(meta);
     wrap.appendChild(head);
 
+    // 사진은 제목/작성정보 다음, 본문 앞에 보여줍니다(2026-09 "커뮤니티
+    // 이미지 업로드" 지시서 10번). 화면 폭을 넘지 않도록 CSS에서
+    // width:100%;height:auto로 처리합니다(원본 비율 유지).
+    if (post.photos && post.photos.length) {
+      var gallery = el("div", "community-detail-gallery");
+      post.photos.forEach(function (url) {
+        var img = document.createElement("img");
+        img.src = url; img.alt = ""; img.loading = "lazy";
+        gallery.appendChild(img);
+      });
+      wrap.appendChild(gallery);
+    }
+
     var body = el("div", "community-detail-body");
     var bodyText = el("p", "community-detail-content", "");
     body.appendChild(bodyText);
@@ -1673,16 +1686,6 @@ var Community = (function () {
     }
     wrap.appendChild(body);
     fillDetailText(title, bodyText, aiNotice, post);
-
-    if (post.photos && post.photos.length) {
-      var gallery = el("div", "community-detail-gallery");
-      post.photos.forEach(function (url) {
-        var img = document.createElement("img");
-        img.src = url; img.alt = ""; img.loading = "lazy";
-        gallery.appendChild(img);
-      });
-      wrap.appendChild(gallery);
-    }
 
     if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
     if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
@@ -2636,13 +2639,54 @@ var Community = (function () {
     ownerKakaoRow.appendChild(document.createTextNode(" " + t(COMMUNITY_POST.ownerKakaoCheckbox)));
     form.appendChild(ownerKakaoRow);
 
+    // 사진 첨부(2026-09 "커뮤니티 이미지 업로드" 지시서) — 모든 게시판
+    // 공통(글쓰기 화면 하나로 처리), 게시글당 최대 1장. 새 이미지
+    // 시스템이 아니라 기존 file input + 압축(compressImage)/업로드
+    // (uploadPhotos) 파이프라인을 그대로 재사용합니다.
     var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
     form.appendChild(photoLabel);
-    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.multiple = true;
+    // 실제 파일 선택은 기존 브라우저 file input 그대로 재사용하되, 화면에는
+    // 숨기고 [+ 사진 추가]/[사진 변경] 버튼을 눌렀을 때만 클릭을 대신
+    // 실행합니다(새 카메라 API 없음 — input accept="image/*"가 모바일에서
+    // 촬영/앨범 선택을 그대로 제공).
+    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.hidden = true;
     form.appendChild(photoInput);
+    var photoAddBtn = el("button", "community-btn-secondary", t(COMMUNITY_MSG.photoAddBtn));
+    photoAddBtn.type = "button";
+    form.appendChild(photoAddBtn);
     var photoPreview = el("div", "community-photo-preview");
     form.appendChild(photoPreview);
+    var photoActions = el("div", "community-photo-actions");
+    var photoChangeBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoChangeBtn));
+    photoChangeBtn.type = "button";
+    var photoRemoveBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoRemoveBtn));
+    photoRemoveBtn.type = "button";
+    photoActions.appendChild(photoChangeBtn);
+    photoActions.appendChild(photoRemoveBtn);
+    form.appendChild(photoActions);
     var pendingFiles = [];
+    var hasExistingPhoto = false; // 수정 모드에서 기존에 업로드된 사진이 있었는지
+    var photosRemoved = false; // "사진 삭제"로 기존 사진을 지우기로 했는지(새 파일 선택 시 초기화)
+    var PHOTO_ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    // 사진이 있으면(선택했거나 기존 사진이 남아있으면) [+ 사진 추가] 대신
+    // [사진 변경]/[사진 삭제] 버튼만 보여줍니다(비용 최소화 — 새 업로더
+    // UI 없이 같은 input을 재사용).
+    function updatePhotoUI() {
+      var hasPhoto = pendingFiles.length > 0 || (hasExistingPhoto && !photosRemoved);
+      photoAddBtn.hidden = hasPhoto;
+      photoActions.hidden = !hasPhoto;
+    }
+
+    photoAddBtn.addEventListener("click", function () { photoInput.click(); });
+    photoChangeBtn.addEventListener("click", function () { photoInput.click(); });
+    photoRemoveBtn.addEventListener("click", function () {
+      pendingFiles = [];
+      photoPreview.innerHTML = "";
+      if (hasExistingPhoto) photosRemoved = true;
+      errorP.textContent = "";
+      updatePhotoUI();
+    });
 
     // 수정 모드: 기존 게시글 값을 폼에 채웁니다(제목/본문/카테고리/기타
     // 필드). 사진은 그대로 두면(pendingFiles 비어있음) 저장 시
@@ -2696,6 +2740,7 @@ var Community = (function () {
       }
 
       if (editingPost.photos && editingPost.photos.length) {
+        hasExistingPhoto = true;
         editingPost.photos.forEach(function (url) {
           var existingImg = document.createElement("img");
           existingImg.src = url; existingImg.alt = "";
@@ -2709,21 +2754,27 @@ var Community = (function () {
       toggleJobTypeFields();
       toggleCategoryFields();
     }
+    updatePhotoUI();
 
     photoInput.addEventListener("change", function () {
       var files = Array.prototype.slice.call(photoInput.files || []);
-      var maxNow = currentMaxPhotos();
-      if (pendingFiles.length + files.length > maxNow) {
-        errorP.textContent = t(COMMUNITY_MSG.errPhotoLimit);
-        files = files.slice(0, maxNow - pendingFiles.length);
-      }
-      files.forEach(function (f) {
-        pendingFiles.push(f);
-        var img = document.createElement("img");
-        img.src = URL.createObjectURL(f);
-        photoPreview.appendChild(img);
-      });
       photoInput.value = "";
+      if (!files.length) return;
+      // 게시글당 사진 최대 1장(비용 최소화) — 한 장만 쓰고 선택은 항상
+      // 기존 사진을 "교체"합니다(추가가 아님).
+      var file = files[0];
+      if (PHOTO_ACCEPTED_TYPES.indexOf(file.type) === -1) {
+        errorP.textContent = t(COMMUNITY_MSG.errPhotoUnsupported);
+        return;
+      }
+      errorP.textContent = "";
+      pendingFiles = [file];
+      photosRemoved = false;
+      photoPreview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      photoPreview.appendChild(img);
+      updatePhotoUI();
     });
 
     function currentMaxPhotos() { return MAX_PHOTOS; } // 모든 카테고리 사진 1장(비용 최소화)
@@ -2814,15 +2865,23 @@ var Community = (function () {
       }
 
       submitBtn.disabled = true;
+      // 큰 사진을 고른 경우 압축/업로드에 시간이 걸릴 수 있어, 멈춘 것으로
+      // 오해하지 않도록 단계별 상태 문구를 보여줍니다(비용 최소화 지시서
+      // 13번) — 등록 버튼은 이미 비활성화되어 중복 제출도 막습니다.
+      if (pendingFiles.length) errorP.textContent = t(COMMUNITY_MSG.photoCompressing);
       createOrUpdatePost({
         category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
         originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null,
         contactViaOwnerKakao: ownerKakaoInput.checked, extra: extra,
-        photoFiles: pendingFiles
+        photoFiles: pendingFiles, photosRemoved: photosRemoved,
+        onPhotoStatus: function (phase) {
+          errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
+        }
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
       }).catch(function (err) {
         errorP.textContent = (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge)
+          : (err && err.message === "IMAGE_LOAD_FAILED") ? t(COMMUNITY_MSG.errPhotoUnsupported)
           : (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
@@ -2876,7 +2935,8 @@ var Community = (function () {
     });
   }
 
-  function compressImage(file) {
+  function compressImage(file, onStatus) {
+    if (onStatus) onStatus("compress");
     return loadImageSource(file).then(function (source) {
       return canvasToWebp(drawToCanvas(source, MAX_PHOTO_DIMENSION), PHOTO_QUALITY_INITIAL).then(function (blob) {
         if (blob.size <= PHOTO_MAX_BYTES) { releaseImageSource(source); return blob; }
@@ -2896,11 +2956,14 @@ var Community = (function () {
     if (source && typeof source.close === "function") source.close();
   }
 
-  function uploadPhotos(postId, files) {
+  function uploadPhotos(postId, files, onStatus) {
     var st = storage();
     if (!st || !files.length) return Promise.resolve([]);
     return Promise.all(files.map(function (file, i) {
-      return compressImage(file).then(function (blob) {
+      return compressImage(file, onStatus).then(function (blob) {
+        if (onStatus) onStatus("upload");
+        // 파일명은 사용자가 올린 원본 파일명을 쓰지 않고 postId+시각으로
+        // 새로 만듭니다(기존 방식 그대로 재사용 — 안전한 파일명 생성).
         var ref = st.ref().child("communityImages/" + postId + "/" + Date.now() + "-" + i + ".webp");
         return ref.put(blob).then(function () { return ref.getDownloadURL(); });
       });
@@ -2920,7 +2983,7 @@ var Community = (function () {
     var ref = isEdit ? d.collection("communityPosts").doc(editPostId) : d.collection("communityPosts").doc();
     var postId = ref.id;
 
-    return uploadPhotos(postId, fields.photoFiles).then(function (urls) {
+    return uploadPhotos(postId, fields.photoFiles, fields.onPhotoStatus).then(function (urls) {
       var base = {
         category: fields.category,
         originalLanguage: fields.originalLanguage,
@@ -2946,7 +3009,11 @@ var Community = (function () {
         // 번역하게 합니다(원문이 안 바뀌면 이 값은 그대로 유지됨).
         translations: {}
       };
+      // 새 사진을 올렸으면 그 URL로, 새 사진 없이 "사진 삭제"만 눌렀으면
+      // 빈 배열로 명시 저장(기존 사진 URL 제거). 둘 다 아니면(그대로 두면)
+      // photos 키 자체를 건드리지 않아 기존 사진이 그대로 유지됩니다.
       if (urls.length) base.photos = urls;
+      else if (fields.photosRemoved) base.photos = [];
       if (!isEdit) base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       Object.keys(fields.extra || {}).forEach(function (k) { base[k] = fields.extra[k]; });
       Object.keys(base).forEach(function (k) { if (base[k] === undefined) delete base[k]; });

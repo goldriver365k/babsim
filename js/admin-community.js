@@ -209,7 +209,7 @@ var AdminCommunity = (function () {
 
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>작성자</th><th>상태</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>사진</th><th>작성자</th><th>상태</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       snap.forEach(function (doc) {
         var p = doc.data();
@@ -222,6 +222,26 @@ var AdminCommunity = (function () {
         var tdTitle = document.createElement("td");
         tdTitle.textContent = p.originalTitle || "";
         tr.appendChild(tdTitle);
+
+        // 관리자가 게시글을 확인할 때 첨부 사진도 같이 볼 수 있도록
+        // 작은 썸네일만 추가(2026-09 "커뮤니티 이미지 업로드" 지시서
+        // 17번) — 새 상세보기 화면 없이 원본 URL을 새 탭으로 엽니다.
+        var tdPhoto = document.createElement("td");
+        if (p.photos && p.photos.length) {
+          var photoLink = document.createElement("a");
+          photoLink.href = p.photos[0];
+          photoLink.target = "_blank";
+          photoLink.rel = "noopener noreferrer";
+          var photoThumb = document.createElement("img");
+          photoThumb.src = p.photos[0];
+          photoThumb.alt = "";
+          photoThumb.className = "admin-post-photo-thumb";
+          photoLink.appendChild(photoThumb);
+          tdPhoto.appendChild(photoLink);
+        } else {
+          tdPhoto.textContent = "-";
+        }
+        tr.appendChild(tdPhoto);
 
         var tdAuthor = document.createElement("td");
         tdAuthor.textContent = p.authorNameMasked || "";
