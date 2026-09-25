@@ -2152,6 +2152,9 @@ main {
 
 .community-field { display: flex; flex-direction: column; gap: 6px; }
 
+/* 글자 수 표시(예: "328 / 500", 2026-09 자동번역 지시서 1번) */
+.community-char-count { font-size: 12px; color: #94A3B8; text-align: right; margin-top: -2px; }
+
 .community-label {
   font-size: 13px;
   font-weight: 700;

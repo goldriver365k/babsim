@@ -5080,7 +5080,7 @@ var AdminCommunity = (function () {
 
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>사진</th><th>작성자</th><th>상태</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>사진</th><th>작성자</th><th>상태</th><th>번역</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       snap.forEach(function (doc) {
         var p = doc.data();
@@ -5121,6 +5121,15 @@ var AdminCommunity = (function () {
         var tdStatus = document.createElement("td");
         tdStatus.textContent = p.status || "";
         tr.appendChild(tdStatus);
+
+        // 원문 언어를 뺀 나머지 언어 중 번역 완료 개수(예: "6/6", 실패가
+        // 있으면 "5/6 ✕" 처럼 표시) — 지시서 15번 "번역 상태 확인".
+        var tdTranslation = document.createElement("td");
+        var trSummary = translationDoneCount(p);
+        tdTranslation.textContent = trSummary.total
+          ? trSummary.done + "/" + trSummary.total + (trSummary.done < trSummary.total ? " ✕" : " ✓")
+          : "-";
+        tr.appendChild(tdTranslation);
 
         var tdReport = document.createElement("td");
         tdReport.textContent = String(p.reportCount || 0);
@@ -5271,14 +5280,27 @@ var AdminCommunity = (function () {
 
   /* ---------------- 번역 관리 ---------------- */
 
-  // 게시글은 이제 등록 시점에 미리 번역하지 않고 방문자가 요청할 때만
-  // 번역하므로(비용 최소화), "번역 실패"는 언어별 translations 맵 안에
-  // status:"failed"로 남습니다. 전용 색인 필드가 없어 최근 글을 훑어
-  // 찾습니다(관리자 화면이라 다른 통계와 동일하게 스캔 방식 사용).
+  // 2026-09 자동번역 지시서부터 게시글은 등록/수정 시점에 원문 언어를 뺀
+  // 나머지 언어를 한 번에 자동번역합니다(비용 최소화 — 조회 시에는 저장된
+  // translations만 읽고 다시 번역하지 않음). "번역 실패"는 언어별
+  // translations 맵 안에 status:"failed"로 남습니다. 전용 색인 필드가
+  // 없어 최근 글을 훑어 찾습니다(관리자 화면이라 다른 통계와 동일하게
+  // 스캔 방식 사용).
+  var TRANSLATE_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
+
   function postHasFailedTranslation(p) {
     var tr = p.translations;
     if (!tr) return false;
     return Object.keys(tr).some(function (l) { return tr[l] && tr[l].status === "failed"; });
+  }
+
+  // 원문 언어를 뺀 나머지 6개 언어 중 번역 완료 개수 — 게시글 목록 표의
+  // "번역" 열에 짧게("6/6") 보여주기 위한 요약입니다.
+  function translationDoneCount(p) {
+    var targets = TRANSLATE_LANGS.filter(function (l) { return l !== p.originalLanguage; });
+    var tr = p.translations || {};
+    var done = targets.filter(function (l) { return tr[l] && tr[l].status === "done"; }).length;
+    return { done: done, total: targets.length };
   }
 
   function loadTranslations() {
@@ -5303,8 +5325,18 @@ var AdminCommunity = (function () {
         card.appendChild(title);
         var meta = document.createElement("p");
         meta.className = "empty-note";
-        meta.textContent = "원문 언어: " + p.originalLanguage + " · 번역 실패한 언어: " + failedLangs.join(", ");
+        meta.textContent = "원문: " + p.originalLanguage;
         card.appendChild(meta);
+
+        // 언어별 상태 그리드(지시서 15번 예시 형식: KO ✓ / VI 원문 / MY ✕).
+        var grid = document.createElement("p");
+        grid.className = "empty-note";
+        grid.textContent = TRANSLATE_LANGS.map(function (l) {
+          if (l === p.originalLanguage) return l.toUpperCase() + " 원문";
+          var st = p.translations && p.translations[l] && p.translations[l].status;
+          return l.toUpperCase() + " " + (st === "done" ? "✓" : "✕");
+        }).join("   ");
+        card.appendChild(grid);
 
         var retryBtn = document.createElement("button");
         retryBtn.type = "button";

@@ -24,8 +24,8 @@ var Community = (function () {
   var PHOTO_MAX_BYTES = 200 * 1024; // 재압축 후에도 넘으면 업로드 거절
   var POST_PAGE_SIZE = 15;
   var COMMENT_PAGE_SIZE = 20;
-  var TITLE_MAX_LEN = 100;
-  var CONTENT_MAX_LEN = 2000;
+  var TITLE_MAX_LEN = 40;
+  var CONTENT_MAX_LEN = 500;
   var JOB_INTRO_MAX_LEN = 1000; // 구직 자기소개(본문 필드 재사용)
   var COMMENT_MAX_LEN = 500;
   var SUMMARY_MAX_LEN = 100; // 비회원(및 목록 카드)에게 보이는 본문 요약 길이
@@ -460,6 +460,23 @@ var Community = (function () {
     inputEl.id = id;
     wrap.appendChild(label);
     wrap.appendChild(inputEl);
+    return wrap;
+  }
+
+  // 글자 수 표시("328 / 500", 2026-09 자동번역 지시서 1번) — 숫자만
+  // 보여주므로 언어별 문구 번역이 필요 없습니다. formField()가 만든
+  // wrap 안에 카운터 한 줄만 추가하고, input 이벤트로만 갱신합니다.
+  function appendCharCounter(wrap, inputEl) {
+    var counter = el("div", "community-char-count");
+    // maxLength를 매번 다시 읽어, 구직 글처럼 카테고리에 따라 본문
+    // 글자 수 상한이 바뀌는 경우에도 inputEl.__updateCharCount()를
+    // 호출하기만 하면 항상 최신 상한이 표시됩니다(updateContentMaxLength
+    // 에서 사용).
+    function update() { counter.textContent = inputEl.value.length + " / " + inputEl.maxLength; }
+    update();
+    inputEl.addEventListener("input", update);
+    inputEl.__updateCharCount = update;
+    wrap.appendChild(counter);
     return wrap;
   }
 
@@ -2349,6 +2366,18 @@ var Community = (function () {
      부르지 않도록, 호출 전에 먼저 Firestore에 "번역 중" 상태를 표시해
      둡니다(완벽한 잠금은 아니지만 정확히 동시에 누르는 경우가 아니면
      중복 호출을 막습니다). 반환값: true(성공)/false(실패)/"quota"(한도 초과). */
+  // 구인·구직 게시글의 상세정보(직접입력 필드)도 제목/본문과 같은 번역
+  // 요청 1번에 묶어서 보냅니다(API 호출 추가 없음, 비용 최소화). 등록 시
+  // 자동번역(translatePostLanguages)과 방문자 요청 번역(requestPostTranslation)
+  // 양쪽에서 같은 함수를 재사용해 카테고리별 번역 코드를 중복하지 않습니다
+  // (2026-09 자동번역 지시서 12번).
+  function jobTranslateFields(post) {
+    if (post.category !== "job") return null;
+    var out = {};
+    jobDetailFieldKeys(post).forEach(function (k) { if (post[k]) out[k] = post[k]; });
+    return Object.keys(out).length ? out : null;
+  }
+
   function requestPostTranslation(post) {
     if (!authUser) return Promise.resolve(false);
     var d = db();
@@ -2362,14 +2391,7 @@ var Community = (function () {
       return ref.update(field).catch(function () { /* 표시 갱신 실패해도 번역 결과 자체는 유효 */ });
     }
 
-    // 구인·구직 게시글의 상세정보(직접입력 필드)도 제목/본문과 같은 번역
-    // 요청 1번에 묶어서 보냅니다(API 호출 추가 없음, 비용 최소화).
-    var jobFields = null;
-    if (post.category === "job") {
-      jobFields = {};
-      jobDetailFieldKeys(post).forEach(function (k) { if (post[k]) jobFields[k] = post[k]; });
-      if (!Object.keys(jobFields).length) jobFields = null;
-    }
+    var jobFields = jobTranslateFields(post);
 
     return ref.update(claimField).catch(function () {}).then(function () {
       return authUser.getIdToken();
@@ -2405,6 +2427,60 @@ var Community = (function () {
       });
     }).catch(function () {
       return setStatus("failed").then(function () { return false; });
+    });
+  }
+
+  /* 등록·수정 시 자동번역(2026-09 자동번역 지시서) — 지원하는 7개 언어 중
+     원문 언어를 뺀 나머지를 한 번의 AI 호출(community-translate.js의
+     translatePost, targetLanguages 배열)로 모두 번역해 저장합니다. 같은
+     글을 몇 명이 읽든 이 호출은 등록/수정 시 단 한 번만 일어나고,
+     조회·언어변경·재방문 시에는 절대 다시 호출하지 않습니다(저장된
+     translations만 읽음 — requestPostTranslation/fillDetailText 참고).
+     원문 저장은 이 함수 호출 전에 이미 끝나 있으므로, 번역이 실패해도
+     게시글 등록 자체는 항상 성공합니다(실패한 언어는 status:"failed"로
+     남아 관리자 번역관리 탭에서 재시도할 수 있습니다). */
+  function translatePostLanguages(postId, post, onStatus) {
+    var targets = SUPPORTED_LANGS.filter(function (l) { return l !== post.originalLanguage; });
+    if (!targets.length || !authUser) return Promise.resolve();
+    if (onStatus) onStatus();
+    var ref = db().collection("communityPosts").doc(postId);
+    var jobFields = jobTranslateFields(post);
+
+    function markAllFailed() {
+      var patch = {};
+      targets.forEach(function (l) { patch["translations." + l] = { status: "failed" }; });
+      return ref.update(patch).catch(function () {});
+    }
+
+    return authUser.getIdToken().then(function (idToken) {
+      var body = {
+        action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
+        title: post.originalTitle, content: post.originalContent, targetLanguages: targets
+      };
+      if (jobFields) body.fields = jobFields;
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    }).then(function (res) {
+      if (res.status === 429) return markAllFailed();
+      return res.json().then(function (data) {
+        var patch = {};
+        targets.forEach(function (l) {
+          var tr = data && data.translations && data.translations[l];
+          if (tr && tr.title && tr.content) {
+            var entry = { status: "done", title: tr.title, content: tr.content };
+            if (tr.fields) entry.fields = tr.fields;
+            patch["translations." + l] = entry;
+          } else {
+            patch["translations." + l] = { status: "failed" };
+          }
+        });
+        return ref.update(patch).catch(function () {});
+      });
+    }).catch(function () {
+      return markAllFailed();
     });
   }
 
@@ -2499,10 +2575,10 @@ var Community = (function () {
     }
 
     var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
-    form.appendChild(formField(COMMUNITY_POST.titleLabel, titleInput));
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
 
     var contentArea = el("textarea"); contentArea.maxLength = CONTENT_MAX_LEN; contentArea.required = true;
-    form.appendChild(formField(COMMUNITY_POST.contentLabel, contentArea));
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
@@ -2629,6 +2705,7 @@ var Community = (function () {
       var max = (catSelect.value === "job" && jobTypeSelect.value === "seeking") ? JOB_INTRO_MAX_LEN : CONTENT_MAX_LEN;
       contentArea.maxLength = max;
       if (contentArea.value.length > max) contentArea.value = contentArea.value.slice(0, max);
+      if (contentArea.__updateCharCount) contentArea.__updateCharCount();
     }
 
     function toggleJobTypeFields() {
@@ -2902,7 +2979,8 @@ var Community = (function () {
           photoFiles: pendingFiles, photosRemoved: photosRemoved,
           onPhotoStatus: function (phase) {
             errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
-          }
+          },
+          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); }
         });
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
@@ -3009,6 +3087,10 @@ var Community = (function () {
     }
     var ref = isEdit ? d.collection("communityPosts").doc(editPostId) : d.collection("communityPosts").doc();
     var postId = ref.id;
+    // 수정 시 원문(제목/본문)이 실제로 바뀐 경우에만 재번역합니다(2026-09
+    // 자동번역 지시서 10번 — 수정하지 않은 다른 게시글은 건드리지 않음).
+    var prevOriginalTitle = isEdit && postCache[editPostId] ? postCache[editPostId].originalTitle : null;
+    var prevOriginalContent = isEdit && postCache[editPostId] ? postCache[editPostId].originalContent : null;
 
     return uploadPhotos(postId, fields.photoFiles, fields.onPhotoStatus).then(function (urls) {
       var base = {
@@ -3029,12 +3111,7 @@ var Community = (function () {
         status: "visible",
         reportCount: 0,
         commentCount: isEdit ? undefined : 0,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        // 번역은 등록 시점에 미리 하지 않고, 방문자가 "선택한 언어로
-        // 번역하기"를 눌렀을 때만 합니다(비용 최소화). 원문을 수정하면
-        // 예전 번역이 남아있지 않도록 비워서, 다음에 보는 사람이 새로
-        // 번역하게 합니다(원문이 안 바뀌면 이 값은 그대로 유지됨).
-        translations: {}
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       // 새 사진을 올렸으면 그 URL로, 새 사진 없이 "사진 삭제"만 눌렀으면
       // 빈 배열로 명시 저장(기존 사진 URL 제거). 둘 다 아니면(그대로 두면)
@@ -3043,12 +3120,24 @@ var Community = (function () {
       else if (fields.photosRemoved) base.photos = [];
       if (!isEdit) base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       Object.keys(fields.extra || {}).forEach(function (k) { base[k] = fields.extra[k]; });
+      // 원문(제목/본문)이 바뀌는 경우에만 translations를 비웁니다 — 새 글은
+      // 항상 비우고, 수정 글은 실제로 바뀔 때만 비웁니다(원문이 안 바뀌면
+      // 기존 번역을 그대로 유지 — 지시서 10번).
+      var titleChanged = !isEdit || base.originalTitle !== prevOriginalTitle;
+      var contentChanged = !isEdit || base.originalContent !== prevOriginalContent;
+      var needsTranslate = titleChanged || contentChanged;
+      if (needsTranslate) base.translations = {};
       Object.keys(base).forEach(function (k) { if (base[k] === undefined) delete base[k]; });
 
       var writeOp = isEdit ? ref.update(base) : withRateLimit("post", function (tx) { tx.set(ref, base); });
       return writeOp.then(function () {
         editPostId = null;
-        return postId;
+        if (!needsTranslate) return postId;
+        // 등록/수정 시 자동번역 — 원문 저장은 이미 끝났으므로, 이 호출이
+        // 실패해도 게시글 등록 자체는 이미 성공한 상태입니다(지시서 9번).
+        // base에는 category/jobType과 구인·구직 상세필드(industry 등)가
+        // 모두 평탄화되어 있어 jobTranslateFields(base)가 그대로 읽습니다.
+        return translatePostLanguages(postId, base, fields.onTranslateStatus).then(function () { return postId; });
       });
     });
   }
