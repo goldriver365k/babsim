@@ -2358,11 +2358,28 @@ main {
 .community-badge-jobstatus-seeking { background: var(--comm-free); }
 .community-badge-jobstatus-done { background: var(--comm-done); }
 
-/* 게시글 상세 */
+/* 게시글 상세 — 이 화면은 항상 어두운 배경(body:not(:has(#homeView...)))
+   위에 표시되는데 제목/본문 색이 밝은 배경용(--comm-navy/--comm-text,
+   어두운 남색·슬레이트)으로 남아 있어 거의 안 보이던 문제를 수정합니다
+   (레이아웃/크기/간격은 그대로, 글씨 색만 변경 — 2026-09 가독성 수정
+   지시서). 작성자·날짜(.community-post-card-meta)는 목록 카드에서도
+   재사용되는 공용 클래스라 목록까지 바뀌지 않도록 상세화면
+   (.community-detail-head) 안에서만 덮어씁니다.
+   카테고리(.community-post-card-cat)는 기존 파란색(#1559D6)이 검정
+   배경에서도 충분히 밝아 그대로 유지합니다. */
 .community-detail-head { margin-bottom: 10px; }
-.community-detail-title { font-size: 19px; font-weight: 800; color: var(--comm-navy); margin: 6px 0; overflow-wrap: anywhere; }
+.community-detail-title { font-size: 19px; font-weight: 800; color: #FFFFFF; margin: 6px 0; overflow-wrap: anywhere; }
+.community-detail-head .community-post-card-meta { color: #A8A8A8; }
 .community-detail-body { margin-bottom: 14px; }
-.community-detail-content { font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.community-detail-content {
+  font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+  color: #E5E5E5;
+}
+/* 본문이 나중에 Markdown(###, 목록 등)으로 렌더링되는 경우를 대비한
+   안전장치 — 지금은 평문(pre-wrap)이라 실제로는 .community-detail-content
+   의 color(#E5E5E5)가 p/li 등에 그대로 상속되어 이미 밝게 보입니다. */
+.community-detail-content h1, .community-detail-content h2,
+.community-detail-content h3, .community-detail-content h4 { color: #FFFFFF; }
 .community-ai-notice { font-size: 12px; color: #94A3B8; margin-top: 6px; }
 
 .community-detail-gallery { margin-bottom: 14px; }
