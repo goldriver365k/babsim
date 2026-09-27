@@ -900,6 +900,7 @@ table.results-table {
       <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
       <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
       <button type="button" class="admin-nav-btn" data-page="roomInquiry">방 구하기 문의</button>
+      <button type="button" class="admin-nav-btn" data-page="weekendSurvey">주말·공휴일 설문</button>
     </nav>
   </header>
 
@@ -1377,6 +1378,64 @@ table.results-table {
         <div id="roomInquiryDetailBody"><p class="empty-note">문의를 선택해주세요.</p></div>
       </div>
     </section>
+
+    <section class="admin-page" id="pageWeekendSurvey" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">통계를 보려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다).</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>총 참여 인원</h2>
+        <p class="weekend-survey-stat-row" id="weekendSurveyTotalCount">0명</p>
+        <label for="weekendSurveyLangFilter">언어 필터</label>
+        <select id="weekendSurveyLangFilter">
+          <option value="all">전체</option>
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="bn">বাংলা</option>
+        </select>
+      </div>
+
+      <div class="admin-card">
+        <h2>선택 언어 통계</h2>
+        <div id="weekendSurveyLangStats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 1 — 한국인 학생 / 유학생</h2>
+        <div id="weekendSurveyQ1Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 2 — 생활 형태</h2>
+        <div id="weekendSurveyQ2Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 3 — 희망 운영시간</h2>
+        <div id="weekendSurveyQ3Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 4 — 메뉴 구성</h2>
+        <div id="weekendSurveyQ4Stats"></div>
+        <h3>기타 의견</h3>
+        <div id="weekendSurveyQ4Other"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 5 — 이용 의향</h2>
+        <div id="weekendSurveyQ5Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>건의사항</h2>
+        <div id="weekendSurveySuggestions"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -1384,8 +1443,7 @@ table.results-table {
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    Firebase 프로젝트 연결 설정
    - babsim-46284 프로젝트 값으로 연결되어 있습니다 (2026-09-09 연동 완료).
    - Firestore(DB)는 학생 화면(천원의 아침밥 평가, 언어 통계, 주간메뉴)과
@@ -1703,6 +1761,23 @@ table.results-table {
             allow delete: if false;
           }
 
+          // ---------------- 1,000원의 아침밥 주말·공휴일 설문조사
+          // (js/weekend-survey.js, 2026-09 추가) ---------------- 로그인/
+          // 회원가입 없이 누구나 딱 1건만 생성 가능(익명 설문 — 개인정보
+          // 없음). 수정/삭제는 아무도 할 수 없고, 조회는 관리자(주간메뉴
+          // 관리와 같은 계정)만 가능합니다(관리자 통계 화면용).
+          match /weekendBreakfastSurveys/{docId} {
+            allow create: if request.resource.data.selectedLanguage in ['ko','en','zh','vi','bn']
+              && request.resource.data.nationalityType in ['korean','international']
+              && request.resource.data.livingType in ['dorm','offcampus','commute']
+              && request.resource.data.preferredTime in ['0730','0800']
+              && request.resource.data.menuPreference in ['simple','simple_korean','other']
+              && request.resource.data.usageIntent in ['often','sometimes','unsure','no']
+              && request.resource.data.surveyVersion is int;
+            allow read: if request.auth != null;   // 관리자 로그인 필요
+            allow update, delete: if false;
+          }
+
           // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
           // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
           // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
@@ -1859,7 +1934,6 @@ function getFirebaseStorage() {
     return null;
   }
 }
-
 </script>
 <script>
 /* ==========================================================================
@@ -3383,7 +3457,7 @@ const OWNER_CHAT = {
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup", menu: "pageMenu", roomInquiry: "pageRoomInquiry" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup", menu: "pageMenu", roomInquiry: "pageRoomInquiry", weekendSurvey: "pageWeekendSurvey" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -3409,6 +3483,7 @@ const OWNER_CHAT = {
     else if (page === "popup") { if (window.AdminPopup) AdminPopup.init(); }
     else if (page === "menu") { if (window.AdminMenu) AdminMenu.init(); }
     else if (page === "roomInquiry") { if (window.AdminRoomInquiry) AdminRoomInquiry.init(); }
+    else if (page === "weekendSurvey") { if (window.AdminWeekendSurvey) AdminWeekendSurvey.init(); }
   }
 
   /* ================================================================
@@ -6678,6 +6753,184 @@ var AdminRoomInquiry = (function () {
     loadPhone();
     loadInquiries();
     renderDetail(null);
+  }
+
+  return { init: init };
+})();
+</script>
+<script>/* ==========================================================================
+   관리자 페이지 - 1,000원의 아침밥 주말·공휴일 설문조사
+   (js/admin-weekend-survey.js)
+   - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
+     "주말·공휴일 설문" 탭 하나를 추가합니다(js/admin-room-inquiry.js와
+     같은 방식). 로그인은 "주간메뉴 관리"에서 이미 로그인한 Firebase
+     계정을 그대로 씁니다.
+   - 탭을 열 때 weekendBreakfastSurveys를 딱 1번만 조회하고(실시간 리스너
+     없음), 이후 언어 필터는 이미 받아온 데이터를 브라우저에서 다시 계산만
+     합니다(재조회 없음 — 비용 최소화 지시서 40번).
+   - Chart.js 등 새 차트 라이브러리 없이 "인원 + %" 텍스트만 사용합니다
+     (36번).
+   ========================================================================== */
+
+var AdminWeekendSurvey = (function () {
+  "use strict";
+
+  var els = {};
+  var allDocs = null; // 최초 조회 결과 캐시(.get() 1회) — 언어 필터는 이 배열을 다시 계산
+
+  var LANG_LABEL = { ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", bn: "বাংলা" };
+  var LANG_ORDER = ["ko", "en", "zh", "vi", "bn"];
+  var Q1_LABEL = { korean: "한국인 학생", international: "유학생" };
+  var Q2_LABEL = { dorm: "기숙사 생활", offcampus: "자취", commute: "통학" };
+  var Q3_LABEL = { "0730": "오전 7:30 ~ 오전 9:30", "0800": "오전 8:00 ~ 오전 10:00" };
+  var Q4_LABEL = { simple: "간편식", simple_korean: "간편식 + 한식", other: "기타 의견" };
+  var Q5_LABEL = { often: "자주 이용하겠다", sometimes: "가끔 이용하겠다", unsure: "잘 모르겠다", no: "이용하지 않을 것 같다" };
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+
+  function fmtDateTime(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : null;
+    if (!d || isNaN(d.getTime())) return "-";
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function pct(count, total) {
+    if (!total) return "0.0%";
+    return (count / total * 100).toFixed(1) + "%";
+  }
+
+  // 인원+% 텍스트만 쌓는 단순 통계 블록(새 차트 라이브러리 없음 — 36번).
+  function renderCountStats(container, rows, total) {
+    container.innerHTML = "";
+    rows.forEach(function (r) {
+      var p = document.createElement("p");
+      p.className = "weekend-survey-stat-row";
+      p.innerHTML = "<strong>" + r.label + "</strong> — " + r.count + "명 / " + pct(r.count, total);
+      container.appendChild(p);
+    });
+    if (!rows.length) container.innerHTML = "<p class=\"empty-note\">데이터가 없습니다.</p>";
+  }
+
+  function countBy(docs, field, keys) {
+    var counts = {};
+    keys.forEach(function (k) { counts[k] = 0; });
+    docs.forEach(function (d) { if (counts[d[field]] !== undefined) counts[d[field]] += 1; });
+    return counts;
+  }
+
+  function render() {
+    var docs = allDocs || [];
+    var filterLang = els.langFilter ? els.langFilter.value : "all";
+    var filtered = (filterLang === "all") ? docs : docs.filter(function (d) { return d.selectedLanguage === filterLang; });
+    var total = filtered.length;
+
+    if (els.totalCount) els.totalCount.textContent = total + "명";
+
+    // 선택 언어 통계는 필터와 무관하게 전체 기준으로 보여줍니다(필터는
+    // "그 언어만 기준으로 나머지 문항 통계를 다시 계산"하는 용도 — 35번).
+    var langCounts = countBy(docs, "selectedLanguage", LANG_ORDER);
+    renderCountStats(els.langStats, LANG_ORDER.map(function (l) {
+      return { label: LANG_LABEL[l], count: langCounts[l] };
+    }), docs.length);
+
+    var q1Counts = countBy(filtered, "nationalityType", Object.keys(Q1_LABEL));
+    renderCountStats(els.q1Stats, Object.keys(Q1_LABEL).map(function (k) {
+      return { label: Q1_LABEL[k], count: q1Counts[k] };
+    }), total);
+
+    var q2Counts = countBy(filtered, "livingType", Object.keys(Q2_LABEL));
+    renderCountStats(els.q2Stats, Object.keys(Q2_LABEL).map(function (k) {
+      return { label: Q2_LABEL[k], count: q2Counts[k] };
+    }), total);
+
+    var q3Counts = countBy(filtered, "preferredTime", Object.keys(Q3_LABEL));
+    renderCountStats(els.q3Stats, Object.keys(Q3_LABEL).map(function (k) {
+      return { label: Q3_LABEL[k], count: q3Counts[k] };
+    }), total);
+
+    var q4Counts = countBy(filtered, "menuPreference", Object.keys(Q4_LABEL));
+    renderCountStats(els.q4Stats, Object.keys(Q4_LABEL).map(function (k) {
+      return { label: Q4_LABEL[k], count: q4Counts[k] };
+    }), total);
+
+    // 기타 의견(menuOtherOpinion) — 비어있지 않은 것만, 최근순.
+    var q4Others = filtered.filter(function (d) { return d.menuOtherOpinion && d.menuOtherOpinion.trim(); })
+      .sort(function (a, b) { return (b._createdMs || 0) - (a._createdMs || 0); });
+    els.q4Other.innerHTML = "";
+    if (!q4Others.length) {
+      els.q4Other.innerHTML = "<p class=\"empty-note\">기타 의견이 없습니다.</p>";
+    } else {
+      q4Others.forEach(function (d) {
+        var p = document.createElement("p");
+        p.innerHTML = "<strong>" + fmtDateTime(d.createdAt) + " (" + (LANG_LABEL[d.selectedLanguage] || d.selectedLanguage) + "):</strong> ";
+        p.appendChild(document.createTextNode(d.menuOtherOpinion));
+        els.q4Other.appendChild(p);
+      });
+    }
+
+    var q5Counts = countBy(filtered, "usageIntent", Object.keys(Q5_LABEL));
+    renderCountStats(els.q5Stats, Object.keys(Q5_LABEL).map(function (k) {
+      return { label: Q5_LABEL[k], count: q5Counts[k] };
+    }), total);
+
+    // 건의사항(suggestion) — 비어있지 않은 것만, 최근순(34번).
+    var suggestions = filtered.filter(function (d) { return d.suggestion && d.suggestion.trim(); })
+      .sort(function (a, b) { return (b._createdMs || 0) - (a._createdMs || 0); });
+    els.suggestions.innerHTML = "";
+    if (!suggestions.length) {
+      els.suggestions.innerHTML = "<p class=\"empty-note\">건의사항이 없습니다.</p>";
+    } else {
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>작성일</th><th>선택 언어</th><th>건의사항</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      suggestions.forEach(function (d) {
+        var tr = document.createElement("tr");
+        var tdDate = document.createElement("td"); tdDate.textContent = fmtDateTime(d.createdAt); tr.appendChild(tdDate);
+        var tdLang = document.createElement("td"); tdLang.textContent = LANG_LABEL[d.selectedLanguage] || d.selectedLanguage; tr.appendChild(tdLang);
+        var tdText = document.createElement("td"); tdText.textContent = d.suggestion; tr.appendChild(tdText);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      els.suggestions.appendChild(table);
+    }
+  }
+
+  function load() {
+    var d = db();
+    if (!d) return;
+    els.totalCount.textContent = "불러오는 중...";
+    d.collection("weekendBreakfastSurveys").orderBy("createdAt", "desc").limit(2000).get().then(function (snap) {
+      allDocs = [];
+      snap.forEach(function (doc) {
+        var data = doc.data();
+        data._createdMs = (data.createdAt && typeof data.createdAt.toMillis === "function") ? data.createdAt.toMillis() : 0;
+        allDocs.push(data);
+      });
+      render();
+    }).catch(function () {
+      els.totalCount.textContent = "불러오지 못했습니다(관리자 로그인이 필요할 수 있습니다).";
+    });
+  }
+
+  function init() {
+    els.totalCount = qs("weekendSurveyTotalCount");
+    if (!els.totalCount) return; // 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+    els.langFilter = qs("weekendSurveyLangFilter");
+    els.langStats = qs("weekendSurveyLangStats");
+    els.q1Stats = qs("weekendSurveyQ1Stats");
+    els.q2Stats = qs("weekendSurveyQ2Stats");
+    els.q3Stats = qs("weekendSurveyQ3Stats");
+    els.q4Stats = qs("weekendSurveyQ4Stats");
+    els.q4Other = qs("weekendSurveyQ4Other");
+    els.q5Stats = qs("weekendSurveyQ5Stats");
+    els.suggestions = qs("weekendSurveySuggestions");
+
+    if (els.langFilter) els.langFilter.addEventListener("change", render);
+
+    if (allDocs === null) load(); else render(); // 탭을 다시 열 때는 재조회하지 않고 캐시만 다시 그림
   }
 
   return { init: init };

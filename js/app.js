@@ -1112,6 +1112,10 @@
     els.homeLegoWeekendBtn = qs("homeLegoWeekendBtn");
     els.homeLegoWeekendLabel = qs("homeLegoWeekendLabel");
     els.homeCardWeekendSub = qs("homeCardWeekendSub");
+    // 1,000원의 아침밥 주말·공휴일 설문조사(2026-09 지시서) — 이벤트
+    // 영역의 새 배너 카드. 삭제된 FEEDBACK 카드 자리(.home-tile-feedback)를
+    // 그대로 재사용(새 색상/새 그리드 규칙 없음).
+    els.homeLegoSurveyBtn = qs("homeLegoSurveyBtn");
     els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
     // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
@@ -1286,6 +1290,13 @@
     if (els.homeLegoWeekendBtn) {
       els.homeLegoWeekendBtn.addEventListener("click", function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("together");
+      });
+    }
+    // 주말·공휴일 설문 배너 — 새 이벤트 시스템 없이 기존 모달 방식
+    // (js/weekend-survey.js)을 그대로 엽니다.
+    if (els.homeLegoSurveyBtn) {
+      els.homeLegoSurveyBtn.addEventListener("click", function () {
+        if (window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") window.WeekendSurvey.openFromBanner();
       });
     }
     // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/
@@ -1541,11 +1552,22 @@
     // 히어로 영역에 상시 노출되므로, 같은 내용이 모달로 또 겹쳐 뜨지
     // 않도록 이 자동 호출 체인에서는 제외합니다(모듈 자체는 삭제하지
     // 않고 그대로 둡니다 — window.HometownPopup.maybeShow는 여전히 존재).
-    setTimeout(function () {
+    // 1,000원의 아침밥 주말·공휴일 설문조사(2026-09 지시서) — 일반 메인
+    // 화면보다 먼저 보여주되, 기존 팝업 체인(관리자 팝업 → 아침밥 평가
+    // 팝업)과 겹쳐 뜨지 않도록 설문 모달이 닫힌 뒤에만 그 체인을
+    // 이어갑니다(이미 참여했으면 설문 없이 바로 기존 체인으로 넘어감).
+    function afterSurveyChain() {
       if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
         window.SitePopup.maybeShow(maybeShowBreakfastPopup);
       } else {
         maybeShowBreakfastPopup();
+      }
+    }
+    setTimeout(function () {
+      if (window.WeekendSurvey && typeof window.WeekendSurvey.maybeShowOnEntry === "function") {
+        window.WeekendSurvey.maybeShowOnEntry(afterSurveyChain);
+      } else {
+        afterSurveyChain();
       }
     }, 1000);
   }

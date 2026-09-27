@@ -614,6 +614,104 @@ button {
 
 .room-finder-submit { width: 100%; }
 
+/* ---------------- 1,000원의 아침밥 주말·공휴일 설문조사
+   (js/weekend-survey.js) ----------------
+   껍데기(.modal-overlay/.modal/.modal-close)와 버튼(.community-btn-primary/
+   .community-btn-secondary)은 기존 스타일을 그대로 재사용합니다(새 UI
+   라이브러리 없음). 언어 버튼은 .room-finder-lang-list/.room-finder-
+   lang-btn을 그대로 재사용하되, 지시서 6번의 최소 높이 52px만 여기서
+   덧붙입니다. */
+.weekend-survey-title {
+  margin: 0 0 2px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.weekend-survey-subtitle {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blue);
+  text-align: center;
+}
+
+.weekend-survey-intro-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+
+.weekend-survey-intro-line {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.weekend-survey-lang-btn { width: 100%; min-height: 52px; }
+
+.weekend-survey-progress {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.weekend-survey-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.weekend-survey-option-btn { width: 100%; text-align: left; }
+
+/* .community-btn-secondary와 클래스 2개를 겹쳐 써서(css/style.css 뒤쪽의
+   .community-btn-secondary 기본 규칙보다 우선하도록) 선택된 답변만 채워진
+   색으로 보이게 합니다(새 컴포넌트 없이 기존 버튼 2종 전환만 사용). */
+.community-btn-secondary.weekend-survey-option-selected {
+  background: var(--comm-blue);
+  color: #FFFFFF;
+  border-color: var(--comm-blue);
+}
+
+.weekend-survey-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 14px;
+  border: 1px solid var(--comm-border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.weekend-survey-suggestion-title {
+  margin: 4px 0 2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.weekend-survey-suggestion-desc {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+.weekend-survey-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.weekend-survey-nav-btn { flex: 1 1 auto; }
+
 /* ---------------- 사장님께 말해요 ---------------- */
 
 .owner-chat-banner {

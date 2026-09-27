@@ -469,3 +469,135 @@ const PWA_INSTALL_INFO = {
     my: ["Safari ၏ မျှဝေရန်ခလုတ်ကို နှိပ်ပါ", "“ပင်မစခရင်တွင်ထည့်ရန်” ကိုရွေးပါ", "ညာဘက်အပေါ်ရှိ “ထည့်ရန်” ကိုနှိပ်ပါ"]
   }
 };
+
+/* ==========================================================================
+   1,000원의 아침밥 — 주말·공휴일 운영 설문조사 (js/weekend-survey.js)
+   - 문항이 5개뿐이라 외부 번역 API 없이 5개 언어(ko/en/zh/vi/bn) 문구를
+     여기 직접 저장합니다(2026-09 비용 최소화 지시서 8/41번). 질문 2는
+     지시서에 명시된 번역을 그대로 사용했습니다(41번).
+   - 시간 표기(07:30/08:00)는 모든 언어에서 숫자를 그대로 씁니다(13번).
+   ========================================================================== */
+const WEEKEND_SURVEY = {
+  introDesc: {
+    ko: "설문조사에 참여해주세요", en: "Please participate in our survey",
+    zh: "请参加问卷调查", vi: "Vui lòng tham gia khảo sát", bn: "অনুগ্রহ করে জরিপে অংশ নিন"
+  },
+  progress: {
+    ko: "질문 {n} / {total}", en: "Question {n} / {total}", zh: "问题 {n} / {total}",
+    vi: "Câu hỏi {n} / {total}", bn: "প্রশ্ন {n} / {total}"
+  },
+  nextButton: { ko: "다음", en: "Next", zh: "下一步", vi: "Tiếp theo", bn: "পরবর্তী" },
+  prevButton: { ko: "이전", en: "Previous", zh: "上一步", vi: "Trước", bn: "পূর্ববর্তী" },
+  completeButton: { ko: "완료", en: "Submit", zh: "完成", vi: "Hoàn thành", bn: "সম্পন্ন করুন" },
+  okButton: { ko: "확인", en: "OK", zh: "确定", vi: "Xác nhận", bn: "ঠিক আছে" },
+  selectRequired: {
+    ko: "선택해주세요.", en: "Please select an option.", zh: "请选择。",
+    vi: "Vui lòng chọn.", bn: "অনুগ্রহ করে নির্বাচন করুন।"
+  },
+  saveError: {
+    ko: "저장에 실패했습니다. 다시 시도해주세요.", en: "Failed to save. Please try again.",
+    zh: "保存失败，请重试。", vi: "Lưu thất bại. Vui lòng thử lại.", bn: "সংরক্ষণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।"
+  },
+  alreadyDoneTitle: {
+    ko: "설문에 이미 참여하셨습니다.", en: "You have already participated in this survey.",
+    zh: "您已经参加过此问卷调查。", vi: "Bạn đã tham gia khảo sát này rồi.",
+    bn: "আপনি ইতিমধ্যে এই জরিপে অংশ নিয়েছেন।"
+  },
+  alreadyDoneDesc: {
+    ko: "소중한 의견 감사합니다.", en: "Thank you for your valuable feedback.",
+    zh: "感谢您的宝贵意见。", vi: "Cảm ơn ý kiến quý báu của bạn.", bn: "আপনার মূল্যবান মতামতের জন্য ধন্যবাদ।"
+  },
+
+  q1_title: {
+    ko: "귀하는 어디에 해당합니까?", en: "Which of the following applies to you?",
+    zh: "您属于以下哪种情况？", vi: "Bạn thuộc nhóm nào sau đây?", bn: "আপনি নিচের কোনটির সাথে সম্পর্কিত?"
+  },
+  q1_opt_korean: { ko: "한국인 학생", en: "Korean student", zh: "韩国学生", vi: "Sinh viên Hàn Quốc", bn: "কোরিয়ান শিক্ষার্থী" },
+  q1_opt_international: { ko: "유학생", en: "International student", zh: "留学生", vi: "Du học sinh", bn: "আন্তর্জাতিক শিক্ষার্থী" },
+
+  // 지시서 12번 — 기숙사 생활/자취/통학의 의미가 정확히 전달되도록 지시서에
+  // 명시된 번역을 그대로 사용(기계번역 아님).
+  q2_title: {
+    ko: "현재 생활 형태는 무엇입니까?", en: "What is your current living arrangement?",
+    zh: "您目前的居住方式是什么？", vi: "Hiện tại bạn đang sinh hoạt theo hình thức nào?",
+    bn: "আপনি বর্তমানে কীভাবে থাকেন?"
+  },
+  q2_opt_dorm: {
+    ko: "기숙사 생활", en: "Living in a dormitory", zh: "住学校宿舍",
+    vi: "Sống trong ký túc xá", bn: "বিশ্ববিদ্যালয়ের ছাত্রাবাসে থাকি"
+  },
+  q2_opt_offcampus: {
+    ko: "자취", en: "Living off-campus on my own", zh: "在校外自己租房居住",
+    vi: "Thuê nhà và sống bên ngoài trường", bn: "ক্যাম্পাসের বাইরে ভাড়া বাসায় থাকি"
+  },
+  q2_opt_commute: {
+    ko: "통학", en: "Commuting from home", zh: "从家里通学",
+    vi: "Đi học từ nhà", bn: "বাড়ি থেকে যাতায়াত করি"
+  },
+
+  q3_title: {
+    ko: "주말 및 공휴일에 원하는 아침밥 운영시간은 언제입니까?",
+    en: "What time would you like weekend/holiday breakfast service to run?",
+    zh: "您希望周末及公休日的早餐供应时间是几点？",
+    vi: "Bạn muốn giờ phục vụ bữa sáng vào cuối tuần và ngày lễ là khi nào?",
+    bn: "সপ্তাহান্ত ও ছুটির দিনে আপনি নাশতা পরিষেবার সময় কখন চান?"
+  },
+  q3_opt_0730: {
+    ko: "오전 7:30 ~ 오전 9:30", en: "7:30 AM ~ 9:30 AM", zh: "上午7:30～上午9:30",
+    vi: "7:30 ~ 9:30 sáng", bn: "সকাল 7:30 ~ সকাল 9:30"
+  },
+  q3_opt_0800: {
+    ko: "오전 8:00 ~ 오전 10:00", en: "8:00 AM ~ 10:00 AM", zh: "上午8:00～上午10:00",
+    vi: "8:00 ~ 10:00 sáng", bn: "সকাল 8:00 ~ সকাল 10:00"
+  },
+
+  q4_title: {
+    ko: "주말 및 공휴일 아침 메뉴는 어떤 구성을 선호합니까?",
+    en: "What menu style would you prefer for weekend/holiday breakfast?",
+    zh: "您希望周末及公休日的早餐是什么样的？",
+    vi: "Bạn muốn thực đơn bữa sáng cuối tuần và ngày lễ như thế nào?",
+    bn: "সপ্তাহান্ত ও ছুটির দিনের নাশতার মেনু কেমন হলে ভালো হয়?"
+  },
+  q4_opt_simple: {
+    ko: "간편식 (빵 · 우유 · 콘플레이크 · 라면 · 쌀국수 등)",
+    en: "Simple meal (bread, milk, cornflakes, ramen, pho, etc.)",
+    zh: "简便餐（面包·牛奶·玉米片·拉面·越南河粉等）",
+    vi: "Bữa ăn đơn giản (bánh mì · sữa · ngũ cốc · mì ramen · phở, v.v.)",
+    bn: "সহজ খাবার (রুটি · দুধ · কর্নফ্লেক্স · রামেন · ফো নুডলস ইত্যাদি)"
+  },
+  q4_opt_simple_korean: {
+    ko: "간편식 + 한식", en: "Simple meal + Korean food", zh: "简便餐 + 韩式餐",
+    vi: "Bữa ăn đơn giản + món Hàn", bn: "সহজ খাবার + কোরিয়ান খাবার"
+  },
+  q4_opt_other: { ko: "기타 의견", en: "Other opinion", zh: "其他意见", vi: "Ý kiến khác", bn: "অন্যান্য মতামত" },
+  q4_otherPlaceholder: {
+    ko: "원하는 메뉴나 의견을 입력해주세요.", en: "Please enter the menu or opinion you'd like.",
+    zh: "请输入您希望的菜单或意见。", vi: "Vui lòng nhập thực đơn hoặc ý kiến mong muốn.",
+    bn: "আপনার পছন্দের মেনু বা মতামত লিখুন।"
+  },
+
+  q5_title: {
+    ko: "주말 및 공휴일에 1,000원의 아침밥을 운영한다면 당신은 이용하시겠습니까?",
+    en: "If weekend/holiday 1,000 won breakfast service is offered, would you use it?",
+    zh: "如果周末及公休日提供1,000韩元早餐，您会使用吗？",
+    vi: "Nếu bữa sáng 1.000 won được vận hành vào cuối tuần và ngày lễ, bạn có sử dụng không?",
+    bn: "সপ্তাহান্ত ও ছুটির দিনে ১,০০০ ওনের নাশতা চালু হলে আপনি কি ব্যবহার করবেন?"
+  },
+  q5_opt_often: { ko: "자주 이용하겠습니다", en: "I would use it often", zh: "会经常使用", vi: "Tôi sẽ sử dụng thường xuyên", bn: "আমি প্রায়ই ব্যবহার করব" },
+  q5_opt_sometimes: { ko: "가끔 이용하겠습니다", en: "I would use it sometimes", zh: "偶尔会使用", vi: "Tôi sẽ thỉnh thoảng sử dụng", bn: "মাঝে মাঝে ব্যবহার করব" },
+  q5_opt_unsure: { ko: "잘 모르겠습니다", en: "Not sure", zh: "不太确定", vi: "Tôi chưa chắc chắn", bn: "নিশ্চিত না" },
+  q5_opt_no: { ko: "이용하지 않을 것 같습니다", en: "I probably wouldn't use it", zh: "应该不会使用", vi: "Có lẽ tôi sẽ không sử dụng", bn: "সম্ভবত ব্যবহার করব না" },
+
+  suggestionTitle: { ko: "건의사항", en: "Suggestions", zh: "建议事项", vi: "Góp ý", bn: "মতামত" },
+  suggestionDesc: {
+    ko: "주말 및 공휴일 영업에 대한 의견이나 건의사항을 자유롭게 작성해주세요.",
+    en: "Feel free to share any opinions or suggestions about weekend/holiday operation.",
+    zh: "请自由填写您对周末及公休日运营的意见或建议。",
+    vi: "Vui lòng tự do chia sẻ ý kiến hoặc góp ý về việc vận hành vào cuối tuần và ngày lễ.",
+    bn: "সপ্তাহান্ত ও ছুটির দিনের পরিচালনা সম্পর্কে আপনার মতামত বা পরামর্শ স্বাধীনভাবে লিখুন।"
+  },
+  suggestionPlaceholder: {
+    ko: "건의사항을 입력해주세요(선택).", en: "Enter your suggestion (optional).",
+    zh: "请输入建议事项（可选）。", vi: "Nhập góp ý của bạn (không bắt buộc).", bn: "আপনার মতামত লিখুন (ঐচ্ছিক)।"
+  }
+};

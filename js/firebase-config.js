@@ -316,6 +316,23 @@
             allow delete: if false;
           }
 
+          // ---------------- 1,000원의 아침밥 주말·공휴일 설문조사
+          // (js/weekend-survey.js, 2026-09 추가) ---------------- 로그인/
+          // 회원가입 없이 누구나 딱 1건만 생성 가능(익명 설문 — 개인정보
+          // 없음). 수정/삭제는 아무도 할 수 없고, 조회는 관리자(주간메뉴
+          // 관리와 같은 계정)만 가능합니다(관리자 통계 화면용).
+          match /weekendBreakfastSurveys/{docId} {
+            allow create: if request.resource.data.selectedLanguage in ['ko','en','zh','vi','bn']
+              && request.resource.data.nationalityType in ['korean','international']
+              && request.resource.data.livingType in ['dorm','offcampus','commute']
+              && request.resource.data.preferredTime in ['0730','0800']
+              && request.resource.data.menuPreference in ['simple','simple_korean','other']
+              && request.resource.data.usageIntent in ['often','sometimes','unsure','no']
+              && request.resource.data.surveyVersion is int;
+            allow read: if request.auth != null;   // 관리자 로그인 필요
+            allow update, delete: if false;
+          }
+
           // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
           // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
           // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
