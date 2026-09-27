@@ -2707,7 +2707,13 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 #homeView{max-width:1100px;margin:0 auto;padding:28px 18px 48px;background:var(--home-bg)}
 #homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
 
-.home-hero-copy{margin:0 0 28px}
+/* 화산불백 ↔ 설문조사 자동 전환(2026-09 지시서) — 같은 자리에서 내용만
+   바꾸므로, 두 슬라이드 중 더 큰 쪽 기준으로 최소 높이를 고정해 전환
+   시 아래 카드들이 위아래로 움직이지 않게 합니다. 전환 효과는 새
+   라이브러리 없이 opacity transition만 사용합니다. */
+.home-hero-copy{margin:0 0 28px;min-height:230px;transition:opacity .35s ease}
+.home-hero-copy.home-hero-fading{opacity:0}
+@media (min-width:640px){.home-hero-copy{min-height:260px}}
 .home-hero-eyebrow{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.18em;color:var(--home-fg-muted);text-transform:uppercase;transition:color .12s ease}
 .home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.28;letter-spacing:-.03em;color:var(--home-fg-strong)}
 /* 메인 히어로가 기존 팝업 데이터(EVENT)를 보여줄 때만 카테고리를
@@ -2728,6 +2734,13 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   color:var(--home-yellow);font-size:13px;font-weight:700;letter-spacing:.02em;text-decoration:none;
 }
 .home-hero-cta[hidden]{display:none}
+
+/* 화산불백/설문조사 슬라이드 표시점 2개 — 작게, 기존 포인트 컬러(노랑)만
+   재사용(새 아이콘/이미지 없음). */
+.home-hero-dots{display:flex;gap:6px;margin-top:16px}
+.home-hero-dots[hidden]{display:none}
+.home-hero-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
+.home-hero-dot.active{background:var(--home-yellow)}
 
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{

@@ -2755,7 +2755,13 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 #homeView{max-width:1100px;margin:0 auto;padding:28px 18px 48px;background:var(--home-bg)}
 #homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
 
-.home-hero-copy{margin:0 0 28px}
+/* 화산불백 ↔ 설문조사 자동 전환(2026-09 지시서) — 같은 자리에서 내용만
+   바꾸므로, 두 슬라이드 중 더 큰 쪽 기준으로 최소 높이를 고정해 전환
+   시 아래 카드들이 위아래로 움직이지 않게 합니다. 전환 효과는 새
+   라이브러리 없이 opacity transition만 사용합니다. */
+.home-hero-copy{margin:0 0 28px;min-height:230px;transition:opacity .35s ease}
+.home-hero-copy.home-hero-fading{opacity:0}
+@media (min-width:640px){.home-hero-copy{min-height:260px}}
 .home-hero-eyebrow{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.18em;color:var(--home-fg-muted);text-transform:uppercase;transition:color .12s ease}
 .home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.28;letter-spacing:-.03em;color:var(--home-fg-strong)}
 /* 메인 히어로가 기존 팝업 데이터(EVENT)를 보여줄 때만 카테고리를
@@ -2776,6 +2782,13 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   color:var(--home-yellow);font-size:13px;font-weight:700;letter-spacing:.02em;text-decoration:none;
 }
 .home-hero-cta[hidden]{display:none}
+
+/* 화산불백/설문조사 슬라이드 표시점 2개 — 작게, 기존 포인트 컬러(노랑)만
+   재사용(새 아이콘/이미지 없음). */
+.home-hero-dots{display:flex;gap:6px;margin-top:16px}
+.home-hero-dots[hidden]{display:none}
+.home-hero-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
+.home-hero-dot.active{background:var(--home-yellow)}
 
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{
@@ -3091,6 +3104,10 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
     <h2 class="home-headline" id="homeHeadline">오늘,<br>인제대에서<br>무엇을 찾으세요?</h2>
     <p class="home-hero-desc" id="homeHeroDesc" hidden></p>
     <a class="home-hero-cta" id="homeHeroCta" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
+    <div class="home-hero-dots" id="homeHeroDots" hidden>
+      <button type="button" class="home-hero-dot" data-hero-slide="0" aria-label="1"></button>
+      <button type="button" class="home-hero-dot" data-hero-slide="1" aria-label="2"></button>
+    </div>
   </div>
   <div class="home-bento" id="homeLegoBoard">
     <button type="button" class="home-tile home-tile-breakfast" id="homeCardBreakfast">
@@ -3902,6 +3919,21 @@ const WEEKEND_SURVEY = {
     zh: "您可以从9月28日上午7点开始参加。", vi: "Bạn có thể tham gia từ 7:00 sáng ngày 28 tháng 9.",
     bn: "আপনি ২৮ সেপ্টেম্বর সকাল ৭টা থেকে অংশ নিতে পারবেন।"
   },
+
+  // 홈 메인 히어로에서 화산불백과 번갈아 표시되는 슬라이드 문구
+  // (2026-09 "화산불백/설문 자동전환" 지시서). eyebrow는 다른 홈 카드
+  // eyebrow(WEEKEND/HOUSING 등)와 같이 언어와 무관하게 "SURVEY" 고정.
+  heroTitleSub: {
+    ko: "1,000원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐",
+    vi: "Bữa sáng 1.000 won", bn: "১,০০০ ওনের সকালের নাশতা"
+  },
+  heroTitleMain: { ko: "설문조사", en: "Survey", zh: "问卷调查", vi: "Khảo sát", bn: "জরিপ" },
+  heroDesc: {
+    ko: "주말·공휴일 운영, 의견을 들려주세요", en: "Weekend & holiday hours — tell us what you think",
+    zh: "周末及公休日运营，欢迎提出您的意见", vi: "Vận hành cuối tuần và ngày lễ, hãy cho chúng tôi biết ý kiến của bạn",
+    bn: "সপ্তাহান্ত ও ছুটির দিনের পরিচালনা, আপনার মতামত জানান"
+  },
+  heroCta: { ko: "설문 참여하기", en: "Take the survey", zh: "参加问卷调查", vi: "Tham gia khảo sát", bn: "জরিপে অংশ নিন" },
 
   q1_title: {
     ko: "귀하는 어디에 해당합니까?", en: "Which of the following applies to you?",
@@ -10999,7 +11031,7 @@ var WeekendSurvey = (function () {
 
   document.addEventListener("DOMContentLoaded", init);
 
-  return { openFromBanner: openFromBanner, maybeShowOnEntry: maybeShowOnEntry };
+  return { openFromBanner: openFromBanner, maybeShowOnEntry: maybeShowOnEntry, hasStarted: hasStarted };
 })();
 </script>
 <script>/* ==========================================================================
@@ -11466,8 +11498,25 @@ var WeekendSurvey = (function () {
     titleMain: "화산불백"
   };
 
-  function renderHomeHero() {
+  // 화산불백 ↔ 설문조사 자동 전환(2026-09 지시서) — 관리자 팝업이 없고
+  // 설문이 이미 시작(WeekendSurvey.hasStarted())된 경우에만 두 슬라이드를
+  // 번갈아 보여줍니다. 그 전에는 기존처럼 화산불백만 계속 표시합니다.
+  var heroSlideIndex = 0; // 0=화산불백, 1=설문조사
+  var heroRotateTimer = null;
+  var HERO_ROTATE_MS = 4500;
+
+  function heroSurveyReady() {
+    return !homeHeroPopup && window.WeekendSurvey && typeof window.WeekendSurvey.hasStarted === "function"
+      && window.WeekendSurvey.hasStarted();
+  }
+
+  function renderHomeHero() { heroSlideIndex = 0; renderHomeHeroSlide(); }
+
+  function renderHomeHeroSlide() {
     if (!els.homeHeadline) return;
+    var rotatable = heroSurveyReady();
+    if (!rotatable) heroSlideIndex = 0;
+
     if (homeHeroPopup) {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "EVENT";
       els.homeHeadline.textContent = homeHeroPopup.title || "";
@@ -11477,8 +11526,22 @@ var WeekendSurvey = (function () {
         els.homeHeroCta.href = homeHeroPopup.linkUrl || "#";
         els.homeHeroCta.hidden = false;
       }
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-menu-promo");
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-event");
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-menu-promo"); els.homeHeroCopy.classList.add("has-event"); }
+    } else if (heroSlideIndex === 1) {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "SURVEY";
+      els.homeHeadline.innerHTML =
+        '<span class="home-hero-menu-sub">' + (WEEKEND_SURVEY.heroTitleSub[state.lang] || WEEKEND_SURVEY.heroTitleSub.ko) + '</span><br>' +
+        '<span class="home-hero-menu-main">' + (WEEKEND_SURVEY.heroTitleMain[state.lang] || WEEKEND_SURVEY.heroTitleMain.ko) + '</span>';
+      if (els.homeHeroDesc) {
+        els.homeHeroDesc.textContent = WEEKEND_SURVEY.heroDesc[state.lang] || WEEKEND_SURVEY.heroDesc.ko;
+        els.homeHeroDesc.hidden = false;
+      }
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (WEEKEND_SURVEY.heroCta[state.lang] || WEEKEND_SURVEY.heroCta.ko) + " →";
+        els.homeHeroCta.href = "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-event"); els.homeHeroCopy.classList.add("has-menu-promo"); }
     } else {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = UI_TEXT.homeHeroMenuLabel[state.lang] || UI_TEXT.homeHeroMenuLabel.ko;
       els.homeHeadline.innerHTML =
@@ -11493,9 +11556,35 @@ var WeekendSurvey = (function () {
         els.homeHeroCta.href = "#";
         els.homeHeroCta.hidden = false;
       }
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-event");
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-menu-promo");
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-event"); els.homeHeroCopy.classList.add("has-menu-promo"); }
     }
+
+    if (els.homeHeroDots) {
+      els.homeHeroDots.hidden = !rotatable;
+      Array.prototype.forEach.call(els.homeHeroDots.children, function (dot, i) {
+        dot.classList.toggle("active", i === heroSlideIndex);
+      });
+    }
+  }
+
+  // 4~5초마다 슬라이드를 바꿉니다(무한반복). opacity transition(CSS)만
+  // 사용해 페이드 전환하고, 전환 중간(투명할 때) 내용을 바꿔치기합니다.
+  function goToHeroSlide(index) {
+    if (!els.homeHeroCopy) { heroSlideIndex = index; renderHomeHeroSlide(); return; }
+    els.homeHeroCopy.classList.add("home-hero-fading");
+    setTimeout(function () {
+      heroSlideIndex = index;
+      renderHomeHeroSlide();
+      els.homeHeroCopy.classList.remove("home-hero-fading");
+    }, 350);
+  }
+
+  function startHeroRotation() {
+    if (heroRotateTimer) return; // 중복 타이머 방지
+    heroRotateTimer = setInterval(function () {
+      if (!heroSurveyReady()) return; // 시작 전/관리자 팝업 노출 중에는 회전하지 않음
+      goToHeroSlide(heroSlideIndex === 0 ? 1 : 0);
+    }, HERO_ROTATE_MS);
   }
 
   // 페이지당 한 번만 조회(Firestore 비용 최소화) — 결과는 renderHome()이
@@ -12134,6 +12223,7 @@ var WeekendSurvey = (function () {
     els.homeHeadline = qs("homeHeadline");
     els.homeHeroDesc = qs("homeHeroDesc");
     els.homeHeroCta = qs("homeHeroCta");
+    els.homeHeroDots = qs("homeHeroDots");
     els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
     els.homeCardMangwonSub = qs("homeCardMangwonSub");
     els.homeCardBapsimSub = qs("homeCardBapsimSub");
@@ -12322,11 +12412,34 @@ var WeekendSurvey = (function () {
         e.preventDefault();
         if (homeHeroPopup) {
           if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+        } else if (heroSlideIndex === 1 && window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") {
+          window.WeekendSurvey.openFromBanner();
         } else if (typeof window.goToStore === "function") {
           window.goToStore("hururuk");
         }
       });
     }
+    // 설문 슬라이드일 때는 버튼뿐 아니라 히어로 영역 전체를 눌러도 설문이
+    // 열립니다(지시서 3번 "버튼 또는 Hero 영역을 클릭하면"). 화산불백
+    // 슬라이드에서는 기존처럼 CTA 버튼에서만 동작(위 리스너가 그대로 처리).
+    if (els.homeHeroCopy) {
+      els.homeHeroCopy.addEventListener("click", function (e) {
+        if (heroSlideIndex !== 1 || homeHeroPopup) return;
+        if (e.target === els.homeHeroCta) return; // CTA 자체는 위 리스너가 이미 처리(중복 호출 방지)
+        if (window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") window.WeekendSurvey.openFromBanner();
+      });
+    }
+    if (els.homeHeroDots) {
+      Array.prototype.forEach.call(els.homeHeroDots.children, function (dot) {
+        dot.addEventListener("click", function () {
+          if (!heroSurveyReady()) return;
+          var idx = Number(dot.getAttribute("data-hero-slide")) || 0;
+          if (idx === heroSlideIndex) return;
+          goToHeroSlide(idx);
+        });
+      });
+    }
+    startHeroRotation();
     loadHomeHeroPopup();
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈

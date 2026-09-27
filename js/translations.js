@@ -517,6 +517,21 @@ const WEEKEND_SURVEY = {
     bn: "আপনি ২৮ সেপ্টেম্বর সকাল ৭টা থেকে অংশ নিতে পারবেন।"
   },
 
+  // 홈 메인 히어로에서 화산불백과 번갈아 표시되는 슬라이드 문구
+  // (2026-09 "화산불백/설문 자동전환" 지시서). eyebrow는 다른 홈 카드
+  // eyebrow(WEEKEND/HOUSING 등)와 같이 언어와 무관하게 "SURVEY" 고정.
+  heroTitleSub: {
+    ko: "1,000원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐",
+    vi: "Bữa sáng 1.000 won", bn: "১,০০০ ওনের সকালের নাশতা"
+  },
+  heroTitleMain: { ko: "설문조사", en: "Survey", zh: "问卷调查", vi: "Khảo sát", bn: "জরিপ" },
+  heroDesc: {
+    ko: "주말·공휴일 운영, 의견을 들려주세요", en: "Weekend & holiday hours — tell us what you think",
+    zh: "周末及公休日运营，欢迎提出您的意见", vi: "Vận hành cuối tuần và ngày lễ, hãy cho chúng tôi biết ý kiến của bạn",
+    bn: "সপ্তাহান্ত ও ছুটির দিনের পরিচালনা, আপনার মতামত জানান"
+  },
+  heroCta: { ko: "설문 참여하기", en: "Take the survey", zh: "参加问卷调查", vi: "Tham gia khảo sát", bn: "জরিপে অংশ নিন" },
+
   q1_title: {
     ko: "귀하는 어디에 해당합니까?", en: "Which of the following applies to you?",
     zh: "您属于以下哪种情况？", vi: "Bạn thuộc nhóm nào sau đây?", bn: "আপনি নিচের কোনটির সাথে সম্পর্কিত?"

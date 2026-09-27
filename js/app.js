@@ -462,8 +462,25 @@
     titleMain: "화산불백"
   };
 
-  function renderHomeHero() {
+  // 화산불백 ↔ 설문조사 자동 전환(2026-09 지시서) — 관리자 팝업이 없고
+  // 설문이 이미 시작(WeekendSurvey.hasStarted())된 경우에만 두 슬라이드를
+  // 번갈아 보여줍니다. 그 전에는 기존처럼 화산불백만 계속 표시합니다.
+  var heroSlideIndex = 0; // 0=화산불백, 1=설문조사
+  var heroRotateTimer = null;
+  var HERO_ROTATE_MS = 4500;
+
+  function heroSurveyReady() {
+    return !homeHeroPopup && window.WeekendSurvey && typeof window.WeekendSurvey.hasStarted === "function"
+      && window.WeekendSurvey.hasStarted();
+  }
+
+  function renderHomeHero() { heroSlideIndex = 0; renderHomeHeroSlide(); }
+
+  function renderHomeHeroSlide() {
     if (!els.homeHeadline) return;
+    var rotatable = heroSurveyReady();
+    if (!rotatable) heroSlideIndex = 0;
+
     if (homeHeroPopup) {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "EVENT";
       els.homeHeadline.textContent = homeHeroPopup.title || "";
@@ -473,8 +490,22 @@
         els.homeHeroCta.href = homeHeroPopup.linkUrl || "#";
         els.homeHeroCta.hidden = false;
       }
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-menu-promo");
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-event");
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-menu-promo"); els.homeHeroCopy.classList.add("has-event"); }
+    } else if (heroSlideIndex === 1) {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "SURVEY";
+      els.homeHeadline.innerHTML =
+        '<span class="home-hero-menu-sub">' + (WEEKEND_SURVEY.heroTitleSub[state.lang] || WEEKEND_SURVEY.heroTitleSub.ko) + '</span><br>' +
+        '<span class="home-hero-menu-main">' + (WEEKEND_SURVEY.heroTitleMain[state.lang] || WEEKEND_SURVEY.heroTitleMain.ko) + '</span>';
+      if (els.homeHeroDesc) {
+        els.homeHeroDesc.textContent = WEEKEND_SURVEY.heroDesc[state.lang] || WEEKEND_SURVEY.heroDesc.ko;
+        els.homeHeroDesc.hidden = false;
+      }
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (WEEKEND_SURVEY.heroCta[state.lang] || WEEKEND_SURVEY.heroCta.ko) + " →";
+        els.homeHeroCta.href = "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-event"); els.homeHeroCopy.classList.add("has-menu-promo"); }
     } else {
       if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = UI_TEXT.homeHeroMenuLabel[state.lang] || UI_TEXT.homeHeroMenuLabel.ko;
       els.homeHeadline.innerHTML =
@@ -489,9 +520,35 @@
         els.homeHeroCta.href = "#";
         els.homeHeroCta.hidden = false;
       }
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.remove("has-event");
-      if (els.homeHeroCopy) els.homeHeroCopy.classList.add("has-menu-promo");
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-event"); els.homeHeroCopy.classList.add("has-menu-promo"); }
     }
+
+    if (els.homeHeroDots) {
+      els.homeHeroDots.hidden = !rotatable;
+      Array.prototype.forEach.call(els.homeHeroDots.children, function (dot, i) {
+        dot.classList.toggle("active", i === heroSlideIndex);
+      });
+    }
+  }
+
+  // 4~5초마다 슬라이드를 바꿉니다(무한반복). opacity transition(CSS)만
+  // 사용해 페이드 전환하고, 전환 중간(투명할 때) 내용을 바꿔치기합니다.
+  function goToHeroSlide(index) {
+    if (!els.homeHeroCopy) { heroSlideIndex = index; renderHomeHeroSlide(); return; }
+    els.homeHeroCopy.classList.add("home-hero-fading");
+    setTimeout(function () {
+      heroSlideIndex = index;
+      renderHomeHeroSlide();
+      els.homeHeroCopy.classList.remove("home-hero-fading");
+    }, 350);
+  }
+
+  function startHeroRotation() {
+    if (heroRotateTimer) return; // 중복 타이머 방지
+    heroRotateTimer = setInterval(function () {
+      if (!heroSurveyReady()) return; // 시작 전/관리자 팝업 노출 중에는 회전하지 않음
+      goToHeroSlide(heroSlideIndex === 0 ? 1 : 0);
+    }, HERO_ROTATE_MS);
   }
 
   // 페이지당 한 번만 조회(Firestore 비용 최소화) — 결과는 renderHome()이
@@ -1130,6 +1187,7 @@
     els.homeHeadline = qs("homeHeadline");
     els.homeHeroDesc = qs("homeHeroDesc");
     els.homeHeroCta = qs("homeHeroCta");
+    els.homeHeroDots = qs("homeHeroDots");
     els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
     els.homeCardMangwonSub = qs("homeCardMangwonSub");
     els.homeCardBapsimSub = qs("homeCardBapsimSub");
@@ -1318,11 +1376,34 @@
         e.preventDefault();
         if (homeHeroPopup) {
           if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+        } else if (heroSlideIndex === 1 && window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") {
+          window.WeekendSurvey.openFromBanner();
         } else if (typeof window.goToStore === "function") {
           window.goToStore("hururuk");
         }
       });
     }
+    // 설문 슬라이드일 때는 버튼뿐 아니라 히어로 영역 전체를 눌러도 설문이
+    // 열립니다(지시서 3번 "버튼 또는 Hero 영역을 클릭하면"). 화산불백
+    // 슬라이드에서는 기존처럼 CTA 버튼에서만 동작(위 리스너가 그대로 처리).
+    if (els.homeHeroCopy) {
+      els.homeHeroCopy.addEventListener("click", function (e) {
+        if (heroSlideIndex !== 1 || homeHeroPopup) return;
+        if (e.target === els.homeHeroCta) return; // CTA 자체는 위 리스너가 이미 처리(중복 호출 방지)
+        if (window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") window.WeekendSurvey.openFromBanner();
+      });
+    }
+    if (els.homeHeroDots) {
+      Array.prototype.forEach.call(els.homeHeroDots.children, function (dot) {
+        dot.addEventListener("click", function () {
+          if (!heroSurveyReady()) return;
+          var idx = Number(dot.getAttribute("data-hero-slide")) || 0;
+          if (idx === heroSlideIndex) return;
+          goToHeroSlide(idx);
+        });
+      });
+    }
+    startHeroRotation();
     loadHomeHeroPopup();
 
     // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈

@@ -350,5 +350,5 @@ var WeekendSurvey = (function () {
 
   document.addEventListener("DOMContentLoaded", init);
 
-  return { openFromBanner: openFromBanner, maybeShowOnEntry: maybeShowOnEntry };
+  return { openFromBanner: openFromBanner, maybeShowOnEntry: maybeShowOnEntry, hasStarted: hasStarted };
 })();
