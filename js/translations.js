@@ -507,6 +507,15 @@ const WEEKEND_SURVEY = {
     ko: "소중한 의견 감사합니다.", en: "Thank you for your valuable feedback.",
     zh: "感谢您的宝贵意见。", vi: "Cảm ơn ý kiến quý báu của bạn.", bn: "আপনার মূল্যবান মতামতের জন্য ধন্যবাদ।"
   },
+  notStartedTitle: {
+    ko: "설문이 아직 시작되지 않았습니다.", en: "The survey hasn't started yet.",
+    zh: "问卷调查尚未开始。", vi: "Khảo sát chưa bắt đầu.", bn: "জরিপটি এখনও শুরু হয়নি।"
+  },
+  notStartedDesc: {
+    ko: "9월 28일 오전 7시부터 참여하실 수 있습니다.", en: "You can participate starting 7:00 AM on September 28.",
+    zh: "您可以从9月28日上午7点开始参加。", vi: "Bạn có thể tham gia từ 7:00 sáng ngày 28 tháng 9.",
+    bn: "আপনি ২৮ সেপ্টেম্বর সকাল ৭টা থেকে অংশ নিতে পারবেন।"
+  },
 
   q1_title: {
     ko: "귀하는 어디에 해당합니까?", en: "Which of the following applies to you?",

@@ -23,6 +23,22 @@ var WeekendSurvey = (function () {
   var VERSION_KEY = "weekendBreakfastSurveyVersion";
   var LANGS = ["ko", "en", "zh", "vi", "bn"];
   var LANG_LABEL = { ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", bn: "বাংলা" };
+  // 오픈 시각(2026-09-28 오전 7시, 한국시간) — 그 전에는 최초 진입 자동
+  // 표시도, 이벤트 배너 클릭도 설문을 열지 않고 "곧 시작합니다" 안내만
+  // 보여줍니다. 새 스케줄러/서버 없이 클라이언트에서 현재 시각만 비교.
+  var SURVEY_START_AT = new Date("2026-09-28T07:00:00+09:00");
+
+  function hasStarted() { return Date.now() >= SURVEY_START_AT.getTime(); }
+
+  // "이미 참여했습니다"/"곧 시작합니다" 같은 짧은 안내 모달은 사이트가
+  // 현재 표시 중인 언어(foodhall_lang)에 맞춰 보여줍니다(설문 응답
+  // 자체의 언어와는 무관 — mn/my처럼 설문이 지원하지 않는 언어면 한국어).
+  function siteLang() {
+    try {
+      var l = localStorage.getItem("foodhall_lang");
+      return (l && LANGS.indexOf(l) !== -1) ? l : "ko";
+    } catch (e) { return "ko"; }
+  }
 
   var els = {};
   var lang = "ko";
@@ -108,9 +124,11 @@ var WeekendSurvey = (function () {
 
   // 이미 현재 버전 설문에 참여한 사람이 이벤트 배너를 눌렀을 때 — 새
   // "완료 화면"을 만들지 않고 기존 모달 껍데기 재사용, 버튼 1개(확인).
-  function openAlreadyDoneModal() {
+  // "이미 참여했습니다"/"곧 시작합니다"처럼 제목+설명+확인 버튼 1개뿐인
+  // 짧은 안내 모달의 공용 껍데기(중복 코드 없이 재사용).
+  function openSimpleModal(titleKey, descKey) {
     if (qs("weekendSurveyOverlay")) return;
-    lang = "ko";
+    lang = siteLang();
 
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -127,8 +145,8 @@ var WeekendSurvey = (function () {
     closeBtn.addEventListener("click", closeOverlay);
     modal.appendChild(closeBtn);
 
-    modal.appendChild(el("h2", "modal-title", t("alreadyDoneTitle")));
-    modal.appendChild(el("p", "room-finder-step-desc", t("alreadyDoneDesc")));
+    modal.appendChild(el("h2", "modal-title", t(titleKey)));
+    modal.appendChild(el("p", "room-finder-step-desc", t(descKey)));
 
     var okBtn = document.createElement("button");
     okBtn.type = "button";
@@ -141,6 +159,9 @@ var WeekendSurvey = (function () {
     overlay.addEventListener("click", function (e) { if (e.target === overlay) closeOverlay(); });
     document.body.appendChild(overlay);
   }
+
+  function openAlreadyDoneModal() { openSimpleModal("alreadyDoneTitle", "alreadyDoneDesc"); }
+  function openNotStartedModal() { openSimpleModal("notStartedTitle", "notStartedDesc"); }
 
   function renderIntroStep() {
     var body = qs("weekendSurveyBody");
@@ -305,16 +326,19 @@ var WeekendSurvey = (function () {
     });
   }
 
-  // 홈 최초 진입 시 자동 호출(지시서 3번) — 이미 현재 버전에 참여했으면
-  // 아무 것도 하지 않고 바로 next()를 불러 기존 팝업 체인을 그대로 진행.
+  // 홈 최초 진입 시 자동 호출(지시서 3번) — 오픈 시각 전이거나 이미
+  // 현재 버전에 참여했으면 아무 것도 띄우지 않고 바로 next()를 불러
+  // 기존 팝업 체인을 그대로 진행.
   function maybeShowOnEntry(next) {
-    if (hasCompletedCurrentVersion()) { if (next) next(); return; }
+    if (!hasStarted() || hasCompletedCurrentVersion()) { if (next) next(); return; }
     onCloseCallback = next || null; // 설문을 닫은 뒤(완료/×)에만 다음 팝업(SitePopup 등)으로 이어감 — 겹쳐 뜨지 않게
     openOverlay();
   }
 
-  // 이벤트 배너 클릭(지시서 24/25번) — 이미 참여했으면 안내 모달만.
+  // 이벤트 배너 클릭(지시서 24/25번) — 오픈 전이면 "곧 시작합니다" 안내,
+  // 이미 참여했으면 "이미 참여했습니다" 안내만 보여줍니다.
   function openFromBanner() {
+    if (!hasStarted()) { openNotStartedModal(); return; }
     if (hasCompletedCurrentVersion()) { openAlreadyDoneModal(); return; }
     openOverlay();
   }

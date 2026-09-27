@@ -60,6 +60,22 @@ var AdminWeekendSurvey = (function () {
     return counts;
   }
 
+  // 테스트/스팸 응답을 지울 때 씁니다 — 재조회 없이 캐시(allDocs)에서만
+  // 지우고 다시 그립니다(비용 최소화 40번과 같은 원칙).
+  function deleteEntry(docId, btn) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("이 응답을 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
+    btn.disabled = true;
+    d.collection("weekendBreakfastSurveys").doc(docId).delete().then(function () {
+      allDocs = (allDocs || []).filter(function (d) { return d.id !== docId; });
+      render();
+    }).catch(function () {
+      window.alert("삭제 실패(관리자 권한이 없을 수 있습니다).");
+      btn.disabled = false;
+    });
+  }
+
   function render() {
     var docs = allDocs || [];
     var filterLang = els.langFilter ? els.langFilter.value : "all";
@@ -105,7 +121,12 @@ var AdminWeekendSurvey = (function () {
       q4Others.forEach(function (d) {
         var p = document.createElement("p");
         p.innerHTML = "<strong>" + fmtDateTime(d.createdAt) + " (" + (LANG_LABEL[d.selectedLanguage] || d.selectedLanguage) + "):</strong> ";
-        p.appendChild(document.createTextNode(d.menuOtherOpinion));
+        p.appendChild(document.createTextNode(d.menuOtherOpinion + " "));
+        var delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", function () { deleteEntry(d.id, delBtn); });
+        p.appendChild(delBtn);
         els.q4Other.appendChild(p);
       });
     }
@@ -124,13 +145,20 @@ var AdminWeekendSurvey = (function () {
     } else {
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>작성일</th><th>선택 언어</th><th>건의사항</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>작성일</th><th>선택 언어</th><th>건의사항</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       suggestions.forEach(function (d) {
         var tr = document.createElement("tr");
         var tdDate = document.createElement("td"); tdDate.textContent = fmtDateTime(d.createdAt); tr.appendChild(tdDate);
         var tdLang = document.createElement("td"); tdLang.textContent = LANG_LABEL[d.selectedLanguage] || d.selectedLanguage; tr.appendChild(tdLang);
         var tdText = document.createElement("td"); tdText.textContent = d.suggestion; tr.appendChild(tdText);
+        var tdActions = document.createElement("td");
+        var delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", function () { deleteEntry(d.id, delBtn); });
+        tdActions.appendChild(delBtn);
+        tr.appendChild(tdActions);
         tbody.appendChild(tr);
       });
       table.appendChild(tbody);
@@ -146,6 +174,7 @@ var AdminWeekendSurvey = (function () {
       allDocs = [];
       snap.forEach(function (doc) {
         var data = doc.data();
+        data.id = doc.id;
         data._createdMs = (data.createdAt && typeof data.createdAt.toMillis === "function") ? data.createdAt.toMillis() : 0;
         allDocs.push(data);
       });

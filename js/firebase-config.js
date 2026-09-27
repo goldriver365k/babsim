@@ -330,7 +330,10 @@
               && request.resource.data.usageIntent in ['often','sometimes','unsure','no']
               && request.resource.data.surveyVersion is int;
             allow read: if request.auth != null;   // 관리자 로그인 필요
-            allow update, delete: if false;
+            // 테스트/스팸 응답을 관리자가 직접 지울 수 있어야 해서 삭제만
+            // 허용합니다(내용 수정은 불가 — 응답을 조작할 수 없도록).
+            allow update: if false;
+            allow delete: if request.auth != null;   // 관리자 로그인 필요
           }
 
           // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone

@@ -3893,6 +3893,15 @@ const WEEKEND_SURVEY = {
     ko: "소중한 의견 감사합니다.", en: "Thank you for your valuable feedback.",
     zh: "感谢您的宝贵意见。", vi: "Cảm ơn ý kiến quý báu của bạn.", bn: "আপনার মূল্যবান মতামতের জন্য ধন্যবাদ।"
   },
+  notStartedTitle: {
+    ko: "설문이 아직 시작되지 않았습니다.", en: "The survey hasn't started yet.",
+    zh: "问卷调查尚未开始。", vi: "Khảo sát chưa bắt đầu.", bn: "জরিপটি এখনও শুরু হয়নি।"
+  },
+  notStartedDesc: {
+    ko: "9월 28일 오전 7시부터 참여하실 수 있습니다.", en: "You can participate starting 7:00 AM on September 28.",
+    zh: "您可以从9月28日上午7点开始参加。", vi: "Bạn có thể tham gia từ 7:00 sáng ngày 28 tháng 9.",
+    bn: "আপনি ২৮ সেপ্টেম্বর সকাল ৭টা থেকে অংশ নিতে পারবেন।"
+  },
 
   q1_title: {
     ko: "귀하는 어디에 해당합니까?", en: "Which of the following applies to you?",
@@ -5072,7 +5081,10 @@ const BREAKFAST_WEEKLY_MENU = {
               && request.resource.data.usageIntent in ['often','sometimes','unsure','no']
               && request.resource.data.surveyVersion is int;
             allow read: if request.auth != null;   // 관리자 로그인 필요
-            allow update, delete: if false;
+            // 테스트/스팸 응답을 관리자가 직접 지울 수 있어야 해서 삭제만
+            // 허용합니다(내용 수정은 불가 — 응답을 조작할 수 없도록).
+            allow update: if false;
+            allow delete: if request.auth != null;   // 관리자 로그인 필요
           }
 
           // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
@@ -10660,6 +10672,22 @@ var WeekendSurvey = (function () {
   var VERSION_KEY = "weekendBreakfastSurveyVersion";
   var LANGS = ["ko", "en", "zh", "vi", "bn"];
   var LANG_LABEL = { ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", bn: "বাংলা" };
+  // 오픈 시각(2026-09-28 오전 7시, 한국시간) — 그 전에는 최초 진입 자동
+  // 표시도, 이벤트 배너 클릭도 설문을 열지 않고 "곧 시작합니다" 안내만
+  // 보여줍니다. 새 스케줄러/서버 없이 클라이언트에서 현재 시각만 비교.
+  var SURVEY_START_AT = new Date("2026-09-28T07:00:00+09:00");
+
+  function hasStarted() { return Date.now() >= SURVEY_START_AT.getTime(); }
+
+  // "이미 참여했습니다"/"곧 시작합니다" 같은 짧은 안내 모달은 사이트가
+  // 현재 표시 중인 언어(foodhall_lang)에 맞춰 보여줍니다(설문 응답
+  // 자체의 언어와는 무관 — mn/my처럼 설문이 지원하지 않는 언어면 한국어).
+  function siteLang() {
+    try {
+      var l = localStorage.getItem("foodhall_lang");
+      return (l && LANGS.indexOf(l) !== -1) ? l : "ko";
+    } catch (e) { return "ko"; }
+  }
 
   var els = {};
   var lang = "ko";
@@ -10745,9 +10773,11 @@ var WeekendSurvey = (function () {
 
   // 이미 현재 버전 설문에 참여한 사람이 이벤트 배너를 눌렀을 때 — 새
   // "완료 화면"을 만들지 않고 기존 모달 껍데기 재사용, 버튼 1개(확인).
-  function openAlreadyDoneModal() {
+  // "이미 참여했습니다"/"곧 시작합니다"처럼 제목+설명+확인 버튼 1개뿐인
+  // 짧은 안내 모달의 공용 껍데기(중복 코드 없이 재사용).
+  function openSimpleModal(titleKey, descKey) {
     if (qs("weekendSurveyOverlay")) return;
-    lang = "ko";
+    lang = siteLang();
 
     var overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -10764,8 +10794,8 @@ var WeekendSurvey = (function () {
     closeBtn.addEventListener("click", closeOverlay);
     modal.appendChild(closeBtn);
 
-    modal.appendChild(el("h2", "modal-title", t("alreadyDoneTitle")));
-    modal.appendChild(el("p", "room-finder-step-desc", t("alreadyDoneDesc")));
+    modal.appendChild(el("h2", "modal-title", t(titleKey)));
+    modal.appendChild(el("p", "room-finder-step-desc", t(descKey)));
 
     var okBtn = document.createElement("button");
     okBtn.type = "button";
@@ -10778,6 +10808,9 @@ var WeekendSurvey = (function () {
     overlay.addEventListener("click", function (e) { if (e.target === overlay) closeOverlay(); });
     document.body.appendChild(overlay);
   }
+
+  function openAlreadyDoneModal() { openSimpleModal("alreadyDoneTitle", "alreadyDoneDesc"); }
+  function openNotStartedModal() { openSimpleModal("notStartedTitle", "notStartedDesc"); }
 
   function renderIntroStep() {
     var body = qs("weekendSurveyBody");
@@ -10942,16 +10975,19 @@ var WeekendSurvey = (function () {
     });
   }
 
-  // 홈 최초 진입 시 자동 호출(지시서 3번) — 이미 현재 버전에 참여했으면
-  // 아무 것도 하지 않고 바로 next()를 불러 기존 팝업 체인을 그대로 진행.
+  // 홈 최초 진입 시 자동 호출(지시서 3번) — 오픈 시각 전이거나 이미
+  // 현재 버전에 참여했으면 아무 것도 띄우지 않고 바로 next()를 불러
+  // 기존 팝업 체인을 그대로 진행.
   function maybeShowOnEntry(next) {
-    if (hasCompletedCurrentVersion()) { if (next) next(); return; }
+    if (!hasStarted() || hasCompletedCurrentVersion()) { if (next) next(); return; }
     onCloseCallback = next || null; // 설문을 닫은 뒤(완료/×)에만 다음 팝업(SitePopup 등)으로 이어감 — 겹쳐 뜨지 않게
     openOverlay();
   }
 
-  // 이벤트 배너 클릭(지시서 24/25번) — 이미 참여했으면 안내 모달만.
+  // 이벤트 배너 클릭(지시서 24/25번) — 오픈 전이면 "곧 시작합니다" 안내,
+  // 이미 참여했으면 "이미 참여했습니다" 안내만 보여줍니다.
   function openFromBanner() {
+    if (!hasStarted()) { openNotStartedModal(); return; }
     if (hasCompletedCurrentVersion()) { openAlreadyDoneModal(); return; }
     openOverlay();
   }
