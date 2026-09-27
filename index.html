@@ -2790,6 +2790,13 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-hero-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
 .home-hero-dot.active{background:var(--home-yellow)}
 
+/* 설문조사 바를 Hero 바로 아래로 이동(2026-09 지시서) — .home-bento
+   그리드 밖으로 빼서 항상 전체 폭 한 줄로 표시되게 하고, 아래
+   .home-bento(천원의 아침밥 카드부터 시작)와의 간격만 hero와 같은
+   값으로 맞춥니다. 카드 자체의 디자인(.home-tile/.home-tile-feedback)은
+   전혀 바꾸지 않습니다. */
+.home-hero-survey-bar{margin:0 0 28px;width:100%}
+
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{
   position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;
@@ -3109,6 +3116,15 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <button type="button" class="home-hero-dot" data-hero-slide="1" aria-label="2"></button>
     </div>
   </div>
+  <!-- 설문조사 바 — 원래 하단 이벤트 영역(.home-bento 안)에 있던 카드를
+       기능/링크는 그대로 두고 위치만 Hero 바로 아래로 옮긴 것입니다
+       (2026-09 "설문조사 바 위치 이동" 지시서). -->
+  <button type="button" class="home-tile home-tile-feedback home-hero-survey-bar" id="homeLegoSurveyBtn">
+    <span class="home-tile-eyebrow">SURVEY</span>
+    <strong class="home-tile-title">1,000원의 아침밥 설문조사</strong>
+    <span class="home-tile-sub">주말·공휴일 운영, 의견을 들려주세요 → 설문 참여하기</span>
+    <span class="home-tile-arrow" aria-hidden="true">→</span>
+  </button>
   <div class="home-bento" id="homeLegoBoard">
     <button type="button" class="home-tile home-tile-breakfast" id="homeCardBreakfast">
       <span class="home-tile-eyebrow">CAMPUS MEAL</span>
@@ -3166,12 +3182,6 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <span class="home-tile-eyebrow">WEEKEND</span>
       <strong class="home-tile-title" id="homeLegoWeekendLabel">주말에 가볼 만한 곳</strong>
       <span class="home-tile-sub" id="homeCardWeekendSub">김해 · 부산 둘러보기</span>
-      <span class="home-tile-arrow" aria-hidden="true">→</span>
-    </button>
-    <button type="button" class="home-tile home-tile-feedback" id="homeLegoSurveyBtn">
-      <span class="home-tile-eyebrow">SURVEY</span>
-      <strong class="home-tile-title">1,000원의 아침밥 설문조사</strong>
-      <span class="home-tile-sub">주말·공휴일 운영, 의견을 들려주세요 → 설문 참여하기</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
     </button>
   </div>
