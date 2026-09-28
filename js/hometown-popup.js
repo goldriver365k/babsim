@@ -1,9 +1,13 @@
 /* ==========================================================================
-   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 신메뉴(고추장버터화산불백) 예고
+   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 신메뉴(새우완탕쌀국수) 안내
    (js/hometown-popup.js)
    - 관리자 등록 팝업(js/site-popup.js)과 같은 방식(.modal-overlay/.modal,
-     새 팝업 라이브러리 없음)을 재사용합니다. 이미지 파일 없이 HTML
-     텍스트 + CSS만으로 포스터처럼 보이게 구성합니다(업로드 기능 없음).
+     새 팝업 라이브러리 없음)을 재사용합니다.
+   - 2026-09 "새우완탕쌀국수" 지시서 — 이전에 이 컴포넌트가 보여주던
+     "고추장버터 화산불백" 예고는 이제 홈 히어로 영역(js/app.js
+     renderHomeHeroSlide, HERO_MENU_PROMO)에서 상시 노출되므로 그 쪽은
+     전혀 건드리지 않고, 여기(자동표시 팝업)는 다음 신메뉴로 교체해
+     재사용합니다.
    - 일반 관리자 팝업(SitePopup) → 이 팝업 → 천원의 아침밥 평가 팝업 순서로
      app.js가 순차 호출해 동시에 겹치지 않습니다(app.js의 체인에서 호출되는
      한 단계만 이 파일이 담당).
@@ -90,47 +94,26 @@ var HometownPopup = (function () {
     closeBtn.addEventListener("click", closeNow);
     modal.appendChild(closeBtn);
 
+    // 새우완탕쌀국수(2026-09 신메뉴 지시서) — ①사진 ②메뉴명 ③가격
+    // ④NEW MENU ⑤짧은 설명 순서로 눈에 들어오도록 사진을 가장 먼저
+    // 배치합니다. 메뉴명·가격은 다른 브랜드/메뉴명과 같이 언어와 무관하게
+    // 원문(한국어) 그대로 고정합니다(지시서 7번 — 번역하지 않음).
     var poster = el("div", "hometown-popup-poster");
 
-    poster.appendChild(el("p", "hometown-popup-badge", "NEW"));
+    var img = document.createElement("img");
+    img.className = "hometown-popup-image";
+    img.src = "images/hururuk/shrimp-wonton-rice-noodle.webp";
+    img.alt = "새우완탕쌀국수";
+    poster.appendChild(img);
+
+    poster.appendChild(el("p", "hometown-popup-eyebrow", "NEW MENU"));
 
     var titleBlock = el("div", "hometown-popup-title-block");
-    var titleMain = el("p", "hometown-popup-title-main");
-    titleMain.appendChild(document.createTextNode("고추장버터"));
-    titleMain.appendChild(el("span", "hometown-popup-title-emphasis", "화산불백"));
-    titleBlock.appendChild(titleMain);
+    titleBlock.appendChild(el("p", "hometown-popup-title-main", "새우완탕쌀국수"));
     poster.appendChild(titleBlock);
 
-    var tagline = el("p", "hometown-popup-tagline");
-    tagline.appendChild(document.createTextNode("매콤함에 버터가 더해지면, 이건, 또 다른 "));
-    tagline.appendChild(el("span", "hometown-popup-tagline-emphasis", "불백"));
-    tagline.appendChild(document.createTextNode("."));
-    poster.appendChild(tagline);
-
-    var descriptors = el("div", "hometown-popup-descriptors");
-    ["매콤하게", "부드럽게", "더 특별하게"].forEach(function (text) {
-      descriptors.appendChild(el("span", "hometown-popup-descriptor", text));
-    });
-    poster.appendChild(descriptors);
-
-    var dateBlock = el("div", "hometown-popup-date-block");
-    dateBlock.appendChild(el("p", "hometown-popup-coming-soon", "COMING SOON"));
-    dateBlock.appendChild(el("p", "hometown-popup-hours", "2026.09.21"));
-    poster.appendChild(dateBlock);
-
-    var locationBlock = el("div", "hometown-popup-location");
-    locationBlock.appendChild(el("p", "hometown-popup-location-line", "인제대 모인관 2층"));
-    locationBlock.appendChild(el("p", "hometown-popup-location-line hometown-popup-location-main", "후루룩찹찹"));
-    poster.appendChild(locationBlock);
-
-    var noticeBlock = el("div", "hometown-popup-notice");
-    noticeBlock.appendChild(el("p", "hometown-popup-notice-line", "메뉴는"));
-    var siteLink = el("button", "hometown-popup-site-link", "babsim.store");
-    siteLink.type = "button";
-    siteLink.addEventListener("click", goAndClose);
-    noticeBlock.appendChild(siteLink);
-    noticeBlock.appendChild(el("p", "hometown-popup-notice-line", "에서 확인하세요"));
-    poster.appendChild(noticeBlock);
+    poster.appendChild(el("p", "hometown-popup-price", "5,500원"));
+    poster.appendChild(el("p", "hometown-popup-tagline", t("newMenuTagline")));
 
     modal.appendChild(poster);
 

@@ -1627,21 +1627,25 @@
 
     // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
     // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음). 관리자가 등록한
-    // 일반 팝업(팝업 기능 2단계) → 천원의 아침밥 평가 팝업 순서로, 앞
-    // 팝업이 없거나 닫힌 뒤에만 다음 팝업을 띄웁니다.
-    // 신메뉴 예고 팝업(HometownPopup, 고추장버터 화산불백)은 이제 홈
-    // 히어로 영역에 상시 노출되므로, 같은 내용이 모달로 또 겹쳐 뜨지
-    // 않도록 이 자동 호출 체인에서는 제외합니다(모듈 자체는 삭제하지
-    // 않고 그대로 둡니다 — window.HometownPopup.maybeShow는 여전히 존재).
+    // 일반 팝업(팝업 기능 2단계) → 신메뉴 팝업(HometownPopup) → 천원의
+    // 아침밥 평가 팝업 순서로, 앞 팝업이 없거나 닫힌 뒤에만 다음 팝업을
+    // 띄웁니다.
     // 1,000원의 아침밥 주말·공휴일 설문조사(2026-09 지시서) — 일반 메인
-    // 화면보다 먼저 보여주되, 기존 팝업 체인(관리자 팝업 → 아침밥 평가
-    // 팝업)과 겹쳐 뜨지 않도록 설문 모달이 닫힌 뒤에만 그 체인을
-    // 이어갑니다(이미 참여했으면 설문 없이 바로 기존 체인으로 넘어감).
-    function afterSurveyChain() {
-      if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
-        window.SitePopup.maybeShow(maybeShowBreakfastPopup);
+    // 화면보다 먼저 보여주되, 기존 팝업 체인(관리자 팝업 → 신메뉴 팝업 →
+    // 아침밥 평가 팝업)과 겹쳐 뜨지 않도록 설문 모달이 닫힌 뒤에만 그
+    // 체인을 이어갑니다(이미 참여했으면 설문 없이 바로 기존 체인으로 넘어감).
+    function afterHometownPopupChain() {
+      if (window.HometownPopup && typeof window.HometownPopup.maybeShow === "function") {
+        window.HometownPopup.maybeShow(maybeShowBreakfastPopup);
       } else {
         maybeShowBreakfastPopup();
+      }
+    }
+    function afterSurveyChain() {
+      if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
+        window.SitePopup.maybeShow(afterHometownPopupChain);
+      } else {
+        afterHometownPopupChain();
       }
     }
     setTimeout(function () {
