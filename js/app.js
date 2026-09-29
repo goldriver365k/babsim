@@ -1169,10 +1169,6 @@
     els.homeLegoWeekendBtn = qs("homeLegoWeekendBtn");
     els.homeLegoWeekendLabel = qs("homeLegoWeekendLabel");
     els.homeCardWeekendSub = qs("homeCardWeekendSub");
-    // 1,000원의 아침밥 주말·공휴일 설문조사(2026-09 지시서) — 이벤트
-    // 영역의 새 배너 카드. 삭제된 FEEDBACK 카드 자리(.home-tile-feedback)를
-    // 그대로 재사용(새 색상/새 그리드 규칙 없음).
-    els.homeLegoSurveyBtn = qs("homeLegoSurveyBtn");
     els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
     // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
@@ -1348,13 +1344,6 @@
     if (els.homeLegoWeekendBtn) {
       els.homeLegoWeekendBtn.addEventListener("click", function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("together");
-      });
-    }
-    // 주말·공휴일 설문 배너 — 새 이벤트 시스템 없이 기존 모달 방식
-    // (js/weekend-survey.js)을 그대로 엽니다.
-    if (els.homeLegoSurveyBtn) {
-      els.homeLegoSurveyBtn.addEventListener("click", function () {
-        if (window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") window.WeekendSurvey.openFromBanner();
       });
     }
     // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/

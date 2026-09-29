@@ -2745,13 +2745,6 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-hero-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
 .home-hero-dot.active{background:var(--home-yellow)}
 
-/* 설문조사 바를 Hero 바로 아래로 이동(2026-09 지시서) — .home-bento
-   그리드 밖으로 빼서 항상 전체 폭 한 줄로 표시되게 하고, 아래
-   .home-bento(천원의 아침밥 카드부터 시작)와의 간격만 hero와 같은
-   값으로 맞춥니다. 카드 자체의 디자인(.home-tile/.home-tile-feedback)은
-   전혀 바꾸지 않습니다. */
-.home-hero-survey-bar{margin:0 0 28px;width:100%}
-
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{
   position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;
@@ -3071,15 +3064,6 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <button type="button" class="home-hero-dot" data-hero-slide="1" aria-label="2"></button>
     </div>
   </div>
-  <!-- 설문조사 바 — 원래 하단 이벤트 영역(.home-bento 안)에 있던 카드를
-       기능/링크는 그대로 두고 위치만 Hero 바로 아래로 옮긴 것입니다
-       (2026-09 "설문조사 바 위치 이동" 지시서). -->
-  <button type="button" class="home-tile home-tile-feedback home-hero-survey-bar" id="homeLegoSurveyBtn">
-    <span class="home-tile-eyebrow">SURVEY</span>
-    <strong class="home-tile-title">1,000원의 아침밥 설문조사</strong>
-    <span class="home-tile-sub">주말·공휴일 운영, 의견을 들려주세요 → 설문 참여하기</span>
-    <span class="home-tile-arrow" aria-hidden="true">→</span>
-  </button>
   <div class="home-bento" id="homeLegoBoard">
     <button type="button" class="home-tile home-tile-breakfast" id="homeCardBreakfast">
       <span class="home-tile-eyebrow">CAMPUS MEAL</span>
@@ -10658,13 +10642,15 @@ var WeekendSurvey = (function () {
   var VERSION_KEY = "weekendBreakfastSurveyVersion";
   var LANGS = ["ko", "en", "zh", "vi", "bn"];
   var LANG_LABEL = { ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", bn: "বাংলা" };
-  // 오픈 시각 — 2026-09-27 지금 바로 시작하는 것으로 변경(관리자 요청).
-  // 새 스케줄러/서버 없이 클라이언트에서 현재 시각만 비교하는 방식은
-  // 그대로 두고, 이미 지난 시각으로 바꿔 hasStarted()가 항상 true가
-  // 되게 합니다.
+  // 오픈 시각 — 2026-09-27 지금 바로 시작하는 것으로 변경했었으나,
+  // 2026-09-29 "설문조사 중지" 지시로 SURVEY_ENABLED를 false로 꺼서
+  // 완전히 중지합니다. 코드/저장된 응답/관리자 통계 화면은 그대로 두고
+  // 학생 화면 노출(홈 최초진입 자동표시, Hero 슬라이드 전환)만 막습니다
+  // — 다시 열 때는 이 값만 true로 되돌리면 됩니다.
+  var SURVEY_ENABLED = false;
   var SURVEY_START_AT = new Date("2026-09-27T00:00:00+09:00");
 
-  function hasStarted() { return Date.now() >= SURVEY_START_AT.getTime(); }
+  function hasStarted() { return SURVEY_ENABLED && Date.now() >= SURVEY_START_AT.getTime(); }
 
   // "이미 참여했습니다"/"곧 시작합니다" 같은 짧은 안내 모달은 사이트가
   // 현재 표시 중인 언어(foodhall_lang)에 맞춰 보여줍니다(설문 응답
@@ -12160,10 +12146,6 @@ var WeekendSurvey = (function () {
     els.homeLegoWeekendBtn = qs("homeLegoWeekendBtn");
     els.homeLegoWeekendLabel = qs("homeLegoWeekendLabel");
     els.homeCardWeekendSub = qs("homeCardWeekendSub");
-    // 1,000원의 아침밥 주말·공휴일 설문조사(2026-09 지시서) — 이벤트
-    // 영역의 새 배너 카드. 삭제된 FEEDBACK 카드 자리(.home-tile-feedback)를
-    // 그대로 재사용(새 색상/새 그리드 규칙 없음).
-    els.homeLegoSurveyBtn = qs("homeLegoSurveyBtn");
     els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
     // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
     // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
@@ -12339,13 +12321,6 @@ var WeekendSurvey = (function () {
     if (els.homeLegoWeekendBtn) {
       els.homeLegoWeekendBtn.addEventListener("click", function () {
         if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("together");
-      });
-    }
-    // 주말·공휴일 설문 배너 — 새 이벤트 시스템 없이 기존 모달 방식
-    // (js/weekend-survey.js)을 그대로 엽니다.
-    if (els.homeLegoSurveyBtn) {
-      els.homeLegoSurveyBtn.addEventListener("click", function () {
-        if (window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") window.WeekendSurvey.openFromBanner();
       });
     }
     // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/

@@ -2697,13 +2697,6 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-hero-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
 .home-hero-dot.active{background:var(--home-yellow)}
 
-/* 설문조사 바를 Hero 바로 아래로 이동(2026-09 지시서) — .home-bento
-   그리드 밖으로 빼서 항상 전체 폭 한 줄로 표시되게 하고, 아래
-   .home-bento(천원의 아침밥 카드부터 시작)와의 간격만 hero와 같은
-   값으로 맞춥니다. 카드 자체의 디자인(.home-tile/.home-tile-feedback)은
-   전혀 바꾸지 않습니다. */
-.home-hero-survey-bar{margin:0 0 28px;width:100%}
-
 .home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .home-tile{
   position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;

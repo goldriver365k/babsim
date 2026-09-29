@@ -23,13 +23,15 @@ var WeekendSurvey = (function () {
   var VERSION_KEY = "weekendBreakfastSurveyVersion";
   var LANGS = ["ko", "en", "zh", "vi", "bn"];
   var LANG_LABEL = { ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", bn: "বাংলা" };
-  // 오픈 시각 — 2026-09-27 지금 바로 시작하는 것으로 변경(관리자 요청).
-  // 새 스케줄러/서버 없이 클라이언트에서 현재 시각만 비교하는 방식은
-  // 그대로 두고, 이미 지난 시각으로 바꿔 hasStarted()가 항상 true가
-  // 되게 합니다.
+  // 오픈 시각 — 2026-09-27 지금 바로 시작하는 것으로 변경했었으나,
+  // 2026-09-29 "설문조사 중지" 지시로 SURVEY_ENABLED를 false로 꺼서
+  // 완전히 중지합니다. 코드/저장된 응답/관리자 통계 화면은 그대로 두고
+  // 학생 화면 노출(홈 최초진입 자동표시, Hero 슬라이드 전환)만 막습니다
+  // — 다시 열 때는 이 값만 true로 되돌리면 됩니다.
+  var SURVEY_ENABLED = false;
   var SURVEY_START_AT = new Date("2026-09-27T00:00:00+09:00");
 
-  function hasStarted() { return Date.now() >= SURVEY_START_AT.getTime(); }
+  function hasStarted() { return SURVEY_ENABLED && Date.now() >= SURVEY_START_AT.getTime(); }
 
   // "이미 참여했습니다"/"곧 시작합니다" 같은 짧은 안내 모달은 사이트가
   // 현재 표시 중인 언어(foodhall_lang)에 맞춰 보여줍니다(설문 응답
