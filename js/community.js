@@ -169,8 +169,16 @@ var Community = (function () {
      .modal-overlay/.modal 껍데기(위 showAuthGateModal과 같은 패턴)를
      재사용합니다. 팝업 안 4개 게시판 버튼은 아래 목록 화면의 "글쓰기"
      버튼(writeTarget)과 똑같이 ensureAuth() 후 해당 게시판 글쓰기
-     화면으로 바로 이동합니다. */
+     화면으로 바로 이동합니다.
+     2026-09-30 지시서 — 배너는 커뮤니티 화면이 아니라 첫화면(홈) 상단
+     (js/app.js)으로 옮기고, 이 팝업은 홈 진입 시 자동으로도 뜨도록
+     maybeShowEventPopupOnEntry(done)를 추가했습니다(기존 SitePopup/
+     HometownPopup과 같은 done 콜백 체인 패턴 재사용). 배너 버튼 자체는
+     더 이상 이 모듈이 그리지 않으므로, "오늘 하루 보지 않기"를 누르면
+     홈 화면의 배너 버튼(id="homeCommunityEventBtn")을 아는 id로 직접
+     숨깁니다(새 모듈간 콜백을 만들지 않는 최소 변경). */
   var EVENT_BANNER_DISMISS_KEY = "communityEventBannerDismissedDate";
+  var eventPopupOnClosed = null;
 
   function eventBannerTodayKey() {
     var d = new Date();
@@ -181,15 +189,24 @@ var Community = (function () {
   }
   function markEventBannerDismissedToday() {
     try { localStorage.setItem(EVENT_BANNER_DISMISS_KEY, eventBannerTodayKey()); } catch (e) { /* localStorage 미지원 시 무시 */ }
+    var homeBtn = document.getElementById("homeCommunityEventBtn");
+    if (homeBtn) homeBtn.hidden = true;
   }
 
   function closeCouponBoardsModal() {
     var existing = qs("communityEventOverlay");
     if (existing) existing.remove();
+    var done = eventPopupOnClosed;
+    eventPopupOnClosed = null;
+    if (done) done();
   }
 
-  function showCouponBoardsModal() {
+  // onClosed(선택) — 팝업이 어떤 경로로든 닫힌 뒤 정확히 1번 호출됩니다
+  // (×/바깥클릭/오늘 하루 보지 않기/게시판 선택 모두 closeCouponBoardsModal을
+  // 거칩니다) — js/app.js의 자동 팝업 체인이 다음 단계로 넘어갈 때 씁니다.
+  function showCouponBoardsModal(onClosed) {
     closeCouponBoardsModal();
+    eventPopupOnClosed = typeof onClosed === "function" ? onClosed : null;
     var overlay = el("div", "modal-overlay");
     overlay.id = "communityEventOverlay";
     var modal = el("div", "modal community-event-modal");
@@ -224,7 +241,6 @@ var Community = (function () {
     dismissTodayBtn.addEventListener("click", function () {
       markEventBannerDismissedToday();
       closeCouponBoardsModal();
-      render();
     });
     modal.appendChild(dismissTodayBtn);
 
@@ -236,6 +252,19 @@ var Community = (function () {
     overlay.appendChild(modal);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) closeCouponBoardsModal(); });
     document.body.appendChild(overlay);
+  }
+
+  // 홈 화면 진입 시 자동으로 띄우는 진입점(2026-09-30 지시서) — 기존
+  // SitePopup.maybeShow/HometownPopup.maybeShow와 같은 계약: done은
+  // 팝업을 안 띄우는 경우 즉시, 띄운 경우 닫힌 뒤 정확히 1번 호출됩니다.
+  function maybeShowEventPopupOnEntry(done) {
+    var finish = typeof done === "function" ? done : function () {};
+    if (typeof COMMUNITY_EVENT === "undefined") { finish(); return; }
+    // 커뮤니티 화면으로 바로 들어온 경우(딥링크)에는 홈 전용 팝업을
+    // 띄우지 않습니다(기존 SitePopup/HometownPopup과 동일한 원칙 재사용).
+    if (isCommunityPath(location.pathname)) { finish(); return; }
+    if (isEventBannerDismissedToday()) { finish(); return; }
+    showCouponBoardsModal(finish);
   }
 
   /* ---------------- 회원가입 유도 안내(2026-09-12 5단계 지시서) ----------------
@@ -1108,23 +1137,10 @@ var Community = (function () {
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
 
-    // 커뮤니티 4곳 글쓰기 이벤트 배너(2026-09 다국어 자동번역 지시서
-    // 2번) — 새 컴포넌트 없이 아래 방 구하기/한글공부 바로가기와 같은
-    // .home-tile.home-tile-room을 재사용, 클릭 시 showCouponBoardsModal()
-    // 팝업만 띄웁니다(페이지 이동 없음). "오늘 하루 보지 않기"를 누른
-    // 경우에는 하루 동안 배너 자체를 숨깁니다.
-    if (!isEventBannerDismissedToday()) {
-      var eventBanner = el("button", "home-tile home-tile-room community-event-banner");
-      eventBanner.type = "button";
-      eventBanner.appendChild(el("span", "home-tile-eyebrow", t(COMMUNITY_EVENT.bannerEyebrow)));
-      eventBanner.appendChild(el("strong", "home-tile-title", t(COMMUNITY_EVENT.bannerTitle)));
-      eventBanner.appendChild(el("span", "home-tile-sub", t(COMMUNITY_EVENT.bannerSub)));
-      var eventBannerArrow = el("span", "home-tile-arrow", "→");
-      eventBannerArrow.setAttribute("aria-hidden", "true");
-      eventBanner.appendChild(eventBannerArrow);
-      eventBanner.addEventListener("click", function () { showCouponBoardsModal(); });
-      wrap.appendChild(eventBanner);
-    }
+    // 커뮤니티 4곳 글쓰기 이벤트 배너는 2026-09-30 지시서로 첫화면(홈)
+    // 상단으로 옮겨졌습니다(js/app.js) — 여기서는 더 이상 그리지 않고,
+    // 팝업(showCouponBoardsModal)만 이 모듈에 남겨 홈 화면 배너/자동
+    // 진입 둘 다에서 재사용합니다.
 
     // 방 구하기 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
     // .home-tile.home-tile-room 컴포넌트·스타일과 RoomFinder 모달을 그대로
@@ -3345,7 +3361,13 @@ var Community = (function () {
     navigateToCategory: navigateToCategory,
     routePrefix: ROUTE_PREFIX,
     fetchLatestPosts: fetchLatestPostsForHome,
-    showToast: showToast
+    showToast: showToast,
+    // 2026-09-30 지시서 — 커뮤니티 이벤트 배너/팝업이 홈 화면(js/app.js)
+    // 에서도 쓰이므로 공개 API에 추가(새 모듈 없이 기존 Community
+    // 모듈 재사용).
+    showEventPopup: showCouponBoardsModal,
+    maybeShowEventPopupOnEntry: maybeShowEventPopupOnEntry,
+    isEventBannerDismissedToday: isEventBannerDismissedToday
   };
 })();
 

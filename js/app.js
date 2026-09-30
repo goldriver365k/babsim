@@ -615,6 +615,16 @@
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
     }
+    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서) — 오늘 하루
+    // 보지 않기를 눌렀으면 숨기고, 아니면 COMMUNITY_EVENT 문구를 채웁니다.
+    if (els.homeCommunityEventBtn && window.COMMUNITY_EVENT) {
+      var eventDismissed = window.Community && typeof window.Community.isEventBannerDismissedToday === "function"
+        && window.Community.isEventBannerDismissedToday();
+      els.homeCommunityEventBtn.hidden = !!eventDismissed;
+      if (els.homeCommunityEventEyebrow) els.homeCommunityEventEyebrow.textContent = COMMUNITY_EVENT.bannerEyebrow[state.lang] || COMMUNITY_EVENT.bannerEyebrow.ko;
+      if (els.homeCommunityEventTitle) els.homeCommunityEventTitle.textContent = COMMUNITY_EVENT.bannerTitle[state.lang] || COMMUNITY_EVENT.bannerTitle.ko;
+      if (els.homeCommunityEventSub) els.homeCommunityEventSub.textContent = COMMUNITY_EVENT.bannerSub[state.lang] || COMMUNITY_EVENT.bannerSub.ko;
+    }
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
     if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
     // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
@@ -1194,6 +1204,14 @@
     els.homeCardCampusLifeSub = qs("homeCardCampusLifeSub");
     els.homeCardFriendsSub = qs("homeCardFriendsSub");
     els.homeCardFeedbackSub = qs("homeCardFeedbackSub");
+    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서) — 밥심커뮤니티
+    // 화면 안에 있던 배너를 첫화면(히어로 바로 아래) 상단으로 옮겼습니다.
+    // 문구는 새로 만들지 않고 기존 COMMUNITY_EVENT(js/community-
+    // translations.js)를 그대로 재사용합니다.
+    els.homeCommunityEventBtn = qs("homeCommunityEventBtn");
+    els.homeCommunityEventEyebrow = qs("homeCommunityEventEyebrow");
+    els.homeCommunityEventTitle = qs("homeCommunityEventTitle");
+    els.homeCommunityEventSub = qs("homeCommunityEventSub");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");
@@ -1327,6 +1345,13 @@
       // 조용히 아무 일도 하지 않습니다.
       els.homeLegoEventBtn.addEventListener("click", function () {
         if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+      });
+    }
+    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서) — 클릭 시
+    // 밥심커뮤니티 모듈의 기존 안내 팝업(showEventPopup)을 그대로 띄웁니다.
+    if (els.homeCommunityEventBtn) {
+      els.homeCommunityEventBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.showEventPopup === "function") window.Community.showEventPopup();
       });
     }
     if (els.homeLegoHometownBtn) {
@@ -1637,11 +1662,22 @@
         afterHometownPopupChain();
       }
     }
-    setTimeout(function () {
+    // "커뮤니티 4곳 글쓰기 이벤트" 팝업(2026-09-30 지시서) — 새로 만든
+    // 배너/이벤트라 체인 맨 앞에 두고, 닫힌 뒤(또는 오늘 이미 하루
+    // 안 보기를 눌렀으면 즉시) 기존 체인(설문→관리자 팝업→신메뉴 팝업→
+    // 아침밥 평가 팝업)으로 이어갑니다.
+    function afterCommunityEventChain() {
       if (window.WeekendSurvey && typeof window.WeekendSurvey.maybeShowOnEntry === "function") {
         window.WeekendSurvey.maybeShowOnEntry(afterSurveyChain);
       } else {
         afterSurveyChain();
+      }
+    }
+    setTimeout(function () {
+      if (window.Community && typeof window.Community.maybeShowEventPopupOnEntry === "function") {
+        window.Community.maybeShowEventPopupOnEntry(afterCommunityEventChain);
+      } else {
+        afterCommunityEventChain();
       }
     }, 1000);
   }
