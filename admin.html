@@ -1397,6 +1397,10 @@ table.results-table {
           <option value="vi">Tiếng Việt</option>
           <option value="bn">বাংলা</option>
         </select>
+        <!-- 결과 취합 다운로드(2026-09-30 지시서) — 현재 화면 통계와 같은
+             집계를 CSV 한 장으로 내려받습니다(새 라이브러리 없음). 언어
+             필터를 바꾼 뒤 누르면 그 필터 기준으로 다시 취합됩니다. -->
+        <button type="button" class="filter-apply-btn" id="weekendSurveyExportBtn" style="margin-top:10px;">결과 취합 다운로드(CSV)</button>
       </div>
 
       <div class="admin-card">
@@ -6804,6 +6808,14 @@ var AdminWeekendSurvey = (function () {
     return (count / total * 100).toFixed(1) + "%";
   }
 
+  // 현재 언어 필터가 적용된 응답 목록 — render()와 CSV 취합(exportResultsCsv)
+  // 양쪽에서 재사용해 같은 필터 로직을 중복 작성하지 않습니다.
+  function getFiltered() {
+    var docs = allDocs || [];
+    var filterLang = els.langFilter ? els.langFilter.value : "all";
+    return (filterLang === "all") ? docs : docs.filter(function (d) { return d.selectedLanguage === filterLang; });
+  }
+
   // 인원+% 텍스트만 쌓는 단순 통계 블록(새 차트 라이브러리 없음 — 36번).
   function renderCountStats(container, rows, total) {
     container.innerHTML = "";
@@ -6839,10 +6851,90 @@ var AdminWeekendSurvey = (function () {
     });
   }
 
+  /* ---------------- 결과 취합 다운로드(CSV) ----------------
+     새 라이브러리 없이 브라우저 기본 Blob/URL.createObjectURL만 사용합니다.
+     화면에 이미 그려둔 통계와 같은 집계 로직(countBy/pct/getFiltered)을
+     그대로 재사용해 중복 계산을 만들지 않습니다. 언어별 응답 수는 필터와
+     무관하게 항상 전체 기준이고(화면 통계와 동일), 문항별 통계·기타
+     의견·건의사항은 현재 선택된 언어 필터를 그대로 반영합니다. */
+  function csvEscape(v) {
+    var s = (v === undefined || v === null) ? "" : String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function csvRow(cells) { return cells.map(csvEscape).join(",") + "\r\n"; }
+
+  function fmtNow() {
+    var d = new Date();
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function buildResultsCsv() {
+    var docs = allDocs || [];
+    var filtered = getFiltered();
+    var total = filtered.length;
+    var filterLang = els.langFilter ? els.langFilter.value : "all";
+    var out = "";
+
+    out += csvRow(["1,000원의 아침밥 주말·공휴일 설문조사 결과 취합"]);
+    out += csvRow(["생성일시", fmtNow()]);
+    out += csvRow(["언어 필터", filterLang === "all" ? "전체" : (LANG_LABEL[filterLang] || filterLang)]);
+    out += csvRow(["응답 수(필터 기준)", total + "명"]);
+    out += csvRow([]);
+
+    out += csvRow(["[언어별 응답 — 전체 기준, 필터 무관]"]);
+    out += csvRow(["언어", "인원", "비율"]);
+    var langCounts = countBy(docs, "selectedLanguage", LANG_ORDER);
+    LANG_ORDER.forEach(function (l) { out += csvRow([LANG_LABEL[l], langCounts[l], pct(langCounts[l], docs.length)]); });
+    out += csvRow([]);
+
+    function statSection(title, field, labelMap) {
+      out += csvRow(["[" + title + "]"]);
+      out += csvRow(["선택지", "인원", "비율"]);
+      var counts = countBy(filtered, field, Object.keys(labelMap));
+      Object.keys(labelMap).forEach(function (k) { out += csvRow([labelMap[k], counts[k], pct(counts[k], total)]); });
+      out += csvRow([]);
+    }
+    function freeTextSection(title, field) {
+      out += csvRow(["[" + title + "]"]);
+      out += csvRow(["작성일", "언어", "내용"]);
+      var rows = filtered.filter(function (d) { return d[field] && d[field].trim(); })
+        .sort(function (a, b) { return (b._createdMs || 0) - (a._createdMs || 0); });
+      if (!rows.length) { out += csvRow(["(없음)"]); }
+      rows.forEach(function (d) { out += csvRow([fmtDateTime(d.createdAt), LANG_LABEL[d.selectedLanguage] || d.selectedLanguage, d[field]]); });
+      out += csvRow([]);
+    }
+
+    statSection("질문 1 — 귀하는 어디에 해당합니까?", "nationalityType", Q1_LABEL);
+    statSection("질문 2 — 현재 생활 형태는?", "livingType", Q2_LABEL);
+    statSection("질문 3 — 희망 운영시간", "preferredTime", Q3_LABEL);
+    statSection("질문 4 — 메뉴 구성", "menuPreference", Q4_LABEL);
+    freeTextSection("질문 4 기타 의견", "menuOtherOpinion");
+    statSection("질문 5 — 이용 의향", "usageIntent", Q5_LABEL);
+    freeTextSection("건의사항", "suggestion");
+
+    return out;
+  }
+
+  function downloadResultsCsv() {
+    if (!allDocs) { window.alert("먼저 데이터를 불러온 뒤 다운로드해주세요."); return; }
+    var csv = buildResultsCsv();
+    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var d = new Date();
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    a.href = url;
+    a.download = "weekend-survey-results-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
   function render() {
     var docs = allDocs || [];
-    var filterLang = els.langFilter ? els.langFilter.value : "all";
-    var filtered = (filterLang === "all") ? docs : docs.filter(function (d) { return d.selectedLanguage === filterLang; });
+    var filtered = getFiltered();
     var total = filtered.length;
 
     if (els.totalCount) els.totalCount.textContent = total + "명";
@@ -6959,8 +7051,10 @@ var AdminWeekendSurvey = (function () {
     els.q4Other = qs("weekendSurveyQ4Other");
     els.q5Stats = qs("weekendSurveyQ5Stats");
     els.suggestions = qs("weekendSurveySuggestions");
+    els.exportBtn = qs("weekendSurveyExportBtn");
 
     if (els.langFilter) els.langFilter.addEventListener("change", render);
+    if (els.exportBtn) els.exportBtn.addEventListener("click", downloadResultsCsv);
 
     if (allDocs === null) load(); else render(); // 탭을 다시 열 때는 재조회하지 않고 캐시만 다시 그림
   }
