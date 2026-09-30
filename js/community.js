@@ -163,6 +163,81 @@ var Community = (function () {
     document.body.appendChild(overlay);
   }
 
+  /* ---------------- 커뮤니티 이벤트 배너/팝업 ----------------
+     "커뮤니티 4곳에 글 올리면 아침식사 1,000원 무료쿠폰 증정"(2026-09
+     다국어 자동번역 지시서 2번) — 새 팝업 라이브러리 없이 기존
+     .modal-overlay/.modal 껍데기(위 showAuthGateModal과 같은 패턴)를
+     재사용합니다. 팝업 안 4개 게시판 버튼은 아래 목록 화면의 "글쓰기"
+     버튼(writeTarget)과 똑같이 ensureAuth() 후 해당 게시판 글쓰기
+     화면으로 바로 이동합니다. */
+  var EVENT_BANNER_DISMISS_KEY = "communityEventBannerDismissedDate";
+
+  function eventBannerTodayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function isEventBannerDismissedToday() {
+    try { return localStorage.getItem(EVENT_BANNER_DISMISS_KEY) === eventBannerTodayKey(); } catch (e) { return false; }
+  }
+  function markEventBannerDismissedToday() {
+    try { localStorage.setItem(EVENT_BANNER_DISMISS_KEY, eventBannerTodayKey()); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  }
+
+  function closeCouponBoardsModal() {
+    var existing = qs("communityEventOverlay");
+    if (existing) existing.remove();
+  }
+
+  function showCouponBoardsModal() {
+    closeCouponBoardsModal();
+    var overlay = el("div", "modal-overlay");
+    overlay.id = "communityEventOverlay";
+    var modal = el("div", "modal community-event-modal");
+
+    var closeBtn = el("button", "modal-close");
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", t(COMMUNITY_EVENT.closeAriaLabel));
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", closeCouponBoardsModal);
+    modal.appendChild(closeBtn);
+
+    modal.appendChild(el("h2", "modal-title", t(COMMUNITY_EVENT.popupTitle)));
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_EVENT.popupDescLine1) + " " + t(COMMUNITY_EVENT.bannerTitle)));
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_EVENT.popupDesc)));
+
+    modal.appendChild(el("p", "community-event-boards-label", t(COMMUNITY_EVENT.boardsLabel)));
+    var boardsList = el("div", "community-event-boards-list");
+    COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
+      var boardBtn = el("button", "community-btn-secondary community-event-board-btn", t(COMMUNITY_CATEGORIES[catKey]));
+      boardBtn.type = "button";
+      var target = ROUTE_PREFIX + "/write?cat=" + catKey;
+      boardBtn.addEventListener("click", function () {
+        closeCouponBoardsModal();
+        ensureAuth().then(function () { navigate(target); }).catch(function () { showAuthGateModal(target); });
+      });
+      boardsList.appendChild(boardBtn);
+    });
+    modal.appendChild(boardsList);
+
+    var dismissTodayBtn = el("button", "community-link-btn", t(COMMUNITY_EVENT.dismissToday));
+    dismissTodayBtn.type = "button";
+    dismissTodayBtn.addEventListener("click", function () {
+      markEventBannerDismissedToday();
+      closeCouponBoardsModal();
+      render();
+    });
+    modal.appendChild(dismissTodayBtn);
+
+    var closeTextBtn = el("button", "community-btn-secondary", t(COMMUNITY_EVENT.close));
+    closeTextBtn.type = "button";
+    closeTextBtn.addEventListener("click", closeCouponBoardsModal);
+    modal.appendChild(closeTextBtn);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeCouponBoardsModal(); });
+    document.body.appendChild(overlay);
+  }
+
   /* ---------------- 회원가입 유도 안내(2026-09-12 5단계 지시서) ----------------
      "가입해야 쓸 수 있는" 안내창(showAuthGateModal)과 달리, 이 안내는
      MY 등 계정이 있으면 더 좋은 기능에 들어갔을 때만 가볍게 띄우고
@@ -1033,6 +1108,24 @@ var Community = (function () {
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
 
+    // 커뮤니티 4곳 글쓰기 이벤트 배너(2026-09 다국어 자동번역 지시서
+    // 2번) — 새 컴포넌트 없이 아래 방 구하기/한글공부 바로가기와 같은
+    // .home-tile.home-tile-room을 재사용, 클릭 시 showCouponBoardsModal()
+    // 팝업만 띄웁니다(페이지 이동 없음). "오늘 하루 보지 않기"를 누른
+    // 경우에는 하루 동안 배너 자체를 숨깁니다.
+    if (!isEventBannerDismissedToday()) {
+      var eventBanner = el("button", "home-tile home-tile-room community-event-banner");
+      eventBanner.type = "button";
+      eventBanner.appendChild(el("span", "home-tile-eyebrow", t(COMMUNITY_EVENT.bannerEyebrow)));
+      eventBanner.appendChild(el("strong", "home-tile-title", t(COMMUNITY_EVENT.bannerTitle)));
+      eventBanner.appendChild(el("span", "home-tile-sub", t(COMMUNITY_EVENT.bannerSub)));
+      var eventBannerArrow = el("span", "home-tile-arrow", "→");
+      eventBannerArrow.setAttribute("aria-hidden", "true");
+      eventBanner.appendChild(eventBannerArrow);
+      eventBanner.addEventListener("click", function () { showCouponBoardsModal(); });
+      wrap.appendChild(eventBanner);
+    }
+
     // 방 구하기 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
     // .home-tile.home-tile-room 컴포넌트·스타일과 RoomFinder 모달을 그대로
     // 재사용합니다(새 UI·새 URL 없음). 커뮤니티 콘텐츠 최상단에 배치.
@@ -1659,7 +1752,7 @@ var Community = (function () {
     aiNotice.hidden = true;
     body.appendChild(aiNotice);
 
-    if (!isOriginalLang) {
+    if (!isOriginalLang && hasTranslatableText(post)) {
       var trState = post.translations && post.translations[lang];
       if (trState && trState.content) {
         var toggleBtn = el("button", "community-link-btn", t(COMMUNITY_POST.viewOriginal));
@@ -2371,6 +2464,14 @@ var Community = (function () {
   // 자동번역(translatePostLanguages)과 방문자 요청 번역(requestPostTranslation)
   // 양쪽에서 같은 함수를 재사용해 카테고리별 번역 코드를 중복하지 않습니다
   // (2026-09 자동번역 지시서 12번).
+  // 이모지·숫자·기호만 있는 글은 번역할 실제 문자가 없으므로 API를
+  // 호출하지 않습니다(2026-09 다국어 자동번역 지시서 12번) — 제목·본문
+  // 어디에도 글자(letter)가 하나도 없으면 항상 원문 그대로 보여줍니다.
+  function hasTranslatableText(post) {
+    var re = /\p{L}/u;
+    return re.test(post.originalTitle || "") || re.test(post.originalContent || "");
+  }
+
   function jobTranslateFields(post) {
     if (post.category !== "job") return null;
     var out = {};
@@ -2441,7 +2542,7 @@ var Community = (function () {
      남아 관리자 번역관리 탭에서 재시도할 수 있습니다). */
   function translatePostLanguages(postId, post, onStatus) {
     var targets = SUPPORTED_LANGS.filter(function (l) { return l !== post.originalLanguage; });
-    if (!targets.length || !authUser) return Promise.resolve();
+    if (!targets.length || !authUser || !hasTranslatableText(post)) return Promise.resolve();
     if (onStatus) onStatus();
     var ref = db().collection("communityPosts").doc(postId);
     var jobFields = jobTranslateFields(post);
