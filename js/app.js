@@ -615,15 +615,19 @@
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
     }
-    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서) — 오늘 하루
-    // 보지 않기를 눌렀으면 숨기고, 아니면 COMMUNITY_EVENT 문구를 채웁니다.
+    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서, 이벤트 바 수정
+    // 지시문) — 오늘 하루 보지 않기를 눌렀으면 숨기고, 아니면 문구를
+    // 채웁니다. 모바일에서 한 줄로 잘리지 않도록 제목을 두 줄(커뮤니티
+    // 4곳에 글 올리면 / 아침식사 1,000원 무료쿠폰 증정)로 나눠 표시하며,
+    // 새 번역 키 없이 기존 COMMUNITY_EVENT.popupDescLine1/bannerTitle을
+    // 그대로 재사용합니다.
     if (els.homeCommunityEventBtn && window.COMMUNITY_EVENT) {
       var eventDismissed = window.Community && typeof window.Community.isEventBannerDismissedToday === "function"
         && window.Community.isEventBannerDismissedToday();
       els.homeCommunityEventBtn.hidden = !!eventDismissed;
       if (els.homeCommunityEventEyebrow) els.homeCommunityEventEyebrow.textContent = COMMUNITY_EVENT.bannerEyebrow[state.lang] || COMMUNITY_EVENT.bannerEyebrow.ko;
-      if (els.homeCommunityEventTitle) els.homeCommunityEventTitle.textContent = COMMUNITY_EVENT.bannerTitle[state.lang] || COMMUNITY_EVENT.bannerTitle.ko;
-      if (els.homeCommunityEventSub) els.homeCommunityEventSub.textContent = COMMUNITY_EVENT.bannerSub[state.lang] || COMMUNITY_EVENT.bannerSub.ko;
+      if (els.homeCommunityEventTitleLine1) els.homeCommunityEventTitleLine1.textContent = COMMUNITY_EVENT.popupDescLine1[state.lang] || COMMUNITY_EVENT.popupDescLine1.ko;
+      if (els.homeCommunityEventTitleLine2) els.homeCommunityEventTitleLine2.textContent = COMMUNITY_EVENT.bannerTitle[state.lang] || COMMUNITY_EVENT.bannerTitle.ko;
     }
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
     if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
@@ -1210,8 +1214,8 @@
     // translations.js)를 그대로 재사용합니다.
     els.homeCommunityEventBtn = qs("homeCommunityEventBtn");
     els.homeCommunityEventEyebrow = qs("homeCommunityEventEyebrow");
-    els.homeCommunityEventTitle = qs("homeCommunityEventTitle");
-    els.homeCommunityEventSub = qs("homeCommunityEventSub");
+    els.homeCommunityEventTitleLine1 = qs("homeCommunityEventTitleLine1");
+    els.homeCommunityEventTitleLine2 = qs("homeCommunityEventTitleLine2");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");

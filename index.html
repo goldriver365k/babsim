@@ -3002,12 +3002,33 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
    (#communityEventOverlay)은 밥심커뮤니티 모듈(js/community.js)에
    그대로 남아 있어 두 진입점이 같은 팝업을 재사용합니다. */
 .community-event-banner{width:100%;margin:0 0 28px}
+/* 모바일 — "이벤트 바 수정 지시문"(2026-09-30): 방 구하기/한글공부는
+   짧은 한 줄 문구라 .home-tile-room의 압축 가로형 레이아웃(고정에
+   가까운 min-height + white-space:nowrap + 세로 중앙정렬 화살표)이
+   맞지만, 이 배너는 "아침식사 1,000원 무료쿠폰 증정" 같은 문구가 길어
+   (특히 영어/몽골어/벵골어/미얀마어) 그대로 쓰면 글자가 잘립니다.
+   이 카드에서만 세로 배치로 되돌리고, white-space:nowrap/text-overflow:
+   ellipsis를 쓰지 않아 최대 2줄(언어가 더 길면 자동으로 더 늘어남)까지
+   자연스럽게 줄바꿈되게 합니다. min-height는 유지하되 고정 height는
+   전혀 쓰지 않아 내용에 따라 카드 높이가 자동으로 늘어납니다. */
 @media (max-width: 699px) {
-  .home-tile-room.community-event-banner{background:var(--home-yellow);min-height:60px}
-  .home-tile-room.community-event-banner .home-tile-eyebrow{color:rgba(24,22,15,.68)}
-  .home-tile-room.community-event-banner .home-tile-title{color:#18160F}
-  .home-tile-room.community-event-banner .home-tile-sub{color:rgba(24,22,15,.68)}
-  .home-tile-room.community-event-banner .home-tile-arrow{color:#18160F}
+  .home-tile-room.community-event-banner{
+    background:var(--home-yellow);
+    flex-direction:column;align-items:flex-start;
+    min-height:60px;padding:18px 46px 18px 18px;
+  }
+  .home-tile-room.community-event-banner .home-tile-eyebrow{
+    flex:0 0 auto;color:rgba(24,22,15,.68);white-space:normal;
+  }
+  .home-tile-room.community-event-banner .home-tile-title{
+    margin:8px 0 0;flex:0 0 auto;
+    white-space:normal;overflow:visible;word-break:keep-all;
+    font-size:19px;line-height:1.35;font-weight:700;color:#18160F;
+  }
+  .home-tile-room.community-event-banner .home-tile-title span{display:block}
+  .home-tile-room.community-event-banner .home-tile-arrow{
+    top:18px;bottom:auto;right:16px;transform:none;color:#18160F;
+  }
 }
 
 /* 이벤트 안내 팝업(#communityEventOverlay) 안 4개 게시판 버튼 목록 —
@@ -3090,15 +3111,20 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <button type="button" class="home-hero-dot" data-hero-slide="1" aria-label="2"></button>
     </div>
   </div>
-  <!-- "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서) — 밥심커뮤니티
-       화면 안에 있던 배너를 히어로 바로 아래(첫화면 상단)로 옮겼습니다.
-       문구는 js/app.js의 renderHome()이 COMMUNITY_EVENT로 채우고,
-       클릭하면 js/community.js의 Community.showEventPopup() 팝업이
-       뜹니다(같은 팝업을 첫화면 진입 시 자동으로도 띄웁니다). -->
+  <!-- "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서, 2026-09-30
+       "이벤트 바 수정 지시문"으로 모바일 잘림 수정) — 밥심커뮤니티 화면
+       안에 있던 배너를 히어로 바로 아래(첫화면 상단)로 옮겼습니다.
+       문구는 js/app.js의 renderHome()이 기존 COMMUNITY_EVENT 번역(새 키
+       추가 없이 popupDescLine1+bannerTitle 재사용)으로 채우고, 클릭하면
+       js/community.js의 Community.showEventPopup() 팝업이 뜹니다(같은
+       팝업을 첫화면 진입 시 자동으로도 띄웁니다). 제목을 줄 2개로
+       나눠(1줄 고정폭 대신) 긴 언어에서도 잘리지 않게 합니다. -->
   <button type="button" class="home-tile home-tile-room community-event-banner" id="homeCommunityEventBtn" hidden>
     <span class="home-tile-eyebrow" id="homeCommunityEventEyebrow"></span>
-    <strong class="home-tile-title" id="homeCommunityEventTitle"></strong>
-    <span class="home-tile-sub" id="homeCommunityEventSub"></span>
+    <strong class="home-tile-title community-event-banner-title">
+      <span id="homeCommunityEventTitleLine1"></span>
+      <span id="homeCommunityEventTitleLine2"></span>
+    </strong>
     <span class="home-tile-arrow" aria-hidden="true">→</span>
   </button>
   <div class="home-bento" id="homeLegoBoard">
@@ -11781,15 +11807,19 @@ var WeekendSurvey = (function () {
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
     }
-    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서) — 오늘 하루
-    // 보지 않기를 눌렀으면 숨기고, 아니면 COMMUNITY_EVENT 문구를 채웁니다.
+    // "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09-30 지시서, 이벤트 바 수정
+    // 지시문) — 오늘 하루 보지 않기를 눌렀으면 숨기고, 아니면 문구를
+    // 채웁니다. 모바일에서 한 줄로 잘리지 않도록 제목을 두 줄(커뮤니티
+    // 4곳에 글 올리면 / 아침식사 1,000원 무료쿠폰 증정)로 나눠 표시하며,
+    // 새 번역 키 없이 기존 COMMUNITY_EVENT.popupDescLine1/bannerTitle을
+    // 그대로 재사용합니다.
     if (els.homeCommunityEventBtn && window.COMMUNITY_EVENT) {
       var eventDismissed = window.Community && typeof window.Community.isEventBannerDismissedToday === "function"
         && window.Community.isEventBannerDismissedToday();
       els.homeCommunityEventBtn.hidden = !!eventDismissed;
       if (els.homeCommunityEventEyebrow) els.homeCommunityEventEyebrow.textContent = COMMUNITY_EVENT.bannerEyebrow[state.lang] || COMMUNITY_EVENT.bannerEyebrow.ko;
-      if (els.homeCommunityEventTitle) els.homeCommunityEventTitle.textContent = COMMUNITY_EVENT.bannerTitle[state.lang] || COMMUNITY_EVENT.bannerTitle.ko;
-      if (els.homeCommunityEventSub) els.homeCommunityEventSub.textContent = COMMUNITY_EVENT.bannerSub[state.lang] || COMMUNITY_EVENT.bannerSub.ko;
+      if (els.homeCommunityEventTitleLine1) els.homeCommunityEventTitleLine1.textContent = COMMUNITY_EVENT.popupDescLine1[state.lang] || COMMUNITY_EVENT.popupDescLine1.ko;
+      if (els.homeCommunityEventTitleLine2) els.homeCommunityEventTitleLine2.textContent = COMMUNITY_EVENT.bannerTitle[state.lang] || COMMUNITY_EVENT.bannerTitle.ko;
     }
     if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
     if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
@@ -12376,8 +12406,8 @@ var WeekendSurvey = (function () {
     // translations.js)를 그대로 재사용합니다.
     els.homeCommunityEventBtn = qs("homeCommunityEventBtn");
     els.homeCommunityEventEyebrow = qs("homeCommunityEventEyebrow");
-    els.homeCommunityEventTitle = qs("homeCommunityEventTitle");
-    els.homeCommunityEventSub = qs("homeCommunityEventSub");
+    els.homeCommunityEventTitleLine1 = qs("homeCommunityEventTitleLine1");
+    els.homeCommunityEventTitleLine2 = qs("homeCommunityEventTitleLine2");
     els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
     els.homeCommunityLatest = qs("homeCommunityLatest");
     els.bottomNav = qs("bottomNav");
