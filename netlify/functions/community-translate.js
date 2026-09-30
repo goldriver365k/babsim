@@ -245,6 +245,14 @@ const PRESERVE_RULE = "Do not translate or alter: person names, brand names, sch
   "building names, prices, dates, phone numbers, email addresses, URLs, or product model numbers " +
   "— keep them exactly as written in the original.";
 
+// 2026-09-30 "이벤트 바 + 다국어 번역 최종 수정 지시문" 5번/10번 — 게시글
+// 자동번역도 단어 그대로 직역하지 않고, 그 언어를 실제로 쓰는 사람이
+// 자연스럽게 읽을 수 있는 문장으로 번역하도록 프롬프트에만 한 문장을
+// 추가합니다(새 API·새 모델 없이 같은 OpenAI 호출의 지시문만 보강).
+const NATURAL_TONE_RULE = "Translate naturally, the way a native speaker of the target language " +
+  "would actually write it, not a literal word-for-word translation — keep the original meaning " +
+  "and tone (casual stays casual, formal stays formal).";
+
 async function callOpenAIJson(promptText) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw Object.assign(new Error("AI_API_KEY_MISSING"), { code: "AI_API_KEY_MISSING" });
@@ -317,7 +325,7 @@ async function handleTranslatePost(payload) {
     : '{"<langCode>":{"title":"...","content":"..."}, ...}';
   const prompt =
     "Translate the following community board post from " + LANG_NAMES[original] +
-    " into these languages: " + targetNames + ". " + PRESERVE_RULE +
+    " into these languages: " + targetNames + ". " + NATURAL_TONE_RULE + " " + PRESERVE_RULE +
     " Respond ONLY with a JSON object shaped like " + shapeHint +
     " using the exact language codes: " + targets.join(", ") + "." +
     (fieldKeys.length
@@ -369,7 +377,7 @@ async function handleTranslateComment(payload) {
 
   const prompt =
     "Translate the following community board comment from " + LANG_NAMES[original] +
-    " into " + LANG_NAMES[target] + ". " + PRESERVE_RULE +
+    " into " + LANG_NAMES[target] + ". " + NATURAL_TONE_RULE + " " + PRESERVE_RULE +
     ' Respond ONLY with a JSON object shaped like {"content":"..."}.' +
     "\n\nComment: " + content;
 

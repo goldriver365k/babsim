@@ -2986,6 +2986,9 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
 /* 이벤트 안내 팝업(#communityEventOverlay) 안 4개 게시판 버튼 목록 —
    기존 .modal-overlay/.modal/.community-btn-secondary 재사용, 세로
    목록으로 보여주기 위한 배치 규칙만 최소로 추가합니다. */
+.community-event-cta-label{
+  font-size:16px;font-weight:800;color:var(--comm-navy);margin:4px 0 10px;
+}
 .community-event-boards-label{
   font-size:13px;font-weight:700;color:var(--comm-text);margin:0 0 8px;
 }

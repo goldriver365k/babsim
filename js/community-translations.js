@@ -65,25 +65,33 @@ var COMMUNITY_CATEGORY_DESC = {
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
 };
 
-/* "커뮤니티 4곳에 글 올리면 아침식사 1,000원 무료쿠폰 증정" 행사 배너/팝업
-   (2026-09 다국어 자동번역 지시서 2번) — 4개 게시판 이름은 새로 만들지
-   않고 위 COMMUNITY_CATEGORIES를 그대로 재사용합니다.
+/* "커뮤니티에 글 올리면 아침식사 1,000원 무료쿠폰 증정" 행사 배너/팝업
+   (2026-09 다국어 자동번역 지시서 2번, 2026-09-30 "이벤트 바 + 다국어
+   번역 최종 수정 지시문"으로 "커뮤니티 4곳" 표현 삭제 + 자연스러운
+   현지 표현으로 교체) — 4개 게시판 이름은 새로 만들지 않고 위
+   COMMUNITY_CATEGORIES를 그대로 재사용합니다.
+   popupDescLine1/bannerTitle은 직역이 아니라 지시서가 직접 준 자연스러운
+   현지 표현을 그대로 사용합니다(예: 영어는 "Post in all 4 community
+   boards"가 아니라 "Post in the community", 중국어는 "在4个社区板块
+   发帖后"가 아니라 "在社区发帖"처럼 짧고 자연스러운 안내 문구).
    bannerEyebrow는 이 사이트의 다른 뱃지형 짧은 문구(예: HOMETOWN_POPUP의
    "NEW MENU", WEEKEND_SURVEY의 영문 배지 등)와 같은 관례로 언어와 무관하게
    영문 그대로 고정합니다(번역 데이터 자체는 지시서대로 7개 언어 항목을
    모두 채워 두되, 값은 모두 동일한 영문입니다).
-   joinNow/getCoupon/joinComplete 3개는 지시서에 번역 대상으로 명시돼
-   있지만, 지금 화면 구조(배너 1개 + 안내 팝업 1개, 별도 쿠폰 발급/참여
-   추적 시스템 없음)에는 자연스럽게 들어갈 자리가 없어 실제로 화면에
-   쓰지는 않습니다 — 번역 데이터만 만들어 두고 완료 보고에 이 판단을
-   그대로 알립니다(지시서의 "UI를 복잡하게 만들지 않는다"/"대규모
-   리팩터링 금지" 원칙에 따른 선택). */
+   getCoupon/joinComplete 2개는 지시서에 번역 대상으로 명시돼 있지만,
+   지금 화면 구조(배너 1개 + 안내 팝업 1개, 별도 쿠폰 발급/참여 추적
+   시스템 없음)에는 자연스럽게 들어갈 자리가 없어 실제로 화면에 쓰지는
+   않습니다 — 번역 데이터만 만들어 두고 완료 보고에 이 판단을 그대로
+   알립니다(지시서의 "UI를 복잡하게 만들지 않는다"/"대규모 리팩터링
+   금지" 원칙에 따른 선택). joinNow("지금 참여하기")는 이번 지시서에서
+   팝업에 반드시 포함하라고 명시해 참여 게시판 목록 위 CTA 문구로
+   추가했습니다. */
 var COMMUNITY_EVENT = {
   bannerEyebrow: { ko: "BABSIM COMMUNITY EVENT", zh: "BABSIM COMMUNITY EVENT", vi: "BABSIM COMMUNITY EVENT", en: "BABSIM COMMUNITY EVENT", mn: "BABSIM COMMUNITY EVENT", bn: "BABSIM COMMUNITY EVENT", my: "BABSIM COMMUNITY EVENT" },
-  bannerTitle: { ko: "아침식사 1,000원 무료쿠폰 증정", zh: "早餐1,000韩元免费优惠券", vi: "Tặng phiếu giảm giá bữa sáng 1.000 won miễn phí", en: "Free ₩1,000 Breakfast Coupon", mn: "Өглөөний цайны 1,000 воны үнэгүй купон өгнө", bn: "সকালের নাস্তার ১,০০০ ওন ফ্রি কুপন উপহার", my: "မနက်စာ ၁,၀၀၀ ဝမ် အခမဲ့ကူပွန်ပေးမည်" },
+  bannerTitle: { ko: "아침식사 1,000원 무료쿠폰 증정", zh: "领取1,000韩元早餐免费券", vi: "Nhận phiếu ăn sáng miễn phí 1.000 won", en: "Get a free ₩1,000 breakfast coupon", mn: "1,000 воны өглөөний хоолны купон аваарай", bn: "১,০০০ ওনের ফ্রি ব্রেকফাস্ট কুপন পান", my: "ဝမ် 1,000 တန် မနက်စာကူပွန် အခမဲ့ရယူပါ" },
   bannerSub: { ko: "게시글 작성 후 쿠폰을 받아가세요", zh: "发帖后即可领取优惠券", vi: "Viết bài để nhận phiếu giảm giá", en: "Write a post and get your coupon", mn: "Нийтлэл бичээд купон аваарай", bn: "পোস্ট লিখে কুপন সংগ্রহ করুন", my: "ပို့စ်ရေးပြီး ကူပွန်ယူပါ" },
   popupTitle: { ko: "게시글 작성 후 쿠폰 받기", zh: "发帖后领取优惠券", vi: "Nhận phiếu giảm giá sau khi đăng bài", en: "Get a Coupon After Posting", mn: "Нийтлэл бичсэний дараа купон авах", bn: "পোস্ট লিখে কুপন নিন", my: "ပို့စ်ရေးပြီးနောက် ကူပွန်ရယူရန်" },
-  popupDescLine1: { ko: "커뮤니티 4곳에 글 올리면", zh: "在4个社区板块发帖后", vi: "Đăng bài lên cả 4 bảng cộng đồng", en: "Post in all 4 community boards", mn: "Нийгэмлэгийн 4 самбарт зурвас нийтэлбэл", bn: "কমিউনিটির ৪টি বোর্ডে পোস্ট করলে", my: "အသိုင်းအဝိုင်း ဘုတ် ၄ ခုတွင် ပို့စ်တင်လျှင်" },
+  popupDescLine1: { ko: "커뮤니티에 글 올리면", zh: "在社区发帖", vi: "Đăng bài trong cộng đồng", en: "Post in the community", mn: "Комьюнитид нийтлэл оруулаарай", bn: "কমিউনিটিতে পোস্ট করুন", my: "ကွန်မြူနတီမှာ ပို့စ်တင်ပါ" },
   popupDesc: { ko: "참여하면 아침식사 1,000원 무료쿠폰을 드립니다", zh: "参与即可获赠早餐1,000韩元免费优惠券", vi: "Tham gia để nhận phiếu giảm giá bữa sáng 1.000 won miễn phí", en: "Take part and we'll give you a free ₩1,000 breakfast coupon", mn: "Оролцвол өглөөний цайны 1,000 воны үнэгүй купон өгнө", bn: "অংশগ্রহণ করলে সকালের নাস্তার ১,০০০ ওন ফ্রি কুপন দেওয়া হবে", my: "ပါဝင်ပါက မနက်စာ ၁,၀၀၀ ဝမ် အခမဲ့ကူပွန်ပေးပါမည်" },
   boardsLabel: { ko: "참여 게시판", zh: "参与板块", vi: "Bảng tham gia", en: "Boards to join", mn: "Оролцох самбар", bn: "অংশগ্রহণের বোর্ড", my: "ပါဝင်ရမည့်ဘုတ်" },
   close: { ko: "닫기", zh: "关闭", vi: "Đóng", en: "Close", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" },

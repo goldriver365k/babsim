@@ -222,6 +222,9 @@ var Community = (function () {
     modal.appendChild(el("p", "modal-desc", t(COMMUNITY_EVENT.popupDescLine1) + " " + t(COMMUNITY_EVENT.bannerTitle)));
     modal.appendChild(el("p", "modal-desc", t(COMMUNITY_EVENT.popupDesc)));
 
+    // "지금 참여하기"(2026-09-30 지시서 8번 — 팝업 필수 포함 문구) — 게시판
+    // 목록 바로 위에 굵은 CTA 문구로 둡니다.
+    modal.appendChild(el("p", "community-event-cta-label", t(COMMUNITY_EVENT.joinNow)));
     modal.appendChild(el("p", "community-event-boards-label", t(COMMUNITY_EVENT.boardsLabel)));
     var boardsList = el("div", "community-event-boards-list");
     COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
