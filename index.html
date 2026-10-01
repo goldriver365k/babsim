@@ -2398,6 +2398,25 @@ main {
   cursor: pointer;
 }
 
+/* 게시판 목록 로딩 스켈레톤(모바일 로딩 속도 지시서 12번) — 실제 카드와
+   같은 틀(.community-post-card)에 애니메이션 바만 덧붙입니다. */
+.community-post-card-skeleton { cursor: default; }
+.community-skeleton-bar {
+  height: 14px; border-radius: 6px; margin: 6px 0;
+  background: linear-gradient(90deg, var(--comm-border) 25%, #EEF2F8 37%, var(--comm-border) 63%);
+  background-size: 400% 100%;
+  animation: community-skeleton-pulse 1.4s ease infinite;
+}
+.community-skeleton-bar-title { width: 60%; height: 16px; }
+.community-skeleton-bar-meta { width: 35%; }
+@keyframes community-skeleton-pulse {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-skeleton-bar { animation: none; }
+}
+
 .community-post-card-cat {
   display: inline-block;
   font-size: 12px;
@@ -7919,14 +7938,41 @@ var Community = (function () {
   var state_hasMorePosts = true;
   var state_postListLoading = false;
   var state_postListContainer = null;
+  // 마지막으로 Firestore에서 실제로 불러온 카테고리 — 언어 변경이나 같은
+  // 게시판 재진입처럼 카테고리가 그대로인 재렌더에서는 이미 불러온 목록을
+  // 그대로 재사용하고 다시 조회하지 않습니다(모바일 로딩 속도 지시서
+  // 10/11번). 글쓰기·수정·삭제 직후에는 null로 되돌려 다음 목록 진입 때
+  // 한 번은 새로 불러오게 합니다(방금 쓴 글이 바로 보이도록).
+  var state_loadedPostsCategory = null;
+
+  // 목록 로딩 중에는 빈 화면/큰 스피너 대신 카드 모양의 스켈레톤을 먼저
+  // 보여줍니다(모바일 로딩 속도 지시서 12번) — 실제 카드와 같은
+  // .community-post-card 틀만 재사용해 데이터 도착 시 자연스럽게 교체됩니다.
+  function renderSkeletonCards(container, count) {
+    for (var i = 0; i < count; i++) {
+      var card = el("div", "community-post-card community-post-card-skeleton");
+      card.appendChild(el("div", "community-skeleton-bar community-skeleton-bar-title"));
+      card.appendChild(el("div", "community-skeleton-bar community-skeleton-bar-meta"));
+      container.appendChild(card);
+    }
+  }
 
   function renderPostList(container) {
     state_postListContainer = container;
+    if (state_loadedPostsCategory === state_category && state_loadedPosts.length) {
+      renderLoadedPosts();
+      return;
+    }
     state_loadedPosts = [];
     state_lastPostDoc = null;
     state_hasMorePosts = true;
+    state_loadedPostsCategory = state_category;
     container.innerHTML = "";
-    container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    renderSkeletonCards(container, 6);
+    // 개발 중 병목 확인용(모바일 로딩 속도 지시서 15번) — 콘솔에만 찍히고
+    // 화면에는 전혀 표시되지 않습니다. fetchPostPage의 .then()에서
+    // console.timeEnd로 닫습니다.
+    try { console.time("community-list-load"); } catch (e) { /* 구형 브라우저 등 무시 */ }
     fetchPostPage(true);
   }
 
@@ -7954,6 +8000,7 @@ var Community = (function () {
         if (snap.size) state_lastPostDoc = snap.docs[snap.docs.length - 1];
         snap.forEach(function (doc) { state_loadedPosts.push(Object.assign({ id: doc.id }, doc.data())); });
         renderLoadedPosts();
+        if (isFirstPage) { try { console.timeEnd("community-list-load"); } catch (e) { /* 무시 */ } }
       })
       .catch(function (err) {
         state_postListLoading = false;
@@ -7961,6 +8008,7 @@ var Community = (function () {
         // Firestore 복합 색인 누락은 "requires an index" 문구와 함께
         // 색인을 바로 만들 수 있는 링크가 여기 찍힙니다).
         console.error("게시글 목록 불러오기 실패:", err);
+        if (isFirstPage) { try { console.timeEnd("community-list-load"); } catch (e2) { /* 무시 */ } }
         if (isFirstPage && container) {
           container.innerHTML = "";
           container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
@@ -8468,6 +8516,7 @@ var Community = (function () {
       delBtn.addEventListener("click", function () {
         if (!window.confirm(t(COMMUNITY_POST.deleteConfirm))) return;
         db().collection("communityPosts").doc(post.id).update({ status: "deleted" }).then(function () {
+          state_loadedPostsCategory = null; // 삭제된 글이 목록에서 바로 빠지도록 다음 진입 때 다시 불러옴
           navigate(ROUTE_PREFIX);
         });
       });
@@ -9829,6 +9878,9 @@ var Community = (function () {
       var writeOp = isEdit ? ref.update(base) : withRateLimit("post", function (tx) { tx.set(ref, base); });
       return writeOp.then(function () {
         editPostId = null;
+        // 새 글/수정 글이 목록에 바로 반영되도록, 다음 목록 진입 때는
+        // 캐시를 재사용하지 않고 1번 다시 불러오게 합니다.
+        state_loadedPostsCategory = null;
         if (!needsTranslate) return postId;
         // 등록/수정 시 자동번역 — 원문 저장은 이미 끝났으므로, 이 호출이
         // 실패해도 게시글 등록 자체는 이미 성공한 상태입니다(지시서 9번).

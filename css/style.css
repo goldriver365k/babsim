@@ -2350,6 +2350,25 @@ main {
   cursor: pointer;
 }
 
+/* 게시판 목록 로딩 스켈레톤(모바일 로딩 속도 지시서 12번) — 실제 카드와
+   같은 틀(.community-post-card)에 애니메이션 바만 덧붙입니다. */
+.community-post-card-skeleton { cursor: default; }
+.community-skeleton-bar {
+  height: 14px; border-radius: 6px; margin: 6px 0;
+  background: linear-gradient(90deg, var(--comm-border) 25%, #EEF2F8 37%, var(--comm-border) 63%);
+  background-size: 400% 100%;
+  animation: community-skeleton-pulse 1.4s ease infinite;
+}
+.community-skeleton-bar-title { width: 60%; height: 16px; }
+.community-skeleton-bar-meta { width: 35%; }
+@keyframes community-skeleton-pulse {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-skeleton-bar { animation: none; }
+}
+
 .community-post-card-cat {
   display: inline-block;
   font-size: 12px;
