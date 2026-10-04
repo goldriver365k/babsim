@@ -20,6 +20,17 @@ var HometownPopup = (function () {
   var TODAY_DISMISS_KEY = "hometownPopupDismissedDate";
   var LANG_KEY = "foodhall_lang"; // js/app.js LANG_KEY와 동일한 값(공용 저장소 재사용)
 
+  // "10월 5일 2층 후루룩찹찹 영업" 공지(2026-10-04 지시) — 이 기간에만
+  // 신메뉴 안내 대신 이 공지를 같은 팝업 슬롯에 보여주고, 기간이 지나면
+  // 자동으로 원래 신메뉴 안내로 돌아갑니다(새 팝업/새 state 없음, 팝업
+  // 2개가 겹쳐 뜨지 않음).
+  var NOTICE_START_AT = new Date("2026-10-04T00:00:00+09:00");
+  var NOTICE_END_AT = new Date("2026-10-06T00:00:00+09:00");
+  function noticeActive() {
+    var now = Date.now();
+    return now >= NOTICE_START_AT.getTime() && now < NOTICE_END_AT.getTime();
+  }
+
   function todayKey() {
     var d = new Date();
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
@@ -94,26 +105,36 @@ var HometownPopup = (function () {
     closeBtn.addEventListener("click", closeNow);
     modal.appendChild(closeBtn);
 
-    // 새우완탕쌀국수(2026-09 신메뉴 지시서) — ①사진 ②메뉴명 ③가격
-    // ④NEW MENU ⑤짧은 설명 순서로 눈에 들어오도록 사진을 가장 먼저
-    // 배치합니다. 메뉴명·가격은 다른 브랜드/메뉴명과 같이 언어와 무관하게
-    // 원문(한국어) 그대로 고정합니다(지시서 7번 — 번역하지 않음).
     var poster = el("div", "hometown-popup-poster");
 
-    var img = document.createElement("img");
-    img.className = "hometown-popup-image";
-    img.src = "images/hururuk/shrimp-wonton-rice-noodle.webp";
-    img.alt = "새우완탕쌀국수";
-    poster.appendChild(img);
+    if (noticeActive()) {
+      // "10월 5일 2층 후루룩찹찹 영업" 공지(2026-10-04 지시) — 이 기간
+      // 동안만 사진 없이 공지 문구만 보여주고, 기간이 지나면 자동으로
+      // 아래의 신메뉴 안내로 돌아갑니다.
+      poster.appendChild(el("p", "hometown-popup-eyebrow", "NOTICE"));
+      var noticeTitleBlock = el("div", "hometown-popup-title-block");
+      noticeTitleBlock.appendChild(el("p", "hometown-popup-title-main", t("noticeTitle")));
+      poster.appendChild(noticeTitleBlock);
+    } else {
+      // 새우완탕쌀국수(2026-09 신메뉴 지시서) — ①사진 ②메뉴명 ③가격
+      // ④NEW MENU ⑤짧은 설명 순서로 눈에 들어오도록 사진을 가장 먼저
+      // 배치합니다. 메뉴명·가격은 다른 브랜드/메뉴명과 같이 언어와 무관하게
+      // 원문(한국어) 그대로 고정합니다(지시서 7번 — 번역하지 않음).
+      var img = document.createElement("img");
+      img.className = "hometown-popup-image";
+      img.src = "images/hururuk/shrimp-wonton-rice-noodle.webp";
+      img.alt = "새우완탕쌀국수";
+      poster.appendChild(img);
 
-    poster.appendChild(el("p", "hometown-popup-eyebrow", "NEW MENU"));
+      poster.appendChild(el("p", "hometown-popup-eyebrow", "NEW MENU"));
 
-    var titleBlock = el("div", "hometown-popup-title-block");
-    titleBlock.appendChild(el("p", "hometown-popup-title-main", "새우완탕쌀국수"));
-    poster.appendChild(titleBlock);
+      var titleBlock = el("div", "hometown-popup-title-block");
+      titleBlock.appendChild(el("p", "hometown-popup-title-main", "새우완탕쌀국수"));
+      poster.appendChild(titleBlock);
 
-    poster.appendChild(el("p", "hometown-popup-price", "5,500원"));
-    poster.appendChild(el("p", "hometown-popup-tagline", t("newMenuTagline")));
+      poster.appendChild(el("p", "hometown-popup-price", "5,500원"));
+      poster.appendChild(el("p", "hometown-popup-tagline", t("newMenuTagline")));
+    }
 
     modal.appendChild(poster);
 
