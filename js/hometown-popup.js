@@ -1,13 +1,14 @@
 /* ==========================================================================
-   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 신메뉴(새우완탕쌀국수) 안내
+   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 "화산불백" 홍보 영상
    (js/hometown-popup.js)
    - 관리자 등록 팝업(js/site-popup.js)과 같은 방식(.modal-overlay/.modal,
      새 팝업 라이브러리 없음)을 재사용합니다.
-   - 2026-09 "새우완탕쌀국수" 지시서 — 이전에 이 컴포넌트가 보여주던
-     "고추장버터 화산불백" 예고는 이제 홈 히어로 영역(js/app.js
-     renderHomeHeroSlide, HERO_MENU_PROMO)에서 상시 노출되므로 그 쪽은
-     전혀 건드리지 않고, 여기(자동표시 팝업)는 다음 신메뉴로 교체해
-     재사용합니다.
+   - 2026-10-05 지시 — "10월 5일 2층 후루룩찹찹 영업" 기간 한정 공지는
+     삭제하고, 그 자리에 사용자가 올려준 화산불백 홍보 영상을 넣습니다.
+     이전 새우완탕쌀국수 신메뉴 안내(정적 사진)는 이 영상으로 교체됩니다.
+     화산불백은 후루룩찹찹 매장의 메뉴라 CTA(goToHururuk)는 그대로
+     재사용합니다. 홈 히어로 영역(HERO_MENU_PROMO)의 화산불백 고정
+     노출은 이 팝업과 별개로 전혀 건드리지 않습니다.
    - 일반 관리자 팝업(SitePopup) → 이 팝업 → 천원의 아침밥 평가 팝업 순서로
      app.js가 순차 호출해 동시에 겹치지 않습니다(app.js의 체인에서 호출되는
      한 단계만 이 파일이 담당).
@@ -19,17 +20,6 @@ var HometownPopup = (function () {
   var SESSION_DISMISS_KEY = "hometownPopupDismissedSession";
   var TODAY_DISMISS_KEY = "hometownPopupDismissedDate";
   var LANG_KEY = "foodhall_lang"; // js/app.js LANG_KEY와 동일한 값(공용 저장소 재사용)
-
-  // "10월 5일 2층 후루룩찹찹 영업" 공지(2026-10-04 지시) — 이 기간에만
-  // 신메뉴 안내 대신 이 공지를 같은 팝업 슬롯에 보여주고, 기간이 지나면
-  // 자동으로 원래 신메뉴 안내로 돌아갑니다(새 팝업/새 state 없음, 팝업
-  // 2개가 겹쳐 뜨지 않음).
-  var NOTICE_START_AT = new Date("2026-10-04T00:00:00+09:00");
-  var NOTICE_END_AT = new Date("2026-10-06T00:00:00+09:00");
-  function noticeActive() {
-    var now = Date.now();
-    return now >= NOTICE_START_AT.getTime() && now < NOTICE_END_AT.getTime();
-  }
 
   function todayKey() {
     var d = new Date();
@@ -105,36 +95,31 @@ var HometownPopup = (function () {
     closeBtn.addEventListener("click", closeNow);
     modal.appendChild(closeBtn);
 
+    // 화산불백 홍보 영상(2026-10-05 지시) — ①영상 ②매장 배지 ③메뉴명
+    // ④짧은 설명 순서. 영상 자체에 "화산불백"/"불백덮밥전문점" 문구가
+    // 이미 들어있어 한국어 사용자는 그대로 보이고, 다른 언어 사용자를
+    // 위해 매장 배지(영문 고정)와 짧은 설명만 번역해 아래에 덧붙입니다.
+    // 메뉴명은 다른 브랜드/메뉴명과 같이 언어와 무관하게 원문(한국어)
+    // 그대로 고정합니다.
     var poster = el("div", "hometown-popup-poster");
 
-    if (noticeActive()) {
-      // "10월 5일 2층 후루룩찹찹 영업" 공지(2026-10-04 지시) — 이 기간
-      // 동안만 사진 없이 공지 문구만 보여주고, 기간이 지나면 자동으로
-      // 아래의 신메뉴 안내로 돌아갑니다.
-      poster.appendChild(el("p", "hometown-popup-eyebrow", "NOTICE"));
-      var noticeTitleBlock = el("div", "hometown-popup-title-block");
-      noticeTitleBlock.appendChild(el("p", "hometown-popup-title-main", t("noticeTitle")));
-      poster.appendChild(noticeTitleBlock);
-    } else {
-      // 새우완탕쌀국수(2026-09 신메뉴 지시서) — ①사진 ②메뉴명 ③가격
-      // ④NEW MENU ⑤짧은 설명 순서로 눈에 들어오도록 사진을 가장 먼저
-      // 배치합니다. 메뉴명·가격은 다른 브랜드/메뉴명과 같이 언어와 무관하게
-      // 원문(한국어) 그대로 고정합니다(지시서 7번 — 번역하지 않음).
-      var img = document.createElement("img");
-      img.className = "hometown-popup-image";
-      img.src = "images/hururuk/shrimp-wonton-rice-noodle.webp";
-      img.alt = "새우완탕쌀국수";
-      poster.appendChild(img);
+    var video = document.createElement("video");
+    video.className = "hometown-popup-image";
+    video.src = "images/hururuk/hwasan-bulbaek.mp4";
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", ""); // 구형 iOS 사파리 대응
+    poster.appendChild(video);
 
-      poster.appendChild(el("p", "hometown-popup-eyebrow", "NEW MENU"));
+    poster.appendChild(el("p", "hometown-popup-eyebrow", "HURURUK CHAPCHAP"));
 
-      var titleBlock = el("div", "hometown-popup-title-block");
-      titleBlock.appendChild(el("p", "hometown-popup-title-main", "새우완탕쌀국수"));
-      poster.appendChild(titleBlock);
+    var titleBlock = el("div", "hometown-popup-title-block");
+    titleBlock.appendChild(el("p", "hometown-popup-title-main", "화산불백"));
+    poster.appendChild(titleBlock);
 
-      poster.appendChild(el("p", "hometown-popup-price", "5,500원"));
-      poster.appendChild(el("p", "hometown-popup-tagline", t("newMenuTagline")));
-    }
+    poster.appendChild(el("p", "hometown-popup-tagline", t("hwasanTagline")));
 
     modal.appendChild(poster);
 
