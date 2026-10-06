@@ -180,6 +180,12 @@ var Community = (function () {
   var EVENT_BANNER_DISMISS_KEY = "communityEventBannerDismissedDate";
   var eventPopupOnClosed = null;
 
+  // 2026-10-06 지시 — 이벤트 팝업(자동 진입 + 홈 배너 클릭) 노출 중단.
+  // 홈 배너 타일은 그대로 두되(사용자 지시) 팝업만 열리지 않게 합니다.
+  // 코드는 그대로 두고 이 플래그만 꺼서, 나중에 다시 켤 때는 false로만
+  // 바꾸면 됩니다(재구현 불필요).
+  var EVENT_POPUP_SUSPENDED = true;
+
   function eventBannerTodayKey() {
     var d = new Date();
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
@@ -205,6 +211,7 @@ var Community = (function () {
   // (×/바깥클릭/오늘 하루 보지 않기/게시판 선택 모두 closeCouponBoardsModal을
   // 거칩니다) — js/app.js의 자동 팝업 체인이 다음 단계로 넘어갈 때 씁니다.
   function showCouponBoardsModal(onClosed) {
+    if (EVENT_POPUP_SUSPENDED) { if (typeof onClosed === "function") onClosed(); return; }
     closeCouponBoardsModal();
     eventPopupOnClosed = typeof onClosed === "function" ? onClosed : null;
     var overlay = el("div", "modal-overlay");
