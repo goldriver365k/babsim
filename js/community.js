@@ -180,11 +180,10 @@ var Community = (function () {
   var EVENT_BANNER_DISMISS_KEY = "communityEventBannerDismissedDate";
   var eventPopupOnClosed = null;
 
-  // 2026-10-06 지시 — 이벤트 팝업(자동 진입 + 홈 배너 클릭) 노출 중단.
-  // 홈 배너 타일은 그대로 두되(사용자 지시) 팝업만 열리지 않게 합니다.
-  // 코드는 그대로 두고 이 플래그만 꺼서, 나중에 다시 켤 때는 false로만
-  // 바꾸면 됩니다(재구현 불필요).
-  var EVENT_POPUP_SUSPENDED = true;
+  // 2026-10-06 지시로 중단했다가, 2026-10-07 지시 — 쿠폰 내용(게시글
+  // 작성 시 아침식사 1,000원 무료쿠폰, 종료일 없는 상시 이벤트)이 여전히
+  // 유효해 배너 클릭 연결을 복원합니다.
+  var EVENT_POPUP_SUSPENDED = false;
 
   function eventBannerTodayKey() {
     var d = new Date();
