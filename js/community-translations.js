@@ -18,9 +18,17 @@ var COMMUNITY_NAV = {
    "비회원 노출" 지시서. 상단 COMMUNITY_NAV(두 줄 버튼)와는 별개로,
    목록 화면 안에 큰 제목+짧은 소개를 둡니다. */
 var COMMUNITY_HOME = {
-  title: { ko: "밥심 커뮤니티", zh: "Babsim社区", vi: "Cộng đồng Babsim", en: "Babsim Community", mn: "Babsim нийгэмлэг", bn: "Babsim কমিউনিটি", my: "Babsim အသိုင်းအဝိုင်း" },
-  // "유학생 전용"처럼 보이지 않도록 짧은 보조문구로 교체(한국학생+유학생 공용)
-  tagline: { ko: "한국학생과 유학생이 함께하는 공간", zh: "韩国学生和留学生共同使用的空间", vi: "Không gian dành cho sinh viên Hàn Quốc và du học sinh cùng sử dụng", en: "A space for Korean and international students together", mn: "Солонгос болон гадаад оюутнууд хамтдаа ашигладаг орон зай", bn: "কোরিয়ান ও আন্তর্জাতিক শিক্ষার্থীদের একসাথে ব্যবহারের জায়গা", my: "ကိုရီးယားကျောင်းသားနှင့် နိုင်ငံတကာကျောင်းသားများ အတူတကွသုံးသည့်နေရာ" }
+  // 2026-10-09 지시서 4번 표 — 게시판 공식 이름을 그대로 재사용(새 번역 없음).
+  title: { ko: "속닥속닥", zh: "悄悄话", vi: "Thì Thầm", en: "Whisper Whisper", mn: "Шивнээ", bn: "ফিসফিস", my: "တိုးတိုးပြောကြမယ်" },
+  // 지시서 4번 안내 문구 — COMMUNITY_CATEGORY_DESC.whisper와 같은 값(재사용).
+  tagline: { ko: "누구나 익명으로 자유롭게 이야기하는 공간", zh: "任何人都能匿名自由畅聊的空间", vi: "Không gian để mọi người thoải mái trò chuyện ẩn danh", en: "A space where anyone can chat freely and anonymously", mn: "Хэн ч нэргүйгээр чөлөөтэй ярилцах орон зай", bn: "যে কেউ বেনামে খোলামেলা কথা বলতে পারার জায়গা", my: "လူတိုင်း အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောနိုင်တဲ့ နေရာ" }
+};
+
+/* 홈 최상단 바로가기 바(2026-10-09 지시서 5번) — "속닥속닥 | 익명으로
+   자유롭게 이야기하세요 →" 형식. 게시판명(COMMUNITY_HOME.title)은 그대로
+   재사용하고, 뒤에 붙는 짧은 행동 유도 문구만 이 사전에 따로 둡니다. */
+var WHISPER_BAR = {
+  cta: { ko: "익명으로 자유롭게 이야기하세요", zh: "匿名畅所欲言吧", vi: "Hãy thoải mái trò chuyện ẩn danh", en: "Chat freely, anonymously", mn: "Нэргүйгээр чөлөөтэй ярилцаарай", bn: "বেনামে খোলামেলা কথা বলুন", my: "အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောပါ" }
 };
 
 /* 카테고리 4개 개편(2026-09): 사용자에게 보이는 선택 목록은 아래 4개만
@@ -34,6 +42,14 @@ var COMMUNITY_CATEGORIES = {
   friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
   market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа", bn: "পুরোনো পণ্য কেনাবেচা", my: "တစ်ပတ်ရစ်ပစ္စည်း အရောင်းအဝယ်" },
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
+  // "속닥속닥"(2026-10-09 밥심커뮤니티 → 단일 익명게시판 전면 개편
+  // 지시서) — COMMUNITY_CATEGORIES/COMMUNITY_CATEGORY_ORDER의 기존 구조를
+  // 그대로 재사용하고 새 카테고리 값 하나(whisper)만 추가합니다. 기존
+  // 글쓰기·목록·상세·댓글·신고 로직(communityPosts/communityComments
+  // 컬렉션, status/reportCount 등 필드)은 전혀 바꾸지 않고 그대로 재사용—
+  // 새 컬렉션·새 데이터 구조 없음. 지시서 4번 표의 공식 번역을 그대로
+  // 사용(직역이 아닌 자연스러운 현지 표현).
+  whisper: { ko: "속닥속닥", zh: "悄悄话", vi: "Thì Thầm", en: "Whisper Whisper", mn: "Шивнээ", bn: "ফিসফিস", my: "တိုးတိုးပြောကြမယ်" },
   // "김해맛집 추천" → "주말에 가볼 만한 곳"으로 명칭 변경(2026-09 지시서).
   // category value("together")와 기존 게시글 데이터는 그대로 유지하고
   // 라벨(7개 언어)만 교체 — 맛집도 주말 나들이 장소의 하나로 포함됨.
@@ -51,12 +67,16 @@ var COMMUNITY_CATEGORIES = {
   life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
   free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
-// 선택 목록(목록 블록/글쓰기/수정/필터 공통, 순서 그대로 반영):
-// 1.김해맛집 추천 2.나의 고향 소개 3.구인·구직 4.친구 만들기
-var COMMUNITY_CATEGORY_ORDER = ["together", "hometown", "job", "friends"];
+// 2026-10-09 밥심커뮤니티 → 속닥속닥 단일 익명게시판 전면 개편 지시서:
+// 선택 목록을 whisper 1개로 줄입니다. 기존 4개(together/hometown/job/
+// friends)는 DB에는 그대로 두되 이 목록에서 빠져 더 이상 화면에
+// 노출되지 않습니다(승인된 처리 방식 — 영구 삭제 아님).
+var COMMUNITY_CATEGORY_ORDER = ["whisper"];
 
-// 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명 — 선택 목록 4개만.
+// 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명.
 var COMMUNITY_CATEGORY_DESC = {
+  // 지시서 4번 안내 문구 — 직역이 아닌 자연스러운 현지 표현.
+  whisper: { ko: "누구나 익명으로 자유롭게 이야기하는 공간", zh: "任何人都能匿名自由畅聊的空间", vi: "Không gian để mọi người thoải mái trò chuyện ẩn danh", en: "A space where anyone can chat freely and anonymously", mn: "Хэн ч нэргүйгээр чөлөөтэй ярилцах орон зай", bn: "যে কেউ বেনামে খোলামেলা কথা বলতে পারার জায়গা", my: "လူတိုင်း အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောနိုင်တဲ့ နေရာ" },
   together: { ko: "김해·부산 맛집, 카페, 나들이 장소 추천", zh: "金海·釜山美食、咖啡厅、周边景点推荐", vi: "Gợi ý quán ăn, quán cà phê, địa điểm dạo chơi ở Gimhae · Busan", en: "Gimhae & Busan food, cafes, and weekend spots", mn: "Гимхэ · Бусан хотын хоол, кафе, амралтын газрын зөвлөмж", bn: "গিমহে · বুসানের খাবার, ক্যাফে ও ঘোরার জায়গার সুপারিশ", my: "ဂျင်ဟေး · ပူဆန်၏ အစားအစာ၊ ကော်ဖီဆိုင်နှင့် လည်ပတ်စရာနေရာများ" },
   // "여러분의 고향을 소개해 주세요."(2026-09 "나의 고향 알리기 정상화"
   // 지시서 3번) — 구인구직이 아니라 고향 소개 게시판임을 분명히 함.
@@ -283,7 +303,14 @@ var COMMUNITY_POST = {
   // "카카오톡 문의 연결" — 홈페이지 "사장님께 말해요"(OWNER_CHAT) 링크를
   // 그대로 재사용하는 체크박스/버튼 문구(게시글마다 새 링크 없음).
   ownerKakaoCheckbox: { ko: "카카오톡 문의 연결", zh: "连接KakaoTalk咨询", vi: "Kết nối hỏi đáp qua KakaoTalk", en: "Connect KakaoTalk inquiry", mn: "KakaoTalk-аар лавлагаа холбох", bn: "কাকাওটক জিজ্ঞাসা সংযুক্ত করুন", my: "KakaoTalk မေးမြန်းမှု ချိတ်ဆက်ရန်" },
-  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" }
+  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" },
+  // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 작성자 고정 표시(닉네임
+  // 선택 없이 모두 "익명"), 글쓰기 화면 안내, 목록/상세의 조회수·좋아요.
+  anonymousLabel: { ko: "익명", zh: "匿名", vi: "Ẩn danh", en: "Anonymous", mn: "Нэргүй", bn: "বেনামী", my: "အမည်မသိ" },
+  whisperWriteNotice: { ko: "등록한 글은 직접 수정하거나 삭제할 수 없습니다. 삭제가 필요한 경우 신고·삭제 요청을 이용해 주세요.", zh: "发布后的帖子无法自行修改或删除。如需删除，请使用举报·删除请求功能。", vi: "Bài viết đã đăng không thể tự chỉnh sửa hoặc xóa. Nếu cần xóa, vui lòng dùng chức năng báo cáo · yêu cầu xóa.", en: "Once posted, you cannot edit or delete it yourself. If you need it removed, please use the report/delete-request button.", mn: "Нийтэлсэн зурвасыг өөрөө засах, устгах боломжгүй. Устгах шаардлагатай бол мэдээлэх·устгах хүсэлт функцийг ашиглана уу.", bn: "পোস্ট করা লেখা নিজে সম্পাদনা বা মুছে ফেলা যাবে না। মুছে ফেলার প্রয়োজন হলে রিপোর্ট·মুছে ফেলার অনুরোধ ব্যবহার করুন।", my: "တင်ပြီးသောပို့စ်ကို ကိုယ်တိုင်ပြင်ဆင်/ဖျက်၍မရပါ။ ဖျက်ရန်လိုအပ်ပါက တိုင်ကြား·ဖျက်ရန်တောင်းဆိုမှုကို သုံးပါ။" },
+  viewCountLabel: { ko: "조회", zh: "浏览", vi: "Lượt xem", en: "Views", mn: "Үзсэн", bn: "দেখা হয়েছে", my: "ကြည့်ရှုမှု" },
+  likeBtn: { ko: "좋아요", zh: "赞", vi: "Thích", en: "Like", mn: "Таалагдсан", bn: "লাইক", my: "နှစ်သက်ပါသည်" },
+  unlikeBtn: { ko: "좋아요 취소", zh: "取消赞", vi: "Bỏ thích", en: "Unlike", mn: "Таалагдсаныг цуцлах", bn: "লাইক বাতিল", my: "နှစ်သက်မှုပယ်ဖျက်ရန်" }
 };
 
 /* 중고거래 */
@@ -410,9 +437,15 @@ var COMMUNITY_REPORT = {
   reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа", bn: "অবৈধ বা বিপজ্জনক পণ্য", my: "တရားမဝင် သို့မဟုတ် အန္တရာယ်ရှိသောပစ္စည်း" },
   reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам", bn: "বিজ্ঞাপন/স্প্যাম", my: "ကြော်ငြာ/စပမ်း" },
   reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт", bn: "অনুপযুক্ত সাক্ষাতের অনুরোধ", my: "မသင့်လျော်သောတွေ့ဆုံမှုတောင်းဆိုခြင်း" },
+  // 2026-10-09 속닥속닥 지시서 9번 — "내가 작성한 글 삭제 요청"(5개 사유
+  // 목록의 1번). 비밀번호·회원가입 없이도 자기 글을 지워달라고 요청할
+  // 수 있는 유일한 경로(관리자가 검토 후 처리).
+  reasonSelfDelete: { ko: "내가 작성한 글 삭제 요청", zh: "请求删除我写的帖子", vi: "Yêu cầu xóa bài tôi đã viết", en: "Request to delete my own post", mn: "Өөрийн бичсэн зурвасыг устгуулах хүсэлт", bn: "আমার লেখা পোস্ট মুছে ফেলার অনুরোধ", my: "ကျွန်ုပ်ရေးသားခဲ့သောပို့စ်ကိုဖျက်ပေးရန်တောင်းဆိုခြင်း" },
   reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" },
   submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх", bn: "রিপোর্ট জমা দিন", my: "တိုင်ကြားချက်တင်ရန်" },
-  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа.", bn: "রিপোর্ট গ্রহণ করা হয়েছে।", my: "တိုင်ကြားချက်လက်ခံရရှိပါပြီ။" },
+  // 2026-10-09 속닥속닥 지시서 9번 — 접수 완료 문구를 지시서가 준 문장
+  // 그대로 사용(관리자에게 전달됐음을 분명히 알림).
+  reportDone: { ko: "관리자에게 요청이 전달되었습니다.", zh: "您的请求已传达给管理员。", vi: "Yêu cầu của bạn đã được chuyển đến quản trị viên.", en: "Your request has been sent to the admin.", mn: "Таны хүсэлт админд хүргэгдлээ.", bn: "আপনার অনুরোধ অ্যাডমিনের কাছে পাঠানো হয়েছে।", my: "သင့်တောင်းဆိုချက်ကို စီမံခန့်ခွဲသူထံပို့ပြီးပါပြီ။" },
   alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна.", bn: "আপনি ইতিমধ্যে এটি রিপোর্ট করেছেন।", my: "သင်ဤပို့စ်ကို တိုင်ကြားပြီးဖြစ်သည်။" },
   hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа.", bn: "একাধিক রিপোর্টের কারণে এটি সাময়িকভাবে লুকানো হয়েছে।", my: "တိုင်ကြားချက်များစုပုံလာသဖြင့် ယာယီဖျောက်ထားပါသည်။" }
 };

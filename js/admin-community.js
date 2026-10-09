@@ -68,6 +68,7 @@ var AdminCommunity = (function () {
     else if (tab === "posts") loadPosts();
     else if (tab === "users") loadUsers();
     else if (tab === "translations") loadTranslations();
+    else if (tab === "reports") loadReports();
   }
 
   /* ---------------- 통계 ---------------- */
@@ -512,16 +513,118 @@ var AdminCommunity = (function () {
     });
   }
 
+  /* ---------------- 신고·삭제 요청 관리(2026-10-09 속닥속닥 지시서 10번) ----------------
+     신고 자체는 기존 communityReports 컬렉션(js/community.js의
+     submitReport가 신고 1건당 문서 1개, status:"pending"으로 이미 저장)을
+     그대로 재사용합니다 — 새 컬렉션 없음. 여기서는 그 문서의 status만
+     "검토 중/처리 완료/반려"로 바꿀 수 있게 하고, 대상(게시글/댓글)을
+     바로 숨기는 단축 버튼만 추가합니다. */
+  var REPORT_STATUS_LABELS = { pending: "접수", reviewing: "검토 중", done: "처리 완료", rejected: "반려" };
+  var REPORT_REASON_LABELS = {
+    reasonSelfDelete: "본인 글 삭제 요청", reasonAbuse: "욕설·비방", reasonAd: "광고·도배",
+    reasonPrivacy: "개인정보 노출", reasonEtc: "기타",
+    // 옛 카테고리에서 쓰던 사유도 과거 신고 기록을 그대로 보여주기 위해 남겨둡니다.
+    reasonScam: "사기 의심", reasonIllegal: "불법·위험 물품", reasonMeet: "부적절한 만남 요구"
+  };
+
+  function loadReports() {
+    var d = db();
+    var body = els.reportsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityReports").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">접수된 신고·삭제 요청이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>구분</th><th>사유</th><th>접수일</th><th>상태</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      snap.forEach(function (doc) {
+        var r = doc.data();
+        var tr = document.createElement("tr");
+
+        var tdTarget = document.createElement("td");
+        tdTarget.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " · " + r.targetId;
+        tr.appendChild(tdTarget);
+
+        var tdReason = document.createElement("td");
+        tdReason.textContent = REPORT_REASON_LABELS[r.reason] || r.reason || "-";
+        tr.appendChild(tdReason);
+
+        var tdDate = document.createElement("td");
+        tdDate.textContent = fmtDate(r.createdAt);
+        tr.appendChild(tdDate);
+
+        var tdStatus = document.createElement("td");
+        tdStatus.textContent = REPORT_STATUS_LABELS[r.status] || r.status || "접수";
+        tr.appendChild(tdStatus);
+
+        var tdActions = document.createElement("td");
+        [["reviewing", "검토 중으로"], ["done", "처리 완료로"], ["rejected", "반려"]].forEach(function (pair) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = pair[1];
+          btn.addEventListener("click", function () { updateReportStatus(doc.id, pair[0], btn); });
+          tdActions.appendChild(btn);
+        });
+        var hideBtn = document.createElement("button");
+        hideBtn.type = "button";
+        hideBtn.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " 숨김";
+        hideBtn.addEventListener("click", function () { hideReportedTarget(r.targetType, r.targetId, doc.id, hideBtn); });
+        tdActions.appendChild(hideBtn);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function updateReportStatus(reportId, status, btn) {
+    var d = db();
+    if (!d) return;
+    btn.disabled = true;
+    d.collection("communityReports").doc(reportId).update({ status: status }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("상태 변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
+  function hideReportedTarget(targetType, targetId, reportId, btn) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("이 " + (targetType === "comment" ? "댓글" : "게시글") + "을(를) 숨김 처리하시겠습니까?")) return;
+    btn.disabled = true;
+    var collectionName = targetType === "comment" ? "communityComments" : "communityPosts";
+    d.collection(collectionName).doc(targetId).update({ status: "hidden" }).then(function () {
+      return d.collection("communityReports").doc(reportId).update({ status: "done" });
+    }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("숨김 처리 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function init() {
     els.subTabs = {
       stats: qs("commAdminTabStats"), posts: qs("commAdminTabPosts"),
-      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations")
+      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations"),
+      reports: qs("commAdminTabReports")
     };
     els.subPages = {
       stats: qs("commAdminPageStats"), posts: qs("commAdminPagePosts"),
-      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations")
+      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations"),
+      reports: qs("commAdminPageReports")
     };
     if (!els.subTabs.stats) return; // 커뮤니티 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
 
@@ -529,6 +632,7 @@ var AdminCommunity = (function () {
     els.postsBody = qs("commAdminPostsBody");
     els.usersBody = qs("commAdminUsersBody");
     els.translationsBody = qs("commAdminTranslationsBody");
+    els.reportsBody = qs("commAdminReportsBody");
 
     Object.keys(els.subTabs).forEach(function (key) {
       els.subTabs[key].addEventListener("click", function () { showTab(key); });

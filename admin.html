@@ -896,7 +896,7 @@ table.results-table {
       <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
       <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
-      <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
+      <button type="button" class="admin-nav-btn" data-page="community">속닥속닥 관리</button>
       <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
       <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
       <button type="button" class="admin-nav-btn" data-page="roomInquiry">방 구하기 문의</button>
@@ -1217,6 +1217,7 @@ table.results-table {
         <nav class="filter-bar" id="commAdminSubNav">
           <button type="button" class="filter-btn active" id="commAdminTabStats">통계</button>
           <button type="button" class="filter-btn" id="commAdminTabPosts">게시글 관리</button>
+          <button type="button" class="filter-btn" id="commAdminTabReports">신고·삭제 요청</button>
           <button type="button" class="filter-btn" id="commAdminTabUsers">회원관리</button>
           <button type="button" class="filter-btn" id="commAdminTabTranslations">번역관리</button>
         </nav>
@@ -1236,6 +1237,13 @@ table.results-table {
       <div class="admin-card" id="commAdminPagePosts" hidden>
         <h2>게시글 관리</h2>
         <div class="table-scroll" id="commAdminPostsBody"></div>
+      </div>
+
+      <div class="admin-card" id="commAdminPageReports" hidden>
+        <h2>신고·삭제 요청 관리</h2>
+        <p class="empty-note" style="padding:0 0 10px;">"게시글 숨김"/"댓글 숨김" 버튼은 신고된 대상을 바로 숨기고
+          처리 상태를 "처리 완료"로 바꿉니다. 게시글 전체 삭제는 위 "게시글 관리" 탭에서 할 수 있습니다.</p>
+        <div class="table-scroll" id="commAdminReportsBody"></div>
       </div>
 
       <div class="admin-card" id="commAdminPageUsers" hidden>
@@ -1942,8 +1950,7 @@ function getFirebaseStorage() {
   }
 }
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    유학생 커뮤니티 다국어 문구 (js/community-translations.js)
    - js/translations.js와 같은 패턴({ko,zh,vi,en,mn,bn,my})을 그대로 따릅니다.
    - babsim.store에서 선택한 언어(js/app.js state.lang, localStorage
@@ -1963,9 +1970,17 @@ var COMMUNITY_NAV = {
    "비회원 노출" 지시서. 상단 COMMUNITY_NAV(두 줄 버튼)와는 별개로,
    목록 화면 안에 큰 제목+짧은 소개를 둡니다. */
 var COMMUNITY_HOME = {
-  title: { ko: "밥심 커뮤니티", zh: "Babsim社区", vi: "Cộng đồng Babsim", en: "Babsim Community", mn: "Babsim нийгэмлэг", bn: "Babsim কমিউনিটি", my: "Babsim အသိုင်းအဝိုင်း" },
-  // "유학생 전용"처럼 보이지 않도록 짧은 보조문구로 교체(한국학생+유학생 공용)
-  tagline: { ko: "한국학생과 유학생이 함께하는 공간", zh: "韩国学生和留学生共同使用的空间", vi: "Không gian dành cho sinh viên Hàn Quốc và du học sinh cùng sử dụng", en: "A space for Korean and international students together", mn: "Солонгос болон гадаад оюутнууд хамтдаа ашигладаг орон зай", bn: "কোরিয়ান ও আন্তর্জাতিক শিক্ষার্থীদের একসাথে ব্যবহারের জায়গা", my: "ကိုရီးယားကျောင်းသားနှင့် နိုင်ငံတကာကျောင်းသားများ အတူတကွသုံးသည့်နေရာ" }
+  // 2026-10-09 지시서 4번 표 — 게시판 공식 이름을 그대로 재사용(새 번역 없음).
+  title: { ko: "속닥속닥", zh: "悄悄话", vi: "Thì Thầm", en: "Whisper Whisper", mn: "Шивнээ", bn: "ফিসফিস", my: "တိုးတိုးပြောကြမယ်" },
+  // 지시서 4번 안내 문구 — COMMUNITY_CATEGORY_DESC.whisper와 같은 값(재사용).
+  tagline: { ko: "누구나 익명으로 자유롭게 이야기하는 공간", zh: "任何人都能匿名自由畅聊的空间", vi: "Không gian để mọi người thoải mái trò chuyện ẩn danh", en: "A space where anyone can chat freely and anonymously", mn: "Хэн ч нэргүйгээр чөлөөтэй ярилцах орон зай", bn: "যে কেউ বেনামে খোলামেলা কথা বলতে পারার জায়গা", my: "လူတိုင်း အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောနိုင်တဲ့ နေရာ" }
+};
+
+/* 홈 최상단 바로가기 바(2026-10-09 지시서 5번) — "속닥속닥 | 익명으로
+   자유롭게 이야기하세요 →" 형식. 게시판명(COMMUNITY_HOME.title)은 그대로
+   재사용하고, 뒤에 붙는 짧은 행동 유도 문구만 이 사전에 따로 둡니다. */
+var WHISPER_BAR = {
+  cta: { ko: "익명으로 자유롭게 이야기하세요", zh: "匿名畅所欲言吧", vi: "Hãy thoải mái trò chuyện ẩn danh", en: "Chat freely, anonymously", mn: "Нэргүйгээр чөлөөтэй ярилцаарай", bn: "বেনামে খোলামেলা কথা বলুন", my: "အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောပါ" }
 };
 
 /* 카테고리 4개 개편(2026-09): 사용자에게 보이는 선택 목록은 아래 4개만
@@ -1979,27 +1994,84 @@ var COMMUNITY_CATEGORIES = {
   friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
   market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа", bn: "পুরোনো পণ্য কেনাবেচা", my: "တစ်ပတ်ရစ်ပစ္စည်း အရောင်းအဝယ်" },
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
-  together: { ko: "김해맛집 추천", zh: "金海美食推荐", vi: "Gợi ý quán ăn Gimhae", en: "Gimhae Food Picks", mn: "Гимхэ хоолны зөвлөмж", bn: "গিমহে খাবারের সুপারিশ", my: "ဂျင်ဟေး အစားအစာ အကြံပြုချက်" },
+  // "속닥속닥"(2026-10-09 밥심커뮤니티 → 단일 익명게시판 전면 개편
+  // 지시서) — COMMUNITY_CATEGORIES/COMMUNITY_CATEGORY_ORDER의 기존 구조를
+  // 그대로 재사용하고 새 카테고리 값 하나(whisper)만 추가합니다. 기존
+  // 글쓰기·목록·상세·댓글·신고 로직(communityPosts/communityComments
+  // 컬렉션, status/reportCount 등 필드)은 전혀 바꾸지 않고 그대로 재사용—
+  // 새 컬렉션·새 데이터 구조 없음. 지시서 4번 표의 공식 번역을 그대로
+  // 사용(직역이 아닌 자연스러운 현지 표현).
+  whisper: { ko: "속닥속닥", zh: "悄悄话", vi: "Thì Thầm", en: "Whisper Whisper", mn: "Шивнээ", bn: "ফিসফিস", my: "တိုးတိုးပြောကြမယ်" },
+  // "김해맛집 추천" → "주말에 가볼 만한 곳"으로 명칭 변경(2026-09 지시서).
+  // category value("together")와 기존 게시글 데이터는 그대로 유지하고
+  // 라벨(7개 언어)만 교체 — 맛집도 주말 나들이 장소의 하나로 포함됨.
+  together: { ko: "주말에 가볼 만한 곳", zh: "周末去处推荐", vi: "Nơi đáng đi vào cuối tuần", en: "Weekend Spots to Visit", mn: "Амралтын өдрүүдэд зочлох газрууд", bn: "সাপ্তাহিক ছুটিতে ঘোরার জায়গা", my: "စနေ၊တနင်္ဂနွေ သွားရောက်လည်ပတ်စရာနေရာများ" },
   // 신규 카테고리(카테고리 4개 개편 지시서) — value는 프로젝트의 기존
   // 짧은 영문 키 명명 규칙(friends/market/help/together/job/free)을 따름.
-  // 공개 화면(js/community-translations.js)과 같은 라벨로 통일(2026-09
-  // "나의 고향 알리기 정상화" 지시서 10번) — 관리자 화면에서도 게시글
-  // 카테고리 이름이 다르게 보이지 않도록 함.
+  // "나의 고향 소개"/"나의 고향 이야기" 등 혼재된 명칭을 "나의 고향
+  // 알리기"로 통일(2026-09 지시서). category value(hometown)와 기존
+  // 게시글 데이터는 그대로 유지하고 라벨(7개 언어)만 교체.
   hometown: { ko: "나의 고향 알리기", zh: "分享我的家乡", vi: "Giới thiệu quê hương tôi", en: "Share My Hometown", mn: "Төрсөн нутгаа танилцуулах", bn: "আমার নিজ শহর জানাই", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်ပါ" },
-  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
+  // 홈 화면 리디자인 지시서(구인·구직 → 나의 학교생활 교체 확인 후)에
+  // 따라 라벨을 교체 — 기존 typeSchool("학교생활") 번역을 그대로
+  // 재사용해 새 번역을 만들지 않았습니다.
+  job: { ko: "나의 학교생활", zh: "我的校园生活", vi: "Đời sống học đường của tôi", en: "My Campus Life", mn: "Миний сургуулийн амьдрал", bn: "আমার ক্যাম্পাস জীবন", my: "ကျွန်ုပ်၏ကျောင်းဘဝ" },
   life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
   free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
-// 선택 목록(목록 블록/글쓰기/수정/필터 공통, 순서 그대로 반영):
-// 1.김해맛집 추천 2.나의 고향 소개 3.구인·구직 4.친구 만들기
-var COMMUNITY_CATEGORY_ORDER = ["together", "hometown", "job", "friends"];
+// 2026-10-09 밥심커뮤니티 → 속닥속닥 단일 익명게시판 전면 개편 지시서:
+// 선택 목록을 whisper 1개로 줄입니다. 기존 4개(together/hometown/job/
+// friends)는 DB에는 그대로 두되 이 목록에서 빠져 더 이상 화면에
+// 노출되지 않습니다(승인된 처리 방식 — 영구 삭제 아님).
+var COMMUNITY_CATEGORY_ORDER = ["whisper"];
 
-// 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명 — 선택 목록 4개만.
+// 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명.
 var COMMUNITY_CATEGORY_DESC = {
-  together: { ko: "김해 맛집 정보와 추천", zh: "金海美食信息与推荐", vi: "Thông tin và gợi ý quán ăn ngon ở Gimhae", en: "Gimhae restaurant tips and recommendations", mn: "Гимхэ хотын амттай газрын мэдээлэл, зөвлөмж", bn: "গিমহের ভালো খাবারের তথ্য ও সুপারিশ", my: "ဂျင်ဟေးခရိုင်၏ အစားအသောက်ဆိုင်ရာ အချက်အလက်နှင့် အကြံပြုချက်" },
-  hometown: { ko: "내 고향의 음식·문화·여행 이야기", zh: "介绍我家乡的美食、文化和旅行故事", vi: "Câu chuyện về ẩm thực, văn hóa và du lịch quê hương tôi", en: "Stories about my hometown's food, culture, and travel", mn: "Миний нутгийн хоол, соёл, аяллын тухай түүх", bn: "আমার শহরের খাবার, সংস্কৃতি ও ভ্রমণের গল্প", my: "ကျွန်ုပ်၏ဇာတိမြို့ရဲ့ အစားအစာ၊ ယဉ်ကျေးမှုနှင့် ခရီးသွားအကြောင်း" },
-  job: { ko: "알바와 일자리 정보", zh: "打工和工作信息", vi: "Thông tin việc làm thêm và việc làm", en: "Part-time job and work information", mn: "Цагийн ажил, ажлын байрны мэдээлэл", bn: "পার্ট-টাইম চাকরি ও কাজের তথ্য", my: "အချိန်ပိုင်းအလုပ်နှင့် အလုပ်အကိုင်ဆိုင်ရာ အချက်အလက်" },
+  // 지시서 4번 안내 문구 — 직역이 아닌 자연스러운 현지 표현.
+  whisper: { ko: "누구나 익명으로 자유롭게 이야기하는 공간", zh: "任何人都能匿名自由畅聊的空间", vi: "Không gian để mọi người thoải mái trò chuyện ẩn danh", en: "A space where anyone can chat freely and anonymously", mn: "Хэн ч нэргүйгээр чөлөөтэй ярилцах орон зай", bn: "যে কেউ বেনামে খোলামেলা কথা বলতে পারার জায়গা", my: "လူတိုင်း အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောနိုင်တဲ့ နေရာ" },
+  together: { ko: "김해·부산 맛집, 카페, 나들이 장소 추천", zh: "金海·釜山美食、咖啡厅、周边景点推荐", vi: "Gợi ý quán ăn, quán cà phê, địa điểm dạo chơi ở Gimhae · Busan", en: "Gimhae & Busan food, cafes, and weekend spots", mn: "Гимхэ · Бусан хотын хоол, кафе, амралтын газрын зөвлөмж", bn: "গিমহে · বুসানের খাবার, ক্যাফে ও ঘোরার জায়গার সুপারিশ", my: "ဂျင်ဟေး · ပူဆန်၏ အစားအစာ၊ ကော်ဖီဆိုင်နှင့် လည်ပတ်စရာနေရာများ" },
+  // "여러분의 고향을 소개해 주세요."(2026-09 "나의 고향 알리기 정상화"
+  // 지시서 3번) — 구인구직이 아니라 고향 소개 게시판임을 분명히 함.
+  hometown: { ko: "여러분의 고향을 소개해 주세요.", zh: "向大家介绍一下你的家乡吧。", vi: "Hãy giới thiệu quê hương của bạn nhé.", en: "Introduce your hometown to everyone.", mn: "Төрсөн нутгаа танилцуулаарай.", bn: "তোমার নিজ শহরের পরিচয় দাও।", my: "သင့်ဇာတိမြို့ကို မိတ်ဆက်ပေးပါ။" },
+  job: { ko: "캠퍼스에서의 일상과 이야기를 나눠요", zh: "分享校园里的日常与故事", vi: "Chia sẻ cuộc sống và câu chuyện trong khuôn viên trường", en: "Share your everyday campus life and stories", mn: "Кампусын өдөр тутмын амьдрал, түүхээ хуваалцаарай", bn: "ক্যাম্পাস জীবনের গল্প ভাগ করুন", my: "ကျောင်းဘဝနေ့စဉ်အကြောင်းများကို မျှဝေပါ" },
   friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
+};
+
+/* "커뮤니티에 글 올리면 아침식사 1,000원 무료쿠폰 증정" 행사 배너/팝업
+   (2026-09 다국어 자동번역 지시서 2번, 2026-09-30 "이벤트 바 + 다국어
+   번역 최종 수정 지시문"으로 "커뮤니티 4곳" 표현 삭제 + 자연스러운
+   현지 표현으로 교체) — 4개 게시판 이름은 새로 만들지 않고 위
+   COMMUNITY_CATEGORIES를 그대로 재사용합니다.
+   popupDescLine1/bannerTitle은 직역이 아니라 지시서가 직접 준 자연스러운
+   현지 표현을 그대로 사용합니다(예: 영어는 "Post in all 4 community
+   boards"가 아니라 "Post in the community", 중국어는 "在4个社区板块
+   发帖后"가 아니라 "在社区发帖"처럼 짧고 자연스러운 안내 문구).
+   bannerEyebrow는 이 사이트의 다른 뱃지형 짧은 문구(예: HOMETOWN_POPUP의
+   "NEW MENU", WEEKEND_SURVEY의 영문 배지 등)와 같은 관례로 언어와 무관하게
+   영문 그대로 고정합니다(번역 데이터 자체는 지시서대로 7개 언어 항목을
+   모두 채워 두되, 값은 모두 동일한 영문입니다).
+   getCoupon/joinComplete 2개는 지시서에 번역 대상으로 명시돼 있지만,
+   지금 화면 구조(배너 1개 + 안내 팝업 1개, 별도 쿠폰 발급/참여 추적
+   시스템 없음)에는 자연스럽게 들어갈 자리가 없어 실제로 화면에 쓰지는
+   않습니다 — 번역 데이터만 만들어 두고 완료 보고에 이 판단을 그대로
+   알립니다(지시서의 "UI를 복잡하게 만들지 않는다"/"대규모 리팩터링
+   금지" 원칙에 따른 선택). joinNow("지금 참여하기")는 이번 지시서에서
+   팝업에 반드시 포함하라고 명시해 참여 게시판 목록 위 CTA 문구로
+   추가했습니다. */
+var COMMUNITY_EVENT = {
+  bannerEyebrow: { ko: "BABSIM COMMUNITY EVENT", zh: "BABSIM COMMUNITY EVENT", vi: "BABSIM COMMUNITY EVENT", en: "BABSIM COMMUNITY EVENT", mn: "BABSIM COMMUNITY EVENT", bn: "BABSIM COMMUNITY EVENT", my: "BABSIM COMMUNITY EVENT" },
+  bannerTitle: { ko: "아침식사 1,000원 무료쿠폰 증정", zh: "领取1,000韩元早餐免费券", vi: "Nhận phiếu ăn sáng miễn phí 1.000 won", en: "Get a free ₩1,000 breakfast coupon", mn: "1,000 воны өглөөний хоолны купон аваарай", bn: "১,০০০ ওনের ফ্রি ব্রেকফাস্ট কুপন পান", my: "ဝမ် 1,000 တန် မနက်စာကူပွန် အခမဲ့ရယူပါ" },
+  bannerSub: { ko: "게시글 작성 후 쿠폰을 받아가세요", zh: "发帖后即可领取优惠券", vi: "Viết bài để nhận phiếu giảm giá", en: "Write a post and get your coupon", mn: "Нийтлэл бичээд купон аваарай", bn: "পোস্ট লিখে কুপন সংগ্রহ করুন", my: "ပို့စ်ရေးပြီး ကူပွန်ယူပါ" },
+  popupTitle: { ko: "게시글 작성 후 쿠폰 받기", zh: "发帖后领取优惠券", vi: "Nhận phiếu giảm giá sau khi đăng bài", en: "Get a Coupon After Posting", mn: "Нийтлэл бичсэний дараа купон авах", bn: "পোস্ট লিখে কুপন নিন", my: "ပို့စ်ရေးပြီးနောက် ကူပွန်ရယူရန်" },
+  popupDescLine1: { ko: "커뮤니티에 글 올리면", zh: "在社区发帖", vi: "Đăng bài trong cộng đồng", en: "Post in the community", mn: "Комьюнитид нийтлэл оруулаарай", bn: "কমিউনিটিতে পোস্ট করুন", my: "ကွန်မြူနတီမှာ ပို့စ်တင်ပါ" },
+  popupDesc: { ko: "참여하면 아침식사 1,000원 무료쿠폰을 드립니다", zh: "参与即可获赠早餐1,000韩元免费优惠券", vi: "Tham gia để nhận phiếu giảm giá bữa sáng 1.000 won miễn phí", en: "Take part and we'll give you a free ₩1,000 breakfast coupon", mn: "Оролцвол өглөөний цайны 1,000 воны үнэгүй купон өгнө", bn: "অংশগ্রহণ করলে সকালের নাস্তার ১,০০০ ওন ফ্রি কুপন দেওয়া হবে", my: "ပါဝင်ပါက မနက်စာ ၁,၀၀၀ ဝမ် အခမဲ့ကူပွန်ပေးပါမည်" },
+  boardsLabel: { ko: "참여 게시판", zh: "参与板块", vi: "Bảng tham gia", en: "Boards to join", mn: "Оролцох самбар", bn: "অংশগ্রহণের বোর্ড", my: "ပါဝင်ရမည့်ဘုတ်" },
+  close: { ko: "닫기", zh: "关闭", vi: "Đóng", en: "Close", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" },
+  closeAriaLabel: { ko: "닫기", zh: "关闭", vi: "Đóng", en: "Close", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" },
+  dismissToday: { ko: "오늘 하루 보지 않기", zh: "今天不再显示", vi: "Không hiện lại hôm nay", en: "Don't show again today", mn: "Өнөөдөр дахин бүү харуул", bn: "আজ আর দেখাবেন না", my: "ယနေ့ ထပ်မပြပါနှင့်" },
+  joinNow: { ko: "지금 참여하기", zh: "立即参与", vi: "Tham gia ngay", en: "Join now", mn: "Одоо оролцох", bn: "এখনই অংশগ্রহণ করুন", my: "ယခုပါဝင်ရန်" },
+  getCoupon: { ko: "쿠폰 받기", zh: "领取优惠券", vi: "Nhận phiếu giảm giá", en: "Get coupon", mn: "Купон авах", bn: "কুপন নিন", my: "ကူပွန်ရယူရန်" },
+  joinComplete: { ko: "참여 완료", zh: "参与完成", vi: "Đã hoàn tất tham gia", en: "Participation complete", mn: "Оролцоо дууссан", bn: "অংশগ্রহণ সম্পন্ন", my: "ပါဝင်မှု ပြီးစီးပါပြီ" }
 };
 
 /* ==========================================================================
@@ -2119,9 +2191,11 @@ var COMMUNITY_AUTH = {
   orDivider: { ko: "또는", zh: "或", vi: "Hoặc", en: "or", mn: "эсвэл", bn: "অথবা", my: "သို့မဟုတ်" },
   completeProfileTitle: { ko: "추가 정보 입력", zh: "填写更多信息", vi: "Hoàn tất thông tin", en: "Complete Your Profile", mn: "Мэдээллээ бөглөнө үү", bn: "অতিরিক্ত তথ্য প্রদান করুন", my: "နောက်ထပ်အချက်အလက်ဖြည့်ရန်" },
   completeProfileDesc: { ko: "커뮤니티 이용을 위해 몇 가지 정보가 더 필요합니다.", zh: "使用社区还需要填写一些信息。", vi: "Cần thêm một vài thông tin để sử dụng cộng đồng.", en: "A few more details are needed to use the community.", mn: "Нийгэмлэгийг ашиглахын тулд зарим нэмэлт мэдээлэл шаардлагатай.", bn: "কমিউনিটি ব্যবহারের জন্য আরও কিছু তথ্য প্রয়োজন।", my: "အသိုင်းအဝိုင်းကို အသုံးပြုရန် နောက်ထပ်အချက်အလက်အနည်းငယ် လိုအပ်ပါသည်။" },
-  // 비회원이 로그인 필요한 행동(상세보기/글쓰기/댓글/번역/연락/신고/내정보 등)을
-  // 시도했을 때 뜨는 안내창 문구 — 2026-09-10 "회원가입 노출 방식 변경" 지시서.
-  authGateDesc: { ko: "커뮤니티 활동을 하려면 회원가입이 필요합니다.", zh: "参与社区活动需要注册会员。", vi: "Bạn cần đăng ký để tham gia cộng đồng.", en: "Sign up to participate in the community.", mn: "Нийгэмлэгт оролцохын тулд бүртгүүлнэ үү.", bn: "কমিউনিটিতে অংশ নিতে নিবন্ধন করুন।", my: "အသိုင်းအဝိုင်းတွင် ပါဝင်ရန် အကောင့်ဖွင့်ပါ။" },
+  // 2026-09 "비회원제 전환" 지시서 — 글쓰기/댓글 등은 이제 회원가입 없이
+  // ensureAuth()의 조용한 익명 로그인만으로 진행됩니다. 이 안내창은
+  // 그 익명 로그인 자체가 실패했을 때(네트워크 등 기술적 오류)만 뜨는
+  // 예외 상황이므로, "가입이 필요합니다" 대신 오류/재시도 안내로 바꿉니다.
+  authGateDesc: { ko: "일시적인 오류로 진행할 수 없습니다. 다시 시도하거나 로그인해 주세요.", zh: "出现临时错误，请重试或登录。", vi: "Có lỗi tạm thời xảy ra. Vui lòng thử lại hoặc đăng nhập.", en: "A temporary error occurred. Please try again or log in.", mn: "Түр зуурын алдаа гарлаа. Дахин оролдох эсвэл нэвтэрнэ үү.", bn: "সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন বা লগইন করুন।", my: "ယာယီအမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ သို့မဟုတ် လော့ဂ်အင်ဝင်ပါ။" },
   authGateCancel: { ko: "취소", zh: "取消", vi: "Hủy", en: "Cancel", mn: "Цуцлах", bn: "বাতিল করুন", my: "ပယ်ဖျက်ရန်" },
   signupInviteDesc: { ko: "가입하면 내 활동을 계속 보관할 수 있어요.", zh: "注册后可以持续保存我的活动记录。", vi: "Đăng ký để lưu lại hoạt động của bạn.", en: "Sign up to keep your activity saved.", mn: "Бүртгүүлбэл миний үйл ажиллагааг хадгалж болно.", bn: "নিবন্ধন করলে আপনার কার্যকলাপ সংরক্ষিত থাকবে।", my: "အကောင့်ဖွင့်ပါက သင့်လှုပ်ရှားမှုများကို ဆက်လက်သိမ်းဆည်းနိုင်ပါသည်။" },
   signupInviteAccept: { ko: "가입하기", zh: "去注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх", bn: "নিবন্ধন করুন", my: "အကောင့်ဖွင့်ရန်" },
@@ -2148,6 +2222,9 @@ var COMMUNITY_MY = {
 var COMMUNITY_POST = {
   writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих", bn: "পোস্ট লিখুন", my: "ပို့စ်ရေးရန်" },
   editPostTitle: { ko: "게시글 수정", zh: "编辑帖子", vi: "Sửa bài viết", en: "Edit Post", mn: "Нийтлэлийг засах", bn: "পোস্ট সম্পাদনা", my: "ပို့စ်ကို ပြင်ဆင်ရန်" },
+  // 2026-09 "비회원제 전환" 지시서 — 글쓰기 화면에서 바로 닉네임을 정할
+  // 수 있게 추가(기존 MY 페이지 "닉네임 수정"과 같은 값을 씁니다).
+  nicknameLabel: { ko: "닉네임", zh: "昵称", vi: "Biệt danh", en: "Nickname", mn: "Хоч", bn: "নিকনেম", my: "အမည်ဝှက်" },
   categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал", bn: "বিভাগ", my: "အမျိုးအစား" },
   titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг", bn: "শিরোনাম", my: "ခေါင်းစဉ်" },
   contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга", bn: "বিষয়বস্তু", my: "အကြောင်းအရာ" },
@@ -2178,7 +2255,14 @@ var COMMUNITY_POST = {
   // "카카오톡 문의 연결" — 홈페이지 "사장님께 말해요"(OWNER_CHAT) 링크를
   // 그대로 재사용하는 체크박스/버튼 문구(게시글마다 새 링크 없음).
   ownerKakaoCheckbox: { ko: "카카오톡 문의 연결", zh: "连接KakaoTalk咨询", vi: "Kết nối hỏi đáp qua KakaoTalk", en: "Connect KakaoTalk inquiry", mn: "KakaoTalk-аар лавлагаа холбох", bn: "কাকাওটক জিজ্ঞাসা সংযুক্ত করুন", my: "KakaoTalk မေးမြန်းမှု ချိတ်ဆက်ရန်" },
-  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" }
+  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" },
+  // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 작성자 고정 표시(닉네임
+  // 선택 없이 모두 "익명"), 글쓰기 화면 안내, 목록/상세의 조회수·좋아요.
+  anonymousLabel: { ko: "익명", zh: "匿名", vi: "Ẩn danh", en: "Anonymous", mn: "Нэргүй", bn: "বেনামী", my: "အမည်မသိ" },
+  whisperWriteNotice: { ko: "등록한 글은 직접 수정하거나 삭제할 수 없습니다. 삭제가 필요한 경우 신고·삭제 요청을 이용해 주세요.", zh: "发布后的帖子无法自行修改或删除。如需删除，请使用举报·删除请求功能。", vi: "Bài viết đã đăng không thể tự chỉnh sửa hoặc xóa. Nếu cần xóa, vui lòng dùng chức năng báo cáo · yêu cầu xóa.", en: "Once posted, you cannot edit or delete it yourself. If you need it removed, please use the report/delete-request button.", mn: "Нийтэлсэн зурвасыг өөрөө засах, устгах боломжгүй. Устгах шаардлагатай бол мэдээлэх·устгах хүсэлт функцийг ашиглана уу.", bn: "পোস্ট করা লেখা নিজে সম্পাদনা বা মুছে ফেলা যাবে না। মুছে ফেলার প্রয়োজন হলে রিপোর্ট·মুছে ফেলার অনুরোধ ব্যবহার করুন।", my: "တင်ပြီးသောပို့စ်ကို ကိုယ်တိုင်ပြင်ဆင်/ဖျက်၍မရပါ။ ဖျက်ရန်လိုအပ်ပါက တိုင်ကြား·ဖျက်ရန်တောင်းဆိုမှုကို သုံးပါ။" },
+  viewCountLabel: { ko: "조회", zh: "浏览", vi: "Lượt xem", en: "Views", mn: "Үзсэн", bn: "দেখা হয়েছে", my: "ကြည့်ရှုမှု" },
+  likeBtn: { ko: "좋아요", zh: "赞", vi: "Thích", en: "Like", mn: "Таалагдсан", bn: "লাইক", my: "နှစ်သက်ပါသည်" },
+  unlikeBtn: { ko: "좋아요 취소", zh: "取消赞", vi: "Bỏ thích", en: "Unlike", mn: "Таалагдсаныг цуцлах", bn: "লাইক বাতিল", my: "နှစ်သက်မှုပယ်ဖျက်ရန်" }
 };
 
 /* 중고거래 */
@@ -2224,6 +2308,23 @@ var COMMUNITY_SPOT = {
   typeCafe: { ko: "카페", zh: "咖啡厅", vi: "Cà phê", en: "Cafe", mn: "Кафе", bn: "ক্যাফে", my: "ကော်ဖီဆိုင်" },
   typeRestaurant: { ko: "음식점", zh: "餐厅", vi: "Nhà hàng", en: "Restaurant", mn: "Хоолны газар", bn: "রেস্তোরাঁ", my: "စားသောက်ဆိုင်" },
   typeTour: { ko: "관광지", zh: "旅游景点", vi: "Điểm du lịch", en: "Tourist Spot", mn: "Аялал жуулчлалын газар", bn: "পর্যটন স্থান", my: "ဧည့်လမ်းညွှန်ခရီးစဉ်" }
+};
+
+/* "나의 고향 알리기"(hometown) — 국가/도시는 선택 입력, 안내문만 재사용
+   가능한 최소 구조(2026-09 "나의 고향 알리기 정상화" 지시서). 새 국가
+   라이브러리 없이 기존 COUNTRY_LIST(datalist)만 재사용합니다. */
+var COMMUNITY_HOMETOWN = {
+  countryLabel: { ko: "나라(선택)", zh: "国家（选填）", vi: "Quốc gia (không bắt buộc)", en: "Country (optional)", mn: "Улс (сонголт)", bn: "দেশ (ঐচ্ছিক)", my: "နိုင်ငံ (ရွေးချယ်ခွင့်)" },
+  cityLabel: { ko: "도시/지역(선택)", zh: "城市/地区（选填）", vi: "Thành phố / khu vực (không bắt buộc)", en: "City / Region (optional)", mn: "Хот / бүс нутаг (сонголт)", bn: "শহর/অঞ্চল (ঐচ্ছিক)", my: "မြို့ / ဒေသ (ရွေးချယ်ခွင့်)" },
+  contentGuide: {
+    ko: "내 고향의 음식, 관광지, 문화, 축제와 이야기를 친구들에게 소개해 주세요.",
+    zh: "向朋友们介绍一下你家乡的美食、景点、文化和节日吧。",
+    vi: "Hãy giới thiệu ẩm thực, danh lam thắng cảnh, văn hóa và lễ hội quê hương bạn cho bạn bè.",
+    en: "Introduce your hometown's food, sights, culture, and festivals to your friends.",
+    mn: "Найзууддаа төрсөн нутгийнхаа хоол, үзмэр, соёл, наадмын тухай танилцуулаарай.",
+    bn: "তোমার শহরের খাবার, দর্শনীয় স্থান, সংস্কৃতি ও উৎসবের গল্প বন্ধুদের সাথে শেয়ার করো।",
+    my: "သင့်ဇာတိမြို့၏ အစားအစာ၊ ကြည့်ရှုစရာနေရာများ၊ ယဉ်ကျေးမှုနှင့် ပွဲတော်များကို သူငယ်ချင်းများကို မိတ်ဆက်ပေးပါ။"
+  }
 };
 
 /* 구인·구직 (2026-09-10, "생활정보" 카테고리를 대체) */
@@ -2288,9 +2389,15 @@ var COMMUNITY_REPORT = {
   reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа", bn: "অবৈধ বা বিপজ্জনক পণ্য", my: "တရားမဝင် သို့မဟုတ် အန္တရာယ်ရှိသောပစ္စည်း" },
   reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам", bn: "বিজ্ঞাপন/স্প্যাম", my: "ကြော်ငြာ/စပမ်း" },
   reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт", bn: "অনুপযুক্ত সাক্ষাতের অনুরোধ", my: "မသင့်လျော်သောတွေ့ဆုံမှုတောင်းဆိုခြင်း" },
+  // 2026-10-09 속닥속닥 지시서 9번 — "내가 작성한 글 삭제 요청"(5개 사유
+  // 목록의 1번). 비밀번호·회원가입 없이도 자기 글을 지워달라고 요청할
+  // 수 있는 유일한 경로(관리자가 검토 후 처리).
+  reasonSelfDelete: { ko: "내가 작성한 글 삭제 요청", zh: "请求删除我写的帖子", vi: "Yêu cầu xóa bài tôi đã viết", en: "Request to delete my own post", mn: "Өөрийн бичсэн зурвасыг устгуулах хүсэлт", bn: "আমার লেখা পোস্ট মুছে ফেলার অনুরোধ", my: "ကျွန်ုပ်ရေးသားခဲ့သောပို့စ်ကိုဖျက်ပေးရန်တောင်းဆိုခြင်း" },
   reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" },
   submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх", bn: "রিপোর্ট জমা দিন", my: "တိုင်ကြားချက်တင်ရန်" },
-  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа.", bn: "রিপোর্ট গ্রহণ করা হয়েছে।", my: "တိုင်ကြားချက်လက်ခံရရှိပါပြီ။" },
+  // 2026-10-09 속닥속닥 지시서 9번 — 접수 완료 문구를 지시서가 준 문장
+  // 그대로 사용(관리자에게 전달됐음을 분명히 알림).
+  reportDone: { ko: "관리자에게 요청이 전달되었습니다.", zh: "您的请求已传达给管理员。", vi: "Yêu cầu của bạn đã được chuyển đến quản trị viên.", en: "Your request has been sent to the admin.", mn: "Таны хүсэлт админд хүргэгдлээ.", bn: "আপনার অনুরোধ অ্যাডমিনের কাছে পাঠানো হয়েছে।", my: "သင့်တောင်းဆိုချက်ကို စီမံခန့်ခွဲသူထံပို့ပြီးပါပြီ။" },
   alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна.", bn: "আপনি ইতিমধ্যে এটি রিপোর্ট করেছেন।", my: "သင်ဤပို့စ်ကို တိုင်ကြားပြီးဖြစ်သည်။" },
   hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа.", bn: "একাধিক রিপোর্টের কারণে এটি সাময়িকভাবে লুকানো হয়েছে।", my: "တိုင်ကြားချက်များစုပုံလာသဖြင့် ယာယီဖျောက်ထားပါသည်။" }
 };
@@ -2312,6 +2419,14 @@ var COMMUNITY_MSG = {
   errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна.", bn: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।", my: "အီးမေးလ် သို့မဟုတ် စကားဝှက်မှားနေသည်။" },
   errPhotoLimit: { ko: "사진은 1장만 첨부할 수 있습니다.", zh: "只能上传1张照片。", vi: "Chỉ có thể đính kèm 1 ảnh.", en: "You can attach only 1 photo.", mn: "Зөвхөн 1 зураг хавсаргах боломжтой.", bn: "শুধুমাত্র ১টি ছবি সংযুক্ত করা যাবে।", my: "ဓာတ်ပုံ ၁ ပုံသာ ပူးတွဲနိုင်ပါသည်။" },
   errPhotoTooLarge: { ko: "사진 용량이 너무 커서 압축 후에도 등록할 수 없습니다. 다른 사진을 선택해 주세요.", zh: "照片文件过大，压缩后仍无法上传，请选择其他照片。", vi: "Ảnh quá lớn, sau khi nén vẫn không thể đăng. Vui lòng chọn ảnh khác.", en: "This photo is too large to upload even after compression. Please choose a different photo.", mn: "Зургийн хэмжээ хэт том тул шахсны дараа ч оруулах боломжгүй байна. Өөр зураг сонгоно уу.", bn: "ছবির আকার অনেক বড় হওয়ায় কম্প্রেস করার পরও আপলোড করা যাচ্ছে না। অন্য ছবি বেছে নিন।", my: "ဓာတ်ပုံအရွယ်အစားကြီးလွန်းသောကြောင့် ချုံ့ပြီးနောက်တွင်ပင် တင်၍မရပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
+  // 2026-09 "커뮤니티 이미지 업로드" 지시서 — 지원하지 않는 파일 형식(사진으로
+  // 디코딩 자체가 실패한 경우, HEIC 등 포함) 안내 문구.
+  errPhotoUnsupported: { ko: "지원하지 않는 파일입니다. 다른 사진을 선택해 주세요.", zh: "不支持该文件格式，请选择其他照片。", vi: "Không hỗ trợ định dạng tệp này. Vui lòng chọn ảnh khác.", en: "This file type isn't supported. Please choose a different photo.", mn: "Энэ файлын төрөл дэмжигдэхгүй байна. Өөр зураг сонгоно уу.", bn: "এই ফাইলটি সমর্থিত নয়। অন্য ছবি বেছে নিন।", my: "ဤဖိုင်အမျိုးအစားကို ပံ့ပိုးမထားပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
+  photoCompressing: { ko: "사진을 압축하고 있습니다...", zh: "正在压缩照片...", vi: "Đang nén ảnh...", en: "Compressing photo...", mn: "Зургийг шахаж байна...", bn: "ছবি সংকুচিত করা হচ্ছে...", my: "ဓာတ်ပုံချုံ့နေပါသည်..." },
+  photoUploading: { ko: "사진을 업로드하고 있습니다...", zh: "正在上传照片...", vi: "Đang tải ảnh lên...", en: "Uploading photo...", mn: "Зургийг байршуулж байна...", bn: "ছবি আপলোড করা হচ্ছে...", my: "ဓာတ်ပုံတင်နေပါသည်..." },
+  photoAddBtn: { ko: "+ 사진 추가", zh: "+ 添加照片", vi: "+ Thêm ảnh", en: "+ Add Photo", mn: "+ Зураг нэмэх", bn: "+ ছবি যোগ করুন", my: "+ ဓာတ်ပုံထည့်ရန်" },
+  photoChangeBtn: { ko: "사진 변경", zh: "更换照片", vi: "Đổi ảnh", en: "Change Photo", mn: "Зураг солих", bn: "ছবি পরিবর্তন করুন", my: "ဓာတ်ပုံပြောင်းရန်" },
+  photoRemoveBtn: { ko: "사진 삭제", zh: "删除照片", vi: "Xóa ảnh", en: "Remove Photo", mn: "Зураг устгах", bn: "ছবি মুছুন", my: "ဓာတ်ပုံဖျက်ရန်" },
   errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу.", bn: "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।", my: "အမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ။" },
   errTooSoon: { ko: "너무 빠르게 반복해서 작성할 수 없습니다. 잠시 후 다시 시도해 주세요.", zh: "发布过于频繁，请稍后再试。", vi: "Bạn đang đăng quá nhanh. Vui lòng thử lại sau ít phút.", en: "You're posting too quickly. Please wait a moment and try again.", mn: "Хэт хурдан дахин бичиж болохгүй. Түр хүлээгээд дахин оролдоно уу.", bn: "খুব দ্রুত বারবার লেখা যাবে না। একটু পর আবার চেষ্টা করুন।", my: "လျင်မြန်လွန်းစွာ ထပ်ခါထပ်ခါရေးနေပါသည်။ ခဏစောင့်ပြီးထပ်ကြိုးစားပါ။" },
   doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа.", bn: "সংরক্ষিত হয়েছে।", my: "သိမ်းဆည်းပြီးပါပြီ။" },
@@ -2362,7 +2477,6 @@ var COUNTRY_LIST = [
   "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
   "Yemen", "Zambia", "Zimbabwe"
 ];
-
 </script>
 <script>
 /* ==========================================================================
@@ -5021,6 +5135,7 @@ var AdminCommunity = (function () {
     else if (tab === "posts") loadPosts();
     else if (tab === "users") loadUsers();
     else if (tab === "translations") loadTranslations();
+    else if (tab === "reports") loadReports();
   }
 
   /* ---------------- 통계 ---------------- */
@@ -5465,16 +5580,118 @@ var AdminCommunity = (function () {
     });
   }
 
+  /* ---------------- 신고·삭제 요청 관리(2026-10-09 속닥속닥 지시서 10번) ----------------
+     신고 자체는 기존 communityReports 컬렉션(js/community.js의
+     submitReport가 신고 1건당 문서 1개, status:"pending"으로 이미 저장)을
+     그대로 재사용합니다 — 새 컬렉션 없음. 여기서는 그 문서의 status만
+     "검토 중/처리 완료/반려"로 바꿀 수 있게 하고, 대상(게시글/댓글)을
+     바로 숨기는 단축 버튼만 추가합니다. */
+  var REPORT_STATUS_LABELS = { pending: "접수", reviewing: "검토 중", done: "처리 완료", rejected: "반려" };
+  var REPORT_REASON_LABELS = {
+    reasonSelfDelete: "본인 글 삭제 요청", reasonAbuse: "욕설·비방", reasonAd: "광고·도배",
+    reasonPrivacy: "개인정보 노출", reasonEtc: "기타",
+    // 옛 카테고리에서 쓰던 사유도 과거 신고 기록을 그대로 보여주기 위해 남겨둡니다.
+    reasonScam: "사기 의심", reasonIllegal: "불법·위험 물품", reasonMeet: "부적절한 만남 요구"
+  };
+
+  function loadReports() {
+    var d = db();
+    var body = els.reportsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityReports").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">접수된 신고·삭제 요청이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>구분</th><th>사유</th><th>접수일</th><th>상태</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      snap.forEach(function (doc) {
+        var r = doc.data();
+        var tr = document.createElement("tr");
+
+        var tdTarget = document.createElement("td");
+        tdTarget.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " · " + r.targetId;
+        tr.appendChild(tdTarget);
+
+        var tdReason = document.createElement("td");
+        tdReason.textContent = REPORT_REASON_LABELS[r.reason] || r.reason || "-";
+        tr.appendChild(tdReason);
+
+        var tdDate = document.createElement("td");
+        tdDate.textContent = fmtDate(r.createdAt);
+        tr.appendChild(tdDate);
+
+        var tdStatus = document.createElement("td");
+        tdStatus.textContent = REPORT_STATUS_LABELS[r.status] || r.status || "접수";
+        tr.appendChild(tdStatus);
+
+        var tdActions = document.createElement("td");
+        [["reviewing", "검토 중으로"], ["done", "처리 완료로"], ["rejected", "반려"]].forEach(function (pair) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = pair[1];
+          btn.addEventListener("click", function () { updateReportStatus(doc.id, pair[0], btn); });
+          tdActions.appendChild(btn);
+        });
+        var hideBtn = document.createElement("button");
+        hideBtn.type = "button";
+        hideBtn.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " 숨김";
+        hideBtn.addEventListener("click", function () { hideReportedTarget(r.targetType, r.targetId, doc.id, hideBtn); });
+        tdActions.appendChild(hideBtn);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function updateReportStatus(reportId, status, btn) {
+    var d = db();
+    if (!d) return;
+    btn.disabled = true;
+    d.collection("communityReports").doc(reportId).update({ status: status }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("상태 변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
+  function hideReportedTarget(targetType, targetId, reportId, btn) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("이 " + (targetType === "comment" ? "댓글" : "게시글") + "을(를) 숨김 처리하시겠습니까?")) return;
+    btn.disabled = true;
+    var collectionName = targetType === "comment" ? "communityComments" : "communityPosts";
+    d.collection(collectionName).doc(targetId).update({ status: "hidden" }).then(function () {
+      return d.collection("communityReports").doc(reportId).update({ status: "done" });
+    }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("숨김 처리 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function init() {
     els.subTabs = {
       stats: qs("commAdminTabStats"), posts: qs("commAdminTabPosts"),
-      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations")
+      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations"),
+      reports: qs("commAdminTabReports")
     };
     els.subPages = {
       stats: qs("commAdminPageStats"), posts: qs("commAdminPagePosts"),
-      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations")
+      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations"),
+      reports: qs("commAdminPageReports")
     };
     if (!els.subTabs.stats) return; // 커뮤니티 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
 
@@ -5482,6 +5699,7 @@ var AdminCommunity = (function () {
     els.postsBody = qs("commAdminPostsBody");
     els.usersBody = qs("commAdminUsersBody");
     els.translationsBody = qs("commAdminTranslationsBody");
+    els.reportsBody = qs("commAdminReportsBody");
 
     Object.keys(els.subTabs).forEach(function (key) {
       els.subTabs[key].addEventListener("click", function () { showTab(key); });

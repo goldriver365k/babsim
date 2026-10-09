@@ -22,7 +22,9 @@ var Community = (function () {
   var PHOTO_QUALITY_RETRY = 0.45;
   var PHOTO_RETRY_DIMENSION = 600;
   var PHOTO_MAX_BYTES = 200 * 1024; // 재압축 후에도 넘으면 업로드 거절
-  var POST_PAGE_SIZE = 15;
+  // 2026-10-09 속닥속닥 지시서 6번 — "최초 20개 게시글만 불러오고
+  // '더보기' 방식으로 추가"를 그대로 맞춰 15 → 20으로 조정.
+  var POST_PAGE_SIZE = 20;
   var COMMENT_PAGE_SIZE = 20;
   var TITLE_MAX_LEN = 40;
   var CONTENT_MAX_LEN = 500;
@@ -349,12 +351,16 @@ var Community = (function () {
     }).catch(function () { return profile; }); // 실패해도 글쓰기 자체를 막지 않음(다음 기회에 다시 시도)
   }
 
-  // 게시글/댓글 작성 시 표시할 이름을 정합니다 — 비회원은 자동 닉네임
-  // (profile.name, 3단계에서 만든 구조 재사용), 가입회원은 위에서 만든
-  // profile.nickname을 사용합니다. 실명(profile.name)은 절대 쓰지 않음.
+  // 게시글/댓글 작성 시 표시할 이름을 정합니다. 2026-10-09 속닥속닥
+  // 단일 익명게시판 지시서 — "작성자는 모두 익명"이 문자 그대로 요구사항
+  // 이라, 비회원(익명 인증) 작성자는 내부적으로 생성된 닉네임(profile.name,
+  // 예: "푸른고래42") 대신 고정된 "익명" 라벨(언어별 번역)을 그대로
+  // 노출합니다. profile.name 자체는 내부 식별용으로 계속 저장되지만
+  // 화면에는 더 이상 쓰지 않습니다. 가입회원(옛 커뮤니티 계정) 글은
+  // 기존처럼 profile.nickname을 그대로 보여줍니다(실명은 절대 노출 안 함).
   function currentDisplayNickname() {
     if (!profile) return "";
-    return profile.isAnonymous ? (profile.name || "") : (profile.nickname || "");
+    return profile.isAnonymous ? (t(COMMUNITY_POST.anonymousLabel) || "익명") : (profile.nickname || "");
   }
 
   // profile.name을 그대로 재사용해(기존 게시글/댓글 작성 코드 무수정)
@@ -1124,24 +1130,13 @@ var Community = (function () {
   function renderList() {
     var wrap = el("div", "community-page community-list-page");
 
-    // 첫 화면: 1.제목 2.짧은 소개 3.카테고리 4.최신 게시글 5.로그인·가입
-    // 작은 버튼(비회원일 때만) — 화면 전체를 로그인창으로 덮지 않습니다
-    // (2026-09-10 "회원가입 노출 방식 변경" 지시서).
+    // 첫 화면: 1.제목 2.짧은 소개 3.최신 게시글. 2026-10-09 속닥속닥
+    // 단일 익명게시판 지시서 — "회원가입 없음/로그인 없음"이 화면에도
+    // 그대로 보여야 해서, 이전에 비회원에게만 보이던 로그인·가입 작은
+    // 버튼을 완전히 제거합니다(글쓰기는 ensureAuth()가 조용히 처리).
     var homeHeader = el("div", "community-home-header");
     var titleRow = el("div", "community-home-title-row");
     titleRow.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
-    if (!authUser) {
-      var authActions = el("div", "community-home-auth-actions");
-      var loginSmallBtn = el("button", "community-link-btn", t(COMMUNITY_AUTH.loginTitle));
-      loginSmallBtn.type = "button";
-      loginSmallBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
-      var signupSmallBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
-      signupSmallBtn.type = "button";
-      signupSmallBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
-      authActions.appendChild(loginSmallBtn);
-      authActions.appendChild(signupSmallBtn);
-      titleRow.appendChild(authActions);
-    }
     homeHeader.appendChild(titleRow);
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
@@ -1167,9 +1162,13 @@ var Community = (function () {
     });
     wrap.appendChild(roomShortcut);
 
-    // 카테고리 4개 개편: 블록형(제목+짧은 설명) UI, 새 페이지 이동 없이
-    // 클릭하면 이 화면 아래 목록만 바뀝니다(기존 필터 로직 재사용).
+    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — "별도의 카테고리를
+    // 만들지 않는다"는 요구에 맞춰, 선택 가능한 게시판이 1개뿐이면
+    // 카테고리 블록 UI 자체를 그리지 않습니다(기존 블록형 UI 코드는
+    // COMMUNITY_CATEGORY_ORDER가 2개 이상일 때를 대비해 그대로 재사용
+    // 가능하도록 남겨둡니다).
     var catTabs = el("div", "community-category-tabs");
+    if (COMMUNITY_CATEGORY_ORDER.length > 1) {
     COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
       var b = el("button", "community-category-tab community-category-block" + (state_category === catKey ? " active" : ""));
       b.type = "button";
@@ -1189,6 +1188,7 @@ var Community = (function () {
       });
       catTabs.appendChild(b);
     });
+    }
     wrap.appendChild(catTabs);
 
     var toolbar = el("div", "community-toolbar");
@@ -1616,6 +1616,26 @@ var Community = (function () {
     var card = el("div", "community-post-card");
     card.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + post.id); });
 
+    // 2026-10-09 속닥속닥 지시서 6번 — 단일 게시판 카드는 카테고리 배지
+    // 없이 제목·본문 미리보기·작성일·조회수·댓글수·좋아요수만 보여줍니다
+    // (이전 "부가정보 남발 금지" 지시서는 4개 카테고리 혼재 목록을
+    // 전제로 한 것이라, 게시판이 1개뿐인 지금은 이 지시서가 우선합니다).
+    if (post.category === "whisper") {
+      card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+      var preview = summarize(post);
+      if (preview) card.appendChild(el("p", "community-post-card-preview", preview));
+      var statsLine = el("p", "community-post-card-stats");
+      var statsParts = [
+        formatDate(post.createdAt),
+        t(COMMUNITY_POST.viewCountLabel) + " " + (post.viewCount || 0),
+        t(COMMUNITY_POST.commentCount) + " " + (post.commentCount || 0),
+        t(COMMUNITY_POST.likeBtn) + " " + (post.likeCount || 0)
+      ];
+      statsLine.textContent = statsParts.join(" · ");
+      card.appendChild(statsLine);
+      return card;
+    }
+
     var catLine = el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category] || COMMUNITY_CATEGORIES.free));
     card.appendChild(catLine);
 
@@ -1757,6 +1777,12 @@ var Community = (function () {
       // 로그인 안내창을 띄웁니다.
       postCache[postId] = post;
       trackVirtualPage("community_post", GA_COMMUNITY_CATEGORY_MAP[post.category] || post.category, postId);
+      // 2026-10-09 속닥속닥 지시서 6번 — 상세를 열 때마다 조회수 1 증가
+      // (원자적 증가, 새 조회 없이 fire-and-forget). 로그인 여부와
+      // 무관하게 세면 되므로 ensureAuth를 거치지 않습니다.
+      if (post.category === "whisper") {
+        doc.ref.update({ viewCount: firebase.firestore.FieldValue.increment(1) }).catch(function () { /* 실패해도 열람엔 영향 없음 */ });
+      }
       renderPostDetailBody(wrap, post);
     }).catch(function (err) {
       console.error("게시글 상세 불러오기 실패:", err);
@@ -1910,7 +1936,12 @@ var Community = (function () {
     });
     actions.appendChild(saveBtn);
 
-    if (authUser && post.authorId === authUser.uid) {
+    // 2026-10-09 속닥속닥 지시서 7번 — "일반 사용자 수정·삭제 불가"가
+    // 명시적 요구사항이라, 작성 본인이어도 수정·삭제 버튼을 아예
+    // 보여주지 않습니다(옛 카테고리 게시글은 DB에만 남아있고 화면
+    // 노출을 막았으므로 이 경로로 실제로 열람될 일이 없지만, 혹시
+    // 남아있더라도 기존 동작 그대로 둡니다).
+    if (post.category !== "whisper" && authUser && post.authorId === authUser.uid) {
       var editBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.editPost));
       editBtn.type = "button";
       // postId는 URL 쿼리(?edit=)로 전달합니다 — 새 라우트를 만들지
@@ -1932,9 +1963,48 @@ var Community = (function () {
       });
       actions.appendChild(delBtn);
     } else {
-      // 신고는 비회원도 가능합니다(눌렀을 때 buildReportButton 내부에서
-      // 필요하면 조용히 익명 로그인 후 제출).
+      // 신고(+ 속닥속닥의 "내가 작성한 글 삭제 요청" 사유)는 작성자
+      // 본인을 포함해 비회원도 가능합니다(눌렀을 때 buildReportButton
+      // 내부에서 필요하면 조용히 익명 로그인 후 제출).
       actions.appendChild(buildReportButton("post", post.id));
+    }
+
+    // 좋아요(2026-10-09 지시서 6번) — "저장(communitySaves)"과 똑같은
+    // 패턴을 그대로 재사용한 새 중복방지 컬렉션(communityLikes)만
+    // 추가합니다. 비회원도 가능(처음 누를 때만 조용히 익명 로그인).
+    if (post.category === "whisper") {
+      var likeBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.likeBtn) + " " + (post.likeCount || 0));
+      likeBtn.type = "button";
+      var likeRef = null;
+      if (authUser) {
+        likeRef = db().collection("communityLikes").doc(authUser.uid + "_" + post.id);
+        likeRef.get().then(function (doc2) {
+          if (doc2.exists) likeBtn.textContent = t(COMMUNITY_POST.unlikeBtn) + " " + (post.likeCount || 0);
+        });
+      }
+      likeBtn.addEventListener("click", function () {
+        ensureAuth().then(function () {
+          var ref = db().collection("communityLikes").doc(authUser.uid + "_" + post.id);
+          var postRef = db().collection("communityPosts").doc(post.id);
+          return ref.get().then(function (doc2) {
+            if (doc2.exists) {
+              return ref.delete().then(function () {
+                return postRef.update({ likeCount: firebase.firestore.FieldValue.increment(-1) });
+              }).then(function () {
+                post.likeCount = Math.max(0, (post.likeCount || 0) - 1);
+                likeBtn.textContent = t(COMMUNITY_POST.likeBtn) + " " + post.likeCount;
+              });
+            }
+            return ref.set({ uid: authUser.uid, postId: post.id, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+              .then(function () { return postRef.update({ likeCount: firebase.firestore.FieldValue.increment(1) }); })
+              .then(function () {
+                post.likeCount = (post.likeCount || 0) + 1;
+                likeBtn.textContent = t(COMMUNITY_POST.unlikeBtn) + " " + post.likeCount;
+              });
+          });
+        }).catch(function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
+      });
+      actions.appendChild(likeBtn);
     }
     wrap.appendChild(actions);
 
@@ -2141,7 +2211,11 @@ var Community = (function () {
     var modal = el("div", "modal");
     modal.appendChild(el("h3", "modal-title", t(COMMUNITY_REPORT.reportTitle)));
 
-    var reasons = ["reasonScam", "reasonAbuse", "reasonPrivacy", "reasonIllegal", "reasonAd", "reasonMeet", "reasonEtc"];
+    // 2026-10-09 속닥속닥 지시서 9번 표의 5개 사유만 사용합니다
+    // (reasonScam/reasonIllegal/reasonMeet는 옛 중고거래·구인구직
+    // 카테고리 전용이라 더 이상 쓰지 않지만, 번역 데이터는 그대로
+    // 남겨둡니다 — 재사용 가능).
+    var reasons = ["reasonSelfDelete", "reasonAbuse", "reasonAd", "reasonPrivacy", "reasonEtc"];
     var selected = null;
     var reasonList = el("div", "community-reason-list");
     reasons.forEach(function (key) {
@@ -2452,34 +2526,28 @@ var Community = (function () {
     }
 
     var actions = el("div", "community-comment-actions");
-    if (authUser && c.authorId === authUser.uid) {
-      var delBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.deleteComment));
-      delBtn.type = "button";
-      delBtn.addEventListener("click", function () {
-        if (!window.confirm(t(COMMUNITY_POST.deleteConfirm))) return;
-        db().collection("communityComments").doc(c.id).update({ status: "deleted" }).then(function () {
-          loadCommentList(postId, listContainer);
-        });
-      });
-      actions.appendChild(delBtn);
-    } else if (!c.parentCommentId) {
+    // 2026-10-09 속닥속닥 지시서 7·8번 — "일반 사용자 수정·삭제 불가,
+    // 관리자만 삭제 가능"이 댓글에도 그대로 적용되어, 작성자 본인이어도
+    // 더 이상 삭제 버튼을 보여주지 않습니다. 모든 댓글(답글 포함)에
+    // 신고·삭제 요청 버튼을 둡니다(이전에는 최상위 댓글에만 있었음).
+    if (!c.parentCommentId && authUser) {
       // 답글은 기존처럼 로그인(회원/비회원 익명 세션)한 뒤에만 보입니다
-      // (이번 단계에서 새로 넓히는 범위가 아님). 신고는 비회원도 가능합니다.
-      if (authUser) {
-        var replyBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.replyLabel));
-        replyBtn.type = "button";
-        replyBtn.addEventListener("click", function () {
-          var content = window.prompt(t(COMMUNITY_COMMENT.replyLabel) + ":");
-          if (content && content.trim()) {
-            postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); }).catch(function (err) {
-              showToast((err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric));
-            });
-          }
-        });
-        actions.appendChild(replyBtn);
-      }
-      actions.appendChild(buildReportButton("comment", c.id));
+      // (이번 단계에서 새로 넓히는 범위가 아님).
+      var replyBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.replyLabel));
+      replyBtn.type = "button";
+      replyBtn.addEventListener("click", function () {
+        var content = window.prompt(t(COMMUNITY_COMMENT.replyLabel) + ":");
+        if (content && content.trim()) {
+          postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); }).catch(function (err) {
+            showToast((err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric));
+          });
+        }
+      });
+      actions.appendChild(replyBtn);
     }
+    // 신고(+ "내가 작성한 글 삭제 요청" 사유)는 작성자 본인을 포함해
+    // 비회원도 가능합니다.
+    actions.appendChild(buildReportButton("comment", c.id));
     node.appendChild(actions);
     return node;
   }
@@ -2693,6 +2761,13 @@ var Community = (function () {
     if (isEdit && (!editingPost || !authUser || editingPost.authorId !== authUser.uid)) {
       isEdit = false; editPostId = null; editingPost = null;
     }
+
+    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 게시판이 1개뿐이면
+    // (카테고리/닉네임/카카오링크/사진 등) 아래의 기존 다중 카테고리
+    // 글쓰기 폼 전체를 건드리지 않고 새 간단한 폼(제목+내용만)으로
+    // 완전히 대체합니다. 일반 사용자는 수정할 수 없으므로(지시서 7번)
+    // 수정 모드 자체를 만들지 않고 항상 새 글 작성으로 취급합니다.
+    if (COMMUNITY_CATEGORY_ORDER.length === 1) { renderWhisperWrite(); return; }
 
     var wrap = el("div", "community-page community-write");
     wrap.appendChild(el("h2", "community-page-title", isEdit ? t(COMMUNITY_POST.editPostTitle) : t(COMMUNITY_POST.writeTitle)));
@@ -3151,6 +3226,58 @@ var Community = (function () {
     els.root.appendChild(wrap);
   }
 
+  /* 속닥속닥 글쓰기(2026-10-09 지시서 7번) — 제목+내용만 입력하는
+     최소한의 폼입니다. 닉네임 입력·카테고리 선택·카카오링크·사진첨부
+     등 기존 다중 카테고리 폼의 부가 입력은 전부 뺐고(지시서 "입력 항목:
+     제목(필수), 내용(필수)"), 저장은 기존 createOrUpdatePost/
+     withRateLimit/translatePostLanguages를 그대로 재사용합니다(새
+     저장 로직 없음). 작성자 닉네임은 currentDisplayNickname()이 항상
+     고정 "익명" 라벨을 돌려주므로 여기서 따로 처리하지 않습니다. */
+  function renderWhisperWrite() {
+    var wrap = el("div", "community-page community-write community-whisper-write");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_POST.writeTitle)));
+    wrap.appendChild(el("p", "community-safety-notice", t(COMMUNITY_POST.whisperWriteNotice)));
+
+    trackVirtualPage("community_write", "whisper");
+
+    var form = el("form", "community-form");
+
+    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
+
+    var contentArea = el("textarea"); contentArea.maxLength = CONTENT_MAX_LEN; contentArea.required = true;
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
+
+    var errorP = el("p", "community-form-error");
+    form.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.submitPost));
+    submitBtn.type = "submit";
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      errorP.textContent = "";
+      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      submitBtn.disabled = true;
+      ensureAuth().then(function () {
+        return createOrUpdatePost({
+          category: "whisper", title: titleInput.value.trim(), content: contentArea.value.trim(),
+          originalLanguage: lang, kakaoLink: null, contactViaOwnerKakao: false, extra: {},
+          photoFiles: [], photosRemoved: false,
+          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); }
+        });
+      }).then(function (postId) {
+        navigate(ROUTE_PREFIX + "/post/" + postId, true);
+      }).catch(function (err) {
+        errorP.textContent = (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric);
+      }).finally(function () { submitBtn.disabled = false; });
+    });
+
+    wrap.appendChild(form);
+    els.root.appendChild(wrap);
+  }
+
   /* 사진 압축(2026-09-11 비용 최소화 지시서) — 원본은 저장하지 않고
      압축된 WebP 한 장만 저장합니다. createImageBitmap의
      imageOrientation:"from-image" 옵션으로 방향을 자동 보정하고,
@@ -3267,6 +3394,11 @@ var Community = (function () {
         status: "visible",
         reportCount: 0,
         commentCount: isEdit ? undefined : 0,
+        // 2026-10-09 속닥속닥 지시서 6번 — 목록/상세에 조회수·좋아요 수를
+        // 보여주기 위한 새 카운터 2개(기존 reportCount/commentCount와 같은
+        // 패턴, 원자적 증가만 사용). 새 글에만 0으로 초기화합니다.
+        viewCount: isEdit ? undefined : 0,
+        likeCount: isEdit ? undefined : 0,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       // 새 사진을 올렸으면 그 URL로, 새 사진 없이 "사진 삭제"만 눌렀으면
