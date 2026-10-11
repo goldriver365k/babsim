@@ -2536,19 +2536,20 @@ main {
 .community-whisper-content-input { min-height: 160px; }
 .community-post-card-stats { font-size: 12px; color: #64748B; margin: 0; }
 
-/* 속닥속닥 바로가기 바(2026-10-09 "제목 없이 바로 쓰기" 지시서) — 노란색
-   배경 + 검은 글씨, 가로 전체 너비, 모바일 기준 40~48px 높이, 바 전체
-   클릭 가능. 1,000원의 아침밥 카드(.home-tile-breakfast) 바로 위, 그
-   카드와 같은 폭·둥근 모서리(.home-korean-card와 같은 관례)로 둡니다.
-   홈 V17의 기존 --home-yellow 포인트색을 그대로 재사용(새 색상 없음). */
+/* 속닥속닥 바로가기 바(2026-10-11 지시서) — 노란색 배경 + 검은 글씨,
+   가로 전체 너비, 모바일 기준 40~48px 높이, 바 전체 클릭 가능. 이제
+   #homeLegoBoard(벤토 그리드)의 일반 아이템이라, 그리드 폭 전체를
+   차지하도록 grid-column만 지정합니다(모바일 2열/PC 6열 — .home-bento
+   grid-template-columns와 맞춤). 화면 폭별 정확한 위치(천원의 아침밥과
+   방 구하기 사이)는 아래 order 규칙이 맡습니다. 홈 V17의 기존
+   --home-yellow 포인트색을 그대로 재사용(새 색상 없음). */
 .whisper-top-bar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
+  grid-column: 1 / 3;
   min-height: 44px;
-  margin: 0 0 7px;
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -2564,6 +2565,12 @@ main {
 .whisper-top-bar-arrow { flex: none; }
 @media (max-width: 360px) {
   .whisper-top-bar { font-size: 13px; padding: 7px 10px; }
+}
+@media (min-width: 700px) {
+  /* PC/태블릿(6열)에서도 한 줄 전체를 차지. 아침밥+후루룩찹찹+만권화밥이
+     이미 1행을 꽉 채우므로(기존 grid-column 배치 그대로 유지), DOM
+     순서상 그 다음에 오는 이 바가 자연스럽게 2행 전체를 차지합니다. */
+  .whisper-top-bar { grid-column: 1 / 7; }
 }
 
 /* 속닥속닥 글쓰기 폼(제목+내용만) — 기존 .community-form/.community-field/
@@ -2934,10 +2941,13 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
    grid-column 기반 배치는 전혀 영향받지 않습니다. */
 @media (max-width: 699px) {
   .home-tile-breakfast{order:1}
-  .home-tile-room{order:2;grid-column:1/3}
-  .home-tile-hururuk{order:3}
-  .home-tile-mangwon{order:4}
-  .home-tile-bapsim{order:5}
+  /* 속닥속닥 바(2026-10-11 지시서) — 천원의 아침밥 바로 다음, 방
+     구하기보다 앞에 오도록 order:2. 나머지는 번호만 하나씩 밀림. */
+  .whisper-top-bar{order:2}
+  .home-tile-room{order:3;grid-column:1/3}
+  .home-tile-hururuk{order:4}
+  .home-tile-mangwon{order:5}
+  .home-tile-bapsim{order:6}
   /* "주말에 가볼 만한 곳"(WEEKEND) — 학생 생활/커뮤니티 콘텐츠라 핵심
      식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) 다음, 나의 고향
      이야기 앞에 배치. 다른 카드는 order 번호만 하나씩 밀렸을 뿐
@@ -3258,16 +3268,6 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <button type="button" class="home-hero-dot" data-hero-slide="1" aria-label="2"></button>
     </div>
   </div>
-  <!-- 속닥속닥 바로가기 바(2026-10-09 "제목 없이 바로 쓰기" 지시서) —
-       1,000원의 아침밥 카드 바로 위에 둡니다(모든 라우트에서 공통인
-       #homeView 안이라 다른 화면으로 넘어가도 위치는 유지). 클릭하면
-       게시판 목록을 거치지 않고 곧장 글쓰기 화면으로 이동합니다
-       (js/community.js의 Community.goToWrite() — 기존 "글쓰기" 버튼과
-       같은 인증 흐름 재사용). -->
-  <button type="button" class="whisper-top-bar" id="whisperTopBar">
-    <span class="whisper-top-bar-text" id="whisperTopBarText"></span>
-    <span class="whisper-top-bar-arrow" aria-hidden="true">→</span>
-  </button>
   <div class="home-bento" id="homeLegoBoard">
     <button type="button" class="home-tile home-tile-breakfast" id="homeCardBreakfast">
       <span class="home-tile-eyebrow">CAMPUS MEAL</span>
@@ -3289,6 +3289,17 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <span class="home-tile-sub" id="homeCardMangwonSub">한국요리</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
       <span id="homeCardMangwonLoc" hidden></span>
+    </button>
+    <!-- 속닥속닥 바로가기 바(2026-10-11 지시서) — 천원의 아침밥 카드와
+         "방 구하기"(눌렀을 때 팝업 폼이 뜨는 카드) 사이에 둡니다. 벤토
+         그리드 안의 일반 아이템으로 넣어, 모바일에서는 CSS order로
+         아침밥 바로 다음(방 구하기보다 앞)에 보이게 하고, PC에서는
+         DOM 순서 그대로(기존 1행 구성을 그대로 둔 채 그 다음 줄에)
+         보이게 합니다. 클릭 동작(Community.goToWrite() — 곧장 글쓰기
+         화면 이동)은 전혀 건드리지 않습니다. -->
+    <button type="button" class="whisper-top-bar" id="whisperTopBar">
+      <span class="whisper-top-bar-text" id="whisperTopBarText"></span>
+      <span class="whisper-top-bar-arrow" aria-hidden="true">→</span>
     </button>
     <button type="button" class="home-service-card home-tile home-tile-bapsim" data-store="bapsim">
       <span class="home-tile-eyebrow">BABSIM</span>
