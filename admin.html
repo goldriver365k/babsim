@@ -1165,10 +1165,11 @@ table.results-table {
 
         <div class="admin-card">
           <h2>방식 1 · 이미지로 자동 인식</h2>
-          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB, 이미지를 복사한 뒤 이 화면에서 Ctrl+V로 바로 붙여넣기도 가능합니다) 이미지 분석이 안 되더라도 방식 2로 바로 입력해 게시할 수 있습니다.</p>
+          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB, 이미지를 복사한 뒤 [붙여넣기] 버튼을 누르거나 이 화면에서 Ctrl+V로 바로 붙여넣기도 가능합니다) 이미지 분석이 안 되더라도 방식 2로 바로 입력해 게시할 수 있습니다.</p>
           <div class="image-upload-box">
             <div class="image-upload-row">
               <input type="file" id="weekImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+              <button type="button" class="image-upload-btn" id="weekPasteBtn">붙여넣기</button>
               <button type="button" class="image-upload-btn" id="weekAnalyzeBtn">이미지 분석하기</button>
             </div>
             <div class="image-preview-wrap" id="weekImagePreviewWrap" hidden>
@@ -4628,6 +4629,34 @@ const OWNER_CHAT = {
       var file = imageItem.getAsFile();
       if (file) applySelectedImageFile(file);
     });
+
+    // [붙여넣기] 버튼 — Ctrl+V를 모르거나 포커스 문제로 키보드 붙여넣기가
+    // 안 먹힐 때를 위한 눈에 보이는 대안입니다. 비동기 클립보드
+    // API(navigator.clipboard.read)로 클립보드의 이미지를 직접 읽어와
+    // 같은 applySelectedImageFile로 넘깁니다 — 저장/분석 로직은 전혀
+    // 새로 만들지 않고 그대로 재사용.
+    var pasteBtn = qs("weekPasteBtn");
+    if (pasteBtn) {
+      pasteBtn.addEventListener("click", function () {
+        errorEl.textContent = "";
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+          errorEl.textContent = "이 브라우저는 버튼으로 붙여넣기를 지원하지 않습니다. Ctrl+V를 이용해 주세요.";
+          return;
+        }
+        navigator.clipboard.read().then(function (clipItems) {
+          for (var i = 0; i < clipItems.length; i++) {
+            var imgType = clipItems[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
+            if (!imgType) continue;
+            return clipItems[i].getType(imgType).then(function (blob) {
+              applySelectedImageFile(new File([blob], "pasted." + (imgType.split("/")[1] || "png"), { type: imgType }));
+            });
+          }
+          errorEl.textContent = "클립보드에 복사된 이미지가 없습니다. 먼저 스크린샷을 복사해 주세요.";
+        }).catch(function () {
+          errorEl.textContent = "클립보드 읽기 권한이 필요합니다. 브라우저 권한 요청을 허용해 주세요.";
+        });
+      });
+    }
 
     function runAnalyze() {
       var user = requireAdminUser();

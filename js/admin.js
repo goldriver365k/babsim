@@ -1460,6 +1460,34 @@
       if (file) applySelectedImageFile(file);
     });
 
+    // [붙여넣기] 버튼 — Ctrl+V를 모르거나 포커스 문제로 키보드 붙여넣기가
+    // 안 먹힐 때를 위한 눈에 보이는 대안입니다. 비동기 클립보드
+    // API(navigator.clipboard.read)로 클립보드의 이미지를 직접 읽어와
+    // 같은 applySelectedImageFile로 넘깁니다 — 저장/분석 로직은 전혀
+    // 새로 만들지 않고 그대로 재사용.
+    var pasteBtn = qs("weekPasteBtn");
+    if (pasteBtn) {
+      pasteBtn.addEventListener("click", function () {
+        errorEl.textContent = "";
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+          errorEl.textContent = "이 브라우저는 버튼으로 붙여넣기를 지원하지 않습니다. Ctrl+V를 이용해 주세요.";
+          return;
+        }
+        navigator.clipboard.read().then(function (clipItems) {
+          for (var i = 0; i < clipItems.length; i++) {
+            var imgType = clipItems[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
+            if (!imgType) continue;
+            return clipItems[i].getType(imgType).then(function (blob) {
+              applySelectedImageFile(new File([blob], "pasted." + (imgType.split("/")[1] || "png"), { type: imgType }));
+            });
+          }
+          errorEl.textContent = "클립보드에 복사된 이미지가 없습니다. 먼저 스크린샷을 복사해 주세요.";
+        }).catch(function () {
+          errorEl.textContent = "클립보드 읽기 권한이 필요합니다. 브라우저 권한 요청을 허용해 주세요.";
+        });
+      });
+    }
+
     function runAnalyze() {
       var user = requireAdminUser();
       errorEl.textContent = "";
