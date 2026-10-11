@@ -1408,11 +1408,13 @@
       scheduleAutosave();
     }
 
-    fileInput.addEventListener("change", function () {
+    // 파일 선택(change)과 붙여넣기(paste) 둘 다 같은 검증·미리보기
+    // 로직을 타도록 공통 함수로 뺐습니다(새 저장 로직 없음, 기존
+    // 흐름 그대로 재사용).
+    function applySelectedImageFile(file) {
       errorEl.textContent = "";
       statusEl.hidden = true;
       resetAnalyzeFailureActions();
-      var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (ALLOWED_IMAGE_TYPES.indexOf(file.type) === -1) {
         errorEl.textContent = "jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.";
@@ -1433,6 +1435,29 @@
         weeklyMenuState.pendingImageMimeType = resized.mimeType;
         scheduleAutosave();
       }).catch(function () { /* 미리보기 실패는 무시 — 분석 시도 시 다시 시도됨 */ });
+    }
+
+    fileInput.addEventListener("change", function () {
+      var file = fileInput.files && fileInput.files[0];
+      applySelectedImageFile(file);
+    });
+
+    // 주간메뉴표 스크린샷을 클립보드에서 바로 붙여넣기(Ctrl+V) — 파일
+    // 저장 없이 캡처 도구에서 복사한 이미지를 즉시 쓸 수 있게 합니다.
+    // "주간메뉴 관리" 탭이 보이는 동안에만 가로채고, 다른 탭/화면에서는
+    // 평소처럼 텍스트 붙여넣기가 그대로 동작합니다.
+    document.addEventListener("paste", function (e) {
+      var pageEl = qs("pageWeeklyMenu");
+      if (!pageEl || pageEl.hidden) return;
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      var imageItem = null;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) { imageItem = items[i]; break; }
+      }
+      if (!imageItem) return; // 이미지가 없는 일반 붙여넣기는 건드리지 않음
+      e.preventDefault();
+      var file = imageItem.getAsFile();
+      if (file) applySelectedImageFile(file);
     });
 
     function runAnalyze() {

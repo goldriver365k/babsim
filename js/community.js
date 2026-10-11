@@ -1621,9 +1621,10 @@ var Community = (function () {
     // (이전 "부가정보 남발 금지" 지시서는 4개 카테고리 혼재 목록을
     // 전제로 한 것이라, 게시판이 1개뿐인 지금은 이 지시서가 우선합니다).
     if (post.category === "whisper") {
-      card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+      // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목은 저장용으로만
+      // 쓰고 화면에는 본문만 보여줍니다(제목 줄 생략, 중복 표시 방지).
       var preview = summarize(post);
-      if (preview) card.appendChild(el("p", "community-post-card-preview", preview));
+      if (preview) card.appendChild(el("p", "community-post-card-preview community-post-card-preview-main", preview));
       var statsLine = el("p", "community-post-card-stats");
       var statsParts = [
         formatDate(post.createdAt),
@@ -1802,6 +1803,10 @@ var Community = (function () {
     var head = el("div", "community-detail-head");
     head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
     var title = el("h2", "community-detail-title", "");
+    // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 속닥속닥 글은 저장용
+    // 자동 제목(deriveWhisperTitle)만 있고 화면에는 본문만 보여주므로
+    // 제목 줄 자체를 숨깁니다(다른 카테고리는 기존처럼 표시).
+    if (post.category === "whisper") title.hidden = true;
     head.appendChild(title);
     // 작성자 닉네임(2026-09 "비회원제 전환" 지시서 7번) — 실명 대신
     // 닉네임만 표시합니다. 목록 카드 미리보기(fetchLatestPostsForHome)·
@@ -3233,20 +3238,33 @@ var Community = (function () {
      withRateLimit/translatePostLanguages를 그대로 재사용합니다(새
      저장 로직 없음). 작성자 닉네임은 currentDisplayNickname()이 항상
      고정 "익명" 라벨을 돌려주므로 여기서 따로 처리하지 않습니다. */
+  // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목 입력칸을 없애고
+  // 본문 하나만 적습니다. Firestore 보안 규칙(communityPosts.create)이
+  // originalTitle을 빈 문자열 없이 요구하므로, 화면에는 보이지 않는
+  // "제목"을 본문 앞부분에서 자동으로 만들어 그대로 저장만 합니다
+  // (목록/상세 화면에서는 이 자동 제목을 따로 보여주지 않고 본문만
+  // 표시 — buildPostListItem/fillDetailText 참고).
+  function deriveWhisperTitle(content) {
+    var oneLine = content.replace(/\s+/g, " ").trim();
+    return oneLine.length > TITLE_MAX_LEN ? oneLine.slice(0, TITLE_MAX_LEN) : oneLine;
+  }
+
   function renderWhisperWrite() {
     var wrap = el("div", "community-page community-write community-whisper-write");
-    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_POST.writeTitle)));
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
     wrap.appendChild(el("p", "community-safety-notice", t(COMMUNITY_POST.whisperWriteNotice)));
 
     trackVirtualPage("community_write", "whisper");
 
     var form = el("form", "community-form");
 
-    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
-    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
-
-    var contentArea = el("textarea"); contentArea.maxLength = CONTENT_MAX_LEN; contentArea.required = true;
+    var contentArea = el("textarea", "community-whisper-content-input");
+    contentArea.maxLength = CONTENT_MAX_LEN;
+    contentArea.required = true;
+    contentArea.placeholder = t(COMMUNITY_POST.contentLabel);
     form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
+    // 바로 적을 수 있도록 화면에 들어오자마자 커서를 본문에 둡니다.
+    setTimeout(function () { contentArea.focus(); }, 0);
 
     var errorP = el("p", "community-form-error");
     form.appendChild(errorP);
@@ -3258,11 +3276,12 @@ var Community = (function () {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       errorP.textContent = "";
-      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      if (!contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
       submitBtn.disabled = true;
+      var content = contentArea.value.trim();
       ensureAuth().then(function () {
         return createOrUpdatePost({
-          category: "whisper", title: titleInput.value.trim(), content: contentArea.value.trim(),
+          category: "whisper", title: deriveWhisperTitle(content), content: content,
           originalLanguage: lang, kakaoLink: null, contactViaOwnerKakao: false, extra: {},
           photoFiles: [], photosRemoved: false,
           onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); }
@@ -3527,12 +3546,25 @@ var Community = (function () {
     route();
   }
 
+  // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 홈 최상단 바를 누르면
+  // 게시판 목록을 거치지 않고 곧장 글쓰기 화면으로 이동합니다. 기존
+  // "글쓰기" 버튼(.community-write-btn)과 완전히 같은 인증 흐름
+  // (ensureAuth 성공 시 이동, 실패 시 로그인 안내창)만 공개 API로
+  // 노출한 것입니다 — 새 라우팅/새 인증 로직 없음.
+  function goToWrite() {
+    var writeTarget = ROUTE_PREFIX + "/write?cat=whisper";
+    ensureAuth().then(function () {
+      navigate(writeTarget);
+    }).catch(function () { showAuthGateModal(writeTarget); });
+  }
+
   return {
     init: init,
     setLang: setLang,
     isCommunityPath: isCommunityPath,
     navigate: navigate,
     navigateToCategory: navigateToCategory,
+    goToWrite: goToWrite,
     routePrefix: ROUTE_PREFIX,
     fetchLatestPosts: fetchLatestPostsForHome,
     showToast: showToast,

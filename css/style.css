@@ -2474,12 +2474,25 @@ main {
   overflow-wrap: anywhere;
   line-height: 1.4;
 }
+/* 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목 줄이 없어진 속닥속닥
+   카드에서는 본문 미리보기가 사실상 제목 역할도 겸하므로 조금 더
+   크고 진하게(기존 .community-post-card-title과 비슷한 비중으로). */
+.community-post-card-preview-main {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--comm-navy);
+  margin-bottom: 6px;
+}
+/* 글쓰기 화면도 본문 입력칸 하나뿐이라, 바로 적을 수 있도록 넉넉한
+   높이를 줍니다(기존 textarea 기본 스타일 재사용, 높이만 지정). */
+.community-whisper-content-input { min-height: 160px; }
 .community-post-card-stats { font-size: 12px; color: #64748B; margin: 0; }
 
-/* 속닥속닥 홈 최상단 바로가기 바(2026-10-09 지시서 5번) — 노란색 배경
-   + 검은 글씨, 가로 전체 너비, 모바일 기준 40~48px 높이, 바 전체 클릭
-   가능. 홈 V17의 기존 --home-yellow 포인트색을 그대로 재사용(새 색상
-   추가 없음). 헤더보다 위, 페이지 맨 위에 고정 노출됩니다. */
+/* 속닥속닥 바로가기 바(2026-10-09 "제목 없이 바로 쓰기" 지시서) — 노란색
+   배경 + 검은 글씨, 가로 전체 너비, 모바일 기준 40~48px 높이, 바 전체
+   클릭 가능. 1,000원의 아침밥 카드(.home-tile-breakfast) 바로 위, 그
+   카드와 같은 폭·둥근 모서리(.home-korean-card와 같은 관례)로 둡니다.
+   홈 V17의 기존 --home-yellow 포인트색을 그대로 재사용(새 색상 없음). */
 .whisper-top-bar {
   display: flex;
   align-items: center;
@@ -2487,10 +2500,12 @@ main {
   gap: 8px;
   width: 100%;
   min-height: 44px;
+  margin: 0 0 7px;
   padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
   background: var(--home-yellow);
   color: #111111;
-  border: none;
   font-weight: 700;
   font-size: 14px;
   line-height: 1.3;

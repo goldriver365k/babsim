@@ -1343,13 +1343,13 @@
         if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
       });
     }
-    // 속닥속닥 최상단 바(2026-10-09 지시서 5번) — 클릭 시 헤더의 기존
-    // 커뮤니티 탭 버튼을 그대로 눌러 이동시킵니다(새 라우팅 코드 없이
-    // js/community.js의 기존 navigate(ROUTE_PREFIX) 로직 재사용).
+    // 속닥속닥 바로가기 바(2026-10-09 "제목 없이 바로 쓰기" 지시서) —
+    // 클릭하면 게시판 목록을 거치지 않고 곧장 글쓰기 화면으로 이동합니다
+    // (js/community.js의 Community.goToWrite() — 기존 "글쓰기" 버튼과
+    // 같은 인증 흐름을 그대로 재사용, 새 라우팅/인증 로직 없음).
     if (els.whisperTopBar) {
       els.whisperTopBar.addEventListener("click", function () {
-        var tabBtn = document.getElementById("communityTabBtn");
-        if (tabBtn) tabBtn.click();
+        if (window.Community && typeof window.Community.goToWrite === "function") window.Community.goToWrite();
       });
     }
     if (els.homeLegoHometownBtn) {
