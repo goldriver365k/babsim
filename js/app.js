@@ -615,13 +615,15 @@
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
     }
-    // 속닥속닥 최상단 바(2026-10-09 밥심커뮤니티 → 속닥속닥 단일
-    // 익명게시판 전면 개편 지시서 5번) — "커뮤니티 4곳 글쓰기 이벤트"
-    // 배너/팝업은 전부 제거하고, 그 자리(최상단)에 이 바 하나만 둡니다.
-    // "속닥속닥 | 익명으로 자유롭게 이야기하세요 →" 형식, 언어가 바뀔
-    // 때마다 다시 채웁니다.
-    if (els.whisperTopBarText && window.COMMUNITY_HOME && window.WHISPER_BAR) {
-      var whisperName = COMMUNITY_HOME.title[state.lang] || COMMUNITY_HOME.title.ko;
+    // 속닥속닥 바로가기 바 — "속닥속닥 | 익명으로 자유롭게 이야기하세요 →"
+    // 형식, 언어가 바뀔 때마다 다시 채웁니다. 2026-10-11 홈페이지/속닥속닥
+    // 개편 지시서로 COMMUNITY_HOME(제목)이 다시 다른 4개 게시판이 함께
+    // 쓰는 공용 "밥심 커뮤니티" 텍스트로 되돌아갔으므로, 이 바의 이름은
+    // 더 이상 COMMUNITY_HOME.title이 아니라 속닥속닥 전용 카테고리명
+    // (COMMUNITY_CATEGORIES.whisper — renderWhisperList()와 같은 값)을
+    // 씁니다.
+    if (els.whisperTopBarText && window.COMMUNITY_CATEGORIES && window.WHISPER_BAR) {
+      var whisperName = COMMUNITY_CATEGORIES.whisper[state.lang] || COMMUNITY_CATEGORIES.whisper.ko;
       var whisperCta = WHISPER_BAR.cta[state.lang] || WHISPER_BAR.cta.ko;
       els.whisperTopBarText.textContent = whisperName + " | " + whisperCta;
     }
@@ -1343,13 +1345,14 @@
         if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
       });
     }
-    // 속닥속닥 바로가기 바(2026-10-09 "제목 없이 바로 쓰기" 지시서) —
-    // 클릭하면 게시판 목록을 거치지 않고 곧장 글쓰기 화면으로 이동합니다
-    // (js/community.js의 Community.goToWrite() — 기존 "글쓰기" 버튼과
-    // 같은 인증 흐름을 그대로 재사용, 새 라우팅/인증 로직 없음).
+    // 속닥속닥 바로가기 바(2026-10-11 홈페이지/속닥속닥 개편 지시서 3번) —
+    // 클릭하면 곧장 글쓰기가 아니라 게시글 목록을 먼저 보여줍니다.
+    // hometown/friends 등 다른 카드와 똑같이 기존 navigateToCategory()만
+    // 재사용합니다(새 라우팅 없음) — 목록 화면 자체는 js/community.js의
+    // renderWhisperList()가 그립니다.
     if (els.whisperTopBar) {
       els.whisperTopBar.addEventListener("click", function () {
-        if (window.Community && typeof window.Community.goToWrite === "function") window.Community.goToWrite();
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("whisper");
       });
     }
     if (els.homeLegoHometownBtn) {

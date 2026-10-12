@@ -2536,13 +2536,15 @@ main {
 .community-whisper-content-input { min-height: 160px; }
 .community-post-card-stats { font-size: 12px; color: #64748B; margin: 0; }
 
-/* 속닥속닥 바로가기 바(2026-10-11 지시서) — 노란색 배경 + 검은 글씨,
-   가로 전체 너비, 모바일 기준 40~48px 높이, 바 전체 클릭 가능. 이제
-   #homeLegoBoard(벤토 그리드)의 일반 아이템이라, 그리드 폭 전체를
-   차지하도록 grid-column만 지정합니다(모바일 2열/PC 6열 — .home-bento
-   grid-template-columns와 맞춤). 화면 폭별 정확한 위치(천원의 아침밥과
-   방 구하기 사이)는 아래 order 규칙이 맡습니다. 홈 V17의 기존
-   --home-yellow 포인트색을 그대로 재사용(새 색상 없음). */
+/* 속닥속닥 바로가기 바(2026-10-09 지시서 → 2026-10-11 홈페이지/속닥속닥
+   개편 지시서로 폭 조정) — 노란색 배경 + 검은 글씨는 그대로 유지합니다.
+   이제 홈 Bento 카드가 11개로 늘어나, 모바일에서는 여전히 가로 전체
+   너비(그리드 폭 전체, .home-bento grid-template-columns와 맞춤)를
+   차지해 눈에 잘 띄게 하고, PC/태블릿에서는 다른 카드들과 같은 2열
+   너비(일반 카드)로 맞춰 줍니다(아래 min-width:700px 규칙). 정확한
+   순서(천원의 아침밥·후루룩찹찹·만권화밥·밥심 다음)는 아래 order
+   규칙이 맡습니다. 홈 V17의 기존 --home-yellow 포인트색을 그대로
+   재사용(새 색상 없음). */
 .whisper-top-bar {
   display: flex;
   align-items: center;
@@ -2567,10 +2569,12 @@ main {
   .whisper-top-bar { font-size: 13px; padding: 7px 10px; }
 }
 @media (min-width: 700px) {
-  /* PC/태블릿(6열)에서도 한 줄 전체를 차지. 아침밥+후루룩찹찹+만권화밥이
-     이미 1행을 꽉 채우므로(기존 grid-column 배치 그대로 유지), DOM
-     순서상 그 다음에 오는 이 바가 자연스럽게 2행 전체를 차지합니다. */
-  .whisper-top-bar { grid-column: 1 / 7; }
+  /* 2026-10-11 지시서 — PC/태블릿에서는 더 이상 한 줄 전체를 차지하지
+     않고, 밥심(bapsim)·주말에 가볼 만한 곳(weekend)과 같은 행에서 2열씩
+     나란히 놓이는 일반 카드 너비로 맞춥니다(아래 .home-tile-bapsim/
+     .home-tile-weekend의 1/3·5/7과 짝지어 6열을 정확히 채움 — 빈 칸
+     없음). */
+  .whisper-top-bar { grid-column: 3 / 5; }
 }
 
 /* 속닥속닥 글쓰기 폼(제목+내용만) — 기존 .community-form/.community-field/
@@ -2934,29 +2938,33 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-korean-link{margin-top:10px;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--home-card-ink)}
 .home-korean-card .hellokorean-desc,.home-korean-card .hellokorean-btn,.home-korean-card .hellokorean-url{display:none}
 
-/* ===== 모바일 홈 — 방 구하기 위치 변경(비용 최소화) =====
+/* ===== 모바일 홈 — 카드 순서(2026-10-11 홈페이지/속닥속닥 개편 지시서
+   2번: 천원의 아침밥→후루룩찹찹→만권화밥→밥심→속닥속닥→주말에 가볼
+   만한 곳→나의 고향 알리기→나의 학교생활→친구 만들기→방 구하기→무료
+   한국어 공부) =====
    기존 breakpoint(700px, .home-bento가 6열로 바뀌는 기준)를 그대로 써서
    699px 이하에서만 적용됩니다. DOM 순서/기존 링크/색상은 그대로 두고
    grid order와 이 카드 내부 배치만 바꾸므로, 700px 이상(PC/태블릿)의
    grid-column 기반 배치는 전혀 영향받지 않습니다. */
 @media (max-width: 699px) {
   .home-tile-breakfast{order:1}
-  /* 속닥속닥 바(2026-10-11 지시서) — 천원의 아침밥 바로 다음, 방
-     구하기보다 앞에 오도록 order:2. 나머지는 번호만 하나씩 밀림. */
-  .whisper-top-bar{order:2}
-  .home-tile-room{order:3;grid-column:1/3}
-  .home-tile-hururuk{order:4}
-  .home-tile-mangwon{order:5}
-  .home-tile-bapsim{order:6}
+  .home-tile-hururuk{order:2}
+  .home-tile-mangwon{order:3}
+  .home-tile-bapsim{order:4}
+  /* 속닥속닥 바 — 지시서가 요구하는 순서상 밥심 다음, 주말에 가볼 만한
+     곳 앞. 눈에 잘 띄도록 가로 전체 너비를 유지합니다. */
+  .whisper-top-bar{order:5}
   /* "주말에 가볼 만한 곳"(WEEKEND) — 학생 생활/커뮤니티 콘텐츠라 핵심
-     식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) 다음, 나의 고향
-     이야기 앞에 배치. 다른 카드는 order 번호만 하나씩 밀렸을 뿐
-     DOM·색상·링크는 그대로다. */
+     식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) + 속닥속닥 다음,
+     나의 고향 알리기 앞에 배치. */
   .home-tile-weekend{order:6;grid-column:1/3}
   .home-tile-hometown{order:7}
   .home-tile-campuslife{order:8}
   .home-tile-friends{order:9}
-  .home-tile-feedback{order:10;grid-column:1/3}
+  /* 방 구하기 — 지시서 순서상 친구 만들기 다음, 무료 한국어 공부
+     (Bento 바깥의 .home-korean-card) 앞. */
+  .home-tile-room{order:10;grid-column:1/3}
+  .home-tile-feedback{order:11;grid-column:1/3}
 
   /* 방 구하기 — 좁고 긴 가로형 "Quick Access" 카드(세로 스택 대신 한 줄
      배치). 주변 파스텔 카드와 다르게 코발트 블루 단색 + 흰색 글자 +
@@ -2987,15 +2995,19 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-breakfast{grid-column:1/4;min-height:230px}
   .home-tile-hururuk{grid-column:4/6}
   .home-tile-mangwon{grid-column:6/7}
+  /* 2026-10-11 지시서 — 지시서 2번 카드 순서를 PC/태블릿(6열)에서도
+     빈 칸 없이 구현합니다. 1행: 천원의 아침밥(3열)+후루룩찹찹(2열)+
+     만권화밥(1열)=6열로 꽉 채움(기존과 동일). 2행: 밥심+속닥속닥+주말에
+     가볼 만한 곳(각 2열)=6열. 3행: 나의 고향 알리기+나의 학교생활+친구
+     만들기(각 2열)=6열. 4행: 방 구하기(2열, 나머지는 빈 칸 — 바로
+     아래 "무료 한국어 공부"가 Bento 밖의 별도 카드라 문제 없음). */
   .home-tile-bapsim{grid-column:1/3}
-  .home-tile-room{grid-column:3/5}
-  .home-tile-hometown{grid-column:5/7}
-  .home-tile-campuslife{grid-column:1/3}
-  .home-tile-friends{grid-column:3/5}
-  .home-tile-feedback{grid-column:5/7}
-  /* 삭제된 FEEDBACK 카드가 쓰던 자리를 그대로 재사용(다른 카드 열 배치
-     변경 없음). */
   .home-tile-weekend{grid-column:5/7}
+  .home-tile-hometown{grid-column:1/3}
+  .home-tile-campuslife{grid-column:3/5}
+  .home-tile-friends{grid-column:5/7}
+  .home-tile-room{grid-column:1/3}
+  .home-tile-feedback{grid-column:3/5}
   .home-korean-card{margin-top:9px}
 }
 
@@ -3290,23 +3302,50 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <span class="home-tile-arrow" aria-hidden="true">→</span>
       <span id="homeCardMangwonLoc" hidden></span>
     </button>
-    <!-- 속닥속닥 바로가기 바(2026-10-11 지시서) — 천원의 아침밥 카드와
-         "방 구하기"(눌렀을 때 팝업 폼이 뜨는 카드) 사이에 둡니다. 벤토
-         그리드 안의 일반 아이템으로 넣어, 모바일에서는 CSS order로
-         아침밥 바로 다음(방 구하기보다 앞)에 보이게 하고, PC에서는
-         DOM 순서 그대로(기존 1행 구성을 그대로 둔 채 그 다음 줄에)
-         보이게 합니다. 클릭 동작(Community.goToWrite() — 곧장 글쓰기
-         화면 이동)은 전혀 건드리지 않습니다. -->
-    <button type="button" class="whisper-top-bar" id="whisperTopBar">
-      <span class="whisper-top-bar-text" id="whisperTopBarText"></span>
-      <span class="whisper-top-bar-arrow" aria-hidden="true">→</span>
-    </button>
     <button type="button" class="home-service-card home-tile home-tile-bapsim" data-store="bapsim">
       <span class="home-tile-eyebrow">BABSIM</span>
       <strong class="home-tile-title">밥심</strong>
       <span class="home-tile-sub" id="homeCardBapsimSub">뷔페 스타일</span>
       <span class="home-tile-arrow" aria-hidden="true">→</span>
       <span id="homeCardBapsimLoc" hidden></span>
+    </button>
+    <!-- 속닥속닥 바로가기 바(2026-10-09 지시서 → 2026-10-11 홈페이지/
+         속닥속닥 개편 지시서 2번) — 지시서가 정한 카드 순서상 밥심
+         다음, 주말에 가볼 만한 곳 앞에 둡니다. 클릭하면 이제 곧장
+         글쓰기가 아니라 게시글 목록으로 이동합니다(js/app.js —
+         navigateToCategory("whisper")). -->
+    <button type="button" class="whisper-top-bar" id="whisperTopBar">
+      <span class="whisper-top-bar-text" id="whisperTopBarText"></span>
+      <span class="whisper-top-bar-arrow" aria-hidden="true">→</span>
+    </button>
+    <!-- 2026-10-11 홈페이지/속닥속닥 개편 지시서 1·2번 — "밥심커뮤니티"
+         중간 허브 화면 없이, 아래 4개 카드에서 바로 해당 게시판으로
+         이동합니다(js/app.js의 navigateToCategory 클릭 핸들러는 이미
+         연결되어 있던 것을 그대로 재사용 — 새 라우팅 없음). 라벨/부제는
+         js/app.js가 다국어로 채웁니다. -->
+    <button type="button" class="home-tile home-tile-weekend" id="homeLegoWeekendBtn">
+      <span class="home-tile-eyebrow">WEEKEND</span>
+      <strong class="home-tile-title" id="homeLegoWeekendLabel">주말에 가볼 만한 곳</strong>
+      <span class="home-tile-sub" id="homeCardWeekendSub">게시판 바로가기</span>
+      <span class="home-tile-arrow" aria-hidden="true">→</span>
+    </button>
+    <button type="button" class="home-tile home-tile-hometown" id="homeLegoHometownBtn">
+      <span class="home-tile-eyebrow">MY HOMETOWN</span>
+      <strong class="home-tile-title" id="homeLegoHometownLabel">나의 고향 알리기</strong>
+      <span class="home-tile-sub" id="homeCardHometownSub">게시판 바로가기</span>
+      <span class="home-tile-arrow" aria-hidden="true">→</span>
+    </button>
+    <button type="button" class="home-tile home-tile-campuslife" id="homeLegoCampusLifeBtn">
+      <span class="home-tile-eyebrow">CAMPUS LIFE</span>
+      <strong class="home-tile-title" id="homeLegoCampusLifeLabel">나의 학교생활</strong>
+      <span class="home-tile-sub" id="homeCardCampusLifeSub">게시판 바로가기</span>
+      <span class="home-tile-arrow" aria-hidden="true">→</span>
+    </button>
+    <button type="button" class="home-tile home-tile-friends" id="homeLegoFriendsBtn">
+      <span class="home-tile-eyebrow">FRIENDS</span>
+      <strong class="home-tile-title" id="homeLegoFriendsLabel">친구 만들기</strong>
+      <span class="home-tile-sub" id="homeCardFriendsSub">게시판 바로가기</span>
+      <span class="home-tile-arrow" aria-hidden="true">→</span>
     </button>
     <button type="button" class="home-tile home-tile-room" id="roomFinderCardBtn" aria-label="방 구하기">
       <span class="home-tile-eyebrow">HOUSING</span>
@@ -6256,11 +6295,14 @@ var COMMUNITY_NAV = {
 /* 커뮤니티 첫 화면(비회원도 보이는 부분) 제목/소개 — 2026-09-10
    "비회원 노출" 지시서. 상단 COMMUNITY_NAV(두 줄 버튼)와는 별개로,
    목록 화면 안에 큰 제목+짧은 소개를 둡니다. */
+// 2026-10-11 "밥심커뮤니티 중간 페이지 제거" 지시서 — 기존 4개 게시판이
+// 다시 공유 목록 화면(renderList)을 쓰므로, 그 화면 상단 제목을 특정
+// 게시판 이름(속닥속닥)이 아닌 원래의 공용 문구로 되돌립니다. 속닥속닥
+// 전용 화면(renderWhisperList)은 COMMUNITY_CATEGORIES.whisper/
+// COMMUNITY_CATEGORY_DESC.whisper를 직접 씁니다(이미 존재, 새 키 없음).
 var COMMUNITY_HOME = {
-  // 2026-10-09 지시서 4번 표 — 게시판 공식 이름을 그대로 재사용(새 번역 없음).
-  title: { ko: "속닥속닥", zh: "悄悄话", vi: "Thì Thầm", en: "Whisper Whisper", mn: "Шивнээ", bn: "ফিসফিস", my: "တိုးတိုးပြောကြမယ်" },
-  // 지시서 4번 안내 문구 — COMMUNITY_CATEGORY_DESC.whisper와 같은 값(재사용).
-  tagline: { ko: "누구나 익명으로 자유롭게 이야기하는 공간", zh: "任何人都能匿名自由畅聊的空间", vi: "Không gian để mọi người thoải mái trò chuyện ẩn danh", en: "A space where anyone can chat freely and anonymously", mn: "Хэн ч нэргүйгээр чөлөөтэй ярилцах орон зай", bn: "যে কেউ বেনামে খোলামেলা কথা বলতে পারার জায়গা", my: "လူတိုင်း အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောနိုင်တဲ့ နေရာ" }
+  title: { ko: "밥심 커뮤니티", zh: "Babsim社区", vi: "Cộng đồng Babsim", en: "Babsim Community", mn: "Babsim нийгэмлэг", bn: "Babsim কমিউনিটি", my: "Babsim အသိုင်းအဝိုင်း" },
+  tagline: { ko: "한국학생과 유학생이 함께하는 공간", zh: "韩国学生和留学生共同使用的空间", vi: "Không gian dành cho sinh viên Hàn Quốc và du học sinh cùng sử dụng", en: "A space for Korean and international students together", mn: "Солонгос болон гадаад оюутнууд хамтдаа ашигладаг орон зай", bn: "কোরিয়ান ও আন্তর্জাতিক শিক্ষার্থীদের একসাথে ব্যবহারের জায়গা", my: "ကိုရီးယားကျောင်းသားနှင့် နိုင်ငံတကာကျောင်းသားများ အတူတကွသုံးသည့်နေရာ" }
 };
 
 /* 홈 최상단 바로가기 바(2026-10-09 지시서 5번) — "속닥속닥 | 익명으로
@@ -6306,11 +6348,13 @@ var COMMUNITY_CATEGORIES = {
   life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
   free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
-// 2026-10-09 밥심커뮤니티 → 속닥속닥 단일 익명게시판 전면 개편 지시서:
-// 선택 목록을 whisper 1개로 줄입니다. 기존 4개(together/hometown/job/
-// friends)는 DB에는 그대로 두되 이 목록에서 빠져 더 이상 화면에
-// 노출되지 않습니다(승인된 처리 방식 — 영구 삭제 아님).
-var COMMUNITY_CATEGORY_ORDER = ["whisper"];
+// 2026-10-11 "밥심커뮤니티 중간 페이지 제거" 지시서 — 기존 4개 게시판을
+// 다시 선택 목록에 포함합니다(2026-10-09 지시서로 whisper 1개만 남겼던
+// 것을 되돌림). 데이터는 그 사이에도 전혀 지워지지 않았으므로 그대로
+// 다시 보입니다. whisper는 홈 카드에서 전용 화면(renderWhisperList)으로
+// 바로 들어가 이 목록의 탭 UI 대상이 아니지만, 다른 4개 게시판 화면의
+// 탭에는 함께 나타나도 무방해 순서만 맞춰 둡니다.
+var COMMUNITY_CATEGORY_ORDER = ["whisper", "together", "hometown", "job", "friends"];
 
 // 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명.
 var COMMUNITY_CATEGORY_DESC = {
@@ -7895,6 +7939,13 @@ var Community = (function () {
   /* ---------------- 게시글 목록 ---------------- */
 
   function renderList() {
+    // 2026-10-11 지시서 — 기존 4개 게시판(together/hometown/job/friends)은
+    // 이 함수를 한 글자도 바꾸지 않고 그대로 재사용합니다(지시서 6번
+    // "기존 게시판으로 바로 이동"). 속닥속닥(whisper)만 지시서 3번이
+    // 요구하는 화면 순서(제목+소개 → 글쓰기 버튼 → 검색/정렬 → 목록,
+    // 방구하기/카테고리탭/한글공부 바로가기 없음)로 별도 화면
+    // (renderWhisperList)을 그립니다.
+    if (state_category === "whisper") { renderWhisperList(); return; }
     var wrap = el("div", "community-page community-list-page");
 
     // 첫 화면: 1.제목 2.짧은 소개 3.최신 게시글. 2026-10-09 속닥속닥
@@ -8041,6 +8092,59 @@ var Community = (function () {
     wrap.appendChild(listArea);
     els.root.appendChild(wrap);
     trackVirtualPage("community");
+
+    var searchDebounce = null;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(function () { state_search = searchInput.value; renderLoadedPosts(); }, 250);
+    });
+    sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderLoadedPosts(); });
+
+    renderPostList(listArea);
+  }
+
+  // 2026-10-11 지시서 3번 — 속닥속닥 전용 목록 화면. 화면 순서:
+  // 1.제목/소개 2.글쓰기 버튼(목록 위) 3.검색·정렬 4.게시글 목록.
+  // 방구하기·카테고리탭·한글공부 바로가기·시장/구인구직 필터는 속닥속닥
+  // 전용 화면에는 두지 않습니다(그 UI들이 필요한 다른 4개 게시판은
+  // renderList()를 그대로 쓰므로 영향 없음). 검색/정렬 상태(state_search/
+  // state_sort)와 목록 조회·페이지네이션(renderPostList)은 기존 로직을
+  // 그대로 재사용합니다.
+  function renderWhisperList() {
+    var wrap = el("div", "community-page community-list-page community-whisper-list-page");
+
+    var homeHeader = el("div", "community-home-header");
+    homeHeader.appendChild(el("h2", "community-page-title", t(COMMUNITY_CATEGORIES.whisper)));
+    homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_CATEGORY_DESC.whisper)));
+    wrap.appendChild(homeHeader);
+
+    var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
+    writeBtn.type = "button";
+    var writeTarget = ROUTE_PREFIX + "/write?cat=whisper";
+    writeBtn.addEventListener("click", function () {
+      ensureAuth().then(function () {
+        navigate(writeTarget);
+      }).catch(function () { showAuthGateModal(writeTarget); });
+    });
+    wrap.appendChild(writeBtn);
+
+    var toolbar = el("div", "community-toolbar");
+    var searchInput = el("input", "community-search-input"); searchInput.type = "search"; searchInput.placeholder = t(COMMUNITY_POST.searchPlaceholder);
+    searchInput.value = state_search;
+    var sortSelect = el("select", "community-sort-select");
+    ["latest", "comments"].forEach(function (v) {
+      var o = el("option", null, v === "latest" ? t(COMMUNITY_POST.sortLatest) : t(COMMUNITY_POST.sortComments));
+      o.value = v; if (v === state_sort) o.selected = true;
+      sortSelect.appendChild(o);
+    });
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(sortSelect);
+    wrap.appendChild(toolbar);
+
+    var listArea = el("div", "community-post-list");
+    wrap.appendChild(listArea);
+    els.root.appendChild(wrap);
+    trackVirtualPage("community_whisper");
 
     var searchDebounce = null;
     searchInput.addEventListener("input", function () {
@@ -8388,10 +8492,22 @@ var Community = (function () {
     // (이전 "부가정보 남발 금지" 지시서는 4개 카테고리 혼재 목록을
     // 전제로 한 것이라, 게시판이 1개뿐인 지금은 이 지시서가 우선합니다).
     if (post.category === "whisper") {
-      // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목은 저장용으로만
-      // 쓰고 화면에는 본문만 보여줍니다(제목 줄 생략, 중복 표시 방지).
+      // 2026-10-11 지시서 5번 — 글쓰기 화면에 제목 입력칸이 다시 생겨
+      // 실제 사용자 제목이 저장되므로, 목록 카드에도 제목 줄을 다시
+      // 보여줍니다(2026-10-09 "제목 없이 바로 쓰기" 지시서의 제목 생략은
+      // 그때는 제목이 본문에서 자동 추출된 값이라 중복 표시를 막은
+      // 것이었음 — 지금은 더 이상 해당하지 않음).
+      card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
       var preview = summarize(post);
       if (preview) card.appendChild(el("p", "community-post-card-preview community-post-card-preview-main", preview));
+      if (post.photos && post.photos.length) {
+        var whisperThumb = document.createElement("img");
+        whisperThumb.className = "community-post-card-photo";
+        whisperThumb.src = post.photos[0];
+        whisperThumb.alt = "";
+        whisperThumb.loading = "lazy";
+        card.appendChild(whisperThumb);
+      }
       var statsLine = el("p", "community-post-card-stats");
       var statsParts = [
         formatDate(post.createdAt),
@@ -8570,10 +8686,9 @@ var Community = (function () {
     var head = el("div", "community-detail-head");
     head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
     var title = el("h2", "community-detail-title", "");
-    // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 속닥속닥 글은 저장용
-    // 자동 제목(deriveWhisperTitle)만 있고 화면에는 본문만 보여주므로
-    // 제목 줄 자체를 숨깁니다(다른 카테고리는 기존처럼 표시).
-    if (post.category === "whisper") title.hidden = true;
+    // 2026-10-11 지시서 5번 — 글쓰기 화면에 제목 입력칸이 돌아왔으므로
+    // (2026-10-09 "제목 없이 바로 쓰기" 지시서는 이번 지시서로 되돌림)
+    // 속닥속닥도 다른 카테고리처럼 제목 줄을 그대로 보여줍니다.
     head.appendChild(title);
     // 작성자 닉네임(2026-09 "비회원제 전환" 지시서 7번) — 실명 대신
     // 닉네임만 표시합니다. 목록 카드 미리보기(fetchLatestPostsForHome)·
@@ -9534,12 +9649,19 @@ var Community = (function () {
       isEdit = false; editPostId = null; editingPost = null;
     }
 
-    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 게시판이 1개뿐이면
-    // (카테고리/닉네임/카카오링크/사진 등) 아래의 기존 다중 카테고리
-    // 글쓰기 폼 전체를 건드리지 않고 새 간단한 폼(제목+내용만)으로
-    // 완전히 대체합니다. 일반 사용자는 수정할 수 없으므로(지시서 7번)
-    // 수정 모드 자체를 만들지 않고 항상 새 글 작성으로 취급합니다.
-    if (COMMUNITY_CATEGORY_ORDER.length === 1) { renderWhisperWrite(); return; }
+    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 속닥속닥(whisper)
+    // 글쓰기는 아래의 기존 다중 카테고리 글쓰기 폼 전체를 건드리지 않고
+    // 별도의 간단한 폼(제목+내용+사진)으로 대체합니다. 2026-10-11
+    // 지시서로 기존 4개 게시판이 되살아나 COMMUNITY_CATEGORY_ORDER가
+    // 다시 여러 개가 되었으므로, 더 이상 "게시판이 1개뿐이면"이 아니라
+    // "글 종류가 whisper이면"으로 분기합니다(?cat=whisper로 들어온 새
+    // 글, 또는 whisper 카테고리 글의 수정). 일반 사용자는 whisper 글을
+    // 수정할 수 없으므로(지시서 7번) 수정 모드는 실질적으로 발생하지
+    // 않습니다.
+    var writeCatMatch = /[?&]cat=([^&]+)/.exec(location.search);
+    var writeCatParam = writeCatMatch ? decodeURIComponent(writeCatMatch[1]) : null;
+    var writeTargetCategory = (isEdit && editingPost) ? editingPost.category : writeCatParam;
+    if (writeTargetCategory === "whisper") { renderWhisperWrite(); return; }
 
     var wrap = el("div", "community-page community-write");
     wrap.appendChild(el("h2", "community-page-title", isEdit ? t(COMMUNITY_POST.editPostTitle) : t(COMMUNITY_POST.writeTitle)));
@@ -9998,24 +10120,18 @@ var Community = (function () {
     els.root.appendChild(wrap);
   }
 
-  /* 속닥속닥 글쓰기(2026-10-09 지시서 7번) — 제목+내용만 입력하는
-     최소한의 폼입니다. 닉네임 입력·카테고리 선택·카카오링크·사진첨부
-     등 기존 다중 카테고리 폼의 부가 입력은 전부 뺐고(지시서 "입력 항목:
-     제목(필수), 내용(필수)"), 저장은 기존 createOrUpdatePost/
-     withRateLimit/translatePostLanguages를 그대로 재사용합니다(새
-     저장 로직 없음). 작성자 닉네임은 currentDisplayNickname()이 항상
-     고정 "익명" 라벨을 돌려주므로 여기서 따로 처리하지 않습니다. */
-  // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목 입력칸을 없애고
-  // 본문 하나만 적습니다. Firestore 보안 규칙(communityPosts.create)이
-  // originalTitle을 빈 문자열 없이 요구하므로, 화면에는 보이지 않는
-  // "제목"을 본문 앞부분에서 자동으로 만들어 그대로 저장만 합니다
-  // (목록/상세 화면에서는 이 자동 제목을 따로 보여주지 않고 본문만
-  // 표시 — buildPostListItem/fillDetailText 참고).
-  function deriveWhisperTitle(content) {
-    var oneLine = content.replace(/\s+/g, " ").trim();
-    return oneLine.length > TITLE_MAX_LEN ? oneLine.slice(0, TITLE_MAX_LEN) : oneLine;
-  }
-
+  /* 속닥속닥 글쓰기(2026-10-11 홈페이지/속닥속닥 개편 지시서 5번) —
+     제목(최대 40자)+내용(최대 500자)+사진 최대 1장만 입력하는 폼입니다.
+     닉네임 입력·카테고리 선택·카카오링크 등 기존 다중 카테고리 폼의
+     부가 입력은 넣지 않고(지시서가 "제목/내용/사진/비회원 글쓰기 정책"만
+     나열), 저장은 기존 createOrUpdatePost/withRateLimit/
+     translatePostLanguages·사진 압축(compressImage)/업로드(uploadPhotos)
+     파이프라인을 그대로 재사용합니다(새 저장 로직 없음). 작성자 닉네임은
+     currentDisplayNickname()이 항상 고정 "익명" 라벨을 돌려주므로 여기서
+     따로 처리하지 않습니다.
+     (2026-10-09 "제목 없이 바로 쓰기" 지시서로 한 번 제거됐던 제목·사진
+     입력을 이번 지시서로 되돌립니다 — deriveWhisperTitle 자동 제목 생성은
+     더 이상 쓰지 않습니다.) */
   function renderWhisperWrite() {
     var wrap = el("div", "community-page community-write community-whisper-write");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
@@ -10025,15 +10141,75 @@ var Community = (function () {
 
     var form = el("form", "community-form");
 
+    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
+
     var contentArea = el("textarea", "community-whisper-content-input");
     contentArea.maxLength = CONTENT_MAX_LEN;
     contentArea.required = true;
     contentArea.placeholder = t(COMMUNITY_POST.contentLabel);
     form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
-    // 바로 적을 수 있도록 화면에 들어오자마자 커서를 본문에 둡니다.
-    setTimeout(function () { contentArea.focus(); }, 0);
+    // 바로 적을 수 있도록 화면에 들어오자마자 커서를 제목칸에 둡니다.
+    setTimeout(function () { titleInput.focus(); }, 0);
+
+    // 사진 첨부(최대 1장) — 기존 다중 카테고리 글쓰기 폼(renderWrite)의
+    // file input + 압축(compressImage)/업로드(uploadPhotos) 파이프라인과
+    // 똑같은 패턴을 그대로 재사용합니다(새 업로더 UI 없음).
+    var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
+    form.appendChild(photoLabel);
+    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.hidden = true;
+    form.appendChild(photoInput);
+    var photoAddBtn = el("button", "community-btn-secondary", t(COMMUNITY_MSG.photoAddBtn));
+    photoAddBtn.type = "button";
+    form.appendChild(photoAddBtn);
+    var photoPreview = el("div", "community-photo-preview");
+    form.appendChild(photoPreview);
+    var photoActions = el("div", "community-photo-actions");
+    var photoChangeBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoChangeBtn));
+    photoChangeBtn.type = "button";
+    var photoRemoveBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoRemoveBtn));
+    photoRemoveBtn.type = "button";
+    photoActions.appendChild(photoChangeBtn);
+    photoActions.appendChild(photoRemoveBtn);
+    form.appendChild(photoActions);
+    var pendingFiles = [];
+    var PHOTO_ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    function updatePhotoUI() {
+      var hasPhoto = pendingFiles.length > 0;
+      photoAddBtn.hidden = hasPhoto;
+      photoActions.hidden = !hasPhoto;
+    }
+    updatePhotoUI();
 
     var errorP = el("p", "community-form-error");
+
+    photoAddBtn.addEventListener("click", function () { photoInput.click(); });
+    photoChangeBtn.addEventListener("click", function () { photoInput.click(); });
+    photoRemoveBtn.addEventListener("click", function () {
+      pendingFiles = [];
+      photoPreview.innerHTML = "";
+      errorP.textContent = "";
+      updatePhotoUI();
+    });
+    photoInput.addEventListener("change", function () {
+      var files = Array.prototype.slice.call(photoInput.files || []);
+      photoInput.value = "";
+      if (!files.length) return;
+      var file = files[0]; // 사진 최대 1장 — 항상 교체(추가 아님)
+      if (PHOTO_ACCEPTED_TYPES.indexOf(file.type) === -1) {
+        errorP.textContent = t(COMMUNITY_MSG.errPhotoUnsupported);
+        return;
+      }
+      errorP.textContent = "";
+      pendingFiles = [file];
+      photoPreview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      photoPreview.appendChild(img);
+      updatePhotoUI();
+    });
+
     form.appendChild(errorP);
 
     var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.submitPost));
@@ -10043,20 +10219,27 @@ var Community = (function () {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       errorP.textContent = "";
-      if (!contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
       submitBtn.disabled = true;
+      var title = titleInput.value.trim();
       var content = contentArea.value.trim();
       ensureAuth().then(function () {
         return createOrUpdatePost({
-          category: "whisper", title: deriveWhisperTitle(content), content: content,
+          category: "whisper", title: title, content: content,
           originalLanguage: lang, kakaoLink: null, contactViaOwnerKakao: false, extra: {},
-          photoFiles: [], photosRemoved: false,
-          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); }
+          photoFiles: pendingFiles, photosRemoved: false,
+          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); },
+          onPhotoStatus: function (phase) {
+            errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
+          }
         });
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
       }).catch(function (err) {
-        errorP.textContent = (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric);
+        errorP.textContent = (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon)
+          : (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge)
+          : (err && err.message === "IMAGE_LOAD_FAILED") ? t(COMMUNITY_MSG.errPhotoUnsupported)
+          : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
 
@@ -12323,13 +12506,15 @@ var WeekendSurvey = (function () {
     if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
       els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
     }
-    // 속닥속닥 최상단 바(2026-10-09 밥심커뮤니티 → 속닥속닥 단일
-    // 익명게시판 전면 개편 지시서 5번) — "커뮤니티 4곳 글쓰기 이벤트"
-    // 배너/팝업은 전부 제거하고, 그 자리(최상단)에 이 바 하나만 둡니다.
-    // "속닥속닥 | 익명으로 자유롭게 이야기하세요 →" 형식, 언어가 바뀔
-    // 때마다 다시 채웁니다.
-    if (els.whisperTopBarText && window.COMMUNITY_HOME && window.WHISPER_BAR) {
-      var whisperName = COMMUNITY_HOME.title[state.lang] || COMMUNITY_HOME.title.ko;
+    // 속닥속닥 바로가기 바 — "속닥속닥 | 익명으로 자유롭게 이야기하세요 →"
+    // 형식, 언어가 바뀔 때마다 다시 채웁니다. 2026-10-11 홈페이지/속닥속닥
+    // 개편 지시서로 COMMUNITY_HOME(제목)이 다시 다른 4개 게시판이 함께
+    // 쓰는 공용 "밥심 커뮤니티" 텍스트로 되돌아갔으므로, 이 바의 이름은
+    // 더 이상 COMMUNITY_HOME.title이 아니라 속닥속닥 전용 카테고리명
+    // (COMMUNITY_CATEGORIES.whisper — renderWhisperList()와 같은 값)을
+    // 씁니다.
+    if (els.whisperTopBarText && window.COMMUNITY_CATEGORIES && window.WHISPER_BAR) {
+      var whisperName = COMMUNITY_CATEGORIES.whisper[state.lang] || COMMUNITY_CATEGORIES.whisper.ko;
       var whisperCta = WHISPER_BAR.cta[state.lang] || WHISPER_BAR.cta.ko;
       els.whisperTopBarText.textContent = whisperName + " | " + whisperCta;
     }
@@ -13051,13 +13236,14 @@ var WeekendSurvey = (function () {
         if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
       });
     }
-    // 속닥속닥 바로가기 바(2026-10-09 "제목 없이 바로 쓰기" 지시서) —
-    // 클릭하면 게시판 목록을 거치지 않고 곧장 글쓰기 화면으로 이동합니다
-    // (js/community.js의 Community.goToWrite() — 기존 "글쓰기" 버튼과
-    // 같은 인증 흐름을 그대로 재사용, 새 라우팅/인증 로직 없음).
+    // 속닥속닥 바로가기 바(2026-10-11 홈페이지/속닥속닥 개편 지시서 3번) —
+    // 클릭하면 곧장 글쓰기가 아니라 게시글 목록을 먼저 보여줍니다.
+    // hometown/friends 등 다른 카드와 똑같이 기존 navigateToCategory()만
+    // 재사용합니다(새 라우팅 없음) — 목록 화면 자체는 js/community.js의
+    // renderWhisperList()가 그립니다.
     if (els.whisperTopBar) {
       els.whisperTopBar.addEventListener("click", function () {
-        if (window.Community && typeof window.Community.goToWrite === "function") window.Community.goToWrite();
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("whisper");
       });
     }
     if (els.homeLegoHometownBtn) {

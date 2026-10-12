@@ -1128,6 +1128,13 @@ var Community = (function () {
   /* ---------------- 게시글 목록 ---------------- */
 
   function renderList() {
+    // 2026-10-11 지시서 — 기존 4개 게시판(together/hometown/job/friends)은
+    // 이 함수를 한 글자도 바꾸지 않고 그대로 재사용합니다(지시서 6번
+    // "기존 게시판으로 바로 이동"). 속닥속닥(whisper)만 지시서 3번이
+    // 요구하는 화면 순서(제목+소개 → 글쓰기 버튼 → 검색/정렬 → 목록,
+    // 방구하기/카테고리탭/한글공부 바로가기 없음)로 별도 화면
+    // (renderWhisperList)을 그립니다.
+    if (state_category === "whisper") { renderWhisperList(); return; }
     var wrap = el("div", "community-page community-list-page");
 
     // 첫 화면: 1.제목 2.짧은 소개 3.최신 게시글. 2026-10-09 속닥속닥
@@ -1274,6 +1281,59 @@ var Community = (function () {
     wrap.appendChild(listArea);
     els.root.appendChild(wrap);
     trackVirtualPage("community");
+
+    var searchDebounce = null;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(function () { state_search = searchInput.value; renderLoadedPosts(); }, 250);
+    });
+    sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderLoadedPosts(); });
+
+    renderPostList(listArea);
+  }
+
+  // 2026-10-11 지시서 3번 — 속닥속닥 전용 목록 화면. 화면 순서:
+  // 1.제목/소개 2.글쓰기 버튼(목록 위) 3.검색·정렬 4.게시글 목록.
+  // 방구하기·카테고리탭·한글공부 바로가기·시장/구인구직 필터는 속닥속닥
+  // 전용 화면에는 두지 않습니다(그 UI들이 필요한 다른 4개 게시판은
+  // renderList()를 그대로 쓰므로 영향 없음). 검색/정렬 상태(state_search/
+  // state_sort)와 목록 조회·페이지네이션(renderPostList)은 기존 로직을
+  // 그대로 재사용합니다.
+  function renderWhisperList() {
+    var wrap = el("div", "community-page community-list-page community-whisper-list-page");
+
+    var homeHeader = el("div", "community-home-header");
+    homeHeader.appendChild(el("h2", "community-page-title", t(COMMUNITY_CATEGORIES.whisper)));
+    homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_CATEGORY_DESC.whisper)));
+    wrap.appendChild(homeHeader);
+
+    var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
+    writeBtn.type = "button";
+    var writeTarget = ROUTE_PREFIX + "/write?cat=whisper";
+    writeBtn.addEventListener("click", function () {
+      ensureAuth().then(function () {
+        navigate(writeTarget);
+      }).catch(function () { showAuthGateModal(writeTarget); });
+    });
+    wrap.appendChild(writeBtn);
+
+    var toolbar = el("div", "community-toolbar");
+    var searchInput = el("input", "community-search-input"); searchInput.type = "search"; searchInput.placeholder = t(COMMUNITY_POST.searchPlaceholder);
+    searchInput.value = state_search;
+    var sortSelect = el("select", "community-sort-select");
+    ["latest", "comments"].forEach(function (v) {
+      var o = el("option", null, v === "latest" ? t(COMMUNITY_POST.sortLatest) : t(COMMUNITY_POST.sortComments));
+      o.value = v; if (v === state_sort) o.selected = true;
+      sortSelect.appendChild(o);
+    });
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(sortSelect);
+    wrap.appendChild(toolbar);
+
+    var listArea = el("div", "community-post-list");
+    wrap.appendChild(listArea);
+    els.root.appendChild(wrap);
+    trackVirtualPage("community_whisper");
 
     var searchDebounce = null;
     searchInput.addEventListener("input", function () {
@@ -1621,10 +1681,22 @@ var Community = (function () {
     // (이전 "부가정보 남발 금지" 지시서는 4개 카테고리 혼재 목록을
     // 전제로 한 것이라, 게시판이 1개뿐인 지금은 이 지시서가 우선합니다).
     if (post.category === "whisper") {
-      // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목은 저장용으로만
-      // 쓰고 화면에는 본문만 보여줍니다(제목 줄 생략, 중복 표시 방지).
+      // 2026-10-11 지시서 5번 — 글쓰기 화면에 제목 입력칸이 다시 생겨
+      // 실제 사용자 제목이 저장되므로, 목록 카드에도 제목 줄을 다시
+      // 보여줍니다(2026-10-09 "제목 없이 바로 쓰기" 지시서의 제목 생략은
+      // 그때는 제목이 본문에서 자동 추출된 값이라 중복 표시를 막은
+      // 것이었음 — 지금은 더 이상 해당하지 않음).
+      card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
       var preview = summarize(post);
       if (preview) card.appendChild(el("p", "community-post-card-preview community-post-card-preview-main", preview));
+      if (post.photos && post.photos.length) {
+        var whisperThumb = document.createElement("img");
+        whisperThumb.className = "community-post-card-photo";
+        whisperThumb.src = post.photos[0];
+        whisperThumb.alt = "";
+        whisperThumb.loading = "lazy";
+        card.appendChild(whisperThumb);
+      }
       var statsLine = el("p", "community-post-card-stats");
       var statsParts = [
         formatDate(post.createdAt),
@@ -1803,10 +1875,9 @@ var Community = (function () {
     var head = el("div", "community-detail-head");
     head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
     var title = el("h2", "community-detail-title", "");
-    // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 속닥속닥 글은 저장용
-    // 자동 제목(deriveWhisperTitle)만 있고 화면에는 본문만 보여주므로
-    // 제목 줄 자체를 숨깁니다(다른 카테고리는 기존처럼 표시).
-    if (post.category === "whisper") title.hidden = true;
+    // 2026-10-11 지시서 5번 — 글쓰기 화면에 제목 입력칸이 돌아왔으므로
+    // (2026-10-09 "제목 없이 바로 쓰기" 지시서는 이번 지시서로 되돌림)
+    // 속닥속닥도 다른 카테고리처럼 제목 줄을 그대로 보여줍니다.
     head.appendChild(title);
     // 작성자 닉네임(2026-09 "비회원제 전환" 지시서 7번) — 실명 대신
     // 닉네임만 표시합니다. 목록 카드 미리보기(fetchLatestPostsForHome)·
@@ -2767,12 +2838,19 @@ var Community = (function () {
       isEdit = false; editPostId = null; editingPost = null;
     }
 
-    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 게시판이 1개뿐이면
-    // (카테고리/닉네임/카카오링크/사진 등) 아래의 기존 다중 카테고리
-    // 글쓰기 폼 전체를 건드리지 않고 새 간단한 폼(제목+내용만)으로
-    // 완전히 대체합니다. 일반 사용자는 수정할 수 없으므로(지시서 7번)
-    // 수정 모드 자체를 만들지 않고 항상 새 글 작성으로 취급합니다.
-    if (COMMUNITY_CATEGORY_ORDER.length === 1) { renderWhisperWrite(); return; }
+    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 속닥속닥(whisper)
+    // 글쓰기는 아래의 기존 다중 카테고리 글쓰기 폼 전체를 건드리지 않고
+    // 별도의 간단한 폼(제목+내용+사진)으로 대체합니다. 2026-10-11
+    // 지시서로 기존 4개 게시판이 되살아나 COMMUNITY_CATEGORY_ORDER가
+    // 다시 여러 개가 되었으므로, 더 이상 "게시판이 1개뿐이면"이 아니라
+    // "글 종류가 whisper이면"으로 분기합니다(?cat=whisper로 들어온 새
+    // 글, 또는 whisper 카테고리 글의 수정). 일반 사용자는 whisper 글을
+    // 수정할 수 없으므로(지시서 7번) 수정 모드는 실질적으로 발생하지
+    // 않습니다.
+    var writeCatMatch = /[?&]cat=([^&]+)/.exec(location.search);
+    var writeCatParam = writeCatMatch ? decodeURIComponent(writeCatMatch[1]) : null;
+    var writeTargetCategory = (isEdit && editingPost) ? editingPost.category : writeCatParam;
+    if (writeTargetCategory === "whisper") { renderWhisperWrite(); return; }
 
     var wrap = el("div", "community-page community-write");
     wrap.appendChild(el("h2", "community-page-title", isEdit ? t(COMMUNITY_POST.editPostTitle) : t(COMMUNITY_POST.writeTitle)));
@@ -3231,24 +3309,18 @@ var Community = (function () {
     els.root.appendChild(wrap);
   }
 
-  /* 속닥속닥 글쓰기(2026-10-09 지시서 7번) — 제목+내용만 입력하는
-     최소한의 폼입니다. 닉네임 입력·카테고리 선택·카카오링크·사진첨부
-     등 기존 다중 카테고리 폼의 부가 입력은 전부 뺐고(지시서 "입력 항목:
-     제목(필수), 내용(필수)"), 저장은 기존 createOrUpdatePost/
-     withRateLimit/translatePostLanguages를 그대로 재사용합니다(새
-     저장 로직 없음). 작성자 닉네임은 currentDisplayNickname()이 항상
-     고정 "익명" 라벨을 돌려주므로 여기서 따로 처리하지 않습니다. */
-  // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목 입력칸을 없애고
-  // 본문 하나만 적습니다. Firestore 보안 규칙(communityPosts.create)이
-  // originalTitle을 빈 문자열 없이 요구하므로, 화면에는 보이지 않는
-  // "제목"을 본문 앞부분에서 자동으로 만들어 그대로 저장만 합니다
-  // (목록/상세 화면에서는 이 자동 제목을 따로 보여주지 않고 본문만
-  // 표시 — buildPostListItem/fillDetailText 참고).
-  function deriveWhisperTitle(content) {
-    var oneLine = content.replace(/\s+/g, " ").trim();
-    return oneLine.length > TITLE_MAX_LEN ? oneLine.slice(0, TITLE_MAX_LEN) : oneLine;
-  }
-
+  /* 속닥속닥 글쓰기(2026-10-11 홈페이지/속닥속닥 개편 지시서 5번) —
+     제목(최대 40자)+내용(최대 500자)+사진 최대 1장만 입력하는 폼입니다.
+     닉네임 입력·카테고리 선택·카카오링크 등 기존 다중 카테고리 폼의
+     부가 입력은 넣지 않고(지시서가 "제목/내용/사진/비회원 글쓰기 정책"만
+     나열), 저장은 기존 createOrUpdatePost/withRateLimit/
+     translatePostLanguages·사진 압축(compressImage)/업로드(uploadPhotos)
+     파이프라인을 그대로 재사용합니다(새 저장 로직 없음). 작성자 닉네임은
+     currentDisplayNickname()이 항상 고정 "익명" 라벨을 돌려주므로 여기서
+     따로 처리하지 않습니다.
+     (2026-10-09 "제목 없이 바로 쓰기" 지시서로 한 번 제거됐던 제목·사진
+     입력을 이번 지시서로 되돌립니다 — deriveWhisperTitle 자동 제목 생성은
+     더 이상 쓰지 않습니다.) */
   function renderWhisperWrite() {
     var wrap = el("div", "community-page community-write community-whisper-write");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
@@ -3258,15 +3330,75 @@ var Community = (function () {
 
     var form = el("form", "community-form");
 
+    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
+
     var contentArea = el("textarea", "community-whisper-content-input");
     contentArea.maxLength = CONTENT_MAX_LEN;
     contentArea.required = true;
     contentArea.placeholder = t(COMMUNITY_POST.contentLabel);
     form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
-    // 바로 적을 수 있도록 화면에 들어오자마자 커서를 본문에 둡니다.
-    setTimeout(function () { contentArea.focus(); }, 0);
+    // 바로 적을 수 있도록 화면에 들어오자마자 커서를 제목칸에 둡니다.
+    setTimeout(function () { titleInput.focus(); }, 0);
+
+    // 사진 첨부(최대 1장) — 기존 다중 카테고리 글쓰기 폼(renderWrite)의
+    // file input + 압축(compressImage)/업로드(uploadPhotos) 파이프라인과
+    // 똑같은 패턴을 그대로 재사용합니다(새 업로더 UI 없음).
+    var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
+    form.appendChild(photoLabel);
+    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.hidden = true;
+    form.appendChild(photoInput);
+    var photoAddBtn = el("button", "community-btn-secondary", t(COMMUNITY_MSG.photoAddBtn));
+    photoAddBtn.type = "button";
+    form.appendChild(photoAddBtn);
+    var photoPreview = el("div", "community-photo-preview");
+    form.appendChild(photoPreview);
+    var photoActions = el("div", "community-photo-actions");
+    var photoChangeBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoChangeBtn));
+    photoChangeBtn.type = "button";
+    var photoRemoveBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoRemoveBtn));
+    photoRemoveBtn.type = "button";
+    photoActions.appendChild(photoChangeBtn);
+    photoActions.appendChild(photoRemoveBtn);
+    form.appendChild(photoActions);
+    var pendingFiles = [];
+    var PHOTO_ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    function updatePhotoUI() {
+      var hasPhoto = pendingFiles.length > 0;
+      photoAddBtn.hidden = hasPhoto;
+      photoActions.hidden = !hasPhoto;
+    }
+    updatePhotoUI();
 
     var errorP = el("p", "community-form-error");
+
+    photoAddBtn.addEventListener("click", function () { photoInput.click(); });
+    photoChangeBtn.addEventListener("click", function () { photoInput.click(); });
+    photoRemoveBtn.addEventListener("click", function () {
+      pendingFiles = [];
+      photoPreview.innerHTML = "";
+      errorP.textContent = "";
+      updatePhotoUI();
+    });
+    photoInput.addEventListener("change", function () {
+      var files = Array.prototype.slice.call(photoInput.files || []);
+      photoInput.value = "";
+      if (!files.length) return;
+      var file = files[0]; // 사진 최대 1장 — 항상 교체(추가 아님)
+      if (PHOTO_ACCEPTED_TYPES.indexOf(file.type) === -1) {
+        errorP.textContent = t(COMMUNITY_MSG.errPhotoUnsupported);
+        return;
+      }
+      errorP.textContent = "";
+      pendingFiles = [file];
+      photoPreview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      photoPreview.appendChild(img);
+      updatePhotoUI();
+    });
+
     form.appendChild(errorP);
 
     var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.submitPost));
@@ -3276,20 +3408,27 @@ var Community = (function () {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       errorP.textContent = "";
-      if (!contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
       submitBtn.disabled = true;
+      var title = titleInput.value.trim();
       var content = contentArea.value.trim();
       ensureAuth().then(function () {
         return createOrUpdatePost({
-          category: "whisper", title: deriveWhisperTitle(content), content: content,
+          category: "whisper", title: title, content: content,
           originalLanguage: lang, kakaoLink: null, contactViaOwnerKakao: false, extra: {},
-          photoFiles: [], photosRemoved: false,
-          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); }
+          photoFiles: pendingFiles, photosRemoved: false,
+          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); },
+          onPhotoStatus: function (phase) {
+            errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
+          }
         });
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
       }).catch(function (err) {
-        errorP.textContent = (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric);
+        errorP.textContent = (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon)
+          : (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge)
+          : (err && err.message === "IMAGE_LOAD_FAILED") ? t(COMMUNITY_MSG.errPhotoUnsupported)
+          : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
 

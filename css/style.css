@@ -2488,13 +2488,15 @@ main {
 .community-whisper-content-input { min-height: 160px; }
 .community-post-card-stats { font-size: 12px; color: #64748B; margin: 0; }
 
-/* 속닥속닥 바로가기 바(2026-10-11 지시서) — 노란색 배경 + 검은 글씨,
-   가로 전체 너비, 모바일 기준 40~48px 높이, 바 전체 클릭 가능. 이제
-   #homeLegoBoard(벤토 그리드)의 일반 아이템이라, 그리드 폭 전체를
-   차지하도록 grid-column만 지정합니다(모바일 2열/PC 6열 — .home-bento
-   grid-template-columns와 맞춤). 화면 폭별 정확한 위치(천원의 아침밥과
-   방 구하기 사이)는 아래 order 규칙이 맡습니다. 홈 V17의 기존
-   --home-yellow 포인트색을 그대로 재사용(새 색상 없음). */
+/* 속닥속닥 바로가기 바(2026-10-09 지시서 → 2026-10-11 홈페이지/속닥속닥
+   개편 지시서로 폭 조정) — 노란색 배경 + 검은 글씨는 그대로 유지합니다.
+   이제 홈 Bento 카드가 11개로 늘어나, 모바일에서는 여전히 가로 전체
+   너비(그리드 폭 전체, .home-bento grid-template-columns와 맞춤)를
+   차지해 눈에 잘 띄게 하고, PC/태블릿에서는 다른 카드들과 같은 2열
+   너비(일반 카드)로 맞춰 줍니다(아래 min-width:700px 규칙). 정확한
+   순서(천원의 아침밥·후루룩찹찹·만권화밥·밥심 다음)는 아래 order
+   규칙이 맡습니다. 홈 V17의 기존 --home-yellow 포인트색을 그대로
+   재사용(새 색상 없음). */
 .whisper-top-bar {
   display: flex;
   align-items: center;
@@ -2519,10 +2521,12 @@ main {
   .whisper-top-bar { font-size: 13px; padding: 7px 10px; }
 }
 @media (min-width: 700px) {
-  /* PC/태블릿(6열)에서도 한 줄 전체를 차지. 아침밥+후루룩찹찹+만권화밥이
-     이미 1행을 꽉 채우므로(기존 grid-column 배치 그대로 유지), DOM
-     순서상 그 다음에 오는 이 바가 자연스럽게 2행 전체를 차지합니다. */
-  .whisper-top-bar { grid-column: 1 / 7; }
+  /* 2026-10-11 지시서 — PC/태블릿에서는 더 이상 한 줄 전체를 차지하지
+     않고, 밥심(bapsim)·주말에 가볼 만한 곳(weekend)과 같은 행에서 2열씩
+     나란히 놓이는 일반 카드 너비로 맞춥니다(아래 .home-tile-bapsim/
+     .home-tile-weekend의 1/3·5/7과 짝지어 6열을 정확히 채움 — 빈 칸
+     없음). */
+  .whisper-top-bar { grid-column: 3 / 5; }
 }
 
 /* 속닥속닥 글쓰기 폼(제목+내용만) — 기존 .community-form/.community-field/
@@ -2886,29 +2890,33 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
 .home-korean-link{margin-top:10px;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--home-card-ink)}
 .home-korean-card .hellokorean-desc,.home-korean-card .hellokorean-btn,.home-korean-card .hellokorean-url{display:none}
 
-/* ===== 모바일 홈 — 방 구하기 위치 변경(비용 최소화) =====
+/* ===== 모바일 홈 — 카드 순서(2026-10-11 홈페이지/속닥속닥 개편 지시서
+   2번: 천원의 아침밥→후루룩찹찹→만권화밥→밥심→속닥속닥→주말에 가볼
+   만한 곳→나의 고향 알리기→나의 학교생활→친구 만들기→방 구하기→무료
+   한국어 공부) =====
    기존 breakpoint(700px, .home-bento가 6열로 바뀌는 기준)를 그대로 써서
    699px 이하에서만 적용됩니다. DOM 순서/기존 링크/색상은 그대로 두고
    grid order와 이 카드 내부 배치만 바꾸므로, 700px 이상(PC/태블릿)의
    grid-column 기반 배치는 전혀 영향받지 않습니다. */
 @media (max-width: 699px) {
   .home-tile-breakfast{order:1}
-  /* 속닥속닥 바(2026-10-11 지시서) — 천원의 아침밥 바로 다음, 방
-     구하기보다 앞에 오도록 order:2. 나머지는 번호만 하나씩 밀림. */
-  .whisper-top-bar{order:2}
-  .home-tile-room{order:3;grid-column:1/3}
-  .home-tile-hururuk{order:4}
-  .home-tile-mangwon{order:5}
-  .home-tile-bapsim{order:6}
+  .home-tile-hururuk{order:2}
+  .home-tile-mangwon{order:3}
+  .home-tile-bapsim{order:4}
+  /* 속닥속닥 바 — 지시서가 요구하는 순서상 밥심 다음, 주말에 가볼 만한
+     곳 앞. 눈에 잘 띄도록 가로 전체 너비를 유지합니다. */
+  .whisper-top-bar{order:5}
   /* "주말에 가볼 만한 곳"(WEEKEND) — 학생 생활/커뮤니티 콘텐츠라 핵심
-     식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) 다음, 나의 고향
-     이야기 앞에 배치. 다른 카드는 order 번호만 하나씩 밀렸을 뿐
-     DOM·색상·링크는 그대로다. */
+     식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) + 속닥속닥 다음,
+     나의 고향 알리기 앞에 배치. */
   .home-tile-weekend{order:6;grid-column:1/3}
   .home-tile-hometown{order:7}
   .home-tile-campuslife{order:8}
   .home-tile-friends{order:9}
-  .home-tile-feedback{order:10;grid-column:1/3}
+  /* 방 구하기 — 지시서 순서상 친구 만들기 다음, 무료 한국어 공부
+     (Bento 바깥의 .home-korean-card) 앞. */
+  .home-tile-room{order:10;grid-column:1/3}
+  .home-tile-feedback{order:11;grid-column:1/3}
 
   /* 방 구하기 — 좁고 긴 가로형 "Quick Access" 카드(세로 스택 대신 한 줄
      배치). 주변 파스텔 카드와 다르게 코발트 블루 단색 + 흰색 글자 +
@@ -2939,15 +2947,19 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-breakfast{grid-column:1/4;min-height:230px}
   .home-tile-hururuk{grid-column:4/6}
   .home-tile-mangwon{grid-column:6/7}
+  /* 2026-10-11 지시서 — 지시서 2번 카드 순서를 PC/태블릿(6열)에서도
+     빈 칸 없이 구현합니다. 1행: 천원의 아침밥(3열)+후루룩찹찹(2열)+
+     만권화밥(1열)=6열로 꽉 채움(기존과 동일). 2행: 밥심+속닥속닥+주말에
+     가볼 만한 곳(각 2열)=6열. 3행: 나의 고향 알리기+나의 학교생활+친구
+     만들기(각 2열)=6열. 4행: 방 구하기(2열, 나머지는 빈 칸 — 바로
+     아래 "무료 한국어 공부"가 Bento 밖의 별도 카드라 문제 없음). */
   .home-tile-bapsim{grid-column:1/3}
-  .home-tile-room{grid-column:3/5}
-  .home-tile-hometown{grid-column:5/7}
-  .home-tile-campuslife{grid-column:1/3}
-  .home-tile-friends{grid-column:3/5}
-  .home-tile-feedback{grid-column:5/7}
-  /* 삭제된 FEEDBACK 카드가 쓰던 자리를 그대로 재사용(다른 카드 열 배치
-     변경 없음). */
   .home-tile-weekend{grid-column:5/7}
+  .home-tile-hometown{grid-column:1/3}
+  .home-tile-campuslife{grid-column:3/5}
+  .home-tile-friends{grid-column:5/7}
+  .home-tile-room{grid-column:1/3}
+  .home-tile-feedback{grid-column:3/5}
   .home-korean-card{margin-top:9px}
 }
 
