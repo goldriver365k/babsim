@@ -13544,5 +13544,68 @@ var WeekendSurvey = (function () {
   }
 })();
 </script>
+
+<!-- ===================== 천원의 아침밥 팝업 시작 ===================== -->
+<style>
+#bsp-overlay{position:fixed;inset:0;z-index:99999;background:rgba(20,14,8,.55);display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans",system-ui,sans-serif}
+#bsp-overlay.bsp-show{display:flex}
+#bsp-box{width:100%;max-width:360px;max-height:100%;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+#bsp-top{background:#B3400B;color:#fff;padding:20px 20px 18px;text-align:center;position:relative}
+#bsp-close{position:absolute;top:6px;right:6px;width:44px;height:44px;border:none;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer}
+#bsp-price{font-size:44px;font-weight:900;letter-spacing:-1px;line-height:1}
+#bsp-price small{font-size:20px;font-weight:800;margin-left:2px}
+#bsp-hours{display:inline-block;margin-top:12px;background:#fff;color:#B3400B;font-size:22px;font-weight:900;padding:6px 16px;border-radius:12px}
+#bsp-list{list-style:none;margin:0;padding:6px 20px;color:#3A2A1E}
+#bsp-list li{padding:11px 0;border-bottom:1px solid #F0E4D4;text-align:center}
+#bsp-list li:last-child{border-bottom:none}
+#bsp-list b{display:block;font-size:17px;font-weight:800;line-height:1.3}
+#bsp-list span{display:block;font-size:14px;color:#6B5646;margin-top:2px}
+#bsp-btns{display:flex;gap:8px;padding:8px 16px 16px}
+#bsp-btns button{flex:1;min-height:48px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+#bsp-today{background:#fff;border:1px solid #E3D3BE;color:#6B5646}
+#bsp-ok{background:#3A2A1E;border:none;color:#fff}
+</style>
+
+<div id="bsp-overlay" role="dialog" aria-modal="true" aria-label="천원의 아침밥 주말 오픈">
+  <div id="bsp-box">
+    <div id="bsp-top">
+      <button id="bsp-close" type="button" aria-label="닫기 Close">&times;</button>
+      <div id="bsp-price">1,000<small>₩</small></div>
+      <div id="bsp-hours">08:00 ~ 10:00</div>
+    </div>
+    <ul id="bsp-list">
+      <li lang="ko"><b>천원의 아침밥 주말 오픈</b><span>토요일 · 일요일</span></li>
+      <li lang="en"><b>1,000 Won Breakfast – Weekends</b><span>Saturday · Sunday</span></li>
+      <li lang="zh"><b>千元早餐 周末开放</b><span>周六 · 周日</span></li>
+      <li lang="vi"><b>Bữa sáng 1.000 won cuối tuần</b><span>Thứ Bảy · Chủ Nhật</span></li>
+      <li lang="mn"><b>1,000 воны өглөөний хоол</b><span>Бямба · Ням гараг</span></li>
+    </ul>
+    <div id="bsp-btns">
+      <button id="bsp-today" type="button">오늘 하루 보지 않기</button>
+      <button id="bsp-ok" type="button">확인 OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY = "bsp_breakfast_hide_until";
+  var d = new Date(), today = d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+  try { if (localStorage.getItem(KEY) === today) return; } catch(e) {}
+  var o = document.getElementById("bsp-overlay");
+  function close(){ o.classList.remove("bsp-show"); }
+  document.getElementById("bsp-ok").onclick = close;
+  document.getElementById("bsp-close").onclick = close;
+  document.getElementById("bsp-today").onclick = function(){
+    try { localStorage.setItem(KEY, today); } catch(e) {}
+    close();
+  };
+  o.onclick = function(e){ if (e.target === o) close(); };
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") close(); });
+  o.classList.add("bsp-show");
+})();
+</script>
+<!-- ===================== 천원의 아침밥 팝업 끝 ===================== -->
+
 </body>
 </html>
