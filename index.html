@@ -2989,20 +2989,20 @@ body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
   .home-tile-breakfast{grid-column:1/4;min-height:230px}
   .home-tile-hururuk{grid-column:4/6}
   .home-tile-mangwon{grid-column:6/7}
-  /* 2026-10-11 지시서 → 2026-10-12 지시(속닥속닥 바가 맨 위 전체 폭
-     줄로 빠짐)로 재계산. PC/태블릿(6열)에서 빈 칸 없이 구현합니다.
-     0행: 속닥속닥(전체 폭, .whisper-top-bar 자체 규칙). 1행: 천원의
-     아침밥(3열)+후루룩찹찹(2열)+만권화밥(1열)=6열. 2행: 밥심+주말에
-     가볼 만한 곳(각 2열, 나머지 2열은 빈 칸). 3행: 나의 고향 알리기+
-     나의 학교생활+친구 만들기(각 2열)=6열. 4행: 방 구하기(2열, 나머지는
-     빈 칸 — 바로 아래 "무료 한국어 공부"가 Bento 밖의 별도 카드라
-     문제 없음). */
+  /* 2026-10-13 지시 — 주말에 가볼 만한 곳/나의 고향 알리기/나의
+     학교생활/친구 만들기 카드를 삭제해 PC/태블릿(6열) 배치를 재계산.
+     0행: 속닥속닥(전체 폭). 1행: 천원의 아침밥(3열)+후루룩찹찹(2열)+
+     만권화밥(1열)=6열. 2행: 밥심+방 구하기(각 2열, 나머지 2열은 빈 칸
+     — 바로 아래 "무료 한국어 공부"가 Bento 밖의 별도 카드라 문제 없음).
+     weekend/hometown/campuslife/friends 규칙은 해당 카드 HTML이 더
+     이상 없어 적용되지 않지만, js/app.js의 클릭 핸들러처럼 되돌릴 때를
+     대비해 그대로 남겨 둡니다. */
   .home-tile-bapsim{grid-column:1/3}
   .home-tile-weekend{grid-column:3/5}
   .home-tile-hometown{grid-column:1/3}
   .home-tile-campuslife{grid-column:3/5}
   .home-tile-friends{grid-column:5/7}
-  .home-tile-room{grid-column:1/3}
+  .home-tile-room{grid-column:3/5}
   .home-tile-feedback{grid-column:3/5}
   .home-korean-card{margin-top:9px}
 }
@@ -3312,35 +3312,11 @@ body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padd
       <span class="home-tile-arrow" aria-hidden="true">→</span>
       <span id="homeCardBapsimLoc" hidden></span>
     </button>
-    <!-- 2026-10-11 홈페이지/속닥속닥 개편 지시서 1·2번 — "밥심커뮤니티"
-         중간 허브 화면 없이, 아래 4개 카드에서 바로 해당 게시판으로
-         이동합니다(js/app.js의 navigateToCategory 클릭 핸들러는 이미
-         연결되어 있던 것을 그대로 재사용 — 새 라우팅 없음). 라벨/부제는
-         js/app.js가 다국어로 채웁니다. -->
-    <button type="button" class="home-tile home-tile-weekend" id="homeLegoWeekendBtn">
-      <span class="home-tile-eyebrow">WEEKEND</span>
-      <strong class="home-tile-title" id="homeLegoWeekendLabel">주말에 가볼 만한 곳</strong>
-      <span class="home-tile-sub" id="homeCardWeekendSub">게시판 바로가기</span>
-      <span class="home-tile-arrow" aria-hidden="true">→</span>
-    </button>
-    <button type="button" class="home-tile home-tile-hometown" id="homeLegoHometownBtn">
-      <span class="home-tile-eyebrow">MY HOMETOWN</span>
-      <strong class="home-tile-title" id="homeLegoHometownLabel">나의 고향 알리기</strong>
-      <span class="home-tile-sub" id="homeCardHometownSub">게시판 바로가기</span>
-      <span class="home-tile-arrow" aria-hidden="true">→</span>
-    </button>
-    <button type="button" class="home-tile home-tile-campuslife" id="homeLegoCampusLifeBtn">
-      <span class="home-tile-eyebrow">CAMPUS LIFE</span>
-      <strong class="home-tile-title" id="homeLegoCampusLifeLabel">나의 학교생활</strong>
-      <span class="home-tile-sub" id="homeCardCampusLifeSub">게시판 바로가기</span>
-      <span class="home-tile-arrow" aria-hidden="true">→</span>
-    </button>
-    <button type="button" class="home-tile home-tile-friends" id="homeLegoFriendsBtn">
-      <span class="home-tile-eyebrow">FRIENDS</span>
-      <strong class="home-tile-title" id="homeLegoFriendsLabel">친구 만들기</strong>
-      <span class="home-tile-sub" id="homeCardFriendsSub">게시판 바로가기</span>
-      <span class="home-tile-arrow" aria-hidden="true">→</span>
-    </button>
+    <!-- 2026-10-13 지시 — 주말에 가볼 만한 곳/나의 고향 알리기/나의
+         학교생활/친구 만들기 4개 카드를 홈에서 완전히 삭제합니다. 해당
+         게시판 데이터·js/app.js의 클릭 핸들러(homeLegoWeekendBtn 등)는
+         건드리지 않습니다(안전하게 죽은 코드로 남겨 두면 되돌릴 때
+         저렴함 — 이 레포의 기존 관례). -->
     <button type="button" class="home-tile home-tile-room" id="roomFinderCardBtn" aria-label="방 구하기">
       <span class="home-tile-eyebrow">HOUSING</span>
       <strong class="home-tile-title" id="homeLegoRoomTitle">방 구하기</strong>
