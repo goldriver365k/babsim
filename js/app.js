@@ -756,10 +756,12 @@
       listEl.appendChild(p);
     }
 
-    if (isSeoulWeekend(offsetDays)) {
-      showMessage("today-meal-closed", closedText);
-      return;
-    }
+    // 2026-10-15 지시 — 주말 천원의 아침밥(토·일 08:00~10:00) 운영에
+    // 맞춰, 주말이라고 무조건 휴무로 표시하던 것을 없앴습니다. 이제
+    // 평일과 똑같이 실제 데이터(관리자가 입력한 메뉴·isOpen 값)를
+    // 기준으로 판단합니다 — 관리자 페이지에서 토·일요일 메뉴를 입력하면
+    // 그대로 화면에 보이고, 입력하지 않은 주말은 아래 dayHasDirectData
+    // 분기에서 "메뉴를 준비 중입니다"로 안내됩니다.
 
     // 관리자가 명시적으로 휴무로 등록한 날(isOpen: false)
     if (day && day.isOpen === false) {
@@ -869,8 +871,10 @@
   }
 
   /* "오늘의 메뉴 평가" 위젯 연동 (js/breakfast-rating.js, 선택적 모듈) */
-  // 오늘 아침 메뉴가 실제로 있는지(주말/휴무/데이터 없음이면 false) —
-  // 아침밥 평가 영역과 6단계의 평가 팝업이 같은 판단 기준을 씁니다.
+  // 오늘 아침 메뉴가 실제로 있는지(휴무/데이터 없음이면 false) — 아침밥
+  // 평가 영역과 6단계의 평가 팝업이 같은 판단 기준을 씁니다. 2026-10-15
+  // 지시로 주말도 평일과 동일하게 실제 데이터 기준으로 판단합니다
+  // (더 이상 주말이라고 무조건 메뉴 없음으로 처리하지 않음).
   function todayBreakfastDay() {
     var dateKey = getSeoulDateKey(0);
     return BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
@@ -879,7 +883,7 @@
   function hasTodayBreakfastMenu() {
     var day = todayBreakfastDay();
     var isExplicitlyClosed = !!(day && day.isOpen === false);
-    return !isSeoulWeekend(0) && !isExplicitlyClosed && dayHasDirectData(day);
+    return !isExplicitlyClosed && dayHasDirectData(day);
   }
 
   function renderBreakfastRating(lang) {

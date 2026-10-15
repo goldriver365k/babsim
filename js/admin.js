@@ -30,7 +30,13 @@
     { code: "tue", label: "화요일", offset: 1 },
     { code: "wed", label: "수요일", offset: 2 },
     { code: "thu", label: "목요일", offset: 3 },
-    { code: "fri", label: "금요일", offset: 4 }
+    { code: "fri", label: "금요일", offset: 4 },
+    // 2026-10-15 지시 — 주말 천원의 아침밥(토·일 08:00~10:00) 운영에 맞춰
+    // 입력 범위를 금요일에서 토·일요일까지로 늘립니다. 날짜 계산
+    // (addDaysToKey)과 카드 렌더링(renderWeekDayGrid)이 모두 이 배열을
+    // 그대로 순회하므로 코드 변경 없이 항목만 추가하면 됩니다.
+    { code: "sat", label: "토요일", offset: 5 },
+    { code: "sun", label: "일요일", offset: 6 }
   ];
 
   var els = {};
