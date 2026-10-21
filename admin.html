@@ -2487,8 +2487,7 @@ var COUNTRY_LIST = [
   "Yemen", "Zambia", "Zimbabwe"
 ];
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    메뉴 데이터
    - 이 파일만 수정하면 가격/품절/메뉴명이 바로 반영됩니다.
    - price: 숫자만 입력 (화면에는 자동으로 쉼표+원이 붙습니다)
@@ -2755,161 +2754,161 @@ const MENU_DATA = [
   },
 
   /* ------------------------- 후루룩찹찹 2층 - 화면1 ------------------------- */
-  {
-    id: "hururuk-usamgyeop-malatang-samgak-kimbap-set",
-    store: "hururuk", group: 1, order: 1,
-    image: "/images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
-    name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি মালাথাং + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်မာလာသန် + တြိဂံကင်းဘတ်ပ် အစုံ" },
-    price: 11900, soldOut: false, needsReview: false
-  },
-  {
-    id: "hururuk-usamgyeop-bomb-riceNoodle-samgak-kimbap-set",
-    store: "hururuk", group: 1, order: 2,
-    image: "/images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
-    name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি ভরপুর ফো + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့ + တြိဂံကင်းဘတ်ပ် အစုံ" },
-    price: 11900, soldOut: false, needsReview: false
-  },
-  {
-    id: "hururuk-bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set",
-    store: "hururuk", group: 1, order: 3,
-    image: "/images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
-    name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл", bn: "স্মোকি বিফ বেলি রাগু পাস্তা + ত্রিভুজ কিম্বাপ সেট", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုပါစတာ + တြိဂံကင်းဘတ်ပ် အစုံ" },
-    price: 12500, soldOut: false, needsReview: false
-  },
+  /* 2026-10-21 키오스크 사진 기준 전면 수정 — "왕다리쌀국수"/"이태리
+     바삭포크치즈덮밥"은 새 키오스크 화면 4장(화면1~4) 어디에도 보이지
+     않아 판매 종료로 보고 목록에서 뺐습니다(사진에 더 있었다면 추가
+     사진을 올려주세요). 새 메뉴는 아직 실제 사진이 없어 image: null로
+     "이미지 준비 중"으로 표시됩니다 — 사진이 오면 채워 넣으면 됩니다.
+     화면1 맨 윗줄은 사진이 살짝 잘려 있어 혹시 빠진 항목이 있다면
+     알려주세요. */
   {
     id: "hururuk-usamgyeop-malatang",
-    store: "hururuk", group: 1, order: 4,
+    store: "hururuk", group: 1, order: 1,
     image: "/images/hururuk/usamgyeop-malatang.jpg",
     name: { ko: "우삼겹마라탕", en: "Beef Belly Malatang", zh: "牛五花麻辣烫", vi: "Malatang ba chỉ bò", mn: "Үхрийн цээжний махтай малатан", bn: "বিফ বেলি মালাথাং", my: "နွားသားရင်ညွှန့်မာလာသန်" },
-    price: 8900, soldOut: false, needsReview: false
+    price: 8900, soldOut: true, needsReview: false
   },
   {
-    id: "hururuk-usamgyeop-bomb-rice-noodle",
+    id: "hururuk-usamgyeop-malatang-samgak-kimbap-set",
+    store: "hururuk", group: 1, order: 2,
+    image: "/images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
+    name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি মালাথাং + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်မာလာသန် + တြိဂံကင်းဘတ်ပ် အစုံ" },
+    price: 11900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-clam-chowder-spaghetti",
+    store: "hururuk", group: 1, order: 3,
+    image: "/images/hururuk/clam-chowder-spaghetti.jpg",
+    name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти", bn: "ক্ল্যাম চাউডার স্প্যাগেটি", my: "ခရုမြောက်ချောင်ဒါစပါဂက်တီ" },
+    price: 7900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-kimchi-cream-pasta",
+    store: "hururuk", group: 1, order: 4,
+    image: "/images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
+    name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста", bn: "স্মোকি বিফ বেলি কিমচি ক্রিম পাস্তা", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ကင်မချီကရင်မ်ပါစတာ" },
+    price: 9500, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-kimchi-bulgogi-deopbap",
     store: "hururuk", group: 1, order: 5,
-    image: "/images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
-    name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон", bn: "বিফ বেলি ভরপুর ফো", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့" },
-    price: 8900, soldOut: false, needsReview: false
+    image: "/images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
+    name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа", bn: "স্মোকি কিমচি বুলগোগি রাইস বোল", my: "မီးခိုးရနံ့ကင်မချီဘူဂိုဂီ ထမင်းခွက်" },
+    price: 7900, soldOut: true, needsReview: false
   },
   {
-    id: "hururuk-bulhyang-usamgyeop-ragu-deopbap",
+    id: "hururuk-tomato-pork-curry",
     store: "hururuk", group: 1, order: 6,
-    image: "/images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
-    name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа", bn: "স্মোকি বিফ বেলি রাগু রাইস বোল", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂု ထမင်းခွက်" },
-    price: 9500, soldOut: false, needsReview: false
+    image: "/images/hururuk/tomato-pork-curry.jpg",
+    name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри", bn: "টমেটো পর্ক কারি", my: "ခရမ်းချဉ်သီးဝက်သားကရီ" },
+    price: 7900, soldOut: true, needsReview: false
   },
   {
-    id: "hururuk-pork-malatang",
+    id: "hururuk-usamgyeop-ramen-rice",
     store: "hururuk", group: 1, order: 7,
-    image: "/images/hururuk/pork-malatang.jpg",
-    name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан", bn: "পর্ক মালাথাং", my: "ဝက်သားမာလာသန်" },
-    price: 7900, soldOut: false, needsReview: false
+    image: null,
+    name: { ko: "우삼겹라면 + 공기밥", en: "Beef Belly Ramen + Rice", zh: "牛五花拉面+米饭", vi: "Mì ramen ba chỉ bò + Cơm", mn: "Үхрийн цээжний махтай рамен + будаа", bn: "বিফ বেলি রামেন + ভাত", my: "နွားသားရင်ညွှန့်ရာမန် + ထမင်း" },
+    price: 6900, soldOut: true, needsReview: false
   },
   {
-    id: "hururuk-king-chicken-rice-noodles",
+    id: "hururuk-cola",
     store: "hururuk", group: 1, order: 8,
-    image: "/images/hururuk/king-chicken-rice-noodles.jpg",
-    name: { ko: "왕다리쌀국수", en: "Chicken Leg Pho", zh: "大鸡腿米粉", vi: "Phở đùi gà lớn", mn: "Том тахианы хөлтэй будааны гоймон", bn: "বড় চিকেন লেগ ফো", my: "ကြီးမားသောကြက်ခြေထောက်ဖို့" },
-    price: 7500, soldOut: false, needsReview: false
+    image: "/images/hururuk/cola.jpg",
+    name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл", bn: "কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ (၃၅၅ မီလီလီတာ)" },
+    price: 2000, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-duthum-chashu-rice-noodle",
+    id: "hururuk-zero-cola",
     store: "hururuk", group: 1, order: 9,
-    image: "/images/hururuk/duthum-chashu-rice-noodle.jpg",
-    name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон", bn: "পুরু চাশু ফো", my: "ထူသောချာရှူးဖို့" },
-    price: 8500, soldOut: false, needsReview: false
+    image: "/images/hururuk/zero-cola.jpg",
+    name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл", bn: "জিরো কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ ဇီးရို (၃၅၅ မီလီလီတာ)" },
+    price: 1500, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-bulhyang-ganjang-usamgyeop-bokkeummyeon",
+    id: "hururuk-sprite",
     store: "hururuk", group: 1, order: 10,
-    image: "/images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
-    name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон", bn: "স্মোকি সয়া বিফ বেলি স্টার-ফ্রাই নুডলস", my: "မီးခိုးရနံ့စွယ်ဆော့စ်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
-    price: 8900, soldOut: false, needsReview: false
+    image: null,
+    name: { ko: "스프라이트", en: "Sprite", zh: "雪碧", vi: "Sprite", mn: "Спрайт", bn: "স্প্রাইট", my: "စပရိုက်" },
+    price: 1500, soldOut: false, needsReview: false
   },
+  {
+    id: "hururuk-fanta",
+    store: "hururuk", group: 1, order: 11,
+    image: "/images/hururuk/fanta.jpg",
+    name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта", bn: "ফ্যান্টা", my: "ဖန်တာ" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면2 ------------------------- */
   {
     id: "hururuk-hwakkeun-gochujang-usamgyeop-bokkeummyeon",
-    store: "hururuk", group: 1, order: 11,
+    store: "hururuk", group: 2, order: 1,
     image: "/images/hururuk/hwakkeun-gochujang-usamgyeop-bokkeummyeon.jpg",
     name: { ko: "화끈고추장우삼겹볶음면", en: "Fiery Gochujang Beef Belly Stir-Fried Noodles", zh: "香辣辣椒酱牛五花炒面", vi: "Mì xào ba chỉ bò sốt ớt cay", mn: "Халуун гочужан соустай үхрийн цээжний хуурсан гоймон", bn: "ঝাল গোচুজাং বিফ বেলি স্টার-ফ্রাই নুডলস", my: "စပ်သောဂိုချူဂျန်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-meat-ragu-spaghetti",
-    store: "hururuk", group: 1, order: 12,
-    image: "/images/hururuk/meat-ragu-spaghetti.jpg",
-    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти", bn: "প্রচুর মাংসসহ রাগু স্প্যাগেটি", my: "အသားအပြည့်ရာဂုစပါဂက်တီ" },
-    price: 7900, soldOut: false, needsReview: false
+    id: "hururuk-salmon-jang-deopbap",
+    store: "hururuk", group: 2, order: 2,
+    image: null,
+    name: { ko: "연어장덮밥", en: "Salmon Jang Rice Bowl", zh: "酱汁三文鱼盖饭", vi: "Cơm cá hồi ngâm tương", mn: "Соёвын хулдтай будаа", bn: "স্যামন জ্যাং রাইস বোল", my: "ဆယ်လမွန်ဆော့စ် ထမင်းခွက်" },
+    price: 8500, soldOut: true, needsReview: true
   },
-
-  /* ------------------------- 후루룩찹찹 2층 - 화면2 ------------------------- */
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-deopbap",
+    store: "hururuk", group: 2, order: 3,
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
+    name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа", bn: "স্মোকি বিফ বেলি রাগু রাইস বোল", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂု ထမင်းခွက်" },
+    price: 9500, soldOut: false, needsReview: false
+  },
   {
     id: "hururuk-meat-ragu-deopbap",
-    store: "hururuk", group: 2, order: 1,
+    store: "hururuk", group: 2, order: 4,
     image: "/images/hururuk/meat-ragu-deopbap.jpg",
     name: { ko: "고기듬뿍 라구덮밥", en: "Meat-Loaded Ragu Rice Bowl", zh: "肉酱盖饭(加量)", vi: "Cơm sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай будаа", bn: "প্রচুর মাংসসহ রাগু রাইস বোল", my: "အသားအပြည့်ရာဂု ထမင်းခွက်" },
     price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-sausage-ragu-deopbap",
-    store: "hururuk", group: 2, order: 2,
+    store: "hururuk", group: 2, order: 5,
     image: "/images/hururuk/sausage-ragu-deopbap.jpg",
     name: { ko: "통소세지 라구덮밥", en: "Whole Sausage Ragu Rice Bowl", zh: "整根香肠肉酱盖饭", vi: "Cơm sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай будаа", bn: "গোটা সসেজ রাগু রাইস বোল", my: "ဝက်အူချောင်းတစ်ချောင်းလုံးရာဂု ထမင်းခွက်" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
-    store: "hururuk", group: 2, order: 3,
-    image: "/images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
-    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти", bn: "স্মোকি বিফ বেলি রাগু স্প্যাগেটি", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုစပါဂက်တီ" },
-    price: 9500, soldOut: false, needsReview: false
+    id: "hururuk-meat-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 6,
+    image: "/images/hururuk/meat-ragu-spaghetti.jpg",
+    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти", bn: "প্রচুর মাংসসহ রাগু স্প্যাগেটি", my: "အသားအပြည့်ရာဂုစပါဂက်တီ" },
+    price: 7900, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-sausage-ragu-spaghetti",
-    store: "hururuk", group: 2, order: 4,
+    store: "hururuk", group: 2, order: 7,
     image: "/images/hururuk/sausage-ragu-spaghetti.jpg",
     name: { ko: "통소세지 라구스파게티", en: "Whole Sausage Ragu Spaghetti", zh: "整根香肠肉酱意面", vi: "Spaghetti sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай спагетти", bn: "গোটা সসেজ রাগু স্প্যাগেটি", my: "ဝက်အူချောင်းတစ်ချောင်းလုံးရာဂုစပါဂက်တီ" },
     price: 8900, soldOut: false, needsReview: false
   },
   {
+    id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 8,
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
+    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти", bn: "স্মোকি বিফ বেলি রাগু স্প্যাগেটি", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုစပါဂက်တီ" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
     id: "hururuk-duthum-chashu-ragu-spaghetti",
-    store: "hururuk", group: 2, order: 5,
+    store: "hururuk", group: 2, order: 9,
     image: "/images/hururuk/duthum-chashu-ragu-spaghetti.jpg",
     name: { ko: "두툼차슈 라구스파게티", en: "Thick-Cut Chashu Ragu Spaghetti", zh: "厚切叉烧肉酱意面", vi: "Spaghetti sốt ragu xá xíu dày", mn: "Зузаан чашүтэй рагу соустай спагетти", bn: "পুরু চাশু রাগু স্প্যাগেটি", my: "ထူသောချာရှူးရာဂုစပါဂက်တီ" },
     price: 9500, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-clam-chowder-spaghetti",
-    store: "hururuk", group: 2, order: 6,
-    image: "/images/hururuk/clam-chowder-spaghetti.jpg",
-    name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти", bn: "ক্ল্যাম চাউডার স্প্যাগেটি", my: "ခရုမြောက်ချောင်ဒါစပါဂက်တီ" },
-    price: 7900, soldOut: false, needsReview: false
-  },
-  {
-    id: "hururuk-eolkeun-usamgyeop-haejang-pasta",
-    store: "hururuk", group: 2, order: 7,
-    image: "/images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
-    name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста", bn: "ঝাল বিফ বেলি হ্যাংওভার পাস্তা", my: "စပ်သောနွားသားရင်ညွှန့် အရက်ပြေဆေးပါစတာ" },
-    price: 8500, soldOut: false, needsReview: false
-  },
-  {
-    id: "hururuk-bulhyang-usamgyeop-kimchi-cream-pasta",
-    store: "hururuk", group: 2, order: 8,
-    image: "/images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
-    name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста", bn: "স্মোকি বিফ বেলি কিমচি ক্রিম পাস্তা", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ကင်မချီကရင်မ်ပါစတာ" },
-    price: 9500, soldOut: false, needsReview: false
-  },
-  {
-    id: "hururuk-bulhyang-kimchi-bulgogi-deopbap",
-    store: "hururuk", group: 2, order: 9,
-    image: "/images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
-    name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа", bn: "স্মোকি কিমচি বুলগোগি রাইস বোল", my: "မီးခိုးရနံ့ကင်မချီဘူဂိုဂီ ထမင်းခွက်" },
-    price: 7900, soldOut: false, needsReview: false
-  },
-  {
-    id: "hururuk-garlic-pork-deopbap",
+    id: "hururuk-bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set",
     store: "hururuk", group: 2, order: 10,
-    image: "/images/hururuk/garlic-pork-deopbap.jpg",
-    name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа", bn: "গার্লিক পর্ক রাইস বোল", my: "ကြက်သွန်ဖြူဝက်သား ထမင်းခွက်" },
-    price: 6900, soldOut: false, needsReview: false
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
+    name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл", bn: "স্মোকি বিফ বেলি রাগু পাস্তা + ত্রিভুজ কিম্বাপ সেট", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုပါစတာ + တြိဂံကင်းဘတ်ပ် အစုံ" },
+    price: 12500, soldOut: false, needsReview: false
   },
   {
     id: "hururuk-duthum-chashu-deopbap",
@@ -2919,54 +2918,200 @@ const MENU_DATA = [
     price: 7900, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-tomato-pork-curry",
+    id: "hururuk-pork-malatang",
     store: "hururuk", group: 2, order: 12,
-    image: "/images/hururuk/tomato-pork-curry.jpg",
-    name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри", bn: "টমেটো পর্ক কারি", my: "ခရမ်းချဉ်သီးဝက်သားကရီ" },
-    price: 7900, soldOut: false, needsReview: false
+    image: "/images/hururuk/pork-malatang.jpg",
+    name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан", bn: "পর্ক মালাথাং", my: "ဝက်သားမာလာသန်" },
+    price: 7900, soldOut: true, needsReview: false
   },
 
   /* ------------------------- 후루룩찹찹 2층 - 화면3 ------------------------- */
   {
-    id: "hururuk-italian-crispy-pork-cheese-deopbap",
+    id: "hururuk-mala-hwasan-bulbaek-rice-noodle-set",
     store: "hururuk", group: 3, order: 1,
-    image: "/images/hururuk/italian-crispy-pork-cheese-deopbap.jpg",
-    name: { ko: "이태리 바삭포크치즈덮밥", en: "Italian Crispy Pork & Cheese Rice Bowl", zh: "意式脆皮猪肉芝士盖饭", vi: "Cơm heo giòn phô mai kiểu Ý", mn: "Итали маягийн хурц, бяслагтай гахайн махны будаа", bn: "ইতালিয়ান ক্রিসপি পর্ক চিজ রাইস বোল", my: "အီတလီပုံစံကြွပ်သောဝက်သားနှင့်ချိစ် ထမင်းခွက်" },
+    image: null,
+    name: { ko: "마라화산불백+100g쌀국수", en: "Mala Volcano Bulbaek + 100g Pho", zh: "麻辣火山不百+100g米粉", vi: "Bulbaek núi lửa vị Mala + Phở 100g", mn: "Мала галт уулын булбэг + 100г будааны гоймон", bn: "মালা ভলকানো বুলবেক + ১০০গ্রাম ফো", my: "မာလာမီးတောင်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-eolkeun-haemul-haejang-pasta",
+    store: "hururuk", group: 3, order: 2,
+    image: null,
+    name: { ko: "얼큰해물해장파스타", en: "Spicy Seafood Hangover Pasta", zh: "辣味海鲜解酒意面", vi: "Mì Ý cay giải rượu hải sản", mn: "Халуун ногоотой далайн хоолтой, сэргээх паста", bn: "ঝাল সিফুড হ্যাংওভার পাস্তা", my: "စပ်သောပင်လယ်စာအရက်ပြေဆေးပါစတာ" },
     price: 8500, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-usamgyeop-ramen-rice",
-    store: "hururuk", group: 3, order: 2,
+    id: "hururuk-eolkeun-usamgyeop-haejang-pasta",
+    store: "hururuk", group: 3, order: 3,
+    image: "/images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
+    name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста", bn: "ঝাল বিফ বেলি হ্যাংওভার পাস্তা", my: "စပ်သောနွားသားရင်ညွှန့် အရက်ပြေဆေးပါစတာ" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bokkeum-pasta",
+    store: "hururuk", group: 3, order: 4,
     image: null,
-    name: { ko: "우삼겹라면 + 공기밥", en: "Beef Belly Ramen + Rice", zh: "牛五花拉面+米饭", vi: "Mì ramen ba chỉ bò + Cơm", mn: "Үхрийн цээжний махтай рамен + будаа", bn: "বিফ বেলি রামেন + ভাত", my: "နွားသားရင်ညွှန့်ရာမန် + ထမင်း" },
+    name: { ko: "우삼겹볶음파스타", en: "Beef Belly Stir-Fried Pasta", zh: "牛五花炒意面", vi: "Mì Ý xào ba chỉ bò", mn: "Үхрийн цээжний махтай хуурсан паста", bn: "বিফ বেলি স্টার-ফ্রাই পাস্তা", my: "နွားသားရင်ညွှန့်ကြော်ပါစတာ" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-haesanmul-bokkeum-pasta",
+    store: "hururuk", group: 3, order: 5,
+    image: null,
+    name: { ko: "해산물볶음파스타", en: "Seafood Stir-Fried Pasta", zh: "海鲜炒意面", vi: "Mì Ý xào hải sản", mn: "Далайн хоолтой хуурсан паста", bn: "সিফুড স্টার-ফ্রাই পাস্তা", my: "ပင်လယ်စာကြော်ပါစတာ" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-garlic-pork-deopbap",
+    store: "hururuk", group: 3, order: 6,
+    image: "/images/hururuk/garlic-pork-deopbap.jpg",
+    name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа", bn: "গার্লিক পর্ক রাইস বোল", my: "ကြက်သွန်ဖြူဝက်သား ထမင်းခွက်" },
     price: 6900, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-cola",
-    store: "hururuk", group: 3, order: 3,
-    image: "/images/hururuk/cola.jpg",
-    name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл", bn: "কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ (၃၅၅ မီလီလီတာ)" },
-    price: 1500, soldOut: false, needsReview: false
+    id: "hururuk-usamgyeop-bomb-riceNoodle-samgak-kimbap-set",
+    store: "hururuk", group: 3, order: 7,
+    image: "/images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
+    name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি ভরপুর ফো + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့ + တြိဂံကင်းဘတ်ပ် အစုံ" },
+    price: 11900, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-zero-cola",
-    store: "hururuk", group: 3, order: 4,
-    image: "/images/hururuk/zero-cola.jpg",
-    name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл", bn: "জিরো কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ ဇီးရို (၃၅၅ မီလီလီတာ)" },
-    price: 1500, soldOut: false, needsReview: false
+    id: "hururuk-sobaeksan",
+    store: "hururuk", group: 3, order: 8,
+    image: null,
+    name: { ko: "소백산(소고기간장불백)", en: "Sobaeksan (Beef Soy Bulbaek)", zh: "小白山(酱油牛肉不百)", vi: "Sobaeksan (Bulbaek bò sốt tương)", mn: "Собэксан (үхрийн махтай соёвын булбэг)", bn: "সোবায়েকসান (বিফ সয় বুলবেক)", my: "ဆိုဘဲစန် (နွားသားစွယ်ဆော့စ်ဘူဘိတ်)" },
+    price: 8900, soldOut: false, needsReview: false
   },
   {
-    id: "hururuk-fanta",
-    store: "hururuk", group: 3, order: 5,
-    image: "/images/hururuk/fanta.jpg",
-    name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта", bn: "ফ্যান্টা", my: "ဖန်တာ" },
-    price: 1500, soldOut: false, needsReview: false
+    id: "hururuk-sobaeksan-rice-noodle-set",
+    store: "hururuk", group: 3, order: 9,
+    image: null,
+    name: { ko: "소백산+100g쌀국수", en: "Sobaeksan + 100g Pho", zh: "小白山+100g米粉", vi: "Sobaeksan + Phở 100g", mn: "Собэксан + 100г будааны гоймон", bn: "সোবায়েকসান + ১০০গ্রাম ফো", my: "ဆိုဘဲစန် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 11900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-mala-hwasan-bulbaek",
+    store: "hururuk", group: 3, order: 10,
+    image: null,
+    name: { ko: "마라화산불백", en: "Mala Volcano Bulbaek", zh: "麻辣火山不百", vi: "Bulbaek núi lửa vị Mala", mn: "Мала галт уулын булбэг", bn: "মালা ভলকানো বুলবেক", my: "မာလာမီးတောင်ဘူဘိတ်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-jikhwa-ganjang-bulbaek",
+    store: "hururuk", group: 3, order: 11,
+    image: null,
+    name: { ko: "직화간장불백", en: "Flame-Grilled Soy Bulbaek", zh: "直火酱油不百", vi: "Bulbaek sốt tương nướng lửa", mn: "Нүүрсэн дээр шарсан соёвын булбэг", bn: "ফ্লেম-গ্রিলড সয় বুলবেক", my: "မီးတိုက်ကင်စွယ်ဆော့စ်ဘူဘိတ်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-ganjang-usamgyeop-bokkeummyeon",
+    store: "hururuk", group: 3, order: 12,
+    image: "/images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
+    name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон", bn: "স্মোকি সয়া বিফ বেলি স্টার-ফ্রাই নুডলস", my: "မီးခိုးရနံ့စွယ်ဆော့စ်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면4 ------------------------- */
+  {
+    id: "hururuk-padak-chicken",
+    store: "hururuk", group: 4, order: 1,
+    image: null,
+    name: { ko: "파닭(chicken)", en: "Scallion Chicken", zh: "葱香鸡", vi: "Gà hành lá", mn: "Ногоотой тахиа", bn: "স্ক্যালিয়ন চিকেন", my: "ကြက်သွန်မြိတ်ကြက်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-cheese-buldak-chicken",
+    store: "hururuk", group: 4, order: 2,
+    image: null,
+    name: { ko: "치즈불닭(chicken)", en: "Cheese Fire Chicken", zh: "芝士火鸡", vi: "Gà cay phô mai", mn: "Бяслагтай халуун тахиа", bn: "চিজ ফায়ার চিকেন", my: "ချိစ်မီးကြက်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-gyeran-pumeun-padak-chicken",
+    store: "hururuk", group: 4, order: 3,
+    image: null,
+    name: { ko: "계란품은파닭(chicken)", en: "Egg-Topped Scallion Chicken", zh: "鸡蛋葱香鸡", vi: "Gà hành lá phủ trứng", mn: "Өндөгтэй ногоотой тахиа", bn: "ডিম-টপড স্ক্যালিয়ন চিকেন", my: "ကြက်ဥဖုံးကြက်သွန်မြိတ်ကြက်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-hwasan-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 4, order: 4,
+    image: null,
+    name: { ko: "화산불백+100g쌀국수", en: "Volcano Bulbaek + 100g Pho", zh: "火山不百+100g米粉", vi: "Bulbaek núi lửa + Phở 100g", mn: "Галт уулын булбэг + 100г будааны гоймон", bn: "ভলকানো বুলবেক + ১০০গ্রাম ফো", my: "မီးတောင်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-gochujang-butter-hwasan-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 4, order: 5,
+    image: null,
+    name: { ko: "고추장버터화산불백+100g쌀국수", en: "Gochujang Butter Volcano Bulbaek + 100g Pho", zh: "辣椒酱黄油火山不百+100g米粉", vi: "Bulbaek núi lửa bơ tương ớt + Phở 100g", mn: "Гочужан-цөцгийн тостой галт уулын булбэг + 100г будааны гоймон", bn: "গোচুজাং বাটার ভলকানো বুলবেক + ১০০গ্রাম ফো", my: "ဂိုချူဂျန်ထောပတ်မီးတောင်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-hwasan-bulbaek",
+    store: "hururuk", group: 4, order: 6,
+    image: null,
+    name: { ko: "화산불백", en: "Volcano Bulbaek", zh: "火山不百", vi: "Bulbaek núi lửa", mn: "Галт уулын булбэг", bn: "ভলকানো বুলবেক", my: "မီးတောင်ဘူဘိတ်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-gochujang-butter-hwasan-bulbaek",
+    store: "hururuk", group: 4, order: 7,
+    image: null,
+    name: { ko: "고추장버터화산불백", en: "Gochujang Butter Volcano Bulbaek", zh: "辣椒酱黄油火山不百", vi: "Bulbaek núi lửa bơ tương ớt", mn: "Гочужан-цөцгийн тостой галт уулын булбэг", bn: "গোচুজাং বাটার ভলকানো বুলবেক", my: "ဂိုချူဂျန်ထောပတ်မီးတောင်ဘူဘိတ်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-shrimp-wonton-rice-noodle",
+    store: "hururuk", group: 4, order: 8,
+    image: "/images/hururuk/shrimp-wonton-rice-noodle.webp",
+    name: { ko: "새우완자쌀국수", en: "Shrimp Wonton Pho", zh: "虾丸米粉", vi: "Phở viên tôm", mn: "Сам хорхойн бөөрөнхийтэй будааны гоймон", bn: "চিংড়ি ওয়ান্টন ফো", my: "ပုဇွန်ဝမ်တန်ဖို့" },
+    price: 5500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bomb-rice-noodle",
+    store: "hururuk", group: 4, order: 9,
+    image: "/images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
+    name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон", bn: "বিফ বেলি ভরপুর ফো", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-chicken-chashu-rice-noodle",
+    store: "hururuk", group: 4, order: 10,
+    image: null,
+    name: { ko: "치킨차슈쌀국수(Chicken Rice Noodle)", en: "Chicken Chashu Pho", zh: "鸡肉叉烧米粉", vi: "Phở xá xíu gà", mn: "Тахианы чашүтэй будааны гоймон", bn: "চিকেন চাশু ফো", my: "ကြက်သားချာရှူးဖို့" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-rice-noodle",
+    store: "hururuk", group: 4, order: 11,
+    image: "/images/hururuk/duthum-chashu-rice-noodle.jpg",
+    name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон", bn: "পুরু চাশু ফো", my: "ထူသောချာရှူးဖို့" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-jikhwa-ganjang-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 4, order: 12,
+    image: null,
+    name: { ko: "직화간장불백+100g쌀국수", en: "Flame-Grilled Soy Bulbaek + 100g Pho", zh: "直火酱油不百+100g米粉", vi: "Bulbaek sốt tương nướng lửa + Phở 100g", mn: "Нүүрсэн дээр шарсан соёвын булбэг + 100г будааны гоймон", bn: "ফ্লেম-গ্রিলড সয় বুলবেক + ১০০গ্রাম ফো", my: "မီးတိုက်ကင်စွယ်ဆော့စ်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10500, soldOut: false, needsReview: false
   }
 ];
 
 /* 천원의 아침밥 안내 (밥심 화면 상단 고정 안내칸 + 상세 모달 공용 데이터) */
 const BREAKFAST_INFO = {
   title: { ko: "천원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐", vi: "Bữa sáng 1.000 won", mn: "1,000 воны өглөөний хоол", bn: "১,০০০ ওনের সকালের খাবার", my: "ဝမ် ၁,၀၀၀ နံနက်စာ" },
+  // 세부페이지 리디자인(비용 최소화)의 라벤더 히어로용 한 줄 설명 —
+  // 새 이벤트/데이터가 아니라 title/price와 같은 자리에 놓이는 문구.
+  heroTagline: {
+    ko: "아침을 여는 가장 든든한 한 끼",
+    en: "A hearty meal to start your morning",
+    zh: "开启元气满满的一天",
+    vi: "Bữa sáng no đủ để bắt đầu ngày mới",
+    mn: "Өглөөг эрч хүчтэй эхлүүлэх хамгийн шимтэй хоол",
+    bn: "সকালকে শক্তিশালীভাবে শুরু করার সবচেয়ে পরিতৃপ্তিকর খাবার",
+    my: "မနက်ခင်းကို အားအင်ပြည့်ဝစွာ စတင်ဖို့ အကောင်းဆုံးအစားအစာ"
+  },
   tabLabel: { ko: "일반 메뉴", en: "Menu", zh: "普通菜单", vi: "Thực đơn thường", mn: "Ерөнхий цэс", bn: "সাধারণ মেনু", my: "ယေဘုယျမီနူး" },
   todayMenuTitle: { ko: "오늘의 아침 메뉴", en: "Today\u2019s Breakfast Menu", zh: "今日早餐菜单", vi: "Thực đơn bữa sáng hôm nay", mn: "Өнөөдрийн өглөөний цэс", bn: "আজকের সকালের খাবারের মেনু", my: "ယနေ့ နံနက်စာမီနူး" },
   tomorrowMenuTitle: { ko: "내일의 아침 메뉴", en: "Tomorrow\u2019s Breakfast Menu", zh: "明日早餐菜单", vi: "Thực đơn bữa sáng ngày mai", mn: "Маргаашийн өглөөний цэс", bn: "আগামীকালের সকালের খাবারের মেনু", my: "မနက်ဖြန် နံနက်စာမီနူး" },
@@ -3174,7 +3319,6 @@ const OWNER_CHAT = {
   },
   button: { ko: "카카오톡으로 말하기", en: "Chat on KakaoTalk", zh: "通过KakaoTalk联系", vi: "Trò chuyện qua KakaoTalk", mn: "KakaoTalk-аар холбогдох", bn: "কাকাওটক-এ কথা বলুন", my: "KakaoTalk ဖြင့်ပြောရန်" }
 };
-
 </script>
 <script>/* ==========================================================================
    관리자 페이지 (js/admin.js)
