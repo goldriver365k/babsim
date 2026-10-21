@@ -165,8 +165,11 @@ var AdminMenu = (function () {
       ? "이미지 용량이 커서 표시가 느려질 수 있습니다."
       : "";
   }
-  function handleImagePick() {
-    var file = els.imageInput.files[0];
+  // 파일 선택과 붙여넣기(Ctrl+V/버튼) 모두 이 함수로 모여서 같은 미리보기/
+  // 압축 경로를 탑니다. 붙여넣은 이미지는 <input type=file>이 자동으로
+  // 채워지지 않으므로, handleSave()가 그대로 읽는 els.imageInput.files에
+  // DataTransfer로 직접 반영해 파일 선택과 동일하게 저장되도록 합니다.
+  function applyPickedImageFile(file) {
     els.imageError.textContent = "";
     pendingCompressPromise = null;
     if (!file) return;
@@ -181,6 +184,32 @@ var AdminMenu = (function () {
       warnIfLarge(blob ? blob.size : file.size);
       return blob;
     });
+
+    try {
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      els.imageInput.files = dt.files;
+    } catch (e) { /* DataTransfer 미지원 브라우저는 무시(미리보기/압축/저장은 handleSave가 file 변수로 별도 처리) */ }
+  }
+
+  function handleImagePick() {
+    applyPickedImageFile(els.imageInput.files[0]);
+  }
+
+  // "메뉴 관리" 탭이 보이는 동안에만 이미지 붙여넣기를 가로채고, 다른
+  // 탭/화면(메뉴명 텍스트 붙여넣기 등)에서는 평소처럼 동작합니다.
+  function handlePaste(e) {
+    var pageEl = document.getElementById("pageMenu");
+    if (!pageEl || pageEl.hidden) return;
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    var imageItem = null;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type && items[i].type.indexOf("image/") === 0) { imageItem = items[i]; break; }
+    }
+    if (!imageItem) return; // 이미지가 없는 일반 붙여넣기는 건드리지 않음
+    e.preventDefault();
+    var file = imageItem.getAsFile();
+    if (file) applyPickedImageFile(file);
   }
 
   /* ---------------- 메뉴명/설명 번역(기존 커뮤니티 번역 서버 함수 재사용) ----------------
@@ -671,12 +700,35 @@ var AdminMenu = (function () {
     els.listBody = qs("menuListBody");
     els.resetBtn = qs("menuResetBtn");
     els.resetStatus = qs("menuResetStatus");
+    els.pasteBtn = qs("menuImagePasteBtn");
     els.storeBtns = document.querySelectorAll("#menuStoreNav .admin-nav-btn");
 
     els.imageInput.addEventListener("change", handleImagePick);
     els.form.addEventListener("submit", handleSave);
     els.cancelEditBtn.addEventListener("click", resetForm);
     if (els.resetBtn) els.resetBtn.addEventListener("click", resetToStaticMenu);
+    document.addEventListener("paste", handlePaste);
+    if (els.pasteBtn) {
+      els.pasteBtn.addEventListener("click", function () {
+        els.imageError.textContent = "";
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+          els.imageError.textContent = "이 브라우저는 버튼으로 붙여넣기를 지원하지 않습니다. Ctrl+V를 이용해 주세요.";
+          return;
+        }
+        navigator.clipboard.read().then(function (clipItems) {
+          for (var i = 0; i < clipItems.length; i++) {
+            var imgType = clipItems[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
+            if (!imgType) continue;
+            return clipItems[i].getType(imgType).then(function (blob) {
+              applyPickedImageFile(new File([blob], "pasted." + (imgType.split("/")[1] || "png"), { type: imgType }));
+            });
+          }
+          els.imageError.textContent = "클립보드에 복사된 이미지가 없습니다. 먼저 이미지를 복사해 주세요.";
+        }).catch(function () {
+          els.imageError.textContent = "클립보드 읽기 권한이 필요합니다. 브라우저 권한 요청을 허용해 주세요.";
+        });
+      });
+    }
     Array.prototype.forEach.call(els.storeBtns, function (btn) {
       btn.addEventListener("click", function () { selectStore(btn.dataset.store); });
     });
