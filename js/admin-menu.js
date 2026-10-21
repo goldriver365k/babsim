@@ -394,20 +394,33 @@ var AdminMenu = (function () {
     });
   }
 
-  /* ---------------- 순서 변경(인접한 두 document만 교환) ---------------- */
-
-  function moveMenu(id, direction) {
+  /* ---------------- 순서 변경(메뉴 앞 번호를 직접 입력해 그 자리로 이동) ----------------
+     화살표로 한 칸씩 옮기던 방식 대신, 각 메뉴 앞의 번호 칸에 원하는
+     순서(1부터)를 입력하면 그 자리로 바로 이동합니다. 이동 후에는 전체
+     목록의 order를 1,2,3...으로 다시 가지런히 매겨, 과거 백필/교환 등으로
+     번호가 비거나 겹쳐 있던 것도 자연스럽게 정리됩니다(실제로 순서가
+     바뀐 문서만 Firestore에 씁니다). */
+  function reorderMenu(id, newPosition) {
     var idx = currentMenus.findIndex(function (m) { return m.id === id; });
     if (idx === -1) return;
-    var targetIdx = idx + direction;
-    if (targetIdx < 0 || targetIdx >= currentMenus.length) return;
+    var targetIdx = Math.max(0, Math.min(currentMenus.length - 1, newPosition - 1));
     var d = db();
-    if (!d) return;
-    var a = currentMenus[idx];
-    var b = currentMenus[targetIdx];
+    if (!d) { loadMenus(); return; }
+
+    var reordered = currentMenus.slice();
+    var moved = reordered.splice(idx, 1)[0];
+    reordered.splice(targetIdx, 0, moved);
+
     var batch = d.batch();
-    batch.update(d.collection("storeMenus").doc(a.id), { order: b.order, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    batch.update(d.collection("storeMenus").doc(b.id), { order: a.order, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    var anyChange = false;
+    reordered.forEach(function (m, i) {
+      var nextOrder = i + 1;
+      if (m.order !== nextOrder) {
+        anyChange = true;
+        batch.update(d.collection("storeMenus").doc(m.id), { order: nextOrder, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      }
+    });
+    if (!anyChange) { loadMenus(); return; }
     batch.commit().then(function () { loadMenus(); });
   }
 
@@ -462,18 +475,19 @@ var AdminMenu = (function () {
     tr.appendChild(tdLike);
 
     var tdOrder = document.createElement("td");
-    var upBtn = document.createElement("button");
-    upBtn.type = "button";
-    upBtn.textContent = "↑";
-    upBtn.disabled = currentMenus.indexOf(m) === 0;
-    upBtn.addEventListener("click", function () { moveMenu(m.id, -1); });
-    var downBtn = document.createElement("button");
-    downBtn.type = "button";
-    downBtn.textContent = "↓";
-    downBtn.disabled = currentMenus.indexOf(m) === currentMenus.length - 1;
-    downBtn.addEventListener("click", function () { moveMenu(m.id, 1); });
-    tdOrder.appendChild(upBtn);
-    tdOrder.appendChild(downBtn);
+    var orderInput = document.createElement("input");
+    orderInput.type = "number";
+    orderInput.min = "1";
+    orderInput.max = String(currentMenus.length);
+    orderInput.value = String(currentMenus.indexOf(m) + 1);
+    orderInput.style.width = "56px";
+    orderInput.style.textAlign = "center";
+    orderInput.addEventListener("change", function () {
+      var n = parseInt(orderInput.value, 10);
+      if (!n || n < 1) { orderInput.value = String(currentMenus.indexOf(m) + 1); return; }
+      reorderMenu(m.id, n);
+    });
+    tdOrder.appendChild(orderInput);
     tr.appendChild(tdOrder);
 
     var tdSoldOut = document.createElement("td");
