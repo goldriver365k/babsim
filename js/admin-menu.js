@@ -591,6 +591,43 @@ var AdminMenu = (function () {
     });
   }
 
+  /* ---------------- 초기화(storeMenus 전체 삭제 → 코드의 MENU_DATA로 재백필) ----------------
+     관리자가 예전에 개별 입력해 둔 메뉴가 최신 코드(js/menu-data.js)와
+     어긋났을 때, 한 번에 전부 지우고 loadMenus()가 항상 하던
+     backfillLegacyMenus()로 다시 채우게 합니다. 소프트 삭제(isActive:false)는
+     쓰지 않습니다 — backfillLegacyMenus는 삭제된 문서의 id도 "이미 존재"로
+     보고 건너뛰어서 되살아나지 않기 때문에(위 주석 참고), 완전 삭제
+     (batch.delete)로 id 자체를 비워야 코드의 최신 내용으로 다시 채워집니다. */
+  function setResetStatus(text, isError) {
+    if (!els.resetStatus) return;
+    if (!text) { els.resetStatus.hidden = true; return; }
+    els.resetStatus.hidden = false;
+    els.resetStatus.textContent = text;
+    els.resetStatus.className = "publish-status" + (isError ? " error" : " success");
+  }
+
+  function resetToStaticMenu() {
+    var d = db();
+    if (!d) return;
+    if (!currentAdminUser()) { setResetStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
+    if (!window.confirm("\"" + currentStore + "\" 매장에 등록된 메뉴를 전부 지우고, 코드에 저장된 최신 메뉴로 다시 불러옵니다.\n되돌릴 수 없습니다. 계속할까요?")) return;
+
+    els.resetBtn.disabled = true;
+    setResetStatus("초기화 중...", false);
+    d.collection("storeMenus").where("store", "==", currentStore).get().then(function (snap) {
+      if (snap.empty) return null;
+      var batch = d.batch();
+      snap.forEach(function (doc) { batch.delete(doc.ref); });
+      return batch.commit();
+    }).then(function () {
+      resetForm();
+      setResetStatus("초기화되었습니다. 최신 메뉴를 불러옵니다...", false);
+      loadMenus();
+    }).catch(function () {
+      setResetStatus("초기화에 실패했습니다.", true);
+    }).finally(function () { els.resetBtn.disabled = false; });
+  }
+
   function selectStore(store) {
     if (currentStore === store) return;
     currentStore = store;
@@ -598,6 +635,7 @@ var AdminMenu = (function () {
       btn.classList.toggle("active", btn.dataset.store === store);
     });
     resetForm();
+    setResetStatus("");
     loadMenus();
   }
 
@@ -617,11 +655,14 @@ var AdminMenu = (function () {
     els.cancelEditBtn = qs("menuCancelEditBtn");
     els.formStatus = qs("menuFormStatus");
     els.listBody = qs("menuListBody");
+    els.resetBtn = qs("menuResetBtn");
+    els.resetStatus = qs("menuResetStatus");
     els.storeBtns = document.querySelectorAll("#menuStoreNav .admin-nav-btn");
 
     els.imageInput.addEventListener("change", handleImagePick);
     els.form.addEventListener("submit", handleSave);
     els.cancelEditBtn.addEventListener("click", resetForm);
+    if (els.resetBtn) els.resetBtn.addEventListener("click", resetToStaticMenu);
     Array.prototype.forEach.call(els.storeBtns, function (btn) {
       btn.addEventListener("click", function () { selectStore(btn.dataset.store); });
     });
