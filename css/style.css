@@ -9,11 +9,11 @@
   --border-gray: #d3d7de;
   --text-dark: #1f2328;
   --text-mid: #4b5563;
-  --bg-page: #f4f5f7;
+  --bg-page: #F6F8FC;
   --bg-card: #ffffff;
   --red: #d92626;
   --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-md: 18px; /* 모바일 UI 개선 2단계: 카드 radius 16~20px 기준 */
 }
 
 * { box-sizing: border-box; }
@@ -25,7 +25,7 @@ html, body {
 }
 
 body {
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", sans-serif;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, "Noto Sans Bengali", "Noto Sans Myanmar", "Noto Sans", sans-serif;
   background: var(--bg-page);
   color: var(--text-dark);
   font-size: 16px;
@@ -61,54 +61,160 @@ button {
   margin: 0 auto 12px;
 }
 
-.site-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--blue);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.lang-select {
+.site-brand {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  max-width: 100%;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  min-width: 0;
 }
 
-.lang-btn,
-.lang-sep {
+/* 공식 로고 버튼(모바일 UI 개선 10단계) — 클릭 시 홈 이동, 로고 주변에
+   여백만 살짝 두고 다른 헤더 버튼보다 크게 보이지 않도록 합니다. */
+.site-logo-btn {
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
-}
-
-.lang-btn {
+  padding: 4px;
   background: none;
   border: none;
-  padding: 6px 4px;
-  min-height: 44px;
-  font-size: 15px;
-  color: var(--text-mid);
   border-radius: var(--radius-sm);
+  line-height: 0;
 }
 
-.lang-btn:hover,
-.lang-btn:focus-visible {
-  color: var(--blue);
+.site-logo-btn:hover,
+.site-logo-btn:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 
-.lang-btn.active {
-  color: var(--blue);
-  font-weight: 700;
+/* 공식 로고 이미지 — images/icon/site-logo.jpg 파일이 없으면 js/app.js가
+   자동으로 hidden 처리합니다. 비율 왜곡을 막기 위해 height 기준으로만
+   크기를 맞추고 width는 auto로 둡니다(가로/세로 강제 고정 금지). */
+.site-logo {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
-.lang-sep {
-  color: var(--border-gray);
+.site-logo[hidden] { display: none; }
+
+.site-brand-text { min-width: 0; }
+
+/* "babsim.store" — 참고 이미지의 고정 브랜드 표기(언어 무관, 굵고 크게).
+   기본 HOME 이동 버튼 역할도 겸함(js/app.js가 goHome() 재사용). */
+.site-brand-name {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #14181F;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.site-brand-name:focus-visible {
+  outline: 2px solid var(--home-yellow, #F5E900);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 기존 siteTitle(건물명·대학명, 매장에 따라 실제로 바뀌는 정보)은
+   대체하지 않고 브랜드명 아래 보조 줄로 내립니다. */
+.site-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin: 1px 0 0;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* LEGO 홈 디자인 참고 이미지의 장식용 태그라인("EAT · PLAY · CONNECT") —
+   siteTitle을 대체하지 않고 그 아래 보조 문구로만 추가합니다. 세 단어를
+   참고 이미지처럼 서로 다른 색으로 표시합니다(js/app.js에서 분리). */
+.site-tagline {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+.site-tagline-part-0 { color: #D6503F; }
+.site-tagline-part-1 { color: #2E6B4F; }
+.site-tagline-part-2 { color: #1D4FA3; }
+
+/* ---------------- 언어 선택 — 작은 🌐 토글 + 드롭다운 ----------------
+   참고 이미지 지시서 3번: 항상 펼쳐진 7버튼 나열 대신 작은 control로
+   표시. 버튼 목록(.lang-bar-btn)과 클릭 로직은 기존 그대로 재사용하고
+   펼침/접힘(hidden)만 새로 추가합니다. */
+.lang-compact { position: relative; flex: 0 0 auto; }
+
+.lang-compact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lang-compact-btn:hover,
+.lang-compact-btn:focus-visible {
+  border-color: #1559D6;
+  outline: none;
+}
+
+.lang-compact-icon { font-size: 15px; line-height: 1; }
+.lang-compact-label { max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
+.lang-compact-caret { font-size: 11px; opacity: .7; }
+
+.lang-bar {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
+  gap: 6px;
+  width: max-content;
+  max-width: 260px;
+  margin: 0;
+  padding: 10px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-gray);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .16);
+}
+
+.lang-bar[hidden] { display: none; }
+
+.lang-bar-btn {
+  min-height: 40px;
+  padding: 8px 10px;
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lang-bar-btn:hover,
+.lang-bar-btn:focus-visible {
+  border-color: #1559D6;
+  outline: none;
+}
+
+.lang-bar-btn.active {
+  background: #1559D6;
+  color: #FFFFFF;
+  border-color: #1559D6;
 }
 
 .store-tabs {
@@ -462,6 +568,150 @@ button {
   .hellokorean-btn { width: 100%; }
 }
 
+/* ---------------- 방 구하기 카드 + 모달(js/room-finder.js) ----------------
+   홈 카드는 기존 .hellokorean-card/.hellokorean-link/.hellokorean-title/
+   .hellokorean-desc를 그대로 재사용합니다(버튼 리셋 한 줄만 추가). 모달
+   껍데기는 .modal-overlay/.modal/.modal-close, 입력창은 .community-form/
+   .community-field/.community-label, 버튼은 .community-btn-primary를
+   그대로 재사용합니다(새 디자인 시스템 없음). */
+.room-finder-link {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+.room-finder-step-title {
+  margin: 0 0 4px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.room-finder-step-desc {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.room-finder-lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-finder-lang-btn { width: 100%; }
+
+.room-finder-form .community-field { margin-bottom: 12px; }
+
+.room-finder-privacy {
+  font-size: 12px;
+  color: var(--text-mid);
+  margin: 4px 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.room-finder-submit { width: 100%; }
+
+/* ---------------- 1,000원의 아침밥 주말·공휴일 설문조사
+   (js/weekend-survey.js) ----------------
+   껍데기(.modal-overlay/.modal/.modal-close)와 버튼(.community-btn-primary/
+   .community-btn-secondary)은 기존 스타일을 그대로 재사용합니다(새 UI
+   라이브러리 없음). 언어 버튼은 .room-finder-lang-list/.room-finder-
+   lang-btn을 그대로 재사용하되, 지시서 6번의 최소 높이 52px만 여기서
+   덧붙입니다. */
+.weekend-survey-title {
+  margin: 0 0 2px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.weekend-survey-subtitle {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blue);
+  text-align: center;
+}
+
+.weekend-survey-intro-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+
+.weekend-survey-intro-line {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.weekend-survey-lang-btn { width: 100%; min-height: 52px; }
+
+.weekend-survey-progress {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+  text-align: center;
+}
+
+.weekend-survey-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.weekend-survey-option-btn { width: 100%; text-align: left; }
+
+/* .community-btn-secondary와 클래스 2개를 겹쳐 써서(css/style.css 뒤쪽의
+   .community-btn-secondary 기본 규칙보다 우선하도록) 선택된 답변만 채워진
+   색으로 보이게 합니다(새 컴포넌트 없이 기존 버튼 2종 전환만 사용). */
+.community-btn-secondary.weekend-survey-option-selected {
+  background: var(--comm-blue);
+  color: #FFFFFF;
+  border-color: var(--comm-blue);
+}
+
+.weekend-survey-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 14px;
+  border: 1px solid var(--comm-border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.weekend-survey-suggestion-title {
+  margin: 4px 0 2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.weekend-survey-suggestion-desc {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+.weekend-survey-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.weekend-survey-nav-btn { flex: 1 1 auto; }
+
 /* ---------------- 사장님께 말해요 ---------------- */
 
 .owner-chat-banner {
@@ -518,8 +768,10 @@ button {
   display: none;
   position: fixed;
   right: 16px;
-  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올려 겹치지 않게 합니다. */
-  bottom: calc(16px + var(--pwa-banner-height, 0px));
+  /* PWA 업데이트/설치 배너가 떠 있을 때는 그 위로 밀어 올립니다. 하단
+     내비게이션은 이제 항상 숨김이라 더 이상 그 위 간격을 계산하지
+     않고, iPhone safe-area만 확보합니다. */
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--pwa-banner-height, 0px));
   transition: bottom 0.15s ease;
   z-index: 40;
   align-items: center;
@@ -546,6 +798,7 @@ button {
 
 @media (max-width: 700px) {
   .owner-chat-fab { display: inline-flex; }
+  body:has(.home-view:not([hidden])) .owner-chat-fab { display: none; }
 }
 
 /* ---------------- PWA 업데이트 알림 / 바탕화면 추가 안내 ----------------
@@ -674,12 +927,271 @@ button {
 
 .ios-install-steps li { overflow-wrap: anywhere; }
 
+/* ---------------- 홈 화면(모바일 UI 개선 4단계) ---------------- */
+
+.home-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px calc(64px + 20px + env(safe-area-inset-bottom, 0px)); /* 하단 내비게이션은 숨김 처리되어 더 이상 가리지 않음 — "사장님께 말해요" FAB(약 64px, 16px 간격) + safe-area만 확보 */
+}
+
+.home-view[hidden] { display: none; }
+
+.home-hero {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  margin-bottom: 24px;
+}
+
+/* 히어로 이미지 placeholder — 파일이 없으면 js/app.js가 자동으로 숨김
+   처리하고, 문구만 남습니다(임의 이미지 제작 없음). */
+.home-hero-img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.home-hero-img[hidden] { display: none; }
+
+.home-hero-tagline {
+  margin: 0;
+  padding: 18px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.home-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 12px;
+}
+
+.home-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+/* 모바일 UI 개선 9단계: 태블릿/PC에서 카드가 지나치게 넓어지지 않도록
+   기존 .menu-grid와 동일한 640px/1000px 기준을 재사용(모바일 2열은 그대로 유지) */
+@media (min-width: 640px) {
+  .home-service-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1000px) {
+  .home-service-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+.home-service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 108px;
+  padding: 16px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.home-service-card:hover,
+.home-service-card:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.home-service-icon { font-size: 28px; line-height: 1; }
+
+/* 공식 로고 이미지(10단계) — 후루룩찹찹/만권화밥/밥심. 이모지 아이콘과
+   비슷한 시각적 크기를 유지하되, 원본 비율은 왜곡하지 않습니다
+   (height 기준, width: auto). 파일이 없으면 js/app.js가 자동 숨김. */
+.home-service-icon-img {
+  height: 32px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+.home-service-icon-img[hidden] { display: none; }
+
+.home-service-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.home-service-loc {
+  font-size: 12px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.home-community-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-community-post-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gray);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.home-community-post-card:hover,
+.home-community-post-card:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+}
+
+.home-community-post-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.home-community-post-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.home-community-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-mid);
+}
+
+/* ---------------- 하단 고정 내비게이션 ----------------
+   HOME/세부페이지 UX 정정 지시서: HOME 포함 전체 화면에서 이 fixed
+   bottom bar의 UI를 숨깁니다(버튼/라우팅/기능 코드는 삭제하지 않고
+   그대로 둠 — display:none만 적용). Search/Write/Alerts/MY 기능은
+   밥심 커뮤니티 등 해당 페이지 내부의 기존 접근 방법으로 유지됩니다. */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: none;
+  background: #ffffff;
+  border-top: 1px solid var(--border-gray);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav[hidden] { display: none; }
+
+.bottom-nav-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+}
+
+/* 모바일 UI 개선 8단계: 선택된 메뉴는 지정된 블루(#1465E8) */
+.bottom-nav-btn.active { color: #1465E8; font-weight: 700; }
+
+.bottom-nav-icon { font-size: 20px; line-height: 1; }
+
+.bottom-nav-label {
+  font-size: 12px;
+  /* 언어별 글자 길이가 달라도(베트남어·벵골어·미얀마어·몽골어 등) 잘리지
+     않도록 줄바꿈을 허용합니다(8단계: 모바일 가독성). */
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* 글쓰기 버튼만 살짝 강조(큰 원형 버튼·과도한 그림자는 쓰지 않음) */
+.bottom-nav-btn-write .bottom-nav-icon { font-size: 22px; }
+.bottom-nav-btn-write .bottom-nav-label { font-weight: 700; }
+
+
+
+/* ---------------- 천원의 아침밥 평가 팝업(당일 첫 방문 1회, 모바일 UI 개선 6단계) ---------------- */
+
+.breakfast-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.breakfast-popup-overlay[hidden] { display: none; }
+
+.breakfast-popup-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.14);
+}
+
+/* 평가하지 않고 닫기(X) — 평가 완료로 처리하지 않고, 이번 세션에서만 닫습니다 */
+.breakfast-popup-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-mid);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.breakfast-popup-close-btn::before { content: "\2715"; }
+
+.breakfast-popup-close-btn:hover,
+.breakfast-popup-close-btn:focus-visible {
+  background: #f2f4f7;
+  outline: none;
+}
+
 /* ---------------- 본문 ---------------- */
 
 main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px 60px;
+  /* HOME/세부페이지 UX 정정: 하단 내비게이션은 항상 숨김이라 더 이상
+     가리지 않음 — "사장님께 말해요" FAB(항상 고정 표시)만 확보 */
+  padding: 20px 16px calc(64px + 20px + env(safe-area-inset-bottom, 0px));
 }
 
 .store-heading {
@@ -979,17 +1491,17 @@ main {
 
 /* ---- 오늘의 메뉴 평가 (천원의 아침밥) ---- */
 
+/* 평가 UI 수정 단계: 본문이 아니라 당일 첫 방문 팝업(.breakfast-popup-sheet)
+   안에서만 쓰이므로, 더 이상 아래쪽 콘텐츠와 구분하는 테두리가 필요 없습니다. */
 .ba-rating {
   max-width: 480px;
-  margin: 0 auto 20px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border-gray);
+  margin: 0 auto;
 }
 
 .ba-rating[hidden] { display: none; }
 
 .ba-rating-title {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   font-size: 17px;
   font-weight: 800;
   color: var(--text-dark);
@@ -998,17 +1510,20 @@ main {
 
 .ba-rating-title[hidden] { display: none; }
 
+/* 평가 UI 수정 단계: 5개를 한 줄에 억지로 욱여넣지 않고, 좁은 화면에서는
+   자연스럽게 줄바꿈되도록 합니다(각 버튼 최소 크기 확보). */
 .ba-rating-options {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .ba-rating-options[hidden] { display: none; }
 
 .ba-rating-option {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 1 76px;
+  min-width: 64px;
   min-height: 76px;
   display: flex;
   flex-direction: column;
@@ -1018,7 +1533,7 @@ main {
   background: #ffffff;
   border: 1px solid var(--border-gray);
   border-radius: var(--radius-sm);
-  padding: 8px 2px;
+  padding: 8px 4px;
 }
 
 .ba-rating-option:hover:not(:disabled),
@@ -1040,12 +1555,7 @@ main {
   width: 40px;
   height: 40px;
   display: block;
-}
-
-.ba-rating-face svg {
-  width: 100%;
-  height: 100%;
-  display: block;
+  object-fit: contain;
 }
 
 .ba-rating-label {
@@ -1176,6 +1686,14 @@ main {
   gap: 2px;
 }
 
+.card-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
 .card-name-ko {
   font-size: 15px;
   font-weight: 700;
@@ -1183,10 +1701,54 @@ main {
   overflow-wrap: anywhere;
 }
 
+.menu-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  /* 실제 터치 영역은 40~44px 정도로 넉넉하게 확보하되(padding), 그만큼
+     음수 margin으로 상쇄해 카드 레이아웃에서 차지하는 시각적 크기는
+     하트 그림 자체 크기 그대로 유지합니다(별도 배경 박스처럼 보이지
+     않음). */
+  padding: 9px 8px;
+  margin: -9px -8px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+
+.menu-like-btn.liked {
+  color: var(--red);
+}
+
+.menu-like-heart {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.menu-like-count {
+  font-variant-numeric: tabular-nums;
+}
+
 .card-name-translated {
   font-size: 13px;
   color: var(--text-mid);
   overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-description {
+  font-size: 12px;
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+  margin-top: 2px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1305,6 +1867,197 @@ main {
   margin: 0 0 10px;
 }
 
+/* ---------------- 홈 팝업(관리자 등록, 팝업 기능 2단계) ----------------
+   껍데기(.modal-overlay/.modal)와 닫기 버튼(.community-btn-secondary)은
+   기존 스타일을 그대로 재사용하고, 이미지 표시만 최소한으로 추가합니다.
+   .modal의 기존 max-width:420px(PC/태블릿에서도 과도하게 커지지 않음)는
+   이미 공용 규칙이라 그대로 두고, 화면 높이 초과 방지만 이 팝업에만
+   덧붙입니다(이미지 규격 최적화 지시서). */
+#sitePopupOverlay .modal { max-height: 85dvh; }
+
+.site-popup-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* 이미지+닫기 버튼+여백이 화면 높이를 넘지 않도록, 버튼·여백 몫을 뺀
+     만큼만 이미지에 남겨둡니다 — 비율은 유지된 채(object-fit: contain)
+     자동으로 줄어듭니다. */
+  max-height: calc(85dvh - 120px);
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  margin: 0 auto 14px;
+}
+
+.site-popup-image-linked { cursor: pointer; }
+
+.site-popup-close-btn { width: 100%; min-height: 48px; }
+
+/* ---------------- 홈 이벤트 팝업(후루룩찹찹 주말 점심영업 안내) ----------------
+   껍데기(.modal-overlay/.modal/.modal-close)와 버튼(.community-btn-primary)
+   스타일을 그대로 재사용합니다. 포스터가 핵심이라 모바일에서 화면 대부분을
+   차지하도록 이 팝업(#hometownPopupOverlay)에만 크기를 덧붙입니다 — 공용
+   .modal-overlay/.modal 규칙(다른 팝업들이 쓰는)은 그대로 둡니다. */
+#hometownPopupOverlay { padding: 12px; }
+
+#hometownPopupOverlay .modal {
+  width: 94vw;
+  max-width: 420px;
+  max-height: 94dvh;
+  /* 위쪽만 넉넉히(.modal-close가 top:10px + 44px 높이라 56px 이상 필요) —
+     X 닫기가 포스터를 가리지 않도록 */
+  padding: 48px 18px 18px;
+  /* 2026-09 "새우완탕쌀국수" 신메뉴 지시서 — 사진이 주인공인 어두운
+     배경으로 교체(기존 밝은 배경 대신 홈 V17과 같은 다크 톤 재사용,
+     새 색상 추가 없음). */
+  background: var(--home-bg);
+}
+
+/* 닫기(×) 버튼은 공용 .modal-close(어두운 글자, 밝은 배경용)를 그대로
+   쓰면 검정 배경 위에서 거의 안 보여서, 이 팝업에서만 밝은 색으로
+   덮어씁니다(가독성 지시서와 동일한 원칙). */
+#hometownPopupOverlay .modal-close { color: rgba(255, 255, 255, 0.8); }
+#hometownPopupOverlay .modal-close:hover,
+#hometownPopupOverlay .modal-close:focus-visible { color: var(--home-yellow); }
+
+.hometown-popup-poster {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* 실제 사진(images/hururuk/shrimp-wonton-rice-noodle.webp)을 가장 먼저
+   보여줍니다 — 관리자 팝업(.site-popup-image)과 같은 object-fit:contain
+   방식을 재사용. */
+.hometown-popup-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(94dvh - 300px);
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin: 0 0 16px;
+}
+
+.hometown-popup-eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--home-yellow);
+  text-transform: uppercase;
+}
+
+.hometown-popup-title-block { margin-bottom: 8px; }
+
+.hometown-popup-title-main {
+  font-size: clamp(26px, 7.5vw, 34px);
+  font-weight: 800;
+  color: var(--home-fg-strong);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.hometown-popup-price {
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 800;
+  color: var(--home-yellow);
+  margin: 0 0 10px;
+}
+
+.hometown-popup-tagline {
+  font-size: clamp(14px, 4vw, 17px);
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.4;
+  margin: 0 0 4px;
+}
+
+.hometown-popup-cta {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  font-size: 18px;
+  margin-top: 16px;
+}
+
+.hometown-popup-dismiss-today {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: none;
+  border: none;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------------- 점심 영업 안내 팝업(2026-10-06 지시, 기간 한정) ----------------
+   #hometownPopupOverlay/.modal 껍데기와 닫기·오늘 하루 보지 않기 로직은
+   그대로 재사용하고, 밝은 배경(검정 글씨+노란 포인트)만 이 팝업 전용
+   클래스로 덮어씁니다(화산불백 영상 팝업의 다크 톤과는 반대 테마). */
+#hometownPopupOverlay .modal.lunch-notice-modal { background: #ffffff; }
+
+#hometownPopupOverlay .modal.lunch-notice-modal .modal-close { color: var(--text-mid); }
+#hometownPopupOverlay .modal.lunch-notice-modal .modal-close:hover,
+#hometownPopupOverlay .modal.lunch-notice-modal .modal-close:focus-visible { color: var(--home-yellow); }
+
+.lunch-notice-poster { text-align: center; overflow-wrap: anywhere; }
+
+.lunch-notice-dates {
+  font-size: clamp(21px, 6.2vw, 27px);
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+
+.lunch-notice-hours {
+  display: inline-block;
+  font-size: clamp(19px, 5.6vw, 25px);
+  font-weight: 800;
+  color: var(--text-dark);
+  background: var(--home-yellow);
+  padding: 4px 14px;
+  border-radius: var(--radius-sm);
+  margin: 0 0 10px;
+}
+
+.lunch-notice-location {
+  font-size: clamp(14px, 4vw, 17px);
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 16px;
+}
+
+.lunch-notice-lang-list { margin: 0 0 14px; }
+
+.lunch-notice-lang-line {
+  font-size: clamp(13px, 3.6vw, 15px);
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.45;
+  margin: 0 0 5px;
+}
+
+.lunch-notice-cta {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  padding: 6px 10px;
+  margin-top: 6px;
+}
+
+.lunch-notice-cta-line {
+  display: block;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+#hometownPopupOverlay .modal.lunch-notice-modal .hometown-popup-dismiss-today {
+  color: rgba(31, 35, 40, 0.55);
+}
+
 .modal-desc {
   font-size: 15px;
   color: var(--text-dark);
@@ -1346,7 +2099,7 @@ main {
 :root {
   --comm-blue: #1559D6;
   --comm-navy: #12345B;
-  --comm-bg: #F7F9FC;
+  --comm-bg: #F6F8FC; /* 모바일 UI 개선 2단계: 사이트 공통 배경(--bg-page)과 통일 */
   --comm-card: #FFFFFF;
   --comm-border: #CBDDF7;
   --comm-text: #334155;
@@ -1380,7 +2133,9 @@ main {
 .community-root {
   max-width: 760px;
   margin: 0 auto;
-  padding: 16px 16px 48px;
+  /* HOME/세부페이지 UX 정정: 하단 내비게이션은 항상 숨김이라 더 이상
+     가리지 않음 — "사장님께 말해요" FAB(항상 고정 표시)만 확보 */
+  padding: 16px 16px calc(64px + 20px + env(safe-area-inset-bottom, 0px));
   font-family: "Noto Sans", "Noto Sans KR", "Noto Sans SC", "Noto Sans Mongolian", "Noto Sans Bengali", "Noto Sans Myanmar", inherit;
   color: var(--comm-text);
 }
@@ -1516,6 +2271,9 @@ main {
 
 .community-field { display: flex; flex-direction: column; gap: 6px; }
 
+/* 글자 수 표시(예: "328 / 500", 2026-09 자동번역 지시서 1번) */
+.community-char-count { font-size: 12px; color: #94A3B8; text-align: right; margin-top: -2px; }
+
 .community-label {
   font-size: 13px;
   font-weight: 700;
@@ -1528,6 +2286,8 @@ main {
 .community-form input[type="number"],
 .community-form input[type="url"],
 .community-form input[type="search"],
+.community-form input[type="tel"],
+.community-form input[type="date"],
 .community-form select,
 .community-form textarea {
   min-height: 48px;
@@ -1576,17 +2336,20 @@ main {
 .community-verify-notice { color: var(--comm-help); font-weight: 700; margin-bottom: 12px; }
 .community-gate-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-/* 카테고리 탭 — 모바일에서는 가로 스크롤 */
+/* 카테고리 4개 개편: 블록형(제목+짧은 설명) 그리드 — 가로 스크롤 대신
+   모바일 2열×2줄, PC(720px~)는 4열로 최소 수정. */
 .community-category-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
   margin-bottom: 12px;
 }
 
+@media (min-width: 720px) {
+  .community-category-tabs { grid-template-columns: repeat(4, 1fr); }
+}
+
 .community-category-tab {
-  flex: 0 0 auto;
   min-height: 44px;
   padding: 8px 16px;
   border-radius: 999px;
@@ -1602,6 +2365,34 @@ main {
   background: var(--comm-blue);
   border-color: var(--comm-blue);
   color: #FFFFFF;
+}
+
+.community-category-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  white-space: normal;
+  text-align: left;
+}
+
+.community-category-block-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.community-category-block-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--comm-text);
+  opacity: 0.7;
+}
+
+.community-category-tab.active .community-category-block-desc {
+  color: #FFFFFF;
+  opacity: 0.9;
 }
 
 .community-toolbar {
@@ -1625,6 +2416,25 @@ main {
   cursor: pointer;
 }
 
+/* 게시판 목록 로딩 스켈레톤(모바일 로딩 속도 지시서 12번) — 실제 카드와
+   같은 틀(.community-post-card)에 애니메이션 바만 덧붙입니다. */
+.community-post-card-skeleton { cursor: default; }
+.community-skeleton-bar {
+  height: 14px; border-radius: 6px; margin: 6px 0;
+  background: linear-gradient(90deg, var(--comm-border) 25%, #EEF2F8 37%, var(--comm-border) 63%);
+  background-size: 400% 100%;
+  animation: community-skeleton-pulse 1.4s ease infinite;
+}
+.community-skeleton-bar-title { width: 60%; height: 16px; }
+.community-skeleton-bar-meta { width: 35%; }
+@keyframes community-skeleton-pulse {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-skeleton-bar { animation: none; }
+}
+
 .community-post-card-cat {
   display: inline-block;
   font-size: 12px;
@@ -1641,7 +2451,7 @@ main {
   overflow-wrap: anywhere;
 }
 
-.community-post-card-meta { font-size: 12px; color: #64748B; overflow-wrap: anywhere; }
+.community-post-card-meta { font-size: 12px; color: #64748B; overflow-wrap: anywhere; margin: 0 0 8px; }
 
 .community-post-card-photo {
   display: block;
@@ -1652,14 +2462,71 @@ main {
   margin-bottom: 8px;
 }
 
-.community-post-card-summary {
-  font-size: 14px;
+.community-post-card-detail-btn { margin-top: 4px; padding-left: 0; }
+
+/* 속닥속닥 단일 익명게시판(2026-10-09 지시서) — 목록 카드의 본문
+   미리보기·조회수/댓글/좋아요 한 줄. 기존 .community-post-card-title/
+   -meta와 같은 톤(글자 크기/색)만 재사용한 새 클래스 2개. */
+.community-post-card-preview {
+  font-size: 13px;
   color: var(--comm-text);
   margin: 0 0 8px;
   overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+/* 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 제목 줄이 없어진 속닥속닥
+   카드에서는 본문 미리보기가 사실상 제목 역할도 겸하므로 조금 더
+   크고 진하게(기존 .community-post-card-title과 비슷한 비중으로). */
+.community-post-card-preview-main {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--comm-navy);
+  margin-bottom: 6px;
+}
+/* 글쓰기 화면도 본문 입력칸 하나뿐이라, 바로 적을 수 있도록 넉넉한
+   높이를 줍니다(기존 textarea 기본 스타일 재사용, 높이만 지정). */
+.community-whisper-content-input { min-height: 160px; }
+.community-post-card-stats { font-size: 12px; color: #64748B; margin: 0; }
+
+/* 속닥속닥 바로가기 바(2026-10-09 지시서 → 2026-10-12 지시로 천원의
+   아침밥 카드 위로 재배치) — 노란색 배경 + 검은 글씨, 가로 전체 너비로
+   눈에 잘 띄게 합니다(모바일/PC 공통 — .home-bento grid-template-columns
+   와 맞춰 전체 폭 차지). 홈 Bento 맨 위(천원의 아침밥보다 먼저)에
+   오도록 아래 order 규칙이 맡습니다. 홈 V17의 기존 --home-yellow
+   포인트색을 그대로 재사용(새 색상 없음). */
+.whisper-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  grid-column: 1 / 3;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--home-yellow);
+  color: #111111;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+}
+.whisper-top-bar-text { overflow-wrap: anywhere; }
+.whisper-top-bar-arrow { flex: none; }
+@media (max-width: 360px) {
+  .whisper-top-bar { font-size: 13px; padding: 7px 10px; }
+}
+@media (min-width: 700px) {
+  /* 2026-10-12 지시 — 천원의 아침밥 카드 위로 이동하면서 PC/태블릿에서도
+     다시 한 줄(6열) 전체를 차지하는 맨 위 바 형태로 되돌립니다. */
+  .whisper-top-bar { grid-column: 1 / 7; }
 }
 
-.community-post-card-detail-btn { margin-top: 4px; padding-left: 0; }
+/* 속닥속닥 글쓰기 폼(제목+내용만) — 기존 .community-form/.community-field/
+   .community-btn-primary 스타일을 그대로 재사용하므로 추가 CSS는
+   안내문구 여백 하나만 필요합니다. */
+.community-whisper-write .community-safety-notice { margin: 0 0 16px; }
 
 /* 비회원/회원 공통 로그인 필요 안내창(.modal-overlay/.modal 재사용) 안의
    버튼 줄 — 좁은 화면에서는 세로로 쌓입니다. */
@@ -1696,24 +2563,38 @@ main {
 .community-badge-jobstatus-seeking { background: var(--comm-free); }
 .community-badge-jobstatus-done { background: var(--comm-done); }
 
-/* 게시글 상세 */
+/* 게시글 상세 — 이 화면은 항상 어두운 배경(body:not(:has(#homeView...)))
+   위에 표시되는데 제목/본문 색이 밝은 배경용(--comm-navy/--comm-text,
+   어두운 남색·슬레이트)으로 남아 있어 거의 안 보이던 문제를 수정합니다
+   (레이아웃/크기/간격은 그대로, 글씨 색만 변경 — 2026-09 가독성 수정
+   지시서). 작성자·날짜(.community-post-card-meta)는 목록 카드에서도
+   재사용되는 공용 클래스라 목록까지 바뀌지 않도록 상세화면
+   (.community-detail-head) 안에서만 덮어씁니다.
+   카테고리(.community-post-card-cat)는 기존 파란색(#1559D6)이 검정
+   배경에서도 충분히 밝아 그대로 유지합니다. */
 .community-detail-head { margin-bottom: 10px; }
-.community-detail-title { font-size: 19px; font-weight: 800; color: var(--comm-navy); margin: 6px 0; overflow-wrap: anywhere; }
+.community-detail-title { font-size: 19px; font-weight: 800; color: #FFFFFF; margin: 6px 0; overflow-wrap: anywhere; }
+.community-detail-head .community-post-card-meta { color: #A8A8A8; }
 .community-detail-body { margin-bottom: 14px; }
-.community-detail-content { font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.community-detail-content {
+  font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+  color: #E5E5E5;
+}
+/* 본문이 나중에 Markdown(###, 목록 등)으로 렌더링되는 경우를 대비한
+   안전장치 — 지금은 평문(pre-wrap)이라 실제로는 .community-detail-content
+   의 color(#E5E5E5)가 p/li 등에 그대로 상속되어 이미 밝게 보입니다. */
+.community-detail-content h1, .community-detail-content h2,
+.community-detail-content h3, .community-detail-content h4 { color: #FFFFFF; }
 .community-ai-notice { font-size: 12px; color: #94A3B8; margin-top: 6px; }
 
-.community-detail-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 8px;
-  margin-bottom: 14px;
-}
+.community-detail-gallery { margin-bottom: 14px; }
 
+/* 게시글당 사진 최대 1장이라 자르지 않고 원본 비율 그대로 보여줍니다
+   (2026-09 "커뮤니티 이미지 업로드" 지시서 10번 — width:100%;height:auto). */
 .community-detail-gallery img {
+  display: block;
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
+  height: auto;
   border-radius: 10px;
   border: 1px solid var(--comm-border);
 }
@@ -1790,17 +2671,23 @@ main {
 /* 사진 미리보기 */
 .community-photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .community-photo-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--comm-border); }
+/* 사진 미리보기 아래 [사진 변경]/[사진 삭제] 버튼 행(2026-09 "커뮤니티
+   이미지 업로드" 지시서 7번) — 사진이 없을 때는 hidden으로 숨김. */
+.community-photo-actions { display: flex; gap: 14px; margin-top: 6px; }
+.community-photo-actions[hidden] { display: none; }
 
 .community-market-fields,
 .community-help-fields,
 .community-job-fields,
 .community-job-hiring-fields,
-.community-job-seeking-fields { display: flex; flex-direction: column; gap: 14px; }
+.community-job-seeking-fields,
+.community-hometown-fields { display: flex; flex-direction: column; gap: 14px; }
 .community-market-fields[hidden],
 .community-help-fields[hidden],
 .community-job-fields[hidden],
 .community-job-hiring-fields[hidden],
-.community-job-seeking-fields[hidden] { display: none; }
+.community-job-seeking-fields[hidden],
+.community-hometown-fields[hidden] { display: none; }
 
 /* 문서(규칙/개인정보) 화면 */
 .community-doc-body { font-size: 14px; line-height: 1.7; }
@@ -1830,3 +2717,442 @@ main {
 @media (min-width: 700px) {
   .community-root { padding-top: 24px; }
 }
+
+/* ===== HOME V11 — studless connected block homepage ===== */
+.b2-home{background:#f7f2e8!important;padding:14px 8px 92px!important}
+.b2-grid{display:grid!important;grid-template-columns:repeat(12,1fr)!important;grid-template-rows:100px 205px 132px 142px 142px!important;gap:7px!important;max-width:560px!important;margin:0 auto!important;overflow:visible!important}
+.b2-brick{position:relative!important;box-sizing:border-box!important;border:0!important;border-radius:12px!important;overflow:visible!important;clip-path:none!important;padding:18px 13px!important;box-shadow:0 7px 0 var(--b-depth,#777),0 10px 13px rgba(44,33,18,.17)!important;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;align-items:flex-start!important;text-decoration:none!important}
+.b2-brick::before,.b2-brick::after{display:none!important}
+.b2-event{grid-column:1/13!important;grid-row:1!important;background:#ed3934!important;--b-depth:#a91f1c!important;padding-left:100px!important}
+.b2-breakfast{grid-column:1/8!important;grid-row:2!important;background:#ffc21a!important;--b-depth:#bd8b00!important;padding:22px 72px 18px 15px!important}
+.b2-room{grid-column:8/13!important;grid-row:2!important;background:#278cdf!important;--b-depth:#1268ad!important;align-items:center!important;text-align:center!important}
+.b2-bapsim{grid-column:1/5!important;grid-row:3!important;background:#54b95a!important;--b-depth:#327d36!important}
+.b2-hururuk{grid-column:5/9!important;grid-row:3!important;background:#e8443f!important;--b-depth:#a52b27!important}
+.b2-mangwon{grid-column:9/13!important;grid-row:3!important;background:#9634ad!important;--b-depth:#651d77!important}
+.b2-hometown{grid-column:1/8!important;grid-row:4!important;background:#f06d9a!important;--b-depth:#bd3e69!important}
+.b2-friends{grid-column:8/13!important;grid-row:4!important;background:#278cdf!important;--b-depth:#1268ad!important}
+.b2-korean{grid-column:1/7!important;grid-row:5!important;background:#54b95a!important;--b-depth:#327d36!important}
+.b2-owner{grid-column:7/13!important;grid-row:5!important;background:#f5a623!important;--b-depth:#b66b00!important}
+
+/* only the shared edges interlock: rectangular tab into matching rectangular socket */
+.b2-breakfast,.b2-hometown,.b2-korean{--tab:18px}
+.b2-breakfast .b11-tab,.b2-hometown .b11-tab,.b2-korean .b11-tab{display:block}
+.b11-tab{display:none;position:absolute;right:-18px;top:50%;width:25px;height:48px;transform:translateY(-50%);background:inherit;border-radius:0 7px 7px 0;z-index:3;box-shadow:0 7px 0 var(--b-depth)}
+.b11-socket{display:none;position:absolute;left:-1px;top:50%;width:19px;height:52px;transform:translateY(-50%);background:#f7f2e8;border-radius:0 7px 7px 0;z-index:4}
+.b2-room .b11-socket,.b2-friends .b11-socket,.b2-owner .b11-socket{display:block}
+.b2-bapsim .b11-tab,.b2-hururuk .b11-tab{display:block}
+.b2-hururuk .b11-socket,.b2-mangwon .b11-socket{display:block}
+
+/* remove old experimental SVG block shells/studs */
+.b3-event-shape,.b3-breakfast-shape,.b3-room-shape{display:none!important}
+.b3-event,.b3-breakfast,.b3-room{isolation:auto!important}
+.b2-brick>span,.b2-brick>strong{position:relative;z-index:6}
+.b2-brick strong{font-weight:950!important;line-height:1.02!important;letter-spacing:-.055em!important;color:#fff!important}
+.b2-breakfast strong,.b2-breakfast .b2-small{color:#151515!important}
+.b2-event strong{font-size:31px!important}.b2-event-sub{font-size:11px!important;color:#fff!important}
+.b2-breakfast .b2-small{font-size:29px!important;font-weight:950!important}.b2-breakfast strong{font-size:34px!important;color:#ed332d!important}
+.b2-room strong{font-size:22px!important}.b2-brick:not(.b2-event):not(.b2-breakfast):not(.b2-room) strong{font-size:clamp(15px,4.3vw,21px)!important}
+.b2-go{position:absolute!important;right:9px!important;bottom:9px!important;width:29px!important;height:29px!important;border-radius:50%!important;background:#fff!important;color:#171717!important;display:grid!important;place-items:center!important;font-size:25px!important;z-index:7!important}
+.b2-symbol{margin-bottom:7px!important}.b2-room-art{margin:0 auto 14px!important}
+.b2-brick:active{transform:translateY(4px)!important;box-shadow:0 3px 0 var(--b-depth),0 5px 7px rgba(44,33,18,.15)!important}
+@media(max-width:430px){
+ .b2-home{padding-left:5px!important;padding-right:5px!important}
+ .b2-grid{grid-template-rows:92px 188px 120px 130px 130px!important;gap:6px!important}
+ .b2-event{padding-left:88px!important}
+ .b11-tab{right:-15px;width:21px;height:42px}
+ .b11-socket{width:16px;height:46px}
+ .b2-breakfast{padding-right:57px!important}
+ .b2-breakfast .b2-small{font-size:25px!important}.b2-breakfast strong{font-size:29px!important}
+}
+
+
+
+/* ===== HOME V17 — dark-bg brand-color editorial (no photos) =====
+   Burson 디자인 감성(검은 배경/강한 브랜드 컬러 타이포그래피/색색 카드/
+   카드 사이 검은 여백)을 참고해 V16(밝은 아이보리 에디토리얼)을 다크
+   버전으로 교체. 카드 구조·클릭 기능·id·다국어 로직은 전부 그대로 두고
+   시각 스타일(배경/헤더/카드 색과 모서리/간격)만 바꿨습니다. */
+:root{
+  --home-bg:#111111;
+  --home-fg-strong:#FFFFFF;
+  --home-fg-muted:#9C978C;
+  --home-yellow:#F5E900;
+  --home-card-ink:#18160F;
+  --home-card-sub:#57503F;
+  --home-lavender:#D8D1F0;
+  --home-mint:#BFE5C8;
+  --home-pink:#F3B8C2;
+  --home-offwhite:#F4F1E8;
+  --home-paleblue:#C9DDEB;
+  --home-paleyellow:#F2E5A7;
+  --home-softgreen:#CADDBE;
+  --home-lightpurple:#D9CCE6;
+  --home-softpeach:#EDC2A4;
+}
+body:has(#homeView:not([hidden])){background:var(--home-bg)}
+body:has(#homeView:not([hidden])) .site-header{background:var(--home-bg);border-bottom:1px solid #2A2A2A;box-shadow:none}
+body:has(#homeView:not([hidden])) .header-top{max-width:1100px;margin:0 auto;min-height:56px}
+body:has(#homeView:not([hidden])) .site-logo-btn,body:has(#homeView:not([hidden])) .site-title,body:has(#homeView:not([hidden])) .store-tabs{display:none!important}
+/* siteTitle/siteTagline은 다른 화면(매장/커뮤니티)에서 계속 동적으로
+   쓰이므로 JS 텍스트는 그대로 두고, 홈 화면일 때만 font-size:0으로
+   숨기고 ::before로 새 문구를 얹습니다(다국어/언어선택 로직 무변경). */
+body:has(#homeView:not([hidden])) .site-brand-name{display:block!important;margin:0;font-size:0}
+body:has(#homeView:not([hidden])) .site-brand-name::before{content:"BABSIM.STORE";font-size:23px;font-weight:800;letter-spacing:-.03em;color:var(--home-yellow)}
+body:has(#homeView:not([hidden])) .site-tagline{display:block!important;margin:4px 0 0;font-size:0}
+body:has(#homeView:not([hidden])) .site-tagline::before{content:"INJE UNIVERSITY · CAMPUS LIFE";display:block;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--home-fg-muted)}
+body:has(#homeView:not([hidden])) .lang-compact-btn{min-height:36px;background:transparent;border:1px solid #3A3A3A;border-radius:999px;font-size:13px;font-weight:600;color:var(--home-fg-strong);box-shadow:none}
+/* "사장님께 말해요" 하단 배너는 #homeView 밖의 항상-표시 위젯이라
+   기능/구조는 그대로 두고, 홈 화면일 때만 어두운 배경 위에서도 읽히도록
+   글자색만 조정합니다(다른 화면에서는 기존 밝은 배경 스타일 그대로). */
+body:has(#homeView:not([hidden])) .owner-chat-banner{border-top:1px solid #2A2A2A}
+body:has(#homeView:not([hidden])) .owner-chat-title{color:var(--home-fg-strong)}
+body:has(#homeView:not([hidden])) .owner-chat-desc{color:var(--home-fg-muted)}
+
+#homeView{max-width:1100px;margin:0 auto;padding:28px 18px 48px;background:var(--home-bg)}
+#homeView .home-hero,#homeView .home-community-latest,#homeView .home-section-title{display:none!important}
+
+/* 화산불백 ↔ 설문조사 자동 전환(2026-09 지시서) — 같은 자리에서 내용만
+   바꾸므로, 두 슬라이드 중 더 큰 쪽 기준으로 최소 높이를 고정해 전환
+   시 아래 카드들이 위아래로 움직이지 않게 합니다. 전환 효과는 새
+   라이브러리 없이 opacity transition만 사용합니다. */
+.home-hero-copy{margin:0 0 28px;min-height:230px;transition:opacity .35s ease}
+.home-hero-copy.home-hero-fading{opacity:0}
+@media (min-width:640px){.home-hero-copy{min-height:260px}}
+.home-hero-eyebrow{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.18em;color:var(--home-fg-muted);text-transform:uppercase;transition:color .12s ease}
+.home-headline{margin:0;font-size:clamp(26px,7vw,40px);font-weight:600;line-height:1.28;letter-spacing:-.03em;color:var(--home-fg-strong)}
+/* 메인 히어로가 기존 팝업 데이터(EVENT)를 보여줄 때만 카테고리를
+   노란색으로 강조 + CTA 버튼 표시(검정 배경 + 노란 테두리/글자). */
+.home-hero-copy.has-event .home-hero-eyebrow{color:var(--home-yellow)}
+/* 현재 실제 진행 중인 신메뉴(고추장버터 화산불백) 홍보 — 사진 없이
+   타이포그래피만으로 표현. "고추장버터"는 작고 포인트 색(노랑),
+   "화산불백"은 더 크고 흰색으로 시각적 우선순위를 줌(검은 배경 위에
+   글자만 떠 있는 느낌, 2줄 구조). */
+.home-hero-copy.has-menu-promo .home-headline{line-height:1.08}
+.home-hero-menu-sub{display:inline-block;font-size:clamp(22px,5.5vw,32px);font-weight:700;letter-spacing:-.02em;color:var(--home-yellow)}
+.home-hero-menu-main{display:inline-block;margin-top:4px;font-size:clamp(38px,9vw,60px);font-weight:800;letter-spacing:-.03em;color:var(--home-fg-strong)}
+.home-hero-desc{margin:14px 0 0;font-size:14px;font-weight:400;color:rgba(255,255,255,.72);letter-spacing:.01em}
+.home-hero-desc[hidden]{display:none}
+.home-hero-cta{
+  display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:10px 18px;
+  border:1px solid var(--home-yellow);border-radius:999px;background:transparent;
+  color:var(--home-yellow);font-size:13px;font-weight:700;letter-spacing:.02em;text-decoration:none;
+}
+.home-hero-cta[hidden]{display:none}
+
+/* 화산불백/설문조사 슬라이드 표시점 2개 — 작게, 기존 포인트 컬러(노랑)만
+   재사용(새 아이콘/이미지 없음). */
+.home-hero-dots{display:flex;gap:6px;margin-top:16px}
+.home-hero-dots[hidden]{display:none}
+.home-hero-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
+.home-hero-dot.active{background:var(--home-yellow)}
+
+.home-bento{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.home-tile{
+  position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;
+  min-height:132px;padding:22px;border:0;border-radius:8px;
+  text-align:left;text-decoration:none;color:var(--home-card-ink);background:var(--home-offwhite);
+  font-family:inherit;box-shadow:none;transition:transform .12s ease;
+}
+.home-tile:active{transform:translateY(2px)}
+.home-tile:focus-visible{outline:2px solid var(--home-yellow);outline-offset:2px}
+.home-tile-eyebrow{font-size:12px;font-weight:600;letter-spacing:.16em;color:var(--home-card-sub);text-transform:uppercase}
+.home-tile-title{display:block;margin:16px 0 0;font-size:clamp(25px,2.2vw,38px);font-weight:600;line-height:1.2;letter-spacing:-.03em;word-break:keep-all;color:var(--home-card-ink)}
+.home-tile-sub{display:block;margin-top:14px;font-size:13px;font-weight:400;color:var(--home-card-sub)}
+.home-tile-arrow{position:absolute;right:18px;bottom:16px;font-size:15px;font-weight:400;color:var(--home-card-ink)}
+
+.home-tile-breakfast{grid-column:1/3;min-height:216px;padding:28px;background:var(--home-lavender)}
+.home-tile-breakfast .home-tile-title{font-size:clamp(34px,3vw,56px);font-weight:600}
+.home-tile-hururuk{background:var(--home-mint);min-height:160px}
+.home-tile-hururuk .home-tile-title{font-size:clamp(28px,2.6vw,44px)}
+.home-tile-mangwon{background:var(--home-pink);min-height:160px}
+.home-tile-bapsim{background:var(--home-offwhite)}
+.home-tile-room{background:var(--home-paleblue)}
+.home-tile-hometown{background:var(--home-paleyellow)}
+.home-tile-campuslife{background:var(--home-softgreen)}
+.home-tile-friends{background:var(--home-lightpurple)}
+.home-tile-feedback{background:var(--home-softpeach)}
+/* "주말에 가볼 만한 곳" — 삭제된 상단 FEEDBACK 카드가 쓰던 softpeach를
+   재사용(새 팔레트 색 추가 없음, 기존 카드들과 명확히 구분됨). */
+.home-tile-weekend{background:var(--home-softpeach)}
+
+.home-korean-card{
+  display:flex;flex-direction:column;gap:6px;margin-top:7px;padding:22px;
+  border:0;border-radius:8px;background:var(--home-paleblue);
+  text-decoration:none;color:var(--home-card-ink);
+}
+.home-korean-card .home-tile-title{margin-top:8px}
+.home-korean-link{margin-top:10px;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--home-card-ink)}
+.home-korean-card .hellokorean-desc,.home-korean-card .hellokorean-btn,.home-korean-card .hellokorean-url{display:none}
+
+/* ===== 모바일 홈 — 카드 순서(2026-10-11 홈페이지/속닥속닥 개편 지시서
+   2번: 천원의 아침밥→후루룩찹찹→만권화밥→밥심→속닥속닥→주말에 가볼
+   만한 곳→나의 고향 알리기→나의 학교생활→친구 만들기→방 구하기→무료
+   한국어 공부) =====
+   기존 breakpoint(700px, .home-bento가 6열로 바뀌는 기준)를 그대로 써서
+   699px 이하에서만 적용됩니다. DOM 순서/기존 링크/색상은 그대로 두고
+   grid order와 이 카드 내부 배치만 바꾸므로, 700px 이상(PC/태블릿)의
+   grid-column 기반 배치는 전혀 영향받지 않습니다. */
+@media (max-width: 699px) {
+  /* 속닥속닥 바(2026-10-12 지시) — 천원의 아침밥보다 먼저 보이도록 맨
+     앞 순서. 눈에 잘 띄도록 가로 전체 너비를 유지합니다. */
+  .whisper-top-bar{order:0}
+  .home-tile-breakfast{order:1}
+  .home-tile-hururuk{order:2}
+  .home-tile-mangwon{order:3}
+  .home-tile-bapsim{order:4}
+  /* "주말에 가볼 만한 곳"(WEEKEND) — 학생 생활/커뮤니티 콘텐츠라 핵심
+     식당 4곳(천원의 아침밥/후루룩찹찹/만권화밥/밥심) 다음, 나의 고향
+     알리기 앞에 배치. */
+  .home-tile-weekend{order:6;grid-column:1/3}
+  .home-tile-hometown{order:7}
+  .home-tile-campuslife{order:8}
+  .home-tile-friends{order:9}
+  /* 방 구하기 — 지시서 순서상 친구 만들기 다음, 무료 한국어 공부
+     (Bento 바깥의 .home-korean-card) 앞. */
+  .home-tile-room{order:10;grid-column:1/3}
+  .home-tile-feedback{order:11;grid-column:1/3}
+
+  /* 방 구하기 — 좁고 긴 가로형 "Quick Access" 카드(세로 스택 대신 한 줄
+     배치). 주변 파스텔 카드와 다르게 코발트 블루 단색 + 흰색 글자 +
+     BABSIM 브랜드 노란 화살표로 눈에 띄게 함(그라데이션/그림자 없음). */
+  .home-tile-room{
+    min-height:68px;padding:14px 44px 14px 18px;
+    flex-direction:row;align-items:center;gap:10px;
+    background:#2457E6;
+  }
+  .home-tile-room .home-tile-eyebrow{flex:0 0 auto;color:rgba(255,255,255,.78)}
+  .home-tile-room .home-tile-title{
+    margin:0;flex:0 0 auto;font-size:19px;font-weight:700;line-height:1.15;
+    white-space:nowrap;color:#FFFFFF;
+  }
+  .home-tile-room .home-tile-sub{
+    margin:0;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;font-weight:400;color:rgba(255,255,255,.68);
+  }
+  .home-tile-room .home-tile-arrow{top:50%;bottom:auto;transform:translateY(-50%);color:var(--home-yellow)}
+  .home-tile-room:focus-visible{outline-color:var(--home-yellow)}
+}
+
+@media(min-width:700px){
+  #homeView{padding:40px 24px 64px}
+  .home-headline{font-size:clamp(32px,4vw,44px)}
+  .home-bento{grid-template-columns:repeat(6,1fr);gap:9px}
+  .home-tile{min-height:150px}
+  .home-tile-breakfast{grid-column:1/4;min-height:230px}
+  .home-tile-hururuk{grid-column:4/6}
+  .home-tile-mangwon{grid-column:6/7}
+  /* 2026-10-13 지시 — 주말에 가볼 만한 곳/나의 고향 알리기/나의
+     학교생활/친구 만들기 카드를 삭제해 PC/태블릿(6열) 배치를 재계산.
+     0행: 속닥속닥(전체 폭). 1행: 천원의 아침밥(3열)+후루룩찹찹(2열)+
+     만권화밥(1열)=6열. 2행: 밥심+방 구하기(각 2열, 나머지 2열은 빈 칸
+     — 바로 아래 "무료 한국어 공부"가 Bento 밖의 별도 카드라 문제 없음).
+     weekend/hometown/campuslife/friends 규칙은 해당 카드 HTML이 더
+     이상 없어 적용되지 않지만, js/app.js의 클릭 핸들러처럼 되돌릴 때를
+     대비해 그대로 남겨 둡니다. */
+  .home-tile-bapsim{grid-column:1/3}
+  .home-tile-weekend{grid-column:3/5}
+  .home-tile-hometown{grid-column:1/3}
+  .home-tile-campuslife{grid-column:3/5}
+  .home-tile-friends{grid-column:5/7}
+  .home-tile-room{grid-column:3/5}
+  .home-tile-feedback{grid-column:3/5}
+  .home-korean-card{margin-top:9px}
+}
+
+/* ===== 세부페이지 디자인 통일 (비용 최소화) =====
+   HOME(V17)의 검정 배경+노란 BABSIM.STORE+Sans-serif+포인트 컬러를
+   매장/천원의 아침밥 세부페이지 "헤더+타이틀 영역"에만 연결합니다.
+   실제 콘텐츠(메뉴 카드/가격/이미지/좋아요 등)는 기존 컴포넌트를 그대로
+   두고(오프화이트 콘텐츠 영역 원칙), 헤더와 타이틀 밴드만 다크 테마로
+   확장합니다. #homeView 관련 규칙은 전혀 건드리지 않습니다. */
+body:not(:has(#homeView:not([hidden]))) .site-header{background:var(--home-bg);border-bottom:1px solid #2A2A2A;box-shadow:none}
+/* 로고 이미지가 흰 배경 jpg라 다크 헤더와 충돌해 숨김(HOME과 동일 정책).
+   클릭 시 홈 이동 기능은 새로 추가하는 "← HOME" 링크가 대신합니다. */
+body:not(:has(#homeView:not([hidden]))) .site-logo-btn{display:none}
+body:not(:has(#homeView:not([hidden]))) .site-brand-name{color:var(--home-yellow);text-transform:uppercase}
+body:not(:has(#homeView:not([hidden]))) .site-title{color:var(--home-fg-strong)}
+body:not(:has(#homeView:not([hidden]))) .site-tagline{font-size:0}
+body:not(:has(#homeView:not([hidden]))) .site-tagline::before{content:"INJE UNIVERSITY · CAMPUS LIFE";display:block;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--home-fg-muted)}
+body:not(:has(#homeView:not([hidden]))) .lang-compact-btn{background:transparent;border:1px solid #3A3A3A;color:var(--home-fg-strong)}
+body:not(:has(#homeView:not([hidden]))) .store-tab{background:transparent;border:1px solid #3A3A3A;color:var(--home-fg-strong)}
+body:not(:has(#homeView:not([hidden]))) .store-tab-floor,
+body:not(:has(#homeView:not([hidden]))) .store-tab-pronunciation{color:var(--home-fg-muted)}
+body:not(:has(#homeView:not([hidden]))) .store-tab.active{background:var(--home-yellow);border-color:var(--home-yellow);color:#18160F}
+body:not(:has(#homeView:not([hidden]))) .store-tab.active .store-tab-floor,
+body:not(:has(#homeView:not([hidden]))) .store-tab.active .store-tab-pronunciation{color:#18160F}
+
+/* "← HOME" — 기존 goHome() 재사용, 홈에서는 숨김 */
+.detail-home-link{display:none;align-items:center;gap:4px;max-width:1200px;margin:0 auto;padding:2px 0 0;background:none;border:0;font-size:13px;font-weight:600;color:var(--home-fg-muted);letter-spacing:.02em}
+body:not(:has(#homeView:not([hidden]))) .detail-home-link{display:inline-flex}
+
+/* ===== 모바일 세부페이지 상단/하단 UX 수정(비용 최소화) =====
+   699px 이하 + 세부페이지(홈 아님)에서만 적용. 언어 선택/기존 탭·
+   fixed bottom-nav의 클릭 로직과 다국어 텍스트는 전혀 건드리지 않고,
+   가독성을 위한 색상/크기와 표시 여부(display)만 조정합니다. */
+@media (max-width: 699px) {
+  /* 언어 선택 버튼 — 검정 배경에 묻히지 않도록 노란 테두리로 강조
+     (버튼 전체를 노란색으로 채우지 않음). 기존 클릭/드롭다운 로직,
+     .lang-bar-btn(드롭다운 안 전체 언어명)은 그대로 둡니다. */
+  body:not(:has(#homeView:not([hidden]))) .lang-compact-btn{
+    min-height:42px;padding:8px 10px;gap:4px;
+    border:1.5px solid var(--home-yellow);background:var(--home-bg);color:#FFFFFF;
+  }
+  body:not(:has(#homeView:not([hidden]))) .lang-compact-icon{color:var(--home-yellow);font-size:14px}
+  body:not(:has(#homeView:not([hidden]))) .lang-compact-label{color:#FFFFFF;text-transform:uppercase;max-width:76px}
+  body:not(:has(#homeView:not([hidden]))) .lang-compact-caret{color:var(--home-yellow);opacity:1}
+  /* BABSIM.STORE와 언어 버튼이 360px에서도 겹치지 않도록 브랜드명
+     폭만 살짝 줄임(색상/폰트/스타일은 그대로, font-size만 최소 조정). */
+  body:not(:has(#homeView:not([hidden]))) .site-brand-name{font-size:19px}
+  /* header-top이 flex-wrap:wrap이면 브랜드 영역이 shrink되기 전에
+     언어 버튼이 통째로 다음 줄로 밀려버립니다. 이 화면에서만 한 줄
+     고정(nowrap)으로 바꿔 브랜드 텍스트가 자연스럽게 줄바꿈되며
+     shrink하도록 해 같은 줄을 유지합니다(겹침 없이). */
+  body:not(:has(#homeView:not([hidden]))) .header-top{flex-wrap:nowrap}
+  /* 하단 고정 내비게이션(홈/검색/글쓰기/알림/MY)은 이제 .bottom-nav
+     기본 규칙 자체가 항상 숨김이라(HOME 포함 전체 화면) 이 화면 전용
+     override가 더 필요하지 않습니다 — main/.community-root/
+     owner-chat-fab의 여백도 기본 규칙에서 이미 맞춰져 있습니다. */
+}
+
+/* 매장 타이틀 밴드(영문 eyebrow + 큰 한글 제목) — 다크 배경, 서비스별
+   포인트 컬러(--detail-accent)는 js/app.js가 store/bapsimView에 따라
+   body[data-store]/[data-bapsim-view]로 얹는 값을 그대로 씁니다. */
+body[data-store="bapsim"]{--detail-accent:var(--home-offwhite)}
+body[data-store="mangwon"]{--detail-accent:var(--home-pink)}
+body[data-store="hururuk"]{--detail-accent:var(--home-mint)}
+body[data-bapsim-view="breakfast"]{--detail-accent:var(--home-lavender)}
+.detail-title-band{margin:-20px -16px 18px;padding:22px 16px 18px;background:var(--home-bg);border-bottom:2px solid var(--detail-accent,var(--home-yellow))}
+.detail-eyebrow{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--detail-accent,var(--home-yellow))}
+.detail-title-band .store-heading{margin:0;color:var(--home-fg-strong)}
+
+/* ===== 천원의 아침밥 세부페이지 리디자인(비용 최소화, 이 화면 전용) =====
+   data-bapsim-view="breakfast"(js/app.js의 updateBapsimViewVisibility가
+   이 서브탭일 때만 표시)로 범위를 정확히 제한해 다른 세부페이지(일반
+   메뉴/만권화밥/후루룩찹찹 등)는 건드리지 않습니다. 메뉴/운영시간/
+   이용대상/이용방법 데이터와 DOM id, JS 로직은 그대로 두고 배경/배치/
+   색상만 HOME의 라벤더+오프화이트+검정 언어로 교체합니다(새 파란색 없음). */
+body[data-bapsim-view="breakfast"]{background:var(--home-bg)}
+/* 상단 "BABSIM/밥심1층" 밴드는 아래 라벤더 히어로와 중복되므로 이
+   화면에서만 숨김(요소 자체는 삭제하지 않고, 다른 화면은 그대로 노출). */
+body[data-bapsim-view="breakfast"] .detail-title-band{display:none}
+/* 매장 전환 탭 — 이 화면에서만 두꺼운 박스 대신 얇은 underline nav로
+   (기존 클릭/링크는 그대로 재사용, 다른 화면의 박스형 탭은 그대로 유지). */
+body[data-bapsim-view="breakfast"] .store-tab{min-width:auto;min-height:auto;padding:8px 12px;background:none;border:0;border-bottom:2px solid transparent;border-radius:0;flex-direction:row;gap:5px}
+body[data-bapsim-view="breakfast"] .store-tab-brand{font-size:14px}
+body[data-bapsim-view="breakfast"] .store-tab-floor{font-size:11px}
+body[data-bapsim-view="breakfast"] .store-tab.active{background:none;border-bottom-color:var(--home-yellow);color:var(--home-fg-strong)}
+body[data-bapsim-view="breakfast"] .store-tab.active .store-tab-floor{color:var(--home-fg-muted)}
+/* 밥심 서브탭(1,000원 아침밥/일반 메뉴) — 파란 박스 대신 얇은 밑줄. */
+body[data-bapsim-view="breakfast"] .bapsim-subtabs{margin-bottom:0;border-bottom:1px solid #2A2A2A}
+body[data-bapsim-view="breakfast"] .bapsim-subtab{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--home-fg-muted);font-size:13px}
+body[data-bapsim-view="breakfast"] .bapsim-subtab.active{background:none;border-color:var(--home-lavender);color:var(--home-fg-strong)}
+/* 사장님께 말해요(footer)도 이 화면에서만 다크 배경에 맞춤(HOME과 동일
+   처리, 다른 화면은 기존 밝은 배경 스타일 그대로). */
+body[data-bapsim-view="breakfast"] .owner-chat-banner{border-top:1px solid #2A2A2A}
+body[data-bapsim-view="breakfast"] .owner-chat-title{color:var(--home-fg-strong)}
+body[data-bapsim-view="breakfast"] .owner-chat-desc{color:var(--home-fg-muted)}
+
+/* 히어로(라벤더)+콘텐츠(오프화이트) — .ba-* 클래스는 이 화면에서만
+   쓰이므로(다른 화면 재사용 없음) 별도 스코프 없이 바로 교체합니다. */
+body[data-bapsim-view="breakfast"] .breakfast-area{background:none;border:0;padding:0;text-align:left;max-width:760px;margin:18px auto 0}
+.ba-top-strip{display:none}
+.ba-hero{background:var(--home-lavender);border-radius:16px;padding:26px 22px}
+.ba-eyebrow{display:block;margin:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#5C4FA0}
+.ba-title{margin:8px 0 2px;font-size:clamp(26px,5vw,34px);font-weight:600;color:#2E2750;text-align:left;overflow-wrap:anywhere}
+.ba-price{margin:0;font-size:clamp(30px,6vw,42px);font-weight:800;color:#2E2750;line-height:1.2;text-align:left}
+.ba-hero-tagline{margin:10px 0 0;font-size:14px;font-weight:400;color:#5C4FA0;overflow-wrap:anywhere}
+
+.ba-content{background:var(--home-offwhite);border-radius:16px;padding:22px;margin-top:14px;color:#18160F}
+.ba-meal-cards{margin:0 0 18px;max-width:none}
+.ba-meal-card-today{background:#fff;border:1px solid var(--home-lavender)}
+.ba-meal-card-tomorrow{background:#fff;border:1px solid #E3DEEF}
+.ba-meal-card-today .ba-meal-card-title{color:#5C4FA0}
+.ba-block{max-width:none;border-top-color:#E3DEEF}
+.ba-label{color:#8C7FC4;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.ba-value{margin:0;font-size:24px;font-weight:700;color:#18160F}
+.ba-list:not(.ba-steps-list){list-style:none;padding-left:0}
+.ba-list:not(.ba-steps-list) li{padding:8px 0;border-top:1px solid #E3DEEF}
+.ba-list:not(.ba-steps-list) li:first-child{border-top:0}
+.ba-steps-list li{border:0;border-top:1px solid #E3DEEF;border-radius:0;padding:12px 0 12px 40px}
+.ba-steps-list li:first-child{border-top:0}
+.ba-steps-list li::before{background:none;color:#5C4FA0;font-size:13px;font-weight:800;width:auto;height:auto;left:0;border-radius:0;transform:translateY(-50%)}
+
+@media(min-width:700px){
+  body[data-bapsim-view="breakfast"] .breakfast-area{max-width:800px}
+}
+
+/* ===== 밥심커뮤니티 — 방 구하기 + 무료 한글공부 바로가기(비용 최소화) =====
+   새 컴포넌트를 만들지 않고 HOME의 기존 .home-tile.home-tile-room(방
+   구하기, 코발트 블루)을 그대로 재사용합니다. 무료 한글공부는 같은
+   가로형 바 모양(.home-tile-room)을 재사용하되, 코발트 블루와 구분되는
+   더 약한 톤인 기존 --home-paleblue로 색만 덮어씁니다(형태 CSS는
+   중복 작성하지 않음). 커뮤니티 화면 전용 클래스이므로 HOME(#homeView)의
+   .home-tile-room에는 전혀 영향을 주지 않습니다. */
+.community-room-shortcut{width:100%;margin:14px 0 18px}
+.community-korean-shortcut{width:100%;margin:16px 0 14px}
+@media (max-width: 699px) {
+  .home-tile-room.community-korean-shortcut{background:var(--home-paleblue);min-height:60px}
+  .home-tile-room.community-korean-shortcut .home-tile-eyebrow{color:var(--home-card-sub)}
+  /* HELLOKOREAN_INFO.title는 세로형 카드용 긴 문구라 일부 언어(예: 몽골어/
+     미얀마어)는 방 구하기와 같은 nowrap 한 줄에 다 안 들어갑니다. 글자
+     잘림(ellipsis) 없이 자연스럽게 줄바꿈되도록만 허용해 가로 스크롤/
+     클리핑을 막습니다(그 외 형태·색은 .home-tile-room 그대로). 보조
+     부제 "HELLO KOREAN"은 선택 요소라 이 좁은 바에서는 숨겨 제목이
+     줄바꿈될 공간을 확보합니다(브랜드명 자체는 HOME 카드에 이미 있음). */
+  .home-tile-room.community-korean-shortcut .home-tile-title{
+    color:var(--home-card-ink);white-space:normal;flex:1 1 auto;min-width:0;
+    font-size:16px;line-height:1.25;
+  }
+  .home-tile-room.community-korean-shortcut .home-tile-sub{display:none}
+  .home-tile-room.community-korean-shortcut .home-tile-arrow{color:#2457E6}
+}
+
+/* ===== "커뮤니티 4곳 글쓰기 이벤트" 배너(2026-09 다국어 자동번역
+   지시서 2번, 2026-09-30 위치 이전 지시서) — 방 구하기/한글공부
+   바로가기와 같은 .home-tile.home-tile-room 구조를 그대로 재사용하고,
+   코발트 블루·페일 블루와 구분되는 브랜드 옐로우로 색만 덮어씁니다
+   (형태 CSS 중복 작성 없음). 첫화면(#homeView) 히어로 바로 아래에
+   두며(예전 .home-hero-survey-bar와 같은 위치·여백), 팝업
+   (#communityEventOverlay)은 밥심커뮤니티 모듈(js/community.js)에
+   그대로 남아 있어 두 진입점이 같은 팝업을 재사용합니다. */
+.community-event-banner{width:100%;margin:0 0 28px}
+/* 모바일 — "이벤트 바 수정 지시문"(2026-09-30): 방 구하기/한글공부는
+   짧은 한 줄 문구라 .home-tile-room의 압축 가로형 레이아웃(고정에
+   가까운 min-height + white-space:nowrap + 세로 중앙정렬 화살표)이
+   맞지만, 이 배너는 "아침식사 1,000원 무료쿠폰 증정" 같은 문구가 길어
+   (특히 영어/몽골어/벵골어/미얀마어) 그대로 쓰면 글자가 잘립니다.
+   이 카드에서만 세로 배치로 되돌리고, white-space:nowrap/text-overflow:
+   ellipsis를 쓰지 않아 최대 2줄(언어가 더 길면 자동으로 더 늘어남)까지
+   자연스럽게 줄바꿈되게 합니다. min-height는 유지하되 고정 height는
+   전혀 쓰지 않아 내용에 따라 카드 높이가 자동으로 늘어납니다. */
+@media (max-width: 699px) {
+  .home-tile-room.community-event-banner{
+    background:var(--home-yellow);
+    flex-direction:column;align-items:flex-start;
+    min-height:60px;padding:18px 46px 18px 18px;
+  }
+  .home-tile-room.community-event-banner .home-tile-eyebrow{
+    flex:0 0 auto;color:rgba(24,22,15,.68);white-space:normal;
+  }
+  .home-tile-room.community-event-banner .home-tile-title{
+    margin:8px 0 0;flex:0 0 auto;
+    white-space:normal;overflow:visible;word-break:keep-all;
+    font-size:19px;line-height:1.35;font-weight:700;color:#18160F;
+  }
+  .home-tile-room.community-event-banner .home-tile-title span{display:block}
+  .home-tile-room.community-event-banner .home-tile-arrow{
+    top:18px;bottom:auto;right:16px;transform:none;color:#18160F;
+  }
+}
+
+/* 이벤트 안내 팝업(#communityEventOverlay) 안 4개 게시판 버튼 목록 —
+   기존 .modal-overlay/.modal/.community-btn-secondary 재사용, 세로
+   목록으로 보여주기 위한 배치 규칙만 최소로 추가합니다. */
+.community-event-cta-label{
+  font-size:16px;font-weight:800;color:var(--comm-navy);margin:4px 0 10px;
+}
+.community-event-boards-label{
+  font-size:13px;font-weight:700;color:var(--comm-text);margin:0 0 8px;
+}
+.community-event-boards-list{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.community-event-boards-list .community-event-board-btn{width:100%}

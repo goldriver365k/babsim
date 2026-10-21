@@ -68,6 +68,7 @@ var AdminCommunity = (function () {
     else if (tab === "posts") loadPosts();
     else if (tab === "users") loadUsers();
     else if (tab === "translations") loadTranslations();
+    else if (tab === "reports") loadReports();
   }
 
   /* ---------------- 통계 ---------------- */
@@ -209,7 +210,7 @@ var AdminCommunity = (function () {
 
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>작성자</th><th>상태</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>사진</th><th>작성자</th><th>상태</th><th>번역</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       snap.forEach(function (doc) {
         var p = doc.data();
@@ -223,6 +224,26 @@ var AdminCommunity = (function () {
         tdTitle.textContent = p.originalTitle || "";
         tr.appendChild(tdTitle);
 
+        // 관리자가 게시글을 확인할 때 첨부 사진도 같이 볼 수 있도록
+        // 작은 썸네일만 추가(2026-09 "커뮤니티 이미지 업로드" 지시서
+        // 17번) — 새 상세보기 화면 없이 원본 URL을 새 탭으로 엽니다.
+        var tdPhoto = document.createElement("td");
+        if (p.photos && p.photos.length) {
+          var photoLink = document.createElement("a");
+          photoLink.href = p.photos[0];
+          photoLink.target = "_blank";
+          photoLink.rel = "noopener noreferrer";
+          var photoThumb = document.createElement("img");
+          photoThumb.src = p.photos[0];
+          photoThumb.alt = "";
+          photoThumb.className = "admin-post-photo-thumb";
+          photoLink.appendChild(photoThumb);
+          tdPhoto.appendChild(photoLink);
+        } else {
+          tdPhoto.textContent = "-";
+        }
+        tr.appendChild(tdPhoto);
+
         var tdAuthor = document.createElement("td");
         tdAuthor.textContent = p.authorNameMasked || "";
         tr.appendChild(tdAuthor);
@@ -230,6 +251,15 @@ var AdminCommunity = (function () {
         var tdStatus = document.createElement("td");
         tdStatus.textContent = p.status || "";
         tr.appendChild(tdStatus);
+
+        // 원문 언어를 뺀 나머지 언어 중 번역 완료 개수(예: "6/6", 실패가
+        // 있으면 "5/6 ✕" 처럼 표시) — 지시서 15번 "번역 상태 확인".
+        var tdTranslation = document.createElement("td");
+        var trSummary = translationDoneCount(p);
+        tdTranslation.textContent = trSummary.total
+          ? trSummary.done + "/" + trSummary.total + (trSummary.done < trSummary.total ? " ✕" : " ✓")
+          : "-";
+        tr.appendChild(tdTranslation);
 
         var tdReport = document.createElement("td");
         tdReport.textContent = String(p.reportCount || 0);
@@ -380,14 +410,27 @@ var AdminCommunity = (function () {
 
   /* ---------------- 번역 관리 ---------------- */
 
-  // 게시글은 이제 등록 시점에 미리 번역하지 않고 방문자가 요청할 때만
-  // 번역하므로(비용 최소화), "번역 실패"는 언어별 translations 맵 안에
-  // status:"failed"로 남습니다. 전용 색인 필드가 없어 최근 글을 훑어
-  // 찾습니다(관리자 화면이라 다른 통계와 동일하게 스캔 방식 사용).
+  // 2026-09 자동번역 지시서부터 게시글은 등록/수정 시점에 원문 언어를 뺀
+  // 나머지 언어를 한 번에 자동번역합니다(비용 최소화 — 조회 시에는 저장된
+  // translations만 읽고 다시 번역하지 않음). "번역 실패"는 언어별
+  // translations 맵 안에 status:"failed"로 남습니다. 전용 색인 필드가
+  // 없어 최근 글을 훑어 찾습니다(관리자 화면이라 다른 통계와 동일하게
+  // 스캔 방식 사용).
+  var TRANSLATE_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
+
   function postHasFailedTranslation(p) {
     var tr = p.translations;
     if (!tr) return false;
     return Object.keys(tr).some(function (l) { return tr[l] && tr[l].status === "failed"; });
+  }
+
+  // 원문 언어를 뺀 나머지 6개 언어 중 번역 완료 개수 — 게시글 목록 표의
+  // "번역" 열에 짧게("6/6") 보여주기 위한 요약입니다.
+  function translationDoneCount(p) {
+    var targets = TRANSLATE_LANGS.filter(function (l) { return l !== p.originalLanguage; });
+    var tr = p.translations || {};
+    var done = targets.filter(function (l) { return tr[l] && tr[l].status === "done"; }).length;
+    return { done: done, total: targets.length };
   }
 
   function loadTranslations() {
@@ -412,8 +455,18 @@ var AdminCommunity = (function () {
         card.appendChild(title);
         var meta = document.createElement("p");
         meta.className = "empty-note";
-        meta.textContent = "원문 언어: " + p.originalLanguage + " · 번역 실패한 언어: " + failedLangs.join(", ");
+        meta.textContent = "원문: " + p.originalLanguage;
         card.appendChild(meta);
+
+        // 언어별 상태 그리드(지시서 15번 예시 형식: KO ✓ / VI 원문 / MY ✕).
+        var grid = document.createElement("p");
+        grid.className = "empty-note";
+        grid.textContent = TRANSLATE_LANGS.map(function (l) {
+          if (l === p.originalLanguage) return l.toUpperCase() + " 원문";
+          var st = p.translations && p.translations[l] && p.translations[l].status;
+          return l.toUpperCase() + " " + (st === "done" ? "✓" : "✕");
+        }).join("   ");
+        card.appendChild(grid);
 
         var retryBtn = document.createElement("button");
         retryBtn.type = "button";
@@ -460,16 +513,118 @@ var AdminCommunity = (function () {
     });
   }
 
+  /* ---------------- 신고·삭제 요청 관리(2026-10-09 속닥속닥 지시서 10번) ----------------
+     신고 자체는 기존 communityReports 컬렉션(js/community.js의
+     submitReport가 신고 1건당 문서 1개, status:"pending"으로 이미 저장)을
+     그대로 재사용합니다 — 새 컬렉션 없음. 여기서는 그 문서의 status만
+     "검토 중/처리 완료/반려"로 바꿀 수 있게 하고, 대상(게시글/댓글)을
+     바로 숨기는 단축 버튼만 추가합니다. */
+  var REPORT_STATUS_LABELS = { pending: "접수", reviewing: "검토 중", done: "처리 완료", rejected: "반려" };
+  var REPORT_REASON_LABELS = {
+    reasonSelfDelete: "본인 글 삭제 요청", reasonAbuse: "욕설·비방", reasonAd: "광고·도배",
+    reasonPrivacy: "개인정보 노출", reasonEtc: "기타",
+    // 옛 카테고리에서 쓰던 사유도 과거 신고 기록을 그대로 보여주기 위해 남겨둡니다.
+    reasonScam: "사기 의심", reasonIllegal: "불법·위험 물품", reasonMeet: "부적절한 만남 요구"
+  };
+
+  function loadReports() {
+    var d = db();
+    var body = els.reportsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityReports").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">접수된 신고·삭제 요청이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>구분</th><th>사유</th><th>접수일</th><th>상태</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      snap.forEach(function (doc) {
+        var r = doc.data();
+        var tr = document.createElement("tr");
+
+        var tdTarget = document.createElement("td");
+        tdTarget.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " · " + r.targetId;
+        tr.appendChild(tdTarget);
+
+        var tdReason = document.createElement("td");
+        tdReason.textContent = REPORT_REASON_LABELS[r.reason] || r.reason || "-";
+        tr.appendChild(tdReason);
+
+        var tdDate = document.createElement("td");
+        tdDate.textContent = fmtDate(r.createdAt);
+        tr.appendChild(tdDate);
+
+        var tdStatus = document.createElement("td");
+        tdStatus.textContent = REPORT_STATUS_LABELS[r.status] || r.status || "접수";
+        tr.appendChild(tdStatus);
+
+        var tdActions = document.createElement("td");
+        [["reviewing", "검토 중으로"], ["done", "처리 완료로"], ["rejected", "반려"]].forEach(function (pair) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = pair[1];
+          btn.addEventListener("click", function () { updateReportStatus(doc.id, pair[0], btn); });
+          tdActions.appendChild(btn);
+        });
+        var hideBtn = document.createElement("button");
+        hideBtn.type = "button";
+        hideBtn.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " 숨김";
+        hideBtn.addEventListener("click", function () { hideReportedTarget(r.targetType, r.targetId, doc.id, hideBtn); });
+        tdActions.appendChild(hideBtn);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function updateReportStatus(reportId, status, btn) {
+    var d = db();
+    if (!d) return;
+    btn.disabled = true;
+    d.collection("communityReports").doc(reportId).update({ status: status }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("상태 변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
+  function hideReportedTarget(targetType, targetId, reportId, btn) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("이 " + (targetType === "comment" ? "댓글" : "게시글") + "을(를) 숨김 처리하시겠습니까?")) return;
+    btn.disabled = true;
+    var collectionName = targetType === "comment" ? "communityComments" : "communityPosts";
+    d.collection(collectionName).doc(targetId).update({ status: "hidden" }).then(function () {
+      return d.collection("communityReports").doc(reportId).update({ status: "done" });
+    }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("숨김 처리 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function init() {
     els.subTabs = {
       stats: qs("commAdminTabStats"), posts: qs("commAdminTabPosts"),
-      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations")
+      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations"),
+      reports: qs("commAdminTabReports")
     };
     els.subPages = {
       stats: qs("commAdminPageStats"), posts: qs("commAdminPagePosts"),
-      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations")
+      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations"),
+      reports: qs("commAdminPageReports")
     };
     if (!els.subTabs.stats) return; // 커뮤니티 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
 
@@ -477,6 +632,7 @@ var AdminCommunity = (function () {
     els.postsBody = qs("commAdminPostsBody");
     els.usersBody = qs("commAdminUsersBody");
     els.translationsBody = qs("commAdminTranslationsBody");
+    els.reportsBody = qs("commAdminReportsBody");
 
     Object.keys(els.subTabs).forEach(function (key) {
       els.subTabs[key].addEventListener("click", function () { showTab(key); });

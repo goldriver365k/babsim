@@ -11,16 +11,36 @@
   var LANG_KEY = "foodhall_lang";
   var SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
 
+  // 세부페이지 디자인 통일(비용 최소화) — 홈 카드 eyebrow와 동일한 고정
+  // 영문 라벨(번역하지 않음, 기존 정책 재사용)을 매장 타이틀 밴드에도 씀.
+  var STORE_EYEBROW = { bapsim: "BABSIM", mangwon: "MANGWONHABAP", hururuk: "HURURUK CHAPCHAP" };
+
   var state = {
     store: "bapsim",
     bapsimView: "breakfast",
     groupByStore: { bapsim: 1, mangwon: 1, hururuk: 1 },
-    lang: "ko"
+    lang: "ko",
+    view: "home" // "home"(모바일 UI 개선 4단계: 새 홈 화면) | "store"(기존 매장 화면)
   };
 
   var els = {};
 
   function qs(id) { return document.getElementById(id); }
+
+  // GA4 화면 방문 기록 — 기존 window.gtag를 그대로 재사용합니다(js/community.js의
+  // 동일한 개념을 이 모듈에도 독립적으로 둡니다). 실제로 사용자가 이동해
+  // 다른 화면이 표시된 경우에만 호출하며, 직전과 같은 화면이면 다시
+  // 보내지 않습니다.
+  var gaLastVirtualPageKey = null;
+  function trackVirtualPage(pageName) {
+    if (gaLastVirtualPageKey === pageName) return;
+    gaLastVirtualPageKey = pageName;
+    try {
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "virtual_page_view", { page_name: pageName });
+      }
+    } catch (e) { /* GA 전송 실패해도 화면 전환은 계속 동작 */ }
+  }
 
   function formatPrice(price, lang) {
     if (price === null || typeof price === "undefined") {
@@ -30,7 +50,49 @@
     return { text: withComma + UI_TEXT.won[lang], tbd: false };
   }
 
+  // 관리자 메뉴관리(storeMenus)가 등록해 둔 매장은 그 데이터를 그대로
+  // 보여주고, 아직 관리자에서 하나도 등록하지 않았거나 조회에 실패한
+  // 매장은 기존 정적 MENU_DATA를 그대로 보여줍니다(둘을 섞지 않음 —
+  // 매장 단위로만 전환). storeMenus는 그룹 개념이 없어 한 그룹으로
+  // 취급합니다. 매장당 조회는 페이지당 한 번뿐이며(캐시), 메뉴별 조회나
+  // 실시간 listener는 만들지 않습니다.
+  var STORE_MENUS_GROUP = 1;
+  var storeMenusCache = {}; // store -> item[] | null(정적 데이터로 fallback)
+
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+
+  function loadStoreMenus(store) {
+    if (storeMenusCache[store] !== undefined) return;
+    var d = db();
+    if (!d) { storeMenusCache[store] = null; return; }
+    d.collection("storeMenus").where("store", "==", store).get().then(function (snap) {
+      var items = [];
+      snap.forEach(function (doc) {
+        var data = doc.data();
+        if (data.isActive === false) return; // 삭제(숨김)된 메뉴는 제외
+        items.push({
+          id: doc.id,
+          store: store,
+          group: STORE_MENUS_GROUP,
+          order: typeof data.order === "number" ? data.order : 0,
+          image: data.image || null,
+          name: data.name || { ko: "" },
+          description: data.description || null,
+          price: typeof data.price === "number" ? data.price : null,
+          soldOut: !!data.soldOut,
+          needsReview: false
+        });
+      });
+      // 아직 하나도 등록되지 않은 매장(빈 목록)은 기존 정적 메뉴를 그대로 보여줍니다.
+      storeMenusCache[store] = items.length ? items : null;
+      if (storeMenusCache[store] && state.store === store) renderAll();
+    }).catch(function () {
+      storeMenusCache[store] = null; // 조회 실패 시 조용히 기존 정적 메뉴 유지
+    });
+  }
+
   function getGroupsForStore(store) {
+    if (storeMenusCache[store]) return [STORE_MENUS_GROUP];
     var groups = {};
     MENU_DATA.forEach(function (item) {
       if (item.store === store) groups[item.group] = true;
@@ -39,9 +101,57 @@
   }
 
   function getItems(store, group) {
+    var live = storeMenusCache[store];
+    if (live) return live.slice().sort(function (a, b) { return a.order - b.order; });
     return MENU_DATA
       .filter(function (item) { return item.store === store && item.group === group; })
       .sort(function (a, b) { return a.order - b.order; });
+  }
+
+  // 메뉴명 옆 ♡/♥ + 누적 좋아요 숫자(js/menu-likes.js가 상태/Firestore
+  // 연동을 담당, 여기서는 버튼 DOM과 클릭 시 낙관적 화면 갱신만 처리).
+  function buildMenuLikeButton(item) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "menu-like-btn";
+
+    var heart = document.createElement("span");
+    heart.className = "menu-like-heart";
+    var count = document.createElement("span");
+    count.className = "menu-like-count";
+    btn.appendChild(heart);
+    btn.appendChild(count);
+
+    function paint() {
+      var likedNow = window.MenuLikes && window.MenuLikes.isLiked(item.id);
+      heart.textContent = likedNow ? "♥" : "♡";
+      btn.classList.toggle("liked", !!likedNow);
+      count.textContent = String(window.MenuLikes ? window.MenuLikes.getCount(item.id) : 0);
+      // 하트 그림만으로 기능을 알기 어려운 보조기기 사용자를 위한 안내.
+      btn.setAttribute("aria-label", likedNow ? "좋아요 취소" : "좋아요");
+      btn.setAttribute("aria-pressed", likedNow ? "true" : "false");
+    }
+    paint();
+
+    btn.addEventListener("click", function () {
+      if (!window.MenuLikes || btn.disabled) return;
+      btn.disabled = true;
+      var p = window.MenuLikes.toggle(item.id);
+      paint(); // toggle()이 동기적으로 반영한 낙관적 상태를 바로 그림
+      p.then(paint, paint).finally(function () { btn.disabled = false; });
+    });
+
+    return btn;
+  }
+
+  // storeMenus의 description은 번역 전(문자열) 데이터와 번역 후(다국어
+  // 객체) 데이터가 함께 있을 수 있습니다 — 둘 다 안전하게 처리합니다.
+  // 번역이 없는 언어는 한국어로 되돌아가며(사라지지 않음), name은 항상
+  // 다국어 객체이므로 이 함수 없이 기존 방식(item.name[lang])을 그대로 씁니다.
+  function localizedText(value, lang) {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    return value[lang] || value.ko || "";
   }
 
   function buildCard(item) {
@@ -59,7 +169,7 @@
       img.onerror = function () {
         if (imgWrap.dataset.fallbackApplied) return;
         imgWrap.dataset.fallbackApplied = "1";
-        imgWrap.innerHTML = "";
+        img.remove(); // imgWrap 전체를 비우면 품절 배지도 함께 사라지므로 깨진 이미지만 제거합니다.
         var pending = document.createElement("span");
         pending.className = "image-pending";
         pending.textContent = UI_TEXT.imagePending[state.lang] || UI_TEXT.imagePending.ko;
@@ -88,10 +198,15 @@
     var names = document.createElement("div");
     names.className = "card-names";
 
+    var nameRow = document.createElement("div");
+    nameRow.className = "card-name-row";
+
     var koName = document.createElement("p");
     koName.className = "card-name-ko";
     koName.textContent = item.name.ko;
-    names.appendChild(koName);
+    nameRow.appendChild(koName);
+    nameRow.appendChild(buildMenuLikeButton(item));
+    names.appendChild(nameRow);
 
     if (state.lang !== "ko") {
       var translated = document.createElement("p");
@@ -101,6 +216,14 @@
     }
 
     body.appendChild(names);
+
+    var descText = localizedText(item.description, state.lang);
+    if (descText) {
+      var descEl = document.createElement("p");
+      descEl.className = "card-description";
+      descEl.textContent = descText;
+      body.appendChild(descEl);
+    }
 
     var priceInfo = formatPrice(item.price, state.lang);
     var priceEl = document.createElement("p");
@@ -135,9 +258,39 @@
     els.groupIndicator.textContent = current + " / " + groups.length;
   }
 
+  function openLangDropdown() {
+    if (!els.langBar) return;
+    els.langBar.hidden = false;
+    if (els.langCompactBtn) els.langCompactBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeLangDropdown() {
+    if (!els.langBar) return;
+    els.langBar.hidden = true;
+    if (els.langCompactBtn) els.langCompactBtn.setAttribute("aria-expanded", "false");
+  }
+
   function renderHeader() {
     els.siteTitle.textContent = UI_TEXT.siteTitle[state.lang];
     document.title = UI_TEXT.siteTitle[state.lang];
+    // 세부페이지 디자인 통일 — 현재 매장을 body에 반영해 CSS(--detail-accent)가
+    // 서비스별 포인트 컬러를 고르게 하고, 타이틀 밴드의 영문 eyebrow를 채웁니다.
+    document.body.dataset.store = state.store;
+    if (els.storeEyebrow) els.storeEyebrow.textContent = STORE_EYEBROW[state.store] || "";
+    if (els.detailHomeLinkLabel) els.detailHomeLinkLabel.textContent = UI_TEXT.detailHomeLink[state.lang] || UI_TEXT.detailHomeLink.ko;
+    if (els.siteTagline) {
+      // 참고 이미지처럼 " · "로 구분된 3단어를 각각 다른 색으로 표시
+      // (새 번역 데이터 없이 기존 UI_TEXT.siteTagline 문자열만 분리).
+      els.siteTagline.textContent = "";
+      var taglineParts = UI_TEXT.siteTagline[state.lang].split(" · ");
+      taglineParts.forEach(function (part, i) {
+        if (i > 0) els.siteTagline.appendChild(document.createTextNode(" · "));
+        var span = document.createElement("span");
+        span.className = "site-tagline-part site-tagline-part-" + (i % 3);
+        span.textContent = part;
+        els.siteTagline.appendChild(span);
+      });
+    }
 
     STORE_ORDER.forEach(function (store) {
       var btn = els.storeTabButtons[store];
@@ -167,8 +320,10 @@
 
     SUPPORTED_LANGS.forEach(function (lang) {
       var btn = els.langButtons[lang];
-      btn.classList.toggle("active", lang === state.lang);
-      btn.setAttribute("aria-pressed", lang === state.lang ? "true" : "false");
+      var isActive = lang === state.lang;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+      if (isActive && els.langCompactLabel) els.langCompactLabel.textContent = btn.textContent;
     });
 
     els.storeHeading.textContent = UI_TEXT.storeHeading[state.store][state.lang];
@@ -203,13 +358,292 @@
     renderAll();
   }
 
+  /* ---------------- 모바일 UI 개선 4단계: 홈 화면 ---------------- */
+
+  // 홈 화면(#homeView) ↔ 매장 화면(main) 중 지금 state.view에 맞는 쪽만
+  // 보여줍니다. 커뮤니티 화면(js/community.js)은 이 둘과 서로 배타적이며,
+  // 커뮤니티에서 빠져나올 때 community.js가 이 함수를 호출해 무엇을
+  // 다시 보여줄지 물어봅니다(window.AppHome.applyView).
+  function applyViewVisibility() {
+    var showHomeView = state.view === "home";
+    if (els.homeView) els.homeView.hidden = !showHomeView;
+    // 모바일 UI 개선 8단계: 하단 내비게이션은 화면과 무관하게 항상
+    // 고정 표시됩니다(홈에서만 보이던 이전 동작을 폐지).
+    if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", showHomeView);
+    var main = document.querySelector("main");
+    if (main) main.hidden = showHomeView;
+  }
+
+  function goHome() {
+    // 이미 홈 화면(커뮤니티 밖)이었다면 실제 화면 전환이 아니므로(최초
+    // 접속 시 기본 page_view와 중복 전송 방지 포함) 기록하지 않습니다.
+    var wasHome = state.view === "home" && !(window.Community && window.Community.isCommunityPath(location.pathname));
+    state.view = "home";
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) {
+      window.Community.navigate("/"); // 커뮤니티 안에 있었다면 빠져나옵니다(빠져나오며 applyViewVisibility 재호출됨)
+    } else {
+      applyViewVisibility();
+    }
+    renderHome();
+    if (!wasHome) trackVirtualPage("home");
+  }
+
+  function goToStore(store) {
+    var alreadyOnThisStore = state.view === "store" && state.store === store &&
+      !(window.Community && window.Community.isCommunityPath(location.pathname));
+    state.view = "store";
+    if (state.store !== store) setStore(store); else renderAll();
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) {
+      window.Community.navigate("/");
+    } else {
+      applyViewVisibility();
+    }
+    if (!alreadyOnThisStore) {
+      trackVirtualPage(store === "bapsim" ? (state.bapsimView === "menu" ? "babsim" : "breakfast") : store);
+    }
+  }
+  // 홈 서비스 카드/헤더 매장 탭과 똑같은 매장 이동 동작을, 팝업(js/hometown-popup.js)
+  // 등 다른 모듈에서도 새 라우팅/URL을 만들지 않고 그대로 재사용할 수 있게 노출합니다.
+  window.goToStore = goToStore;
+
+  function renderHomeLatestPosts() {
+    if (!els.homeCommunityLatest) return;
+    if (!(window.Community && typeof window.Community.fetchLatestPosts === "function")) return;
+    var container = els.homeCommunityLatest;
+    var requestLang = state.lang;
+    window.Community.fetchLatestPosts(3).then(function (posts) {
+      if (state.lang !== requestLang) return; // 응답 오는 사이 언어가 바뀌었으면 버립니다
+      container.innerHTML = "";
+      if (!posts.length) {
+        var empty = document.createElement("p");
+        empty.className = "home-community-empty";
+        empty.textContent = UI_TEXT.homeCommunityLatestEmpty[state.lang];
+        container.appendChild(empty);
+        return;
+      }
+      posts.forEach(function (post) {
+        var card = document.createElement("button");
+        card.type = "button";
+        card.className = "home-community-post-card";
+        card.addEventListener("click", function () {
+          if (window.Community && typeof window.Community.navigate === "function") {
+            window.Community.navigate(window.Community.routePrefix + "/post/" + post.id);
+          }
+        });
+        var title = document.createElement("p");
+        title.className = "home-community-post-title";
+        title.textContent = post.title;
+        card.appendChild(title);
+        var meta = document.createElement("p");
+        meta.className = "home-community-post-meta";
+        meta.textContent = [post.authorMasked, post.nationality, post.dateText].filter(Boolean).join(" · ");
+        card.appendChild(meta);
+        container.appendChild(card);
+      });
+    }).catch(function () { /* 홈 화면 미리보기는 실패해도 조용히 무시(핵심 기능 아님) */ });
+  }
+
+  // 홈 메인 히어로 영역(타이포그래피 지시서) — 기존 sitePopups 데이터를
+  // 새 컬렉션/새 조건 없이 그대로 재사용합니다. undefined=아직 조회
+  // 전(기본 문구 표시), null=조회했지만 활성 팝업 없음, object=활성
+  // 팝업 데이터(title/linkUrl).
+  var homeHeroPopup;
+
+  // 현재 실제 진행 중인 신메뉴 홍보 — js/hometown-popup.js가 이미 쓰고
+  // 있는 것과 같은 내용(고추장버터/화산불백, 후루룩찹찹 이동)을 그대로
+  // 재사용합니다(새 이벤트 데이터 아님). 관리자 팝업(homeHeroPopup)이
+  // 없을 때 홈 히어로의 기본 내용으로 씁니다. 사진/썸네일 없이 텍스트만.
+  // titleSub/titleMain은 브랜드/고유 메뉴명 취급이라 다른 카드
+  // 브랜드명(후루룩찹찹/만권화밥/밥심)과 동일하게 언어와 무관하게 항상
+  // 한국어 원문 고정(번역하지 않음). eyebrow와 설명 한 줄만 UI_TEXT의
+  // homeHeroMenuLabel/homeHeroMenuDesc를 language별로 조회해서 씁니다.
+  var HERO_MENU_PROMO = {
+    titleSub: "고추장버터",
+    titleMain: "화산불백"
+  };
+
+  // 화산불백 ↔ 설문조사 자동 전환(2026-09 지시서) — 관리자 팝업이 없고
+  // 설문이 이미 시작(WeekendSurvey.hasStarted())된 경우에만 두 슬라이드를
+  // 번갈아 보여줍니다. 그 전에는 기존처럼 화산불백만 계속 표시합니다.
+  var heroSlideIndex = 0; // 0=화산불백, 1=설문조사
+  var heroRotateTimer = null;
+  var HERO_ROTATE_MS = 4500;
+
+  function heroSurveyReady() {
+    return !homeHeroPopup && window.WeekendSurvey && typeof window.WeekendSurvey.hasStarted === "function"
+      && window.WeekendSurvey.hasStarted();
+  }
+
+  function renderHomeHero() { heroSlideIndex = 0; renderHomeHeroSlide(); }
+
+  function renderHomeHeroSlide() {
+    if (!els.homeHeadline) return;
+    var rotatable = heroSurveyReady();
+    if (!rotatable) heroSlideIndex = 0;
+
+    if (homeHeroPopup) {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "EVENT";
+      els.homeHeadline.textContent = homeHeroPopup.title || "";
+      if (els.homeHeroDesc) els.homeHeroDesc.hidden = true;
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (UI_TEXT.homeHeroCta[state.lang] || UI_TEXT.homeHeroCta.ko) + " →";
+        els.homeHeroCta.href = homeHeroPopup.linkUrl || "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-menu-promo"); els.homeHeroCopy.classList.add("has-event"); }
+    } else if (heroSlideIndex === 1) {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = "SURVEY";
+      els.homeHeadline.innerHTML =
+        '<span class="home-hero-menu-sub">' + (WEEKEND_SURVEY.heroTitleSub[state.lang] || WEEKEND_SURVEY.heroTitleSub.ko) + '</span><br>' +
+        '<span class="home-hero-menu-main">' + (WEEKEND_SURVEY.heroTitleMain[state.lang] || WEEKEND_SURVEY.heroTitleMain.ko) + '</span>';
+      if (els.homeHeroDesc) {
+        els.homeHeroDesc.textContent = WEEKEND_SURVEY.heroDesc[state.lang] || WEEKEND_SURVEY.heroDesc.ko;
+        els.homeHeroDesc.hidden = false;
+      }
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (WEEKEND_SURVEY.heroCta[state.lang] || WEEKEND_SURVEY.heroCta.ko) + " →";
+        els.homeHeroCta.href = "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-event"); els.homeHeroCopy.classList.add("has-menu-promo"); }
+    } else {
+      if (els.homeHeroEyebrow) els.homeHeroEyebrow.textContent = UI_TEXT.homeHeroMenuLabel[state.lang] || UI_TEXT.homeHeroMenuLabel.ko;
+      els.homeHeadline.innerHTML =
+        '<span class="home-hero-menu-sub">' + HERO_MENU_PROMO.titleSub + '</span><br>' +
+        '<span class="home-hero-menu-main">' + HERO_MENU_PROMO.titleMain + '</span>';
+      if (els.homeHeroDesc) {
+        els.homeHeroDesc.textContent = UI_TEXT.homeHeroMenuDesc[state.lang] || UI_TEXT.homeHeroMenuDesc.ko;
+        els.homeHeroDesc.hidden = false;
+      }
+      if (els.homeHeroCta) {
+        els.homeHeroCta.textContent = (UI_TEXT.homeHeroCta[state.lang] || UI_TEXT.homeHeroCta.ko) + " →";
+        els.homeHeroCta.href = "#";
+        els.homeHeroCta.hidden = false;
+      }
+      if (els.homeHeroCopy) { els.homeHeroCopy.classList.remove("has-event"); els.homeHeroCopy.classList.add("has-menu-promo"); }
+    }
+
+    if (els.homeHeroDots) {
+      els.homeHeroDots.hidden = !rotatable;
+      Array.prototype.forEach.call(els.homeHeroDots.children, function (dot, i) {
+        dot.classList.toggle("active", i === heroSlideIndex);
+      });
+    }
+  }
+
+  // 4~5초마다 슬라이드를 바꿉니다(무한반복). opacity transition(CSS)만
+  // 사용해 페이드 전환하고, 전환 중간(투명할 때) 내용을 바꿔치기합니다.
+  function goToHeroSlide(index) {
+    if (!els.homeHeroCopy) { heroSlideIndex = index; renderHomeHeroSlide(); return; }
+    els.homeHeroCopy.classList.add("home-hero-fading");
+    setTimeout(function () {
+      heroSlideIndex = index;
+      renderHomeHeroSlide();
+      els.homeHeroCopy.classList.remove("home-hero-fading");
+    }, 350);
+  }
+
+  function startHeroRotation() {
+    if (heroRotateTimer) return; // 중복 타이머 방지
+    heroRotateTimer = setInterval(function () {
+      if (!heroSurveyReady()) return; // 시작 전/관리자 팝업 노출 중에는 회전하지 않음
+      goToHeroSlide(heroSlideIndex === 0 ? 1 : 0);
+    }, HERO_ROTATE_MS);
+  }
+
+  // 페이지당 한 번만 조회(Firestore 비용 최소화) — 결과는 renderHome()이
+  // 언어 전환 때마다 다시 그릴 수 있도록 homeHeroPopup에 캐시합니다.
+  function loadHomeHeroPopup() {
+    if (!window.SitePopup || typeof window.SitePopup.getActive !== "function") return;
+    window.SitePopup.getActive(function (data) {
+      homeHeroPopup = data;
+      renderHomeHero();
+    });
+  }
+
+  function renderHome() {
+    if (!els.homeView) return;
+    if (els.homeServicesTitle) els.homeServicesTitle.textContent = UI_TEXT.homeServicesTitle[state.lang];
+    if (els.homeCommunityLatestTitle) els.homeCommunityLatestTitle.textContent = UI_TEXT.homeCommunityLatestTitle[state.lang];
+    if (els.homeCardCommunityName && window.COMMUNITY_HOME) {
+      els.homeCardCommunityName.textContent = window.COMMUNITY_HOME.title[state.lang];
+    }
+    var moinPrefix = { ko: "모인관 ", en: "Moin-gwan ", zh: "摩茵馆 ", vi: "Moin-gwan ", mn: "Моин-гван ", bn: "মোইন-গোয়ান ", my: "မိုအင်ဂွမ် " };
+    // 천원의 아침밥 카드 — 새 화면이 아니라 밥심 내부 화면을 그대로
+    // 재사용하므로(위치도 밥심과 동일), 기존 BREAKFAST_INFO.title 문구를
+    // 그대로 씁니다(새 번역 없음).
+    if (els.homeCardBreakfastName) els.homeCardBreakfastName.textContent = BREAKFAST_INFO.title[state.lang];
+    if (els.homeCardBreakfastLoc) els.homeCardBreakfastLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
+    if (els.homeCardBreakfastPrice) els.homeCardBreakfastPrice.textContent = BREAKFAST_INFO.price[state.lang];
+    if (els.homeCardBapsimLoc) els.homeCardBapsimLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.bapsim.floor[state.lang];
+    if (els.homeCardMangwonLoc) els.homeCardMangwonLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.mangwon.floor[state.lang];
+    if (els.homeCardHururukLoc) els.homeCardHururukLoc.textContent = (moinPrefix[state.lang] || moinPrefix.ko) + UI_TEXT.storeNames.hururuk.floor[state.lang];
+    // 홈 MZ LEGO 보드 — 새로 추가된 블록 3개(EVENT/나의 고향 이야기/친구
+    // 만들기)도 기존 데이터(UI_TEXT/COMMUNITY_CATEGORIES)를 그대로 재사용.
+    if (els.homeLegoEventLabel) els.homeLegoEventLabel.textContent = UI_TEXT.homeEventLabel[state.lang];
+    if (els.homeLegoHometownLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoHometownLabel.textContent = COMMUNITY_CATEGORIES.hometown[state.lang] || COMMUNITY_CATEGORIES.hometown.ko;
+    }
+    if (els.homeLegoFriendsLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoFriendsLabel.textContent = COMMUNITY_CATEGORIES.friends[state.lang] || COMMUNITY_CATEGORIES.friends.ko;
+    }
+    // "주말에 가볼 만한 곳" — 커뮤니티 together 카테고리(옛 "김해맛집
+    // 추천")와 같은 COMMUNITY_CATEGORIES.together 라벨을 그대로 재사용.
+    if (els.homeLegoWeekendLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoWeekendLabel.textContent = COMMUNITY_CATEGORIES.together[state.lang] || COMMUNITY_CATEGORIES.together.ko;
+    }
+    if (els.homeLegoRoomTitle) {
+      els.homeLegoRoomTitle.textContent = ROOM_FINDER.title[state.lang] || ROOM_FINDER.title.ko;
+    }
+    // "사장님에게 말하기" 홈 블록 — 기존 footer/FAB과 같은 OWNER_CHAT.title을 재사용.
+    if (els.homeLegoOwnerChatLabel) els.homeLegoOwnerChatLabel.textContent = OWNER_CHAT.title[state.lang];
+    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피(활성 이벤트/공지
+    // 팝업이 있으면 그 내용, 없으면 기본 문구) + 카드 한 줄 설명.
+    renderHomeHero();
+    var sub = UI_TEXT.homeCardSubtitle;
+    if (els.homeCardBreakfastSub) els.homeCardBreakfastSub.textContent = sub.breakfast[state.lang] || sub.breakfast.ko;
+    if (els.homeCardMangwonSub) els.homeCardMangwonSub.textContent = sub.koreanFood[state.lang] || sub.koreanFood.ko;
+    if (els.homeCardBapsimSub) els.homeCardBapsimSub.textContent = sub.buffetStyle[state.lang] || sub.buffetStyle.ko;
+    if (els.homeCardRoomSub) els.homeCardRoomSub.textContent = sub.housing[state.lang] || sub.housing.ko;
+    if (els.homeCardHometownSub) els.homeCardHometownSub.textContent = sub.hometown[state.lang] || sub.hometown.ko;
+    if (els.homeCardCampusLifeSub) els.homeCardCampusLifeSub.textContent = sub.campusLife[state.lang] || sub.campusLife.ko;
+    if (els.homeCardFriendsSub) els.homeCardFriendsSub.textContent = sub.friends[state.lang] || sub.friends.ko;
+    if (els.homeCardFeedbackSub) els.homeCardFeedbackSub.textContent = sub.feedback[state.lang] || sub.feedback.ko;
+    if (els.homeCardWeekendSub) els.homeCardWeekendSub.textContent = sub.weekend[state.lang] || sub.weekend.ko;
+    // "나의 학교생활" — 새 카테고리가 아니라 기존 COMMUNITY_CATEGORIES.job을
+    // 그대로 재사용(라벨만 "나의 학교생활"로 교체됨).
+    if (els.homeLegoCampusLifeLabel && window.COMMUNITY_CATEGORIES) {
+      els.homeLegoCampusLifeLabel.textContent = COMMUNITY_CATEGORIES.job[state.lang] || COMMUNITY_CATEGORIES.job.ko;
+    }
+    // 속닥속닥 바로가기 바 — "속닥속닥 | 익명으로 자유롭게 이야기하세요 →"
+    // 형식, 언어가 바뀔 때마다 다시 채웁니다. 2026-10-11 홈페이지/속닥속닥
+    // 개편 지시서로 COMMUNITY_HOME(제목)이 다시 다른 4개 게시판이 함께
+    // 쓰는 공용 "밥심 커뮤니티" 텍스트로 되돌아갔으므로, 이 바의 이름은
+    // 더 이상 COMMUNITY_HOME.title이 아니라 속닥속닥 전용 카테고리명
+    // (COMMUNITY_CATEGORIES.whisper — renderWhisperList()와 같은 값)을
+    // 씁니다.
+    if (els.whisperTopBarText && window.COMMUNITY_CATEGORIES && window.WHISPER_BAR) {
+      var whisperName = COMMUNITY_CATEGORIES.whisper[state.lang] || COMMUNITY_CATEGORIES.whisper.ko;
+      var whisperCta = WHISPER_BAR.cta[state.lang] || WHISPER_BAR.cta.ko;
+      els.whisperTopBarText.textContent = whisperName + " | " + whisperCta;
+    }
+    if (els.bottomNavHomeLabel) els.bottomNavHomeLabel.textContent = UI_TEXT.bottomNavHome[state.lang];
+    if (els.bottomNavSearchLabel) els.bottomNavSearchLabel.textContent = UI_TEXT.bottomNavSearch[state.lang];
+    // "글쓰기"는 이미 있는 COMMUNITY_POST.writeTitle을 그대로 재사용합니다(새 키 없음).
+    if (els.bottomNavWriteLabel && window.COMMUNITY_POST) els.bottomNavWriteLabel.textContent = window.COMMUNITY_POST.writeTitle[state.lang];
+    if (els.bottomNavNotifyLabel) els.bottomNavNotifyLabel.textContent = UI_TEXT.bottomNavNotify[state.lang];
+    renderHomeLatestPosts();
+  }
+
   function setLang(lang) {
     if (SUPPORTED_LANGS.indexOf(lang) === -1 || state.lang === lang) return;
     state.lang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* localStorage 미지원 시 무시 */ }
     renderAll();
+    renderHome();
     if (!els.colaDetailOverlay.hidden) renderColaDetail();
     if (!els.staffShowOverlay.hidden) renderStaffShow();
+    if (els.breakfastPopupOverlay && !els.breakfastPopupOverlay.hidden) openBreakfastPopup(); // 열려 있으면 문구만 새 언어로 갱신
     if (window.LanguageStats && typeof window.LanguageStats.record === "function") {
       window.LanguageStats.record(lang);
     }
@@ -285,10 +719,14 @@
     renderBapsimSubtabs();
     updateBapsimViewVisibility();
     if (view === "breakfast") renderBreakfastArea();
+    trackVirtualPage(view === "menu" ? "babsim" : "breakfast");
   }
 
   function updateBapsimViewVisibility() {
     var showBreakfast = state.store === "bapsim" && state.bapsimView === "breakfast";
+    // 세부페이지 디자인 통일 — 천원의 아침밥 카드일 때만 라벤더 포인트
+    // 컬러(--detail-accent)를 쓰도록 body에 반영.
+    document.body.dataset.bapsimView = showBreakfast ? "breakfast" : "";
     els.breakfastArea.hidden = !showBreakfast;
     els.menuGrid.hidden = showBreakfast;
     els.groupNav.hidden = showBreakfast || getGroupsForStore(state.store).length <= 1;
@@ -318,10 +756,12 @@
       listEl.appendChild(p);
     }
 
-    if (isSeoulWeekend(offsetDays)) {
-      showMessage("today-meal-closed", closedText);
-      return;
-    }
+    // 2026-10-15 지시 — 주말 천원의 아침밥(토·일 08:00~10:00) 운영에
+    // 맞춰, 주말이라고 무조건 휴무로 표시하던 것을 없앴습니다. 이제
+    // 평일과 똑같이 실제 데이터(관리자가 입력한 메뉴·isOpen 값)를
+    // 기준으로 판단합니다 — 관리자 페이지에서 토·일요일 메뉴를 입력하면
+    // 그대로 화면에 보이고, 입력하지 않은 주말은 아래 dayHasDirectData
+    // 분기에서 "메뉴를 준비 중입니다"로 안내됩니다.
 
     // 관리자가 명시적으로 휴무로 등록한 날(isOpen: false)
     if (day && day.isOpen === false) {
@@ -397,11 +837,14 @@
 
     els.baTitle.textContent = info.title[lang];
     els.baPriceValue.textContent = info.price[lang];
+    if (els.baHeroTagline) els.baHeroTagline.textContent = (info.heroTagline && (info.heroTagline[lang] || info.heroTagline.ko)) || "";
 
     els.baTodayMenuTitle.textContent = info.todayMenuTitle[lang];
     els.baTodayDateValue.textContent = formatSeoulDateDisplay(lang, 0);
     renderMealList(els.todayMealList, lang, 0, info.todayClosedMessage[lang] || info.todayClosedMessage.ko);
-    renderBreakfastRating(lang);
+    // 평가 위젯은 더 이상 이 화면(본문)에 렌더링하지 않습니다 — 이제
+    // openBreakfastPopup()에서 팝업이 열릴 때만 renderBreakfastRating을
+    // 호출합니다(평가 UI 수정 단계: 본문에서 팝업으로 이동).
 
     els.baTomorrowMenuTitle.textContent = info.tomorrowMenuTitle[lang];
     els.baTomorrowDateValue.textContent = formatSeoulDateDisplay(lang, 1);
@@ -428,13 +871,26 @@
   }
 
   /* "오늘의 메뉴 평가" 위젯 연동 (js/breakfast-rating.js, 선택적 모듈) */
+  // 오늘 아침 메뉴가 실제로 있는지(휴무/데이터 없음이면 false) — 아침밥
+  // 평가 영역과 6단계의 평가 팝업이 같은 판단 기준을 씁니다. 2026-10-15
+  // 지시로 주말도 평일과 동일하게 실제 데이터 기준으로 판단합니다
+  // (더 이상 주말이라고 무조건 메뉴 없음으로 처리하지 않음).
+  function todayBreakfastDay() {
+    var dateKey = getSeoulDateKey(0);
+    return BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
+  }
+
+  function hasTodayBreakfastMenu() {
+    var day = todayBreakfastDay();
+    var isExplicitlyClosed = !!(day && day.isOpen === false);
+    return !isExplicitlyClosed && dayHasDirectData(day);
+  }
+
   function renderBreakfastRating(lang) {
     if (!window.BreakfastRating || typeof window.BreakfastRating.render !== "function") return;
     var dateKey = getSeoulDateKey(0);
-    var day = BREAKFAST_WEEKLY_MENU && BREAKFAST_WEEKLY_MENU.days ? BREAKFAST_WEEKLY_MENU.days[dateKey] : null;
-    var isExplicitlyClosed = !!(day && day.isOpen === false);
-    var hasText = !isExplicitlyClosed && dayHasDirectData(day);
-    var hasTodayMenu = !isSeoulWeekend(0) && hasText;
+    var day = todayBreakfastDay();
+    var hasTodayMenu = hasTodayBreakfastMenu();
 
     var menuText = "";
     var menuNames = [];
@@ -458,7 +914,72 @@
         menuNames = [menuText];
       }
     }
-    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType);
+    window.BreakfastRating.render(lang, hasTodayMenu, dateKey, menuText, menuNames, mealType, handleBreakfastRatingSaved);
+  }
+
+  /* ---------------- 천원의 아침밥 평가 팝업 (모바일 UI 개선 6단계, 평가 UI
+     수정 단계에서 본문 평가 영역을 팝업 안으로 이동) ----------------
+     Firebase read/write 없이 localStorage/sessionStorage만 사용합니다
+     (비용 최소화 지시). 두 상태를 분리해서 관리합니다:
+       - breakfastRatingCompletedDate(localStorage): 실제로 평가를 저장
+         완료한 날짜(KST). 이 날짜가 오늘이면 다음날까지 팝업을 다시
+         띄우지 않습니다. 반드시 기존 평가 저장(BreakfastRating 모듈)이
+         성공한 뒤에만 기록합니다.
+       - breakfastRatingPopupDismissed(sessionStorage): 평가하지 않고
+         X로 닫기만 한 경우. 같은 세션(탭)에서는 다시 띄우지 않지만,
+         다음 방문/새 세션에서는 (완료 기록이 없다면) 다시 표시됩니다. */
+  var BREAKFAST_COMPLETED_KEY = "breakfastRatingCompletedDate";
+  var BREAKFAST_DISMISSED_SESSION_KEY = "breakfastRatingPopupDismissed";
+
+  function markBreakfastRatingCompletedToday() {
+    try { localStorage.setItem(BREAKFAST_COMPLETED_KEY, getSeoulDateKey(0)); } catch (e) { /* localStorage 미지원 시 무시 */ }
+  }
+
+  function isBreakfastRatingCompletedToday() {
+    try { return localStorage.getItem(BREAKFAST_COMPLETED_KEY) === getSeoulDateKey(0); } catch (e) { return false; }
+  }
+
+  function markBreakfastPopupDismissedThisSession() {
+    try { sessionStorage.setItem(BREAKFAST_DISMISSED_SESSION_KEY, "true"); } catch (e) { /* sessionStorage 미지원 시 무시 */ }
+  }
+
+  function isBreakfastPopupDismissedThisSession() {
+    try { return sessionStorage.getItem(BREAKFAST_DISMISSED_SESSION_KEY) === "true"; } catch (e) { return false; }
+  }
+
+  function closeBreakfastPopup() {
+    if (els.breakfastPopupOverlay) els.breakfastPopupOverlay.hidden = true;
+  }
+
+  // 평가 저장이 실제로 성공한 뒤에만(BreakfastRating 모듈이 호출) 완료
+  // 상태를 기록하고 팝업을 닫습니다 — 저장 실패 시에는 호출되지 않으므로
+  // 완료 처리도 되지 않습니다.
+  function handleBreakfastRatingSaved() {
+    markBreakfastRatingCompletedToday();
+    closeBreakfastPopup();
+  }
+
+  function openBreakfastPopup() {
+    if (!els.breakfastPopupOverlay) return;
+    if (els.breakfastPopupCloseBtn) els.breakfastPopupCloseBtn.setAttribute("aria-label", BREAKFAST_RATING_TEXT.close[state.lang]);
+    renderBreakfastRating(state.lang); // 평가 위젯(#baRating)을 팝업 안에서 새로 렌더링
+    els.breakfastPopupOverlay.hidden = false;
+  }
+
+  function maybeShowBreakfastPopup() {
+    if (!els.breakfastPopupOverlay) return;
+    // 커뮤니티 화면으로 바로 들어온 경우(딥링크)에는 메인 화면 전용
+    // 팝업을 띄우지 않습니다.
+    if (window.Community && window.Community.isCommunityPath(location.pathname)) return;
+    if (isBreakfastRatingCompletedToday()) return;
+    if (isBreakfastPopupDismissedThisSession()) return;
+    if (!hasTodayBreakfastMenu()) return;
+    var todayKey = getSeoulDateKey(0);
+    if (window.BreakfastRating && typeof window.BreakfastRating.isRatedToday === "function" && window.BreakfastRating.isRatedToday(todayKey)) {
+      markBreakfastRatingCompletedToday(); // 기존 평가 모듈 기록만 있던 경우 새 키로도 보강
+      return;
+    }
+    openBreakfastPopup();
   }
 
   /* 자정이 지나 날짜가 바뀌면 화면을 새로고침 없이 갱신 */
@@ -621,6 +1142,94 @@
 
   function init() {
     els.siteTitle = qs("siteTitle");
+    els.siteTagline = qs("siteTagline");
+    els.siteLogo = qs("siteLogo");
+    els.siteLogoBtn = qs("siteLogoBtn");
+    els.siteBrandName = qs("siteBrandName");
+    // 세부페이지 디자인 통일(비용 최소화) — "← HOME" 링크와 매장 타이틀
+    // 밴드의 영문 eyebrow. 새 라우팅 없이 기존 goHome()/state.store만 재사용.
+    els.detailHomeLink = qs("detailHomeLink");
+    els.detailHomeLinkLabel = qs("detailHomeLinkLabel");
+    els.storeEyebrow = qs("storeEyebrow");
+    // 언어 선택 — 항상 펼쳐진 7버튼 대신 작은 🌐 토글로 여닫는 드롭다운
+    // (기존 langBar/lang-bar-btn과 setLang 로직은 그대로 재사용).
+    els.langCompact = qs("langCompact");
+    els.langCompactBtn = qs("langCompactBtn");
+    els.langCompactLabel = qs("langCompactLabel");
+    els.langBar = qs("langBar");
+
+    els.homeView = qs("homeView");
+    els.homeHeroImg = qs("homeHeroImg");
+    els.homeServicesTitle = qs("homeServicesTitle");
+    els.homeCardCommunity = qs("homeCardCommunity");
+    els.homeCardCommunityName = qs("homeCardCommunityName");
+    els.homeCardBreakfast = qs("homeCardBreakfast");
+    els.homeCardBreakfastName = qs("homeCardBreakfastName");
+    els.homeCardBreakfastLoc = qs("homeCardBreakfastLoc");
+    els.homeCardBreakfastPrice = qs("homeCardBreakfastPrice");
+    els.homeCardBapsimLoc = qs("homeCardBapsimLoc");
+    els.homeCardMangwonLoc = qs("homeCardMangwonLoc");
+    els.homeCardHururukLoc = qs("homeCardHururukLoc");
+    // 홈 MZ LEGO 보드(리뉴얼 1단계) — 기존에 없던 블록 3개(EVENT/나의 고향
+    // 이야기/친구 만들기/사장님에게 말하기)만 새로 연결합니다. 나머지
+    // 블록(천원의 아침밥/방 구하기/밥심/후루룩찹찹/만권화밥/한국어 공부)은
+    // 기존 id·클릭 핸들러를 그대로 재사용합니다.
+    els.homeLegoEventBtn = qs("homeLegoEventBtn");
+    els.homeLegoEventLabel = qs("homeLegoEventLabel");
+    els.homeLegoHometownBtn = qs("homeLegoHometownBtn");
+    els.homeLegoHometownLabel = qs("homeLegoHometownLabel");
+    els.homeLegoFriendsBtn = qs("homeLegoFriendsBtn");
+    els.homeLegoFriendsLabel = qs("homeLegoFriendsLabel");
+    // "주말에 가볼 만한 곳"(2026-09 지시서) — 커뮤니티 together 카테고리로
+    // 바로 이동하는 새 HOME 카드. 새 라우트/새 게시판 없음.
+    els.homeLegoWeekendBtn = qs("homeLegoWeekendBtn");
+    els.homeLegoWeekendLabel = qs("homeLegoWeekendLabel");
+    els.homeCardWeekendSub = qs("homeCardWeekendSub");
+    els.homeLegoOwnerChatLabel = qs("homeLegoOwnerChatLabel");
+    // 방 구하기는 브랜드명이 아니라 일반 UI 문구라 기존 ROOM_FINDER.title
+    // (js/room-finder.js가 이미 쓰는 4개 언어 데이터)을 그대로 재사용해
+    // 선택 언어에 맞춰 바꿉니다(교정 지시서 14번 — 새 번역 없음).
+    els.homeLegoRoomTitle = qs("homeLegoRoomTitle");
+    // 홈 화면 프리미엄 에디토리얼 리디자인 — 메인 카피 + 카드별 짧은
+    // 한 줄 설명(신규 최소 번역 UI_TEXT.homeHeadline/homeCardSubtitle)과
+    // "나의 학교생활" 카드(기존 COMMUNITY_CATEGORIES.job 카테고리를
+    // 그대로 재사용 — 라벨만 "나의 학교생활"로 교체, 새 카테고리 아님).
+    els.homeHeroCopy = qs("homeHeroCopy");
+    els.homeHeroEyebrow = qs("homeHeroEyebrow");
+    els.homeHeadline = qs("homeHeadline");
+    els.homeHeroDesc = qs("homeHeroDesc");
+    els.homeHeroCta = qs("homeHeroCta");
+    els.homeHeroDots = qs("homeHeroDots");
+    els.homeCardBreakfastSub = qs("homeCardBreakfastSub");
+    els.homeCardMangwonSub = qs("homeCardMangwonSub");
+    els.homeCardBapsimSub = qs("homeCardBapsimSub");
+    els.homeCardRoomSub = qs("homeCardRoomSub");
+    els.homeCardHometownSub = qs("homeCardHometownSub");
+    els.homeLegoCampusLifeBtn = qs("homeLegoCampusLifeBtn");
+    els.homeLegoCampusLifeLabel = qs("homeLegoCampusLifeLabel");
+    els.homeCardCampusLifeSub = qs("homeCardCampusLifeSub");
+    els.homeCardFriendsSub = qs("homeCardFriendsSub");
+    els.homeCardFeedbackSub = qs("homeCardFeedbackSub");
+    // 속닥속닥 최상단 바(2026-10-09 지시서 5번) — 기존 "커뮤니티 4곳
+    // 글쓰기 이벤트" 배너를 대체합니다.
+    els.whisperTopBar = qs("whisperTopBar");
+    els.whisperTopBarText = qs("whisperTopBarText");
+    els.homeCommunityLatestTitle = qs("homeCommunityLatestTitle");
+    els.homeCommunityLatest = qs("homeCommunityLatest");
+    els.bottomNav = qs("bottomNav");
+    els.bottomNavHomeBtn = qs("bottomNavHomeBtn");
+    els.bottomNavHomeLabel = qs("bottomNavHomeLabel");
+    els.bottomNavSearchBtn = qs("bottomNavSearchBtn");
+    els.bottomNavSearchLabel = qs("bottomNavSearchLabel");
+    els.bottomNavWriteBtn = qs("bottomNavWriteBtn");
+    els.bottomNavWriteLabel = qs("bottomNavWriteLabel");
+    els.bottomNavNotifyBtn = qs("bottomNavNotifyBtn");
+    els.bottomNavNotifyLabel = qs("bottomNavNotifyLabel");
+    els.bottomNavMyBtn = qs("bottomNavMyBtn");
+
+    els.breakfastPopupOverlay = qs("breakfastPopupOverlay");
+    els.breakfastPopupCloseBtn = qs("breakfastPopupCloseBtn");
+
     els.storeTabs = qs("storeTabs");
     els.storeHeading = qs("storeHeading");
     els.menuGrid = qs("menuGrid");
@@ -637,6 +1246,7 @@
     els.breakfastArea = qs("breakfastArea");
     els.baTitle = qs("baTitle");
     els.baPriceValue = qs("baPriceValue");
+    els.baHeroTagline = qs("baHeroTagline");
     els.baTodayMenuTitle = qs("baTodayMenuTitle");
     els.baTodayDateValue = qs("baTodayDateValue");
     els.todayMealList = qs("todayMealList");
@@ -700,14 +1310,262 @@
     Array.prototype.forEach.call(els.storeTabs.querySelectorAll(".store-tab[data-store]"), function (btn) {
       var store = btn.getAttribute("data-store");
       els.storeTabButtons[store] = btn;
-      btn.addEventListener("click", function () { setStore(store); });
+      // goToStore()는 setStore()에 더해 홈/커뮤니티 화면에서 매장 화면으로
+      // 전환하는 것까지 함께 처리합니다(모바일 UI 개선 4단계).
+      btn.addEventListener("click", function () { goToStore(store); });
     });
 
+    // 홈 화면의 핵심 서비스 카드 — 기존 헤더 탭과 같은 동작을 재사용합니다
+    // (새 라우팅 로직·새 페이지를 따로 만들지 않음).
+    if (els.homeCardCommunity && els.storeTabs) {
+      els.homeCardCommunity.addEventListener("click", function () {
+        var communityTabBtn = els.storeTabs.querySelector(".community-tab");
+        if (communityTabBtn) communityTabBtn.click();
+      });
+    }
+    // 천원의 아침밥 카드 — 새 화면 없이 기존 밥심 내부의 천원의 아침밥
+    // 화면으로 바로 이동합니다. 이미 밥심의 "일반 메뉴" 탭에 있던
+    // 상태여도 이 카드는 항상 아침밥 화면으로 보내야 하므로, 매장이
+    // 이미 밥심이라 goToStore()가 화면을 새로 그리지 않는 경우까지
+    // 대비해 bapsimView를 먼저 breakfast로 맞춰둡니다.
+    if (els.homeCardBreakfast) {
+      els.homeCardBreakfast.addEventListener("click", function () {
+        state.bapsimView = "breakfast";
+        goToStore("bapsim");
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".home-service-card[data-store]"), function (card) {
+      var store = card.getAttribute("data-store");
+      card.addEventListener("click", function () { goToStore(store); });
+    });
+
+    // 홈 MZ LEGO 보드(리뉴얼 1단계)의 새 블록 3개 — 전부 기존 기능을
+    // 그대로 연결합니다(새 route/새 API 없음).
+    if (els.homeLegoEventBtn) {
+      // 기존 팝업(js/site-popup.js)을 다시 열어 보여주는 진입점 — 새
+      // 이벤트 CMS/컬렉션을 만들지 않습니다. 활성 팝업이 없으면
+      // 조용히 아무 일도 하지 않습니다.
+      els.homeLegoEventBtn.addEventListener("click", function () {
+        if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+      });
+    }
+    // 속닥속닥 바로가기 바(2026-10-11 홈페이지/속닥속닥 개편 지시서 3번) —
+    // 클릭하면 곧장 글쓰기가 아니라 게시글 목록을 먼저 보여줍니다.
+    // hometown/friends 등 다른 카드와 똑같이 기존 navigateToCategory()만
+    // 재사용합니다(새 라우팅 없음) — 목록 화면 자체는 js/community.js의
+    // renderWhisperList()가 그립니다.
+    if (els.whisperTopBar) {
+      els.whisperTopBar.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("whisper");
+      });
+    }
+    if (els.homeLegoHometownBtn) {
+      els.homeLegoHometownBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("hometown");
+      });
+    }
+    if (els.homeLegoFriendsBtn) {
+      els.homeLegoFriendsBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("friends");
+      });
+    }
+    // "주말에 가볼 만한 곳" — 옛 "김해맛집 추천"(together) 카테고리를 그대로
+    // 재사용. 새 route/새 카테고리를 만들지 않고 기존 이동 함수만 재사용.
+    if (els.homeLegoWeekendBtn) {
+      els.homeLegoWeekendBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("together");
+      });
+    }
+    // "나의 학교생활" — 기존 job 카테고리(라벨만 교체)로 이동. 새 카테고리/
+    // 새 route가 아니라 hometown/friends와 동일한 기존 함수 재사용.
+    if (els.homeLegoCampusLifeBtn) {
+      els.homeLegoCampusLifeBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigateToCategory === "function") window.Community.navigateToCategory("job");
+      });
+    }
+    // 홈 메인 히어로 영역의 CTA — 관리자 팝업에 linkUrl이 있으면 그
+    // 링크(기본 <a href> 동작), 관리자 팝업은 있지만 링크가 없으면 기존
+    // 전체 팝업(showActive) 재사용. 관리자 팝업이 없어 신메뉴 홍보(고추장
+    // 버터 화산불백)를 보여주는 기본 상태에서는, 그 팝업(js/hometown-
+    // popup.js)의 "메뉴 확인" 버튼과 같은 기존 이동 함수(goToStore)를
+    // 그대로 재사용해 후루룩찹찹 매장으로 이동합니다(새 링크 없음).
+    if (els.homeHeroCta) {
+      els.homeHeroCta.addEventListener("click", function (e) {
+        if (homeHeroPopup && homeHeroPopup.linkUrl) return;
+        e.preventDefault();
+        if (homeHeroPopup) {
+          if (window.SitePopup && typeof window.SitePopup.showActive === "function") window.SitePopup.showActive();
+        } else if (heroSlideIndex === 1 && window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") {
+          window.WeekendSurvey.openFromBanner();
+        } else if (typeof window.goToStore === "function") {
+          window.goToStore("hururuk");
+        }
+      });
+    }
+    // 설문 슬라이드일 때는 버튼뿐 아니라 히어로 영역 전체를 눌러도 설문이
+    // 열립니다(지시서 3번 "버튼 또는 Hero 영역을 클릭하면"). 화산불백
+    // 슬라이드에서는 기존처럼 CTA 버튼에서만 동작(위 리스너가 그대로 처리).
+    if (els.homeHeroCopy) {
+      els.homeHeroCopy.addEventListener("click", function (e) {
+        if (heroSlideIndex !== 1 || homeHeroPopup) return;
+        if (e.target === els.homeHeroCta) return; // CTA 자체는 위 리스너가 이미 처리(중복 호출 방지)
+        if (window.WeekendSurvey && typeof window.WeekendSurvey.openFromBanner === "function") window.WeekendSurvey.openFromBanner();
+      });
+    }
+    if (els.homeHeroDots) {
+      Array.prototype.forEach.call(els.homeHeroDots.children, function (dot) {
+        dot.addEventListener("click", function () {
+          if (!heroSurveyReady()) return;
+          var idx = Number(dot.getAttribute("data-hero-slide")) || 0;
+          if (idx === heroSlideIndex) return;
+          goToHeroSlide(idx);
+        });
+      });
+    }
+    startHeroRotation();
+    loadHomeHeroPopup();
+
+    // 공식 로고 클릭 시 홈으로 이동(모바일 UI 개선 10단계) — 기존 홈
+    // 라우팅(goHome)을 그대로 재사용합니다.
+    if (els.siteLogoBtn) {
+      els.siteLogoBtn.addEventListener("click", goHome);
+    }
+    // 세부페이지 "← HOME" 링크도 같은 goHome()을 재사용(새 라우팅 없음).
+    if (els.detailHomeLink) {
+      els.detailHomeLink.addEventListener("click", goHome);
+    }
+    // BABSIM.STORE 텍스트 자체도 기본 홈 이동 버튼 역할(새 아이콘/새
+    // route 없이 같은 goHome()만 재사용). role="button"이라 키보드로도
+    // Enter/Space로 접근 가능하게 합니다.
+    if (els.siteBrandName) {
+      els.siteBrandName.addEventListener("click", goHome);
+      els.siteBrandName.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); }
+      });
+    }
+
+    // 하단 내비게이션(홈/검색/글쓰기/알림/MY, 모바일 UI 개선 8단계) —
+    // 전부 기존 커뮤니티 라우팅·안내창 로직을 그대로 재사용합니다.
+    if (els.bottomNavHomeBtn) {
+      els.bottomNavHomeBtn.addEventListener("click", goHome);
+    }
+    if (els.bottomNavSearchBtn) {
+      els.bottomNavSearchBtn.addEventListener("click", function () {
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix);
+        }
+        // 게시판/콘텐츠 검색은 새로 만들지 않고, 커뮤니티 목록에 이미 있는
+        // 검색창(제목·본문 검색)으로 포커스만 이동합니다.
+        setTimeout(function () {
+          var input = document.querySelector(".community-search-input");
+          if (input) input.focus();
+        }, 150);
+      });
+    }
+    if (els.bottomNavWriteBtn) {
+      els.bottomNavWriteBtn.addEventListener("click", function () {
+        // 비회원이면 기존 로그인 안내창이, 회원이면 글쓰기 화면이 뜹니다
+        // (js/community.js의 AUTH_REQUIRED_ROUTES를 그대로 재사용).
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix + "/write");
+        }
+      });
+    }
+    if (els.bottomNavNotifyBtn) {
+      els.bottomNavNotifyBtn.addEventListener("click", function () {
+        // 기존 알림 기능이 없어, 새 알림 시스템을 만드는 대신 있는
+        // 토스트(community.js showToast)로 안내만 합니다.
+        if (window.Community && typeof window.Community.showToast === "function") {
+          window.Community.showToast(UI_TEXT.bottomNavNotifyComingSoon[state.lang]);
+        }
+      });
+    }
+    if (els.bottomNavMyBtn) {
+      els.bottomNavMyBtn.addEventListener("click", function () {
+        // 비회원이면 로그인 안내, 회원이면 기존 마이페이지(동일 로직 재사용).
+        if (window.Community && typeof window.Community.navigate === "function") {
+          window.Community.navigate(window.Community.routePrefix + "/my");
+        }
+      });
+    }
+
+    // 히어로 이미지도 로고와 같은 방식으로, 파일이 없으면 자동으로 숨깁니다.
+    if (els.homeHeroImg) {
+      var hideBrokenHero = function () {
+        if (els.homeHeroImg.complete && els.homeHeroImg.naturalWidth === 0) els.homeHeroImg.hidden = true;
+      };
+      els.homeHeroImg.addEventListener("error", hideBrokenHero, { once: true });
+      hideBrokenHero();
+    }
+
+    // js/community.js가 커뮤니티 화면에서 빠져나올 때 홈/매장 중 무엇을
+    // 다시 보여줄지 이 함수를 통해 물어봅니다.
+    window.AppHome = {
+      applyView: applyViewVisibility,
+      // 커뮤니티 화면으로 들어갈 때 하단 내비게이션의 "홈" 활성 표시만
+      // 꺼달라고 community.js가 호출합니다(하단 내비게이션 자체는 8단계부터
+      // 항상 고정 표시).
+      setHomeActive: function (active) {
+        if (els.bottomNavHomeBtn) els.bottomNavHomeBtn.classList.toggle("active", active);
+      }
+    };
+
+    // 당일 첫 방문 평가 팝업 — X로 닫기는 "평가완료"가 아니라 "이번
+    // 세션에서만 닫기"입니다(평가 UI 수정 단계 5번 요구사항).
+    if (els.breakfastPopupCloseBtn) {
+      els.breakfastPopupCloseBtn.addEventListener("click", function () {
+        markBreakfastPopupDismissedThisSession();
+        closeBreakfastPopup();
+      });
+    }
+    if (els.breakfastPopupOverlay) {
+      els.breakfastPopupOverlay.addEventListener("click", function (e) {
+        if (e.target === els.breakfastPopupOverlay) { markBreakfastPopupDismissedThisSession(); closeBreakfastPopup(); }
+      });
+    }
+
     els.langButtons = {};
-    Array.prototype.forEach.call(document.querySelectorAll(".lang-btn"), function (btn) {
+    Array.prototype.forEach.call(document.querySelectorAll(".lang-bar-btn"), function (btn) {
       var lang = btn.getAttribute("data-lang");
       els.langButtons[lang] = btn;
-      btn.addEventListener("click", function () { setLang(lang); });
+      btn.addEventListener("click", function () {
+        setLang(lang);
+        closeLangDropdown();
+      });
+    });
+
+    if (els.langCompactBtn && els.langBar) {
+      els.langCompactBtn.addEventListener("click", function () {
+        if (els.langBar.hidden) openLangDropdown(); else closeLangDropdown();
+      });
+      document.addEventListener("click", function (e) {
+        if (!els.langBar.hidden && els.langCompact && !els.langCompact.contains(e.target)) closeLangDropdown();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !els.langBar.hidden) closeLangDropdown();
+      });
+    }
+
+    // 로고 파일이 아직 없으면(placeholder) 깨진 이미지 아이콘 없이 자동으로 숨깁니다.
+    // 나중에 images/icon/site-logo.png 파일을 올리기만 하면 코드 수정 없이 보입니다.
+    if (els.siteLogo) {
+      var hideBrokenLogo = function () {
+        if (els.siteLogo.complete && els.siteLogo.naturalWidth === 0) els.siteLogo.hidden = true;
+      };
+      els.siteLogo.addEventListener("error", hideBrokenLogo, { once: true });
+      // init() 실행 전에 이미 로드가 끝나버렸을 수도 있어(로컬/캐시처럼
+      // 아주 빠른 응답) 즉시 한 번 더 확인합니다.
+      hideBrokenLogo();
+    }
+
+    // 핵심 서비스 카드의 공식 로고 이미지(10단계)도 같은 방식으로
+    // 파일이 없으면 자동 숨김 처리합니다(임의 로고 제작 없이 자리만 마련).
+    Array.prototype.forEach.call(document.querySelectorAll(".home-service-icon-img"), function (img) {
+      var hideBrokenIcon = function () {
+        if (img.complete && img.naturalWidth === 0) img.hidden = true;
+      };
+      img.addEventListener("error", hideBrokenIcon, { once: true });
+      hideBrokenIcon();
     });
 
     els.prevBtn.addEventListener("click", function () { changeGroup(-1); });
@@ -745,6 +1603,12 @@
     state.lang = loadSavedLang();
 
     renderAll();
+    renderHome();
+    // 커뮤니티 경로로 바로 들어온 경우(딥링크)에는 community.js가 이미
+    // 화면 전환을 처리했으므로, 여기서 홈/매장 보이기를 덮어쓰지 않습니다.
+    if (!(window.Community && window.Community.isCommunityPath(location.pathname))) {
+      applyViewVisibility();
+    }
 
     lastKnownSeoulDateKey = getSeoulDateKey(0);
     setInterval(checkMidnightRollover, 60000);
@@ -768,6 +1632,52 @@
         if (state.store === "bapsim" && state.bapsimView === "breakfast") renderBreakfastArea();
       });
     }
+
+    /* 메뉴 좋아요 — 전체 카운트/내 좋아요 목록을 1회씩만 읽어오고,
+       도착하면 현재 보이는 카드에 반영합니다(기존 renderGrid 재사용). */
+    if (window.MenuLikes && typeof window.MenuLikes.init === "function") {
+      window.MenuLikes.onChange(renderGrid);
+      window.MenuLikes.init();
+    }
+
+    /* 관리자 메뉴관리(storeMenus) — 매장마다 딱 1번씩만 조회합니다(실시간
+       listener 없음). 등록된 메뉴가 있는 매장만 도착 즉시 다시 그립니다. */
+    STORE_ORDER.forEach(function (store) { loadStoreMenus(store); });
+
+    // 메인 화면이 먼저 정상 표시된 뒤 약간의 지연 후 자연스럽게 팝업을
+    // 띄웁니다(사이트 진입 즉시 화면을 가리지 않음). 관리자가 등록한
+    // 일반 팝업(팝업 기능 2단계) → 신메뉴 팝업(HometownPopup) → 천원의
+    // 아침밥 평가 팝업 순서로, 앞 팝업이 없거나 닫힌 뒤에만 다음 팝업을
+    // 띄웁니다.
+    // 1,000원의 아침밥 주말·공휴일 설문조사(2026-09 지시서) — 일반 메인
+    // 화면보다 먼저 보여주되, 기존 팝업 체인(관리자 팝업 → 신메뉴 팝업 →
+    // 아침밥 평가 팝업)과 겹쳐 뜨지 않도록 설문 모달이 닫힌 뒤에만 그
+    // 체인을 이어갑니다(이미 참여했으면 설문 없이 바로 기존 체인으로 넘어감).
+    function afterHometownPopupChain() {
+      if (window.HometownPopup && typeof window.HometownPopup.maybeShow === "function") {
+        window.HometownPopup.maybeShow(maybeShowBreakfastPopup);
+      } else {
+        maybeShowBreakfastPopup();
+      }
+    }
+    function afterSurveyChain() {
+      if (window.SitePopup && typeof window.SitePopup.maybeShow === "function") {
+        window.SitePopup.maybeShow(afterHometownPopupChain);
+      } else {
+        afterHometownPopupChain();
+      }
+    }
+    // 2026-10-09 속닥속닥 지시서 3·5번 — "커뮤니티 4곳 글쓰기 이벤트"
+    // 배너와 그 자동 팝업(Community.maybeShowEventPopupOnEntry)을 완전히
+    // 제거합니다. 체인 맨 앞 단계를 건너뛰고 바로 기존 체인(설문→관리자
+    // 팝업→신메뉴 팝업→아침밥 평가 팝업)으로 이어갑니다.
+    setTimeout(function () {
+      if (window.WeekendSurvey && typeof window.WeekendSurvey.maybeShowOnEntry === "function") {
+        window.WeekendSurvey.maybeShowOnEntry(afterSurveyChain);
+      } else {
+        afterSurveyChain();
+      }
+    }, 1000);
   }
 
   if (document.readyState === "loading") {

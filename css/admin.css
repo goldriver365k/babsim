@@ -277,6 +277,21 @@ table.results-table {
 
 .results-table td.menu-cell { text-align: left; white-space: normal; max-width: 220px; overflow-wrap: anywhere; }
 
+.results-table td.desc-cell {
+  text-align: left;
+  white-space: normal;
+  max-width: 180px;
+  overflow-wrap: anywhere;
+  color: var(--text-mid);
+}
+
+.results-table td.desc-cell .desc-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .results-table tbody tr { cursor: pointer; }
 .results-table tbody tr:hover { background: #f4f7fd; }
 .results-table tbody tr.selected { background: #eaf1fc; }
@@ -320,12 +335,18 @@ table.results-table {
   max-width: 360px;
 }
 
-.weekly-auth-box input {
+.weekly-auth-box input,
+.weekly-auth-box textarea {
   min-height: 42px;
   padding: 8px 12px;
   border: 1px solid var(--border-gray);
   border-radius: var(--radius-sm);
   font-size: 14px;
+  font-family: inherit;
+}
+
+.weekly-auth-box textarea {
+  resize: vertical;
 }
 
 .weekly-auth-box button {
@@ -396,7 +417,10 @@ table.results-table {
 }
 
 @media (min-width: 900px) {
-  .week-day-grid { grid-template-columns: repeat(5, 1fr); }
+  /* 2026-10-15 지시 — 요일 카드가 5개(월~금)에서 7개(월~일)로 늘어나
+     고정 5열로는 일·토요일 카드가 밀려나므로, 카드 폭(최소 200px)만
+     보장하고 화면 폭에 맞게 자동으로 줄 수를 늘리도록 바꿉니다. */
+  .week-day-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 }
 
 .week-day-card {

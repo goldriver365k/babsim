@@ -44,6 +44,10 @@ const RETRYABLE_STATUS = [429, 503];
 
 const MAX_TITLE_CHARS = 200;
 const MAX_CONTENT_CHARS = 4000;
+// 구인·구직 게시글 상세정보(직접입력 필드) 번역용 — 제목/본문과 같은
+// 호출에 묶어서 보내므로 개수·글자수를 짧게 제한합니다(비용 최소화).
+const MAX_FIELD_KEYS = 12;
+const MAX_FIELD_CHARS = 300;
 
 const SUPPORTED_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
 const LANG_NAMES = {
@@ -241,6 +245,14 @@ const PRESERVE_RULE = "Do not translate or alter: person names, brand names, sch
   "building names, prices, dates, phone numbers, email addresses, URLs, or product model numbers " +
   "— keep them exactly as written in the original.";
 
+// 2026-09-30 "이벤트 바 + 다국어 번역 최종 수정 지시문" 5번/10번 — 게시글
+// 자동번역도 단어 그대로 직역하지 않고, 그 언어를 실제로 쓰는 사람이
+// 자연스럽게 읽을 수 있는 문장으로 번역하도록 프롬프트에만 한 문장을
+// 추가합니다(새 API·새 모델 없이 같은 OpenAI 호출의 지시문만 보강).
+const NATURAL_TONE_RULE = "Translate naturally, the way a native speaker of the target language " +
+  "would actually write it, not a literal word-for-word translation — keep the original meaning " +
+  "and tone (casual stays casual, formal stays formal).";
+
 async function callOpenAIJson(promptText) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw Object.assign(new Error("AI_API_KEY_MISSING"), { code: "AI_API_KEY_MISSING" });
@@ -274,10 +286,25 @@ async function callOpenAIJson(promptText) {
 
 /* ---------------- 게시글 번역 ---------------- */
 
+// 구인·구직 상세정보(사용자가 직접 입력한 텍스트 값만) — 제목/본문과
+// 같은 요청에 묶어 보내 API 호출을 늘리지 않습니다. 알 수 없는 키/과도한
+// 개수·길이는 서버에서 그대로 잘라내 프롬프트 비용을 방어합니다.
+function sanitizeFields(rawFields) {
+  if (!rawFields || typeof rawFields !== "object") return null;
+  const keys = Object.keys(rawFields).slice(0, MAX_FIELD_KEYS);
+  const out = {};
+  keys.forEach(function (k) {
+    const v = rawFields[k];
+    if (typeof v === "string" && v.trim()) out[k] = v.slice(0, MAX_FIELD_CHARS);
+  });
+  return Object.keys(out).length ? out : null;
+}
+
 async function handleTranslatePost(payload) {
   const original = payload.originalLanguage;
   const title = (payload.title || "").toString().slice(0, MAX_TITLE_CHARS);
   const content = (payload.content || "").toString();
+  const fields = sanitizeFields(payload.fields);
 
   if (!original || SUPPORTED_LANGS.indexOf(original) === -1) {
     return json(400, { error: "INVALID_LANGUAGE" });
@@ -291,13 +318,21 @@ async function handleTranslatePost(payload) {
   if (!targets.length) return json(200, { translations: {}, failedLanguages: [] });
 
   const targetNames = targets.map(function (l) { return l + " (" + LANG_NAMES[l] + ")"; }).join(", ");
+  const fieldKeys = fields ? Object.keys(fields) : [];
+  const shapeHint = fieldKeys.length
+    ? '{"<langCode>":{"title":"...","content":"...","fields":{' +
+      fieldKeys.map(function (k) { return '"' + k + '":"..."'; }).join(",") + "}}, ...}"
+    : '{"<langCode>":{"title":"...","content":"..."}, ...}';
   const prompt =
     "Translate the following community board post from " + LANG_NAMES[original] +
-    " into these languages: " + targetNames + ". " + PRESERVE_RULE +
-    " Respond ONLY with a JSON object shaped like " +
-    '{"<langCode>":{"title":"...","content":"..."}, ...} using the exact language codes: ' +
-    targets.join(", ") + ".\n\n" +
-    "Title: " + title + "\n\nContent: " + content;
+    " into these languages: " + targetNames + ". " + NATURAL_TONE_RULE + " " + PRESERVE_RULE +
+    " Respond ONLY with a JSON object shaped like " + shapeHint +
+    " using the exact language codes: " + targets.join(", ") + "." +
+    (fieldKeys.length
+      ? ' The "fields" object holds short structured detail values (job field, work location, work hours, etc.) from a job posting form — translate each value the same way as the content, keeping the same keys.'
+      : "") +
+    "\n\nTitle: " + title + "\n\nContent: " + content +
+    (fieldKeys.length ? "\n\nFields: " + JSON.stringify(fields) : "");
 
   const translations = {};
   const failedLanguages = [];
@@ -306,7 +341,15 @@ async function handleTranslatePost(payload) {
     targets.forEach(function (lang) {
       const entry = parsed && parsed[lang];
       if (entry && typeof entry.title === "string" && typeof entry.content === "string") {
-        translations[lang] = { title: entry.title, content: entry.content };
+        const out = { title: entry.title, content: entry.content };
+        if (fieldKeys.length && entry.fields && typeof entry.fields === "object") {
+          const outFields = {};
+          fieldKeys.forEach(function (k) {
+            if (typeof entry.fields[k] === "string") outFields[k] = entry.fields[k];
+          });
+          if (Object.keys(outFields).length) out.fields = outFields;
+        }
+        translations[lang] = out;
       } else {
         failedLanguages.push(lang);
       }
@@ -334,7 +377,7 @@ async function handleTranslateComment(payload) {
 
   const prompt =
     "Translate the following community board comment from " + LANG_NAMES[original] +
-    " into " + LANG_NAMES[target] + ". " + PRESERVE_RULE +
+    " into " + LANG_NAMES[target] + ". " + NATURAL_TONE_RULE + " " + PRESERVE_RULE +
     ' Respond ONLY with a JSON object shaped like {"content":"..."}.' +
     "\n\nComment: " + content;
 

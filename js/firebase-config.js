@@ -57,6 +57,14 @@
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
 
+          // 홈 팝업(관리자 등록, 팝업 기능 1단계) — "주간메뉴 관리"와 같은
+          // 관리자 로그인을 그대로 재사용합니다. 학생 화면에 실제로
+          // 띄우는 기능은 다음 단계에서 이 컬렉션을 읽어 연결합니다.
+          match /sitePopups/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
           // 메뉴 번역 사전(문서 ID = 한글 메뉴명). 같은 메뉴를 매주 다시
           // 번역하지 않기 위한 캐시입니다. parse-weekly-menu 함수가 읽고,
           // 관리자 게시 시 클라이언트가 새로 번역된 항목만 씁니다.
@@ -98,9 +106,19 @@
             // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다. 이름·국적은
             // Google 로그인으로 가입하더라도(이메일/비밀번호 없이도) 반드시
             // 채워야만 문서가 만들어지도록 서버(규칙)에서도 검사합니다.
+            // 비회원(익명, Firebase Anonymous Auth)은 회원가입 절차 없이
+            // 자동 생성된 nickname(name 필드 재사용)만으로 문서를 만들 수
+            // 있습니다 — request.auth.token.firebase.sign_in_provider는
+            // 서버가 검증한 값이라 클라이언트가 위조할 수 없습니다.
             allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user'
-              && request.resource.data.name is string && request.resource.data.name.size() > 0
-              && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0;
+              && (
+                (request.resource.data.name is string && request.resource.data.name.size() > 0
+                  && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0)
+                ||
+                (request.auth.token.firebase.sign_in_provider == 'anonymous'
+                  && request.resource.data.isAnonymous == true
+                  && request.resource.data.name is string && request.resource.data.name.size() > 0)
+              );
             allow update: if (isSignedIn() && request.auth.uid == uid
                 && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
               || isAdmin();
@@ -166,6 +184,13 @@
           // 초기화됩니다(별도 초기화 스케줄 불필요).
           function rlPrev(field) { return resource != null && field in resource.data ? resource.data[field] : 0; }
           function rlNext(field) { return field in request.resource.data ? request.resource.data[field] : 0; }
+          // 짧은 시간 반복 글쓰기/댓글 도배 방지(2026-09-12 6단계 지시서) —
+          // 새 컬렉션·서비스 없이 이 문서에 마지막 작성 시각만 더 기록해
+          // 재사용합니다. 그 날의 첫 글/댓글(=이전 시각 없음)은 항상 허용.
+          function tooSoon(field, seconds) {
+            return resource != null && field in resource.data
+              && request.time < resource.data[field] + duration.value(seconds, 's');
+          }
           match /communityRateLimits/{docId} {
             allow read: if isSignedIn() && docId.matches(request.auth.uid + '_.*');
             allow write: if isActiveMember() && docId.matches(request.auth.uid + '_.*')
@@ -178,11 +203,13 @@
               && (
                 (rlNext('postCount') == rlPrev('postCount') + 1
                   && rlNext('commentCount') == rlPrev('commentCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastPostAt', 10))
                 ||
                 (rlNext('commentCount') == rlPrev('commentCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastCommentAt', 5))
                 ||
                 (rlNext('translationCount') == rlPrev('translationCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
@@ -239,6 +266,83 @@
             allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
             allow update: if false;
           }
+
+          // ---------------- 메뉴 좋아요(js/menu-likes.js, 2026-09-16 추가)
+          // ---------------- 매장 메뉴명 옆 ♡/♥ + 누적 좋아요 숫자. 이후
+          // 밥심 커뮤니티 "인기 메뉴"도 menuLikeCounts를 그대로 재사용합니다.
+
+          // 메뉴별 누적 좋아요 수 — 문서 1개(id="all")에 { 메뉴id: 숫자 }
+          // 형태로 모아 두어, 메뉴가 몇 개든 읽기는 항상 1회입니다. 누구나
+          // 볼 수 있어야 하므로 읽기는 공개, 쓰기(증가/감소)는 로그인
+          // (비회원 포함 Anonymous Auth)한 사용자만 가능합니다.
+          match /menuLikeCounts/{docId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
+
+          // 사용자별 좋아요 표시(문서 id="{uid}_{menuId}") — 같은 사용자가
+          // 같은 메뉴를 중복으로 좋아요 하지 못하도록 존재 여부만 확인합니다.
+          // "내가 좋아요한 메뉴 목록"은 where(uid==내uid) 쿼리 1회로 가져오며,
+          // communitySaves와 같은 이유로 resource == null(아직 없는 문서를
+          // get()하는 경우)도 허용합니다.
+          match /menuLikeUsers/{likeId} {
+            allow read, delete: if isSignedIn() && (resource == null || request.auth.uid == resource.data.uid);
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+          }
+
+          // ---------------- 매장 메뉴관리(js/admin-menu.js, 2026-09-16
+          // 추가) ---------------- 관리자가 후루룩찹찹/만권화밥/밥심 메뉴를
+          // 등록·수정·순서변경·품절·삭제(soft delete)하는 화면용. 문서 id가
+          // 그대로 menuId이며(js/menu-likes.js의 menuLikeCounts/menuLikeUsers
+          // 와 같은 값을 쓸 수 있음), 누구나 볼 수 있어야 하므로 읽기는
+          // 공개, 쓰기는 관리자 로그인(주간메뉴 관리와 같은 계정)만
+          // 가능합니다.
+          match /storeMenus/{menuId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
+
+          // ---------------- 방 구하기(js/room-finder.js, 2026-09-21 추가)
+          // ---------------- 학생이 직접 씀(누구나 생성만 가능). 이름·전화번호
+          // 등 개인정보가 포함되므로 조회/상태변경은 관리자 로그인(주간메뉴
+          // 관리와 같은 계정)만 가능하고, 일반 사용자 화면에는 절대 공개하지
+          // 않습니다.
+          match /roomInquiries/{docId} {
+            allow create: if request.resource.data.name is string && request.resource.data.name.size() > 0
+              && request.resource.data.phone is string && request.resource.data.phone.size() > 0
+              && request.resource.data.status == 'new';
+            allow read, update: if request.auth != null;   // 관리자 로그인 필요
+            allow delete: if false;
+          }
+
+          // ---------------- 1,000원의 아침밥 주말·공휴일 설문조사
+          // (js/weekend-survey.js, 2026-09 추가) ---------------- 로그인/
+          // 회원가입 없이 누구나 딱 1건만 생성 가능(익명 설문 — 개인정보
+          // 없음). 수정/삭제는 아무도 할 수 없고, 조회는 관리자(주간메뉴
+          // 관리와 같은 계정)만 가능합니다(관리자 통계 화면용).
+          match /weekendBreakfastSurveys/{docId} {
+            allow create: if request.resource.data.selectedLanguage in ['ko','en','zh','vi','bn']
+              && request.resource.data.nationalityType in ['korean','international']
+              && request.resource.data.livingType in ['dorm','offcampus','commute']
+              && request.resource.data.preferredTime in ['0730','0800']
+              && request.resource.data.menuPreference in ['simple','simple_korean','other']
+              && request.resource.data.usageIntent in ['often','sometimes','unsure','no']
+              && request.resource.data.surveyVersion is int;
+            allow read: if request.auth != null;   // 관리자 로그인 필요
+            // 테스트/스팸 응답을 관리자가 직접 지울 수 있어야 해서 삭제만
+            // 허용합니다(내용 수정은 불가 — 응답을 조작할 수 없도록).
+            allow update: if false;
+            allow delete: if request.auth != null;   // 관리자 로그인 필요
+          }
+
+          // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
+          // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
+          // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
+          match /siteSettings/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
         }
       }
 
@@ -256,6 +360,14 @@
               && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
+          // 홈 팝업 이미지(관리자 등록, 팝업 기능 1단계) — weeklyMenuImages와
+          // 같은 조건(관리자 로그인 필요, 10MB 이하 이미지)을 그대로 재사용.
+          match /sitePopupImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
           // 커뮤니티 게시글 사진(게시글당 최대 1장, 브라우저에서 WebP로
           // 압축해 200KB 이하로 만든 뒤에만 올립니다 — 비용 최소화
           // 지시서). 500KB로 한도를 두어 클라이언트 압축 로직을 우회해도
@@ -264,6 +376,15 @@
             allow read: if true;
             allow write: if request.auth != null
               && request.resource.size < 500 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
+          // 매장 메뉴 이미지(관리자 메뉴관리, 2026-09-16 추가) —
+          // weeklyMenuImages/sitePopupImages와 같은 조건(관리자 로그인
+          // 필요, 10MB 이하 이미지)을 그대로 재사용.
+          match /storeMenuImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
         }

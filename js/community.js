@@ -22,14 +22,19 @@ var Community = (function () {
   var PHOTO_QUALITY_RETRY = 0.45;
   var PHOTO_RETRY_DIMENSION = 600;
   var PHOTO_MAX_BYTES = 200 * 1024; // 재압축 후에도 넘으면 업로드 거절
-  var POST_PAGE_SIZE = 15;
+  // 2026-10-09 속닥속닥 지시서 6번 — "최초 20개 게시글만 불러오고
+  // '더보기' 방식으로 추가"를 그대로 맞춰 15 → 20으로 조정.
+  var POST_PAGE_SIZE = 20;
   var COMMENT_PAGE_SIZE = 20;
-  var TITLE_MAX_LEN = 100;
-  var CONTENT_MAX_LEN = 2000;
+  var TITLE_MAX_LEN = 40;
+  var CONTENT_MAX_LEN = 500;
   var JOB_INTRO_MAX_LEN = 1000; // 구직 자기소개(본문 필드 재사용)
   var COMMENT_MAX_LEN = 500;
   var SUMMARY_MAX_LEN = 100; // 비회원(및 목록 카드)에게 보이는 본문 요약 길이
   var REDIRECT_KEY = "communityRedirectAfterAuth"; // 로그인/가입 완료 후 돌아갈 경로(세션 동안만)
+  // "김해 MZ 추천 카페 10곳" — 실제 Firestore 게시글이 아니라 together
+  // 카테고리 목록에 항상 표시되는 고정 콘텐츠 블록의 id(라우팅용).
+  var MZ_CAFE_POST_ID = "mz-cafe-10-gimhae";
 
   var lang = "ko";
   var els = {};
@@ -78,6 +83,16 @@ var Community = (function () {
       else history.pushState({}, "", path);
     }
     route();
+  }
+
+  // 홈 MZ LEGO 보드(리뉴얼 1단계)의 "나의 고향 이야기"/"친구 만들기"
+  // 블록에서 씁니다 — 새 route를 만들지 않고, 카테고리 탭을 직접 누른
+  // 것과 똑같이 기존 state_category만 미리 맞춰 둔 뒤 기존 navigate()로
+  // 커뮤니티 목록으로 이동합니다(목록 화면이 그 카테고리를 선택된
+  // 상태로 그려줌).
+  function navigateToCategory(catKey) {
+    if (COMMUNITY_CATEGORY_ORDER.indexOf(catKey) !== -1) state_category = catKey;
+    navigate(ROUTE_PREFIX);
   }
 
   window.addEventListener("popstate", function () { route(); });
@@ -150,6 +165,249 @@ var Community = (function () {
     document.body.appendChild(overlay);
   }
 
+  /* ---------------- 커뮤니티 이벤트 배너/팝업 ----------------
+     "커뮤니티 4곳에 글 올리면 아침식사 1,000원 무료쿠폰 증정"(2026-09
+     다국어 자동번역 지시서 2번) — 새 팝업 라이브러리 없이 기존
+     .modal-overlay/.modal 껍데기(위 showAuthGateModal과 같은 패턴)를
+     재사용합니다. 팝업 안 4개 게시판 버튼은 아래 목록 화면의 "글쓰기"
+     버튼(writeTarget)과 똑같이 ensureAuth() 후 해당 게시판 글쓰기
+     화면으로 바로 이동합니다.
+     2026-09-30 지시서 — 배너는 커뮤니티 화면이 아니라 첫화면(홈) 상단
+     (js/app.js)으로 옮기고, 이 팝업은 홈 진입 시 자동으로도 뜨도록
+     maybeShowEventPopupOnEntry(done)를 추가했습니다(기존 SitePopup/
+     HometownPopup과 같은 done 콜백 체인 패턴 재사용). 배너 버튼 자체는
+     더 이상 이 모듈이 그리지 않으므로, "오늘 하루 보지 않기"를 누르면
+     홈 화면의 배너 버튼(id="homeCommunityEventBtn")을 아는 id로 직접
+     숨깁니다(새 모듈간 콜백을 만들지 않는 최소 변경). */
+  var EVENT_BANNER_DISMISS_KEY = "communityEventBannerDismissedDate";
+  var eventPopupOnClosed = null;
+
+  // 2026-10-06 지시로 중단했다가, 2026-10-07 지시 — 쿠폰 내용(게시글
+  // 작성 시 아침식사 1,000원 무료쿠폰, 종료일 없는 상시 이벤트)이 여전히
+  // 유효해 배너 클릭 연결을 복원합니다.
+  var EVENT_POPUP_SUSPENDED = false;
+
+  function eventBannerTodayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function isEventBannerDismissedToday() {
+    try { return localStorage.getItem(EVENT_BANNER_DISMISS_KEY) === eventBannerTodayKey(); } catch (e) { return false; }
+  }
+  function markEventBannerDismissedToday() {
+    try { localStorage.setItem(EVENT_BANNER_DISMISS_KEY, eventBannerTodayKey()); } catch (e) { /* localStorage 미지원 시 무시 */ }
+    var homeBtn = document.getElementById("homeCommunityEventBtn");
+    if (homeBtn) homeBtn.hidden = true;
+  }
+
+  function closeCouponBoardsModal() {
+    var existing = qs("communityEventOverlay");
+    if (existing) existing.remove();
+    var done = eventPopupOnClosed;
+    eventPopupOnClosed = null;
+    if (done) done();
+  }
+
+  // onClosed(선택) — 팝업이 어떤 경로로든 닫힌 뒤 정확히 1번 호출됩니다
+  // (×/바깥클릭/오늘 하루 보지 않기/게시판 선택 모두 closeCouponBoardsModal을
+  // 거칩니다) — js/app.js의 자동 팝업 체인이 다음 단계로 넘어갈 때 씁니다.
+  function showCouponBoardsModal(onClosed) {
+    if (EVENT_POPUP_SUSPENDED) { if (typeof onClosed === "function") onClosed(); return; }
+    closeCouponBoardsModal();
+    eventPopupOnClosed = typeof onClosed === "function" ? onClosed : null;
+    var overlay = el("div", "modal-overlay");
+    overlay.id = "communityEventOverlay";
+    var modal = el("div", "modal community-event-modal");
+
+    var closeBtn = el("button", "modal-close");
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", t(COMMUNITY_EVENT.closeAriaLabel));
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", closeCouponBoardsModal);
+    modal.appendChild(closeBtn);
+
+    modal.appendChild(el("h2", "modal-title", t(COMMUNITY_EVENT.popupTitle)));
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_EVENT.popupDescLine1) + " " + t(COMMUNITY_EVENT.bannerTitle)));
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_EVENT.popupDesc)));
+
+    // "지금 참여하기"(2026-09-30 지시서 8번 — 팝업 필수 포함 문구) — 게시판
+    // 목록 바로 위에 굵은 CTA 문구로 둡니다.
+    modal.appendChild(el("p", "community-event-cta-label", t(COMMUNITY_EVENT.joinNow)));
+    modal.appendChild(el("p", "community-event-boards-label", t(COMMUNITY_EVENT.boardsLabel)));
+    var boardsList = el("div", "community-event-boards-list");
+    COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
+      var boardBtn = el("button", "community-btn-secondary community-event-board-btn", t(COMMUNITY_CATEGORIES[catKey]));
+      boardBtn.type = "button";
+      var target = ROUTE_PREFIX + "/write?cat=" + catKey;
+      boardBtn.addEventListener("click", function () {
+        closeCouponBoardsModal();
+        ensureAuth().then(function () { navigate(target); }).catch(function () { showAuthGateModal(target); });
+      });
+      boardsList.appendChild(boardBtn);
+    });
+    modal.appendChild(boardsList);
+
+    var dismissTodayBtn = el("button", "community-link-btn", t(COMMUNITY_EVENT.dismissToday));
+    dismissTodayBtn.type = "button";
+    dismissTodayBtn.addEventListener("click", function () {
+      markEventBannerDismissedToday();
+      closeCouponBoardsModal();
+    });
+    modal.appendChild(dismissTodayBtn);
+
+    var closeTextBtn = el("button", "community-btn-secondary", t(COMMUNITY_EVENT.close));
+    closeTextBtn.type = "button";
+    closeTextBtn.addEventListener("click", closeCouponBoardsModal);
+    modal.appendChild(closeTextBtn);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeCouponBoardsModal(); });
+    document.body.appendChild(overlay);
+  }
+
+  // 홈 화면 진입 시 자동으로 띄우는 진입점(2026-09-30 지시서) — 기존
+  // SitePopup.maybeShow/HometownPopup.maybeShow와 같은 계약: done은
+  // 팝업을 안 띄우는 경우 즉시, 띄운 경우 닫힌 뒤 정확히 1번 호출됩니다.
+  function maybeShowEventPopupOnEntry(done) {
+    var finish = typeof done === "function" ? done : function () {};
+    if (typeof COMMUNITY_EVENT === "undefined") { finish(); return; }
+    // 커뮤니티 화면으로 바로 들어온 경우(딥링크)에는 홈 전용 팝업을
+    // 띄우지 않습니다(기존 SitePopup/HometownPopup과 동일한 원칙 재사용).
+    if (isCommunityPath(location.pathname)) { finish(); return; }
+    if (isEventBannerDismissedToday()) { finish(); return; }
+    showCouponBoardsModal(finish);
+  }
+
+  /* ---------------- 회원가입 유도 안내(2026-09-12 5단계 지시서) ----------------
+     "가입해야 쓸 수 있는" 안내창(showAuthGateModal)과 달리, 이 안내는
+     MY 등 계정이 있으면 더 좋은 기능에 들어갔을 때만 가볍게 띄우고
+     [나중에]를 누르면(또는 바깥을 클릭하면) 그냥 닫히고 비회원(익명)
+     상태로 기본 커뮤니티 이용을 계속할 수 있습니다(가입 강제 아님). */
+  function closeSignupInviteModal() {
+    var existing = qs("communitySignupInviteOverlay");
+    if (existing) existing.remove();
+  }
+
+  function showSignupInviteModal(redirectPath) {
+    if (qs("communitySignupInviteOverlay")) return; // 이미 떠 있으면 중복 표시 안 함
+    closeAuthGateModal();
+    var overlay = el("div", "modal-overlay");
+    overlay.id = "communitySignupInviteOverlay";
+    var modal = el("div", "modal");
+    modal.appendChild(el("p", "modal-desc", t(COMMUNITY_AUTH.signupInviteDesc)));
+
+    var actions = el("div", "community-auth-gate-actions");
+    var signupBtn = el("button", "community-btn-primary", t(COMMUNITY_AUTH.signupInviteAccept));
+    signupBtn.type = "button";
+    signupBtn.addEventListener("click", function () {
+      saveRedirectTarget(redirectPath);
+      closeSignupInviteModal();
+      navigate(ROUTE_PREFIX + "/signup");
+    });
+    var laterBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupInviteLater));
+    laterBtn.type = "button";
+    laterBtn.addEventListener("click", function () { closeSignupInviteModal(); });
+
+    actions.appendChild(signupBtn);
+    actions.appendChild(laterBtn);
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeSignupInviteModal(); });
+    document.body.appendChild(overlay);
+  }
+
+  /* ---------------- 비회원(익명) 참여 — 기존 Firebase Anonymous Auth 재사용 ----------------
+     회원가입 없이 글쓰기/댓글/저장/신고를 할 수 있도록, 참여 버튼을 처음
+     누른 시점에만 조용히 signInAnonymously()로 로그인하고(화면 전체를
+     가리는 안내창 없음), communityUsers 문서도 자동 생성합니다. 식별은
+     UID로, 화면 표시는 자동 생성된 nickname으로만 합니다(UID 노출 없음).
+     같은 브라우저에서는 Firebase Auth가 로그인 상태를 기억하므로, 다시
+     방문해도 같은 UID·닉네임이 유지됩니다(로그아웃/데이터 삭제 전까지). */
+  var GUEST_NICKNAME_ADJ = ["푸른", "노란", "구름", "민트", "캠퍼스", "은빛", "조용한", "포근한", "산뜻한", "초록", "따뜻한", "말랑", "느긋한", "상쾌한", "반짝"];
+  var GUEST_NICKNAME_NOUN = ["고래", "별", "여행", "나무", "친구", "바람", "하늘", "강물", "숲", "달", "구름", "연필", "책상", "자전거", "토끼"];
+
+  function generateGuestNickname() {
+    var adj = GUEST_NICKNAME_ADJ[Math.floor(Math.random() * GUEST_NICKNAME_ADJ.length)];
+    var noun = GUEST_NICKNAME_NOUN[Math.floor(Math.random() * GUEST_NICKNAME_NOUN.length)];
+    var num = 10 + Math.floor(Math.random() * 90);
+    return adj + noun + num;
+  }
+
+  /* ---------------- 가입회원 닉네임(2026-09-11 4단계 지시서) ----------------
+     가입회원도 커뮤니티에서는 실명(profile.name, 회원가입 필수 항목)이
+     아니라 닉네임(profile.nickname, 새 필드 하나만 추가)으로 활동합니다.
+     닉네임을 직접 정하지 않은 회원은 커뮤니티를 처음 쓸 때 자동으로
+     1회만 생성해 프로필에 저장합니다(강제 팝업 없음, 기존 회원도 이
+     흐름을 그대로 타면 자동으로 채워짐). 기존 프로필 문서 구조·회원가입
+     화면은 손대지 않고 필드 하나만 재사용 추가합니다. */
+  function ensureMemberNickname(uid) {
+    if (!profile || profile.isAnonymous || profile.nickname) return Promise.resolve(profile);
+    var nickname = generateGuestNickname();
+    var d = db();
+    if (!d) { profile.nickname = nickname; return Promise.resolve(profile); }
+    return d.collection("communityUsers").doc(uid).update({ nickname: nickname }).then(function () {
+      profile.nickname = nickname;
+      return profile;
+    }).catch(function () { return profile; }); // 실패해도 글쓰기 자체를 막지 않음(다음 기회에 다시 시도)
+  }
+
+  // 게시글/댓글 작성 시 표시할 이름을 정합니다. 2026-10-09 속닥속닥
+  // 단일 익명게시판 지시서 — "작성자는 모두 익명"이 문자 그대로 요구사항
+  // 이라, 비회원(익명 인증) 작성자는 내부적으로 생성된 닉네임(profile.name,
+  // 예: "푸른고래42") 대신 고정된 "익명" 라벨(언어별 번역)을 그대로
+  // 노출합니다. profile.name 자체는 내부 식별용으로 계속 저장되지만
+  // 화면에는 더 이상 쓰지 않습니다. 가입회원(옛 커뮤니티 계정) 글은
+  // 기존처럼 profile.nickname을 그대로 보여줍니다(실명은 절대 노출 안 함).
+  function currentDisplayNickname() {
+    if (!profile) return "";
+    return profile.isAnonymous ? (t(COMMUNITY_POST.anonymousLabel) || "익명") : (profile.nickname || "");
+  }
+
+  // profile.name을 그대로 재사용해(기존 게시글/댓글 작성 코드 무수정)
+  // 닉네임을 저장합니다 — authorIsAnonymous만 함께 저장해 두어, 실명이
+  // 아니라 닉네임이므로 화면에서 마스킹하지 않도록 구분합니다.
+  function createAnonymousProfile(uid) {
+    var d = db();
+    if (!d) return Promise.resolve(null);
+    var data = {
+      name: generateGuestNickname(),
+      nationality: "",
+      role: "user",
+      status: "active",
+      isAnonymous: true,
+      preferredLanguage: lang,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    return d.collection("communityUsers").doc(uid).set(data).then(function () {
+      profile = data;
+      return profile;
+    }).catch(function (err) { console.error("비회원 프로필 생성 오류:", err); return null; });
+  }
+
+  // ensureAuth()가 signInAnonymously()를 직접 트리거한 경우, 잠시 후
+  // onAuthStateChanged 리스너도 같은 로그인 이벤트로 한 번 더 불립니다.
+  // 그 중복 호출이 render()로 화면 전체를 다시 그리면, 참여 버튼(저장 등)
+  // 클릭 핸들러가 이미 갱신해 둔 버튼 DOM이 통째로 새 버튼으로 바뀌어
+  // 버려집니다(경쟁 상태) — 그 한 번의 리스너 호출에서만 render()를
+  // 건너뛰어 호출자가 직접 한 UI 갱신이 그대로 남게 합니다.
+  var suppressNextAuthRender = false;
+
+  // 참여 버튼(글쓰기/댓글/저장/신고)에서 호출 — 이미 로그인(회원 또는
+  // 비회원 익명 세션)돼 있으면 그대로 진행하고, 아니면 이번 한 번만
+  // 조용히 익명 로그인 + 프로필 생성까지 마친 뒤에 진행합니다.
+  function ensureAuth() {
+    if (authUser && profile) return Promise.resolve(authUser);
+    var a = auth();
+    if (!a) return Promise.reject(new Error("auth unavailable"));
+    if (authUser) return loadProfile(authUser.uid).then(function () { return authUser; });
+    suppressNextAuthRender = true;
+    return a.signInAnonymously().then(function (cred) {
+      authUser = cred.user;
+      return createAnonymousProfile(cred.user.uid);
+    }).then(function () { return authUser; });
+  }
+
   function route() {
     var path = location.pathname;
     var inCommunity = isCommunityPath(path);
@@ -173,14 +431,29 @@ var Community = (function () {
       var node = qs(id);
       if (node) node.hidden = !show || node.hidden && !show ? node.hidden : node.hidden;
     });
-    var main = document.querySelector("main");
-    if (main) main.hidden = !show;
     var cola = qs("colaBanner");
     if (cola && !show) cola.hidden = true;
     var hello = document.querySelector(".hellokorean-card");
     if (hello) hello.hidden = !show;
     var ownerBanner = document.querySelector(".owner-chat-banner");
     if (ownerBanner) ownerBanner.hidden = !show;
+    var home = qs("homeView");
+    if (!show) {
+      // 커뮤니티로 들어갈 때는 홈 화면(있다면)과 매장 화면을 함께 숨깁니다.
+      // 하단 내비게이션(모바일 UI 개선 8단계부터 항상 고정 표시)은
+      // 그대로 두고, "홈" 활성 표시만 꺼 둡니다.
+      if (home) home.hidden = true;
+      if (window.AppHome && typeof window.AppHome.setHomeActive === "function") window.AppHome.setHomeActive(false);
+      var mainIn = document.querySelector("main");
+      if (mainIn) mainIn.hidden = true;
+    } else if (window.AppHome && typeof window.AppHome.applyView === "function") {
+      // 커뮤니티에서 나갈 때는 홈/매장 중 무엇을 보여줄지 app.js(모바일 UI
+      // 개선 4단계에서 추가된 홈 화면)가 결정합니다.
+      window.AppHome.applyView();
+    } else {
+      var mainOut = document.querySelector("main");
+      if (mainOut) mainOut.hidden = false;
+    }
     if (els.root) els.root.hidden = show;
   }
 
@@ -195,7 +468,10 @@ var Community = (function () {
   }
 
   function formatDate(ts) {
-    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : (ts instanceof Date ? ts : null);
+    var d = null;
+    if (ts && typeof ts.toDate === "function") d = ts.toDate();
+    else if (ts instanceof Date) d = ts;
+    else if (typeof ts === "string") { var parsed = new Date(ts); if (!isNaN(parsed.getTime())) d = parsed; }
     if (!d) return "";
     var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
     return y + "." + m + "." + day;
@@ -206,6 +482,7 @@ var Community = (function () {
   function render() {
     if (!els.root) return;
     closeAuthGateModal();
+    closeSignupInviteModal();
     els.root.innerHTML = "";
     els.root.hidden = false;
 
@@ -224,18 +501,34 @@ var Community = (function () {
       if (profile && profile.status === "suspended") { renderSuspended(); return; }
     }
 
-    // 로그인이 필요한 라우트("내 정보"/"글쓰기")를 비회원이 직접 주소로
-    // 열거나 버튼을 눌렀을 때는 화면 전체를 로그인창으로 덮지 않고,
-    // 작은 안내창만 띄운 뒤 뒤에는 누구나 볼 수 있는 커뮤니티 첫 화면을
-    // 그대로 보여줍니다(2026-09-10 "회원가입 노출 방식 변경" 지시서).
-    var AUTH_REQUIRED_ROUTES = ["my", "write"];
+    // "내 정보"/"글쓰기"는 비회원도 회원가입 없이 쓸 수 있습니다 — 주소로
+    // 직접 열면 일단 목록을 보여주면서 조용히 익명 로그인을 마친 뒤 실제
+    // 화면으로 넘어갑니다(화면 전체를 로그인창으로 덮지 않음). 아주 드물게
+    // 익명 로그인 자체가 실패하면(네트워크 등) 그때만 안내창을 띄웁니다.
+    var AUTH_REQUIRED_ROUTES = ["write"]; // "my"는 가입 유도가 필요해 아래에서 따로 처리
     if (!user && AUTH_REQUIRED_ROUTES.indexOf(currentRoute.name) !== -1) {
       renderList();
-      showAuthGateModal(location.pathname);
+      ensureAuth().then(function () {
+        if (isCommunityPath(location.pathname)) render();
+      }).catch(function () { showAuthGateModal(location.pathname); });
       return;
     }
 
-    if (currentRoute.name === "my") { renderMyPage(); return; }
+    // MY는 "가입해야만 쓸 수 있는" 기능이 아니라 "가입하면 더 좋은"
+    // 기능입니다 — 비회원도 그대로 볼 수 있습니다. 2026-09 "비회원제
+    // 전환" 지시서 13번에 따라 가입 유도 팝업(showSignupInviteModal)은
+    // 더 이상 띄우지 않습니다(로그인/회원가입 자체는 커뮤니티 상단의
+    // 기존 버튼으로 여전히 가능 — 강제/유도만 제거).
+    if (currentRoute.name === "my") {
+      if (!user) {
+        // 아직 아무 활동도 없는 완전 신규 방문자는 MY에서 보여줄 것이
+        // 없으므로, 굳이 익명 로그인까지 만들지 않고 목록만 보여줍니다.
+        renderList();
+        return;
+      }
+      renderMyPage();
+      return;
+    }
     if (currentRoute.name === "write") { renderWrite(); return; }
     if (currentRoute.name === "post") { renderPostDetail(currentRoute.postId); return; }
     renderList();
@@ -289,7 +582,25 @@ var Community = (function () {
     return wrap;
   }
 
+  // 글자 수 표시("328 / 500", 2026-09 자동번역 지시서 1번) — 숫자만
+  // 보여주므로 언어별 문구 번역이 필요 없습니다. formField()가 만든
+  // wrap 안에 카운터 한 줄만 추가하고, input 이벤트로만 갱신합니다.
+  function appendCharCounter(wrap, inputEl) {
+    var counter = el("div", "community-char-count");
+    // maxLength를 매번 다시 읽어, 구직 글처럼 카테고리에 따라 본문
+    // 글자 수 상한이 바뀌는 경우에도 inputEl.__updateCharCount()를
+    // 호출하기만 하면 항상 최신 상한이 표시됩니다(updateContentMaxLength
+    // 에서 사용).
+    function update() { counter.textContent = inputEl.value.length + " / " + inputEl.maxLength; }
+    update();
+    inputEl.addEventListener("input", update);
+    inputEl.__updateCharCount = update;
+    wrap.appendChild(counter);
+    return wrap;
+  }
+
   function renderLogin() {
+    trackVirtualPage("login");
     var wrap = el("div", "community-page community-auth");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.loginTitle)));
 
@@ -377,15 +688,20 @@ var Community = (function () {
     }
     if (btn) btn.disabled = true;
     var provider = new firebase.auth.GoogleAuthProvider();
-    // signInWithPopup은 클릭 이벤트 처리 중 곧바로(비동기 대기 없이)
-    // 호출해야 합니다 — 한 박자라도 늦게(예: setPersistence를 먼저
-    // await) 호출하면 일부 브라우저(특히 사파리/아이폰)가 "사용자가
-    // 직접 누른 동작"으로 인식하지 못해 팝업을 조용히 막아버립니다.
-    // (기본 지속성이 이미 LOCAL이라 별도 setPersistence 호출도 불필요.)
-    a.signInWithPopup(provider).then(function (result) {
+    // 비회원(익명)으로 이미 활동 중이었다면 linkWithPopup으로 같은 UID에
+    // Google 계정만 연결합니다(Anonymous Account Linking) — UID가 그대로라
+    // 기존 게시글·댓글의 authorId가 바뀌지 않습니다. signInWithPopup처럼
+    // 클릭 이벤트 처리 중 곧바로(비동기 대기 없이) 호출해야 팝업이 막히지
+    // 않습니다(사파리/아이폰).
+    var wasAnonymous = !!(a.currentUser && a.currentUser.isAnonymous);
+    var popupPromise = wasAnonymous ? a.currentUser.linkWithPopup(provider) : a.signInWithPopup(provider);
+    popupPromise.then(function (result) {
       return db().collection("communityUsers").doc(result.user.uid).get();
     }).then(function (doc) {
-      if (doc.exists) {
+      // isAnonymous:true로 남아있는 문서(=아직 국적/약관 동의를 받기 전인
+      // 익명 프로필)는 "가입 완료된 회원"으로 치지 않고 마저 정보를
+      // 받습니다. 완전히 새 문서가 없는 경우도 마찬가지입니다.
+      if (doc.exists && doc.data() && doc.data().isAnonymous !== true) {
         pendingProfileUser = null;
         navigateAfterAuth();
       } else {
@@ -396,7 +712,8 @@ var Community = (function () {
       }
     }).catch(function (err) {
       if (errorP && err && err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
-        errorP.textContent = t(COMMUNITY_MSG.errGeneric);
+        errorP.textContent = (err && err.code === "auth/credential-already-in-use")
+          ? t(COMMUNITY_MSG.errEmailInUse) : t(COMMUNITY_MSG.errGeneric);
       }
     }).finally(function () { if (btn) btn.disabled = false; });
   }
@@ -456,7 +773,11 @@ var Community = (function () {
       if (!d || !user) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
       submitBtn.disabled = true;
       var now = firebase.firestore.FieldValue.serverTimestamp();
-      d.collection("communityUsers").doc(user.uid).set({
+      // 익명이었을 때의 닉네임은 name 필드에 있었습니다(3단계) — Google로
+      // 승계 가입해도 그대로 새 nickname 필드로 옮겨 유지합니다.
+      var wasAnonymous = !!(profile && profile.isAnonymous);
+      var priorNickname = wasAnonymous ? currentDisplayNickname() : "";
+      var profileData = {
         name: nameInput.value.trim(),
         nationality: natInput.value.trim(),
         email: user.email || "",
@@ -464,11 +785,14 @@ var Community = (function () {
         emailVerified: true, // Google 계정은 이미 검증된 이메일입니다
         role: "user",
         status: "active",
+        isAnonymous: false,
         createdAt: now,
         lastLoginAt: now,
         termsAgreedAt: now,
         privacyAgreedAt: now
-      }).then(function () {
+      };
+      if (priorNickname) profileData.nickname = priorNickname;
+      d.collection("communityUsers").doc(user.uid).set(profileData, { merge: true }).then(function () {
         return loadProfile(user.uid);
       }).then(function () {
         pendingProfileUser = null;
@@ -485,6 +809,7 @@ var Community = (function () {
   }
 
   function renderSignup() {
+    trackVirtualPage("signup");
     var wrap = el("div", "community-page community-auth");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_AUTH.signupTitle)));
 
@@ -561,10 +886,23 @@ var Community = (function () {
       if (!a || !d) { errorP.textContent = t(COMMUNITY_MSG.errGeneric); return; }
       submitBtn.disabled = true;
       var now = firebase.firestore.FieldValue.serverTimestamp();
-      a.createUserWithEmailAndPassword(emailInput.value.trim(), pwInput.value).then(function (cred) {
+      // 비회원(익명)으로 이미 활동 중이었다면 새 계정을 만들지 않고
+      // linkWithCredential로 같은 UID에 이메일/비밀번호만 연결합니다
+      // (Anonymous Account Linking) — UID가 그대로라 기존 게시글·댓글의
+      // authorId, 신고/차단 기록이 전혀 바뀌지 않습니다. 처음부터
+      // 회원가입 화면으로 바로 들어온 경우(활동 이력 없음)에만 새 계정을
+      // 만듭니다.
+      var wasAnonymous = !!(a.currentUser && a.currentUser.isAnonymous);
+      // 익명일 때의 닉네임은 name 필드에 있었습니다(3단계) — 승계 시
+      // 그대로 새 nickname 필드로 옮겨 유지합니다(재생성 아님).
+      var priorNickname = wasAnonymous ? currentDisplayNickname() : "";
+      var authPromise = wasAnonymous
+        ? a.currentUser.linkWithCredential(firebase.auth.EmailAuthProvider.credential(emailInput.value.trim(), pwInput.value))
+        : a.createUserWithEmailAndPassword(emailInput.value.trim(), pwInput.value);
+      authPromise.then(function (cred) {
         // 이메일 인증 절차 없이 바로 가입을 완료합니다(인증메일을 보내지
         // 않고, 이메일 인증 여부를 접근 조건으로 쓰지 않습니다).
-        return d.collection("communityUsers").doc(cred.user.uid).set({
+        var profileData = {
           name: nameInput.value.trim(),
           nationality: natInput.value.trim(),
           email: emailInput.value.trim(),
@@ -572,17 +910,20 @@ var Community = (function () {
           emailVerified: true,
           role: "user",
           status: "active",
+          isAnonymous: false,
           createdAt: now,
           lastLoginAt: now,
           termsAgreedAt: now,
           privacyAgreedAt: now
-        }).then(function () { return loadProfile(cred.user.uid); });
+        };
+        if (priorNickname) profileData.nickname = priorNickname;
+        return d.collection("communityUsers").doc(cred.user.uid).set(profileData, { merge: true }).then(function () { return loadProfile(cred.user.uid); });
       }).then(function () {
         pendingProfileUser = null;
         setLang(langSelect.value);
         navigateAfterAuth();
       }).catch(function (err) {
-        errorP.textContent = (err && err.code === "auth/email-already-in-use")
+        errorP.textContent = (err && (err.code === "auth/email-already-in-use" || err.code === "auth/credential-already-in-use"))
           ? t(COMMUNITY_MSG.errEmailInUse) : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
@@ -602,21 +943,36 @@ var Community = (function () {
   /* ---------------- 내 정보 ---------------- */
 
   function renderMyPage() {
+    trackVirtualPage("my");
     var wrap = el("div", "community-page community-my");
     wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_MY.myPageTitle)));
 
+    var isAnon = !!(profile && profile.isAnonymous);
     var info = el("div", "community-my-info");
-    info.appendChild(el("p", null, (profile && profile.name) || ""));
-    info.appendChild(el("p", "community-my-sub", (profile && profile.nationality) || ""));
+    info.appendChild(el("p", null, currentDisplayNickname()));
+    if (!isAnon) info.appendChild(el("p", "community-my-sub", (profile && profile.nationality) || ""));
     info.appendChild(el("p", "community-my-sub", (authUser && authUser.email) || ""));
     wrap.appendChild(info);
 
     var editForm = el("form", "community-form");
-    var nameInput = el("input"); nameInput.type = "text"; nameInput.value = (profile && profile.name) || "";
-    var natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList2");
-    natInput.value = (profile && profile.nationality) || "";
-    var datalist = el("datalist"); datalist.id = "communityNationalityList2";
-    COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+    // 커뮤니티 게시글·댓글에는 이 닉네임만 표시됩니다(실명 비공개). 비회원
+    // (익명)은 실명·국적 자체가 없으므로(3단계 자동 닉네임만 있음) 그
+    // 입력칸은 아예 보여주지 않습니다.
+    var nicknameInput = el("input"); nicknameInput.type = "text"; nicknameInput.maxLength = 20;
+    nicknameInput.value = currentDisplayNickname();
+    editForm.appendChild(formField(COMMUNITY_MY.editNickname, nicknameInput));
+
+    var nameInput, natInput, datalist;
+    if (!isAnon) {
+      nameInput = el("input"); nameInput.type = "text"; nameInput.value = (profile && profile.name) || "";
+      natInput = el("input"); natInput.type = "text"; natInput.setAttribute("list", "communityNationalityList2");
+      natInput.value = (profile && profile.nationality) || "";
+      datalist = el("datalist"); datalist.id = "communityNationalityList2";
+      COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; datalist.appendChild(o); });
+      editForm.appendChild(formField(COMMUNITY_MY.editName, nameInput));
+      editForm.appendChild(formField(COMMUNITY_MY.editNationality, natInput));
+      editForm.appendChild(datalist);
+    }
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
       var opt = el("option", null, { ko: "한국어", zh: "中文", vi: "Tiếng Việt", en: "English", mn: "Монгол", bn: "বাংলা", my: "မြန်မာ" }[code]);
@@ -624,9 +980,6 @@ var Community = (function () {
       if (code === ((profile && profile.preferredLanguage) || lang)) opt.selected = true;
       langSelect.appendChild(opt);
     });
-    editForm.appendChild(formField(COMMUNITY_MY.editName, nameInput));
-    editForm.appendChild(formField(COMMUNITY_MY.editNationality, natInput));
-    editForm.appendChild(datalist);
     editForm.appendChild(formField(COMMUNITY_MY.editLang, langSelect));
     var saveBtn = el("button", "community-btn-primary", t(COMMUNITY_MY.save));
     saveBtn.type = "submit";
@@ -635,13 +988,23 @@ var Community = (function () {
       e.preventDefault();
       var d = db();
       if (!d || !authUser) return;
-      d.collection("communityUsers").doc(authUser.uid).update({
-        name: nameInput.value.trim(),
-        nationality: natInput.value.trim(),
-        preferredLanguage: langSelect.value
-      }).then(function () {
-        profile.name = nameInput.value.trim();
-        profile.nationality = natInput.value.trim();
+      // 닉네임을 바꿔도 게시글/댓글의 authorId(작성자 UID)는 그대로라
+      // 소유권·신고·차단 기록에는 영향이 없습니다(과거 글에 남은
+      // 닉네임 표시만 예전 값 그대로 남고, 새 글부터 새 닉네임 적용).
+      var newNickname = nicknameInput.value.trim() || currentDisplayNickname();
+      // 비회원(익명)은 name 필드 자체가 화면에 쓰는 닉네임이므로 거기에
+      // 저장하고, 가입회원은 별도 nickname 필드에 저장합니다(실명 필드는
+      // 그대로 유지).
+      var payload = { preferredLanguage: langSelect.value };
+      if (isAnon) {
+        payload.name = newNickname;
+      } else {
+        payload.nickname = newNickname;
+        payload.name = nameInput.value.trim();
+        payload.nationality = natInput.value.trim();
+      }
+      d.collection("communityUsers").doc(authUser.uid).update(payload).then(function () {
+        if (isAnon) { profile.name = newNickname; } else { profile.nickname = newNickname; profile.name = nameInput.value.trim(); profile.nationality = natInput.value.trim(); }
         profile.preferredLanguage = langSelect.value;
         setLang(langSelect.value);
         showToast(t(COMMUNITY_MSG.doneSaved));
@@ -765,37 +1128,74 @@ var Community = (function () {
   /* ---------------- 게시글 목록 ---------------- */
 
   function renderList() {
+    // 2026-10-11 지시서 — 기존 4개 게시판(together/hometown/job/friends)은
+    // 이 함수를 한 글자도 바꾸지 않고 그대로 재사용합니다(지시서 6번
+    // "기존 게시판으로 바로 이동"). 속닥속닥(whisper)만 지시서 3번이
+    // 요구하는 화면 순서(제목+소개 → 글쓰기 버튼 → 검색/정렬 → 목록,
+    // 방구하기/카테고리탭/한글공부 바로가기 없음)로 별도 화면
+    // (renderWhisperList)을 그립니다.
+    if (state_category === "whisper") { renderWhisperList(); return; }
     var wrap = el("div", "community-page community-list-page");
 
-    // 첫 화면: 1.제목 2.짧은 소개 3.카테고리 4.최신 게시글 5.로그인·가입
-    // 작은 버튼(비회원일 때만) — 화면 전체를 로그인창으로 덮지 않습니다
-    // (2026-09-10 "회원가입 노출 방식 변경" 지시서).
+    // 첫 화면: 1.제목 2.짧은 소개 3.최신 게시글. 2026-10-09 속닥속닥
+    // 단일 익명게시판 지시서 — "회원가입 없음/로그인 없음"이 화면에도
+    // 그대로 보여야 해서, 이전에 비회원에게만 보이던 로그인·가입 작은
+    // 버튼을 완전히 제거합니다(글쓰기는 ensureAuth()가 조용히 처리).
     var homeHeader = el("div", "community-home-header");
     var titleRow = el("div", "community-home-title-row");
     titleRow.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
-    if (!authUser) {
-      var authActions = el("div", "community-home-auth-actions");
-      var loginSmallBtn = el("button", "community-link-btn", t(COMMUNITY_AUTH.loginTitle));
-      loginSmallBtn.type = "button";
-      loginSmallBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/login"); });
-      var signupSmallBtn = el("button", "community-btn-secondary", t(COMMUNITY_AUTH.signupTitle));
-      signupSmallBtn.type = "button";
-      signupSmallBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/signup"); });
-      authActions.appendChild(loginSmallBtn);
-      authActions.appendChild(signupSmallBtn);
-      titleRow.appendChild(authActions);
-    }
     homeHeader.appendChild(titleRow);
     homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_HOME.tagline)));
     wrap.appendChild(homeHeader);
 
+    // 커뮤니티 4곳 글쓰기 이벤트 배너는 2026-09-30 지시서로 첫화면(홈)
+    // 상단으로 옮겨졌습니다(js/app.js) — 여기서는 더 이상 그리지 않고,
+    // 팝업(showCouponBoardsModal)만 이 모듈에 남겨 홈 화면 배너/자동
+    // 진입 둘 다에서 재사용합니다.
+
+    // 방 구하기 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
+    // .home-tile.home-tile-room 컴포넌트·스타일과 RoomFinder 모달을 그대로
+    // 재사용합니다(새 UI·새 URL 없음). 커뮤니티 콘텐츠 최상단에 배치.
+    var roomShortcut = el("button", "home-tile home-tile-room community-room-shortcut");
+    roomShortcut.type = "button";
+    roomShortcut.appendChild(el("span", "home-tile-eyebrow", "HOUSING"));
+    roomShortcut.appendChild(el("strong", "home-tile-title", t(ROOM_FINDER.title)));
+    roomShortcut.appendChild(el("span", "home-tile-sub", t(UI_TEXT.homeCardSubtitle.housing)));
+    var roomShortcutArrow = el("span", "home-tile-arrow", "→");
+    roomShortcutArrow.setAttribute("aria-hidden", "true");
+    roomShortcut.appendChild(roomShortcutArrow);
+    roomShortcut.addEventListener("click", function () {
+      if (window.RoomFinder && typeof RoomFinder.openModal === "function") RoomFinder.openModal();
+    });
+    wrap.appendChild(roomShortcut);
+
+    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — "별도의 카테고리를
+    // 만들지 않는다"는 요구에 맞춰, 선택 가능한 게시판이 1개뿐이면
+    // 카테고리 블록 UI 자체를 그리지 않습니다(기존 블록형 UI 코드는
+    // COMMUNITY_CATEGORY_ORDER가 2개 이상일 때를 대비해 그대로 재사용
+    // 가능하도록 남겨둡니다).
     var catTabs = el("div", "community-category-tabs");
-    COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
-      var b = el("button", "community-category-tab" + (state_category === cat ? " active" : ""), t(COMMUNITY_CATEGORIES[cat]));
+    if (COMMUNITY_CATEGORY_ORDER.length > 1) {
+    COMMUNITY_CATEGORY_ORDER.forEach(function (catKey) {
+      var b = el("button", "community-category-tab community-category-block" + (state_category === catKey ? " active" : ""));
       b.type = "button";
-      b.addEventListener("click", function () { state_category = cat; render(); });
+      b.appendChild(el("span", "community-category-block-title", t(COMMUNITY_CATEGORIES[catKey])));
+      b.appendChild(el("span", "community-category-block-desc", t(COMMUNITY_CATEGORY_DESC[catKey])));
+      b.addEventListener("click", function () {
+        state_category = catKey; render();
+        // 실제 사용자가 카테고리 블록을 클릭해 게시판이 표시되는 시점에만
+        // 1회 전송(렌더링 시 전송 아님). gtag가 없어도(광고차단기 등)
+        // 커뮤니티 기능이 멈추지 않도록 존재 확인 + try/catch로 감싸고,
+        // 카테고리 식별값 외 개인정보는 전혀 보내지 않습니다.
+        try {
+          if (typeof window.gtag === "function") {
+            window.gtag("event", "community_category_view", { category: GA_COMMUNITY_CATEGORY_MAP[catKey] || catKey });
+          }
+        } catch (e) { /* GA 전송 실패해도 커뮤니티 기능은 계속 동작 */ }
+      });
       catTabs.appendChild(b);
     });
+    }
     wrap.appendChild(catTabs);
 
     var toolbar = el("div", "community-toolbar");
@@ -849,17 +1249,38 @@ var Community = (function () {
       wrap.appendChild(openOnlyRow);
     }
 
+    // 무료 한글공부 바로가기(2026-09 밥심커뮤니티 지시서) — HOME의 기존
+    // HELLO KOREAN 링크(HELLOKOREAN_INFO.url)를 그대로 재사용합니다. 기존
+    // "글쓰기" 버튼 바로 위에 배치하고, 방 구하기(코발트 블루)보다 약한
+    // 톤인 페일 블루(.community-korean-shortcut CSS)로 구분합니다.
+    var koreanShortcut = el("a", "home-tile home-tile-room community-korean-shortcut");
+    koreanShortcut.href = HELLOKOREAN_INFO.url;
+    koreanShortcut.target = "_blank";
+    koreanShortcut.rel = "noopener noreferrer";
+    koreanShortcut.appendChild(el("span", "home-tile-eyebrow", "KOREAN STUDY"));
+    koreanShortcut.appendChild(el("strong", "home-tile-title", t(HELLOKOREAN_INFO.title)));
+    koreanShortcut.appendChild(el("span", "home-tile-sub", "HELLO KOREAN"));
+    var koreanShortcutArrow = el("span", "home-tile-arrow", "→");
+    koreanShortcutArrow.setAttribute("aria-hidden", "true");
+    koreanShortcut.appendChild(koreanShortcutArrow);
+    wrap.appendChild(koreanShortcut);
+
     var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
     writeBtn.type = "button";
+    // 카테고리 블록형 UI: 현재 선택된 카테고리를 글쓰기로 그대로 넘겨
+    // 자동 선택되게 합니다("이 카테고리에 글쓰기").
+    var writeTarget = ROUTE_PREFIX + "/write" + (COMMUNITY_CATEGORY_ORDER.indexOf(state_category) !== -1 ? "?cat=" + state_category : "");
     writeBtn.addEventListener("click", function () {
-      if (!authUser) { showAuthGateModal(ROUTE_PREFIX + "/write"); return; }
-      navigate(ROUTE_PREFIX + "/write");
+      ensureAuth().then(function () {
+        navigate(writeTarget);
+      }).catch(function () { showAuthGateModal(writeTarget); });
     });
     wrap.appendChild(writeBtn);
 
     var listArea = el("div", "community-post-list");
     wrap.appendChild(listArea);
     els.root.appendChild(wrap);
+    trackVirtualPage("community");
 
     var searchDebounce = null;
     searchInput.addEventListener("input", function () {
@@ -871,7 +1292,105 @@ var Community = (function () {
     renderPostList(listArea);
   }
 
-  var state_category = "friends";
+  // 2026-10-11 지시서 3번 — 속닥속닥 전용 목록 화면. 화면 순서:
+  // 1.제목/소개 2.글쓰기 버튼(목록 위) 3.검색·정렬 4.게시글 목록.
+  // 방구하기·카테고리탭·한글공부 바로가기·시장/구인구직 필터는 속닥속닥
+  // 전용 화면에는 두지 않습니다(그 UI들이 필요한 다른 4개 게시판은
+  // renderList()를 그대로 쓰므로 영향 없음). 검색/정렬 상태(state_search/
+  // state_sort)와 목록 조회·페이지네이션(renderPostList)은 기존 로직을
+  // 그대로 재사용합니다.
+  function renderWhisperList() {
+    var wrap = el("div", "community-page community-list-page community-whisper-list-page");
+
+    var homeHeader = el("div", "community-home-header");
+    homeHeader.appendChild(el("h2", "community-page-title", t(COMMUNITY_CATEGORIES.whisper)));
+    homeHeader.appendChild(el("p", "community-home-tagline", t(COMMUNITY_CATEGORY_DESC.whisper)));
+    wrap.appendChild(homeHeader);
+
+    var writeBtn = el("button", "community-btn-primary community-write-btn", t(COMMUNITY_POST.writeTitle));
+    writeBtn.type = "button";
+    var writeTarget = ROUTE_PREFIX + "/write?cat=whisper";
+    writeBtn.addEventListener("click", function () {
+      ensureAuth().then(function () {
+        navigate(writeTarget);
+      }).catch(function () { showAuthGateModal(writeTarget); });
+    });
+    wrap.appendChild(writeBtn);
+
+    var toolbar = el("div", "community-toolbar");
+    var searchInput = el("input", "community-search-input"); searchInput.type = "search"; searchInput.placeholder = t(COMMUNITY_POST.searchPlaceholder);
+    searchInput.value = state_search;
+    var sortSelect = el("select", "community-sort-select");
+    ["latest", "comments"].forEach(function (v) {
+      var o = el("option", null, v === "latest" ? t(COMMUNITY_POST.sortLatest) : t(COMMUNITY_POST.sortComments));
+      o.value = v; if (v === state_sort) o.selected = true;
+      sortSelect.appendChild(o);
+    });
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(sortSelect);
+    wrap.appendChild(toolbar);
+
+    var listArea = el("div", "community-post-list");
+    wrap.appendChild(listArea);
+    els.root.appendChild(wrap);
+    trackVirtualPage("community_whisper");
+
+    var searchDebounce = null;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(function () { state_search = searchInput.value; renderLoadedPosts(); }, 250);
+    });
+    sortSelect.addEventListener("change", function () { state_sort = sortSelect.value; renderLoadedPosts(); });
+
+    renderPostList(listArea);
+  }
+
+  // GA4 커뮤니티 화면 방문 기록용 — 내부 category 값(together/job)이
+  // GA에 쓰기로 한 값(gimhae_food/jobs)과 다른 2개만 최소 매핑하고,
+  // 나머지(hometown/friends)는 이미 안정적인 기존 값을 그대로 재사용.
+  var GA_COMMUNITY_CATEGORY_MAP = { together: "gimhae_food", hometown: "hometown", job: "jobs", friends: "friends" };
+
+  // "나의 고향 알리기" 카드/상세에 나라 국기를 붙일 때만 쓰는 아주 작은
+  // 표(2026-09 지시서 8번) — 기존 COUNTRY_LIST(국가명 문자열) 값과
+  // 정확히 일치하는 표기만 다룹니다. 새 국가 라이브러리/API 없음이며,
+  // 매핑에 없는 나라는 국기 없이 이름만 표시합니다(조용히 무시).
+  var HOMETOWN_COUNTRY_FLAG = {
+    "Vietnam": "🇻🇳", "China": "🇨🇳", "Mongolia": "🇲🇳", "South Korea": "🇰🇷", "North Korea": "🇰🇵",
+    "Bangladesh": "🇧🇩", "Myanmar": "🇲🇲"
+  };
+
+  // 나라/도시가 입력되어 있으면 "🇻🇳 Vietnam · 다낭" 형태의 1줄로,
+  // 없으면 빈 문자열을 돌려줍니다(호출부에서 작성일로 대체).
+  function hometownKeyInfo(post) {
+    var country = (post.spotCountry || "").trim();
+    var city = (post.spotCity || "").trim();
+    if (!country && !city) return "";
+    var flag = HOMETOWN_COUNTRY_FLAG[country] || "";
+    var parts = [country, city].filter(Boolean);
+    return (flag ? flag + " " : "") + parts.join(" · ");
+  }
+
+  // GA4 커뮤니티 화면 방문 기록 공통 헬퍼 — 실제 화면이 표시되는 시점에만
+  // 호출합니다. 직전에 기록한 화면과 같으면(단순 재렌더링) 다시 보내지
+  // 않고, 다른 화면을 거쳐 돌아오면 새로 기록합니다. dedupKey를 따로 주면
+  // (예: 게시글 postId) 같은 category라도 서로 다른 화면으로 구분합니다.
+  var gaLastVirtualPageKey = null;
+  function trackVirtualPage(pageName, category, dedupKey) {
+    var key = pageName + ":" + (dedupKey || category || "");
+    if (gaLastVirtualPageKey === key) return;
+    gaLastVirtualPageKey = key;
+    try {
+      if (typeof window.gtag === "function") {
+        var params = { page_name: pageName };
+        if (category) params.category = category;
+        window.gtag("event", "virtual_page_view", params);
+      }
+    } catch (e) { /* GA 전송 실패해도 커뮤니티 기능은 계속 동작 */ }
+  }
+
+  // 카테고리 4개 개편: "전체" 없이 항상 COMMUNITY_CATEGORY_ORDER의 실제
+  // category 값 중 하나(기본값=첫 블록인 "together"/김해맛집 추천).
+  var state_category = COMMUNITY_CATEGORY_ORDER[0];
   var state_search = "";
   var state_sort = "latest";
   var state_hideDone = false;
@@ -889,14 +1408,41 @@ var Community = (function () {
   var state_hasMorePosts = true;
   var state_postListLoading = false;
   var state_postListContainer = null;
+  // 마지막으로 Firestore에서 실제로 불러온 카테고리 — 언어 변경이나 같은
+  // 게시판 재진입처럼 카테고리가 그대로인 재렌더에서는 이미 불러온 목록을
+  // 그대로 재사용하고 다시 조회하지 않습니다(모바일 로딩 속도 지시서
+  // 10/11번). 글쓰기·수정·삭제 직후에는 null로 되돌려 다음 목록 진입 때
+  // 한 번은 새로 불러오게 합니다(방금 쓴 글이 바로 보이도록).
+  var state_loadedPostsCategory = null;
+
+  // 목록 로딩 중에는 빈 화면/큰 스피너 대신 카드 모양의 스켈레톤을 먼저
+  // 보여줍니다(모바일 로딩 속도 지시서 12번) — 실제 카드와 같은
+  // .community-post-card 틀만 재사용해 데이터 도착 시 자연스럽게 교체됩니다.
+  function renderSkeletonCards(container, count) {
+    for (var i = 0; i < count; i++) {
+      var card = el("div", "community-post-card community-post-card-skeleton");
+      card.appendChild(el("div", "community-skeleton-bar community-skeleton-bar-title"));
+      card.appendChild(el("div", "community-skeleton-bar community-skeleton-bar-meta"));
+      container.appendChild(card);
+    }
+  }
 
   function renderPostList(container) {
     state_postListContainer = container;
+    if (state_loadedPostsCategory === state_category && state_loadedPosts.length) {
+      renderLoadedPosts();
+      return;
+    }
     state_loadedPosts = [];
     state_lastPostDoc = null;
     state_hasMorePosts = true;
+    state_loadedPostsCategory = state_category;
     container.innerHTML = "";
-    container.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
+    renderSkeletonCards(container, 6);
+    // 개발 중 병목 확인용(모바일 로딩 속도 지시서 15번) — 콘솔에만 찍히고
+    // 화면에는 전혀 표시되지 않습니다. fetchPostPage의 .then()에서
+    // console.timeEnd로 닫습니다.
+    try { console.time("community-list-load"); } catch (e) { /* 구형 브라우저 등 무시 */ }
     fetchPostPage(true);
   }
 
@@ -905,9 +1451,15 @@ var Community = (function () {
     var d = db();
     if (!d || !container || state_postListLoading || !state_hasMorePosts) return;
     state_postListLoading = true;
-    var q = d.collection("communityPosts")
-      .where("category", "==", state_category)
-      .where("status", "==", "visible")
+    // 모바일 UI 개선 5단계: "전체" 탭은 category 필터 없이 status+createdAt
+    // 색인만 쓰고(별도 복합 색인 필요), 그 외 탭은 실제 글 category 값
+    // 1개 이상을 in 연산자로 묶어 기존 category+status+createdAt 복합
+    // 색인을 그대로 재사용합니다(Firestore in 연산자는 == 와 같은 색인을
+    // 씁니다 — 새 색인 불필요).
+    var tabCategories = state_category === "all" ? null : [state_category];
+    var q = d.collection("communityPosts");
+    if (tabCategories) q = q.where("category", "in", tabCategories);
+    q = q.where("status", "==", "visible")
       .orderBy("createdAt", "desc")
       .limit(POST_PAGE_SIZE);
     if (state_lastPostDoc) q = q.startAfter(state_lastPostDoc);
@@ -918,6 +1470,7 @@ var Community = (function () {
         if (snap.size) state_lastPostDoc = snap.docs[snap.docs.length - 1];
         snap.forEach(function (doc) { state_loadedPosts.push(Object.assign({ id: doc.id }, doc.data())); });
         renderLoadedPosts();
+        if (isFirstPage) { try { console.timeEnd("community-list-load"); } catch (e) { /* 무시 */ } }
       })
       .catch(function (err) {
         state_postListLoading = false;
@@ -925,6 +1478,7 @@ var Community = (function () {
         // Firestore 복합 색인 누락은 "requires an index" 문구와 함께
         // 색인을 바로 만들 수 있는 링크가 여기 찍힙니다).
         console.error("게시글 목록 불러오기 실패:", err);
+        if (isFirstPage) { try { console.timeEnd("community-list-load"); } catch (e2) { /* 무시 */ } }
         if (isFirstPage && container) {
           container.innerHTML = "";
           container.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
@@ -984,6 +1538,15 @@ var Community = (function () {
       posts.sort(function (a, b) { return (b.commentCount || 0) - (a.commentCount || 0); });
     }
 
+    // "김해 MZ 추천 카페 10곳" 고정 콘텐츠 블록 — 실제 Firestore 글이
+    // 아니라 목록 맨 위에 항상 붙여서 보여줍니다(검색어가 있으면 제목이
+    // 맞을 때만). 정렬 이후에 붙여 정렬 방식과 무관하게 항상 맨 위입니다.
+    if (state_category === "together") {
+      var mzTitle = t(MZ_CAFE_POST_TITLE);
+      var mzMatchesSearch = !state_search.trim() || mzTitle.toLowerCase().indexOf(state_search.trim().toLowerCase()) !== -1;
+      if (mzMatchesSearch) posts.unshift(buildMzCafePostStub());
+    }
+
     container.innerHTML = "";
     if (!posts.length) { container.appendChild(el("p", "community-empty", t(COMMUNITY_POST.noPosts))); }
     else { posts.forEach(function (p) { container.appendChild(buildPostListItem(p)); }); }
@@ -1000,6 +1563,55 @@ var Community = (function () {
     if (post.originalLanguage === lang) return post.originalTitle;
     var tr = post.translations && post.translations[lang];
     return (tr && tr.title) || post.originalTitle;
+  }
+
+  function toMillisSafe(ts) {
+    if (!ts) return 0;
+    if (typeof ts.toMillis === "function") return ts.toMillis();
+    if (typeof ts.toDate === "function") return ts.toDate().getTime();
+    if (ts instanceof Date) return ts.getTime();
+    if (typeof ts === "string") { var t = new Date(ts).getTime(); return isNaN(t) ? 0 : t; }
+    return 0;
+  }
+
+  /* 홈 화면의 "커뮤니티 최신 글" 미리보기용. 전체 카테고리를 한 번에
+     최신순으로 가져오려면 별도의 복합 색인(status+createdAt)이 더
+     필요해지므로, 이미 만들어져 있는 카테고리별 색인
+     (category+status+createdAt)을 그대로 재사용해 카테고리마다 최근
+     글을 조금씩 가져온 뒤 합쳐서 최신순으로 정렬합니다(Firebase 콘솔에
+     새 색인을 추가로 만들 필요가 없습니다). */
+  function fetchLatestPostsForHome(count) {
+    var d = db();
+    if (!d) return Promise.resolve([]);
+    var perCategory = Math.min(count, 3);
+    var queries = COMMUNITY_CATEGORY_ORDER.map(function (cat) {
+      return d.collection("communityPosts")
+        .where("category", "==", cat)
+        .where("status", "==", "visible")
+        .orderBy("createdAt", "desc")
+        .limit(perCategory)
+        .get()
+        .then(function (snap) {
+          return snap.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+        })
+        .catch(function () { return []; });
+    });
+    return Promise.all(queries).then(function (lists) {
+      var all = [].concat.apply([], lists);
+      all.sort(function (a, b) { return toMillisSafe(b.createdAt) - toMillisSafe(a.createdAt); });
+      return all.slice(0, count).map(function (post) {
+        return {
+          id: post.id,
+          title: localizedTitle(post),
+          // 닉네임(비회원/가입회원)은 그대로, 이 필드가 생기기 전(구 게시글)의
+          // 실명만 마스킹해서 홈 미리보기 카드로 내보냅니다.
+          authorMasked: (post.authorIsAnonymous || post.authorNameIsNickname) ? (post.authorNameMasked || "") : maskName(post.authorNameMasked),
+          nationality: post.authorNationality || "",
+          dateText: formatDate(post.createdAt),
+          category: post.category
+        };
+      });
+    });
   }
 
   function localizedContent(post) {
@@ -1032,11 +1644,72 @@ var Community = (function () {
     return text.slice(0, SUMMARY_MAX_LEN) + "…";
   }
 
+  /* "김해 MZ 추천 카페 10곳" 고정 콘텐츠 블록 — 실제 게시글 카드
+     컴포넌트(buildPostListItem)를 그대로 재사용하기 위한 가짜(static)
+     post 객체입니다. Firestore에 저장하지 않으므로 새 DB 컬렉션이
+     생기지 않습니다. */
+  function buildMzCafePostStub() {
+    return {
+      id: MZ_CAFE_POST_ID,
+      category: "together",
+      isStaticContent: true,
+      originalTitle: t(MZ_CAFE_POST_TITLE),
+      originalContent: t(MZ_CAFE_INTRO)
+    };
+  }
+
+  // 새 지도 API 없이 카카오맵 외부 링크로 연결합니다(장소 검색/길찾기
+  // 모두 카카오맵의 기존 URL 파라미터만 사용 — sName/eName은 이름 기반
+  // 길찾기를 지원하는 카카오맵 공식 URL 방식입니다).
+  function mzCafeMapSearchUrl(cafe) {
+    return "https://map.kakao.com/?q=" + encodeURIComponent(cafe.name + " " + cafe.address);
+  }
+  function mzCafeDirectionsUrl(cafe) {
+    return "https://map.kakao.com/?sName=" + encodeURIComponent("인제대학교") + "&eName=" + encodeURIComponent(cafe.name);
+  }
+
+  /* 모바일 UI 개선 5단계: 목록 카드에는 최소한의 정보만 표시합니다.
+     표시 우선순위 1.카테고리 2.제목 3.핵심 정보(1줄) 4.선택적 썸네일 —
+     긴 본문 미리보기·작성자/국적/댓글 수 같은 부가정보는 목록에서
+     뺐습니다(상세 화면에서는 그대로 볼 수 있습니다). */
   function buildPostListItem(post) {
     var card = el("div", "community-post-card");
     card.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/post/" + post.id); });
 
-    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category]));
+    // 2026-10-09 속닥속닥 지시서 6번 — 단일 게시판 카드는 카테고리 배지
+    // 없이 제목·본문 미리보기·작성일·조회수·댓글수·좋아요수만 보여줍니다
+    // (이전 "부가정보 남발 금지" 지시서는 4개 카테고리 혼재 목록을
+    // 전제로 한 것이라, 게시판이 1개뿐인 지금은 이 지시서가 우선합니다).
+    if (post.category === "whisper") {
+      // 2026-10-11 지시서 5번 — 글쓰기 화면에 제목 입력칸이 다시 생겨
+      // 실제 사용자 제목이 저장되므로, 목록 카드에도 제목 줄을 다시
+      // 보여줍니다(2026-10-09 "제목 없이 바로 쓰기" 지시서의 제목 생략은
+      // 그때는 제목이 본문에서 자동 추출된 값이라 중복 표시를 막은
+      // 것이었음 — 지금은 더 이상 해당하지 않음).
+      card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+      var preview = summarize(post);
+      if (preview) card.appendChild(el("p", "community-post-card-preview community-post-card-preview-main", preview));
+      if (post.photos && post.photos.length) {
+        var whisperThumb = document.createElement("img");
+        whisperThumb.className = "community-post-card-photo";
+        whisperThumb.src = post.photos[0];
+        whisperThumb.alt = "";
+        whisperThumb.loading = "lazy";
+        card.appendChild(whisperThumb);
+      }
+      var statsLine = el("p", "community-post-card-stats");
+      var statsParts = [
+        formatDate(post.createdAt),
+        t(COMMUNITY_POST.viewCountLabel) + " " + (post.viewCount || 0),
+        t(COMMUNITY_POST.commentCount) + " " + (post.commentCount || 0),
+        t(COMMUNITY_POST.likeBtn) + " " + (post.likeCount || 0)
+      ];
+      statsLine.textContent = statsParts.join(" · ");
+      card.appendChild(statsLine);
+      return card;
+    }
+
+    var catLine = el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category] || COMMUNITY_CATEGORIES.free));
     card.appendChild(catLine);
 
     if (post.category === "market" && post.dealStatus) {
@@ -1049,6 +1722,14 @@ var Community = (function () {
       var hbadge = el("span", "community-badge community-badge-help-" + post.helpStatus, t(helpMap[post.helpStatus]));
       card.appendChild(hbadge);
     }
+    if (post.category === "together" && post.spotType) {
+      var spotBadgeMap = { cafe: COMMUNITY_SPOT.typeCafe, restaurant: COMMUNITY_SPOT.typeRestaurant, tour: COMMUNITY_SPOT.typeTour };
+      card.appendChild(el("span", "community-badge community-badge-spot-" + post.spotType, t(spotBadgeMap[post.spotType])));
+    }
+    // "김해 MZ 추천 카페 10곳" 고정 콘텐츠 블록 카드 표시(실제 게시글 아님).
+    if (post.isStaticContent) {
+      card.appendChild(el("span", "community-badge", t(MZ_CAFE_PINNED_LABEL)));
+    }
     if (post.category === "job") {
       var jTypeMap = { hiring: COMMUNITY_JOB.typeHiring, seeking: COMMUNITY_JOB.typeSeeking };
       card.appendChild(el("span", "community-badge community-badge-job-" + post.jobType, t(jTypeMap[post.jobType])));
@@ -1058,6 +1739,16 @@ var Community = (function () {
       if (jEffectiveStatus) card.appendChild(el("span", "community-badge community-badge-jobstatus-" + jEffectiveStatus, t(jStatusMap[jEffectiveStatus])));
     }
 
+    card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
+
+    // 핵심 정보 1줄 — 구인·구직은 위치, 고향 알리기는 나라·도시, 그 외에는
+    // 작성일만(부가정보 남발 금지).
+    var keyInfo = post.category === "job" ? (post.workLocation || post.desiredLocation || "")
+      : post.category === "hometown" ? hometownKeyInfo(post)
+      : (post.isStaticContent ? t(MZ_CAFE_LIST_META) : "");
+    if (!keyInfo) keyInfo = formatDate(post.createdAt);
+    if (keyInfo) card.appendChild(el("p", "community-post-card-meta", keyInfo));
+
     if (post.photos && post.photos.length) {
       var thumb = document.createElement("img");
       thumb.className = "community-post-card-photo";
@@ -1066,14 +1757,6 @@ var Community = (function () {
       thumb.loading = "lazy";
       card.appendChild(thumb);
     }
-
-    card.appendChild(el("h3", "community-post-card-title", localizedTitle(post)));
-    var summaryText = summarize(post);
-    if (summaryText) card.appendChild(el("p", "community-post-card-summary", summaryText));
-    var meta = el("p", "community-post-card-meta",
-      maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
-      (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
-    card.appendChild(meta);
 
     var detailBtn = el("button", "community-link-btn community-post-card-detail-btn", t(COMMUNITY_POST.detailBtn));
     detailBtn.type = "button";
@@ -1088,7 +1771,59 @@ var Community = (function () {
 
   /* ---------------- 게시글 상세 ---------------- */
 
+  /* "김해 MZ 추천 카페 10곳" 상세 화면 — 실제 게시글이 아니라 사이트에
+     고정으로 들어있는 콘텐츠라 댓글/수정/삭제/신고 등 참여 기능은 없고,
+     기존 상세 화면과 같은 클래스(community-detail-*, community-help-panel,
+     community-btn-secondary)만 재사용해 카페 10곳을 카드로 보여줍니다. */
+  function renderMzCafeDetail() {
+    trackVirtualPage("community_post", "gimhae_food", MZ_CAFE_POST_ID);
+    var wrap = el("div", "community-page community-detail");
+
+    var head = el("div", "community-detail-head");
+    head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES.together)));
+    head.appendChild(el("h2", "community-detail-title", t(MZ_CAFE_POST_TITLE)));
+    wrap.appendChild(head);
+
+    var body = el("div", "community-detail-body");
+    body.appendChild(el("p", "community-detail-content", t(MZ_CAFE_INTRO)));
+    wrap.appendChild(body);
+
+    MZ_CAFE_LIST.forEach(function (cafe) {
+      var panel = el("div", "community-help-panel");
+      panel.appendChild(el("h3", "community-post-card-title", cafe.name));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.address) + ": " + cafe.address));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.menu) + ": " + t(cafe.menu)));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.pros) + ": " + t(cafe.pros)));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.fromInje) + ": " + t(cafe.fromInje)));
+      panel.appendChild(el("p", null, t(MZ_CAFE_FIELD_LABELS.transit) + ": " + t(cafe.transit)));
+
+      // 새 지도 API 없이 카카오맵 외부 링크(장소 검색/이름 기반 길찾기)로
+      // 연결합니다. "실시간 노선 확인"도 같은 길찾기 링크를 열어, 그
+      // 자리에서 카카오맵이 제공하는 최신 버스/지하철 경로를 그대로
+      // 보여줍니다(버스 노선 번호를 DB에 저장하지 않음).
+      var actions = el("div", "community-detail-actions");
+      var mapBtn = el("a", "community-btn-secondary", t(MZ_CAFE_BUTTONS.viewOnMap));
+      mapBtn.href = mzCafeMapSearchUrl(cafe); mapBtn.target = "_blank"; mapBtn.rel = "noopener noreferrer";
+      actions.appendChild(mapBtn);
+      var dirBtn = el("a", "community-btn-secondary", t(MZ_CAFE_BUTTONS.directionsFromInje));
+      dirBtn.href = mzCafeDirectionsUrl(cafe); dirBtn.target = "_blank"; dirBtn.rel = "noopener noreferrer";
+      actions.appendChild(dirBtn);
+      var liveBtn = el("a", "community-btn-secondary", t(MZ_CAFE_BUTTONS.liveTransit));
+      liveBtn.href = mzCafeDirectionsUrl(cafe); liveBtn.target = "_blank"; liveBtn.rel = "noopener noreferrer";
+      actions.appendChild(liveBtn);
+      panel.appendChild(actions);
+
+      wrap.appendChild(panel);
+    });
+
+    els.root.appendChild(wrap);
+  }
+
   function renderPostDetail(postId) {
+    // "김해 MZ 추천 카페 10곳"은 실제 Firestore 문서가 아니므로 조회
+    // 없이 바로 정적 상세 화면을 그립니다.
+    if (postId === MZ_CAFE_POST_ID) { renderMzCafeDetail(); return; }
+
     var wrap = el("div", "community-page community-detail");
     wrap.appendChild(el("p", "community-loading", t(COMMUNITY_POST.loading)));
     els.root.appendChild(wrap);
@@ -1109,46 +1844,24 @@ var Community = (function () {
         return;
       }
       var post = Object.assign({ id: doc.id }, doc.data());
-      if (!authUser) {
-        // 비회원은 요약만 보고, 전체 본문·댓글·연락처·번역은 로그인해야
-        // 볼 수 있습니다(2026-09-10 "회원가입 노출 방식 변경" 지시서 2번).
-        renderGuestPostPreview(wrap, post);
-        showAuthGateModal(ROUTE_PREFIX + "/post/" + postId);
-        return;
-      }
+      // 2026-09-13 "로그인/회원가입 동선" 지시서: 공개 게시글 상세는
+      // 비회원도 그대로 볼 수 있습니다. 글쓰기·댓글 작성·번역·연락처
+      // 등 참여 기능만 renderPostDetailBody 안에서 개별적으로
+      // 로그인 안내창을 띄웁니다.
       postCache[postId] = post;
+      trackVirtualPage("community_post", GA_COMMUNITY_CATEGORY_MAP[post.category] || post.category, postId);
+      // 2026-10-09 속닥속닥 지시서 6번 — 상세를 열 때마다 조회수 1 증가
+      // (원자적 증가, 새 조회 없이 fire-and-forget). 로그인 여부와
+      // 무관하게 세면 되므로 ensureAuth를 거치지 않습니다.
+      if (post.category === "whisper") {
+        doc.ref.update({ viewCount: firebase.firestore.FieldValue.increment(1) }).catch(function () { /* 실패해도 열람엔 영향 없음 */ });
+      }
       renderPostDetailBody(wrap, post);
     }).catch(function (err) {
       console.error("게시글 상세 불러오기 실패:", err);
       wrap.innerHTML = "";
       wrap.appendChild(el("p", "community-form-error", t(COMMUNITY_MSG.errGeneric)));
     });
-  }
-
-  /* 비회원용 게시글 미리보기 — 제목·요약(100자)·가려진 작성자·국적·
-     작성일·사진 1장·댓글 개수만 보여주고, 전체 본문·댓글 내용·연락처는
-     보여주지 않습니다. "자세히 보기"를 누르면(이미 열려 있는 안내창을
-     다시 띄워) 로그인/가입을 안내합니다. */
-  function renderGuestPostPreview(wrap, post) {
-    wrap.innerHTML = "";
-    wrap.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
-    wrap.appendChild(el("h2", "community-detail-title", localizedTitle(post)));
-    var meta = el("p", "community-post-card-meta",
-      maskName(post.authorNameMasked || post.authorName) + " · " + (post.authorNationality || "") + " · " + formatDate(post.createdAt) +
-      (post.commentCount ? " · " + t(COMMUNITY_POST.commentCount) + " " + post.commentCount : ""));
-    wrap.appendChild(meta);
-    if (post.photos && post.photos.length) {
-      var img = document.createElement("img");
-      img.className = "community-post-card-photo";
-      img.src = post.photos[0]; img.alt = ""; img.loading = "lazy";
-      wrap.appendChild(img);
-    }
-    var summaryText = summarize(post);
-    if (summaryText) wrap.appendChild(el("p", "community-post-card-summary", summaryText));
-    var detailBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.detailBtn));
-    detailBtn.type = "button";
-    detailBtn.addEventListener("click", function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
-    wrap.appendChild(detailBtn);
   }
 
   var detailShowOriginal = false;
@@ -1158,13 +1871,35 @@ var Community = (function () {
     detailShowOriginal = false;
 
     var isOriginalLang = post.originalLanguage === lang;
+    var jobPanelEl = null; // "원문 보기" 토글 시 구인·구직 상세정보도 같이 갱신하기 위한 참조
     var head = el("div", "community-detail-head");
     head.appendChild(el("span", "community-post-card-cat", t(COMMUNITY_CATEGORIES[post.category])));
     var title = el("h2", "community-detail-title", "");
+    // 2026-10-11 지시서 5번 — 글쓰기 화면에 제목 입력칸이 돌아왔으므로
+    // (2026-10-09 "제목 없이 바로 쓰기" 지시서는 이번 지시서로 되돌림)
+    // 속닥속닥도 다른 카테고리처럼 제목 줄을 그대로 보여줍니다.
     head.appendChild(title);
-    var meta = el("p", "community-post-card-meta", "");
+    // 작성자 닉네임(2026-09 "비회원제 전환" 지시서 7번) — 실명 대신
+    // 닉네임만 표시합니다. 목록 카드 미리보기(fetchLatestPostsForHome)·
+    // 댓글과 같은 마스킹 규칙을 그대로 재사용(회원 실명은 maskName으로
+    // 가리고, 비회원/닉네임 글은 그대로 노출 — UID·이메일은 절대 노출 없음).
+    var authorDisplay = (post.authorIsAnonymous || post.authorNameIsNickname) ? (post.authorNameMasked || "") : maskName(post.authorNameMasked);
+    var meta = el("p", "community-post-card-meta", [authorDisplay, formatDate(post.createdAt)].filter(Boolean).join(" · "));
     head.appendChild(meta);
     wrap.appendChild(head);
+
+    // 사진은 제목/작성정보 다음, 본문 앞에 보여줍니다(2026-09 "커뮤니티
+    // 이미지 업로드" 지시서 10번). 화면 폭을 넘지 않도록 CSS에서
+    // width:100%;height:auto로 처리합니다(원본 비율 유지).
+    if (post.photos && post.photos.length) {
+      var gallery = el("div", "community-detail-gallery");
+      post.photos.forEach(function (url) {
+        var img = document.createElement("img");
+        img.src = url; img.alt = ""; img.loading = "lazy";
+        gallery.appendChild(img);
+      });
+      wrap.appendChild(gallery);
+    }
 
     var body = el("div", "community-detail-body");
     var bodyText = el("p", "community-detail-content", "");
@@ -1173,7 +1908,7 @@ var Community = (function () {
     aiNotice.hidden = true;
     body.appendChild(aiNotice);
 
-    if (!isOriginalLang) {
+    if (!isOriginalLang && hasTranslatableText(post)) {
       var trState = post.translations && post.translations[lang];
       if (trState && trState.content) {
         var toggleBtn = el("button", "community-link-btn", t(COMMUNITY_POST.viewOriginal));
@@ -1183,6 +1918,11 @@ var Community = (function () {
           detailShowOriginal = !detailShowOriginal;
           toggleBtn.textContent = detailShowOriginal ? t(COMMUNITY_POST.viewTranslated) : t(COMMUNITY_POST.viewOriginal);
           fillDetailText(title, bodyText, aiNotice, post);
+          if (post.category === "job" && jobPanelEl) {
+            var refreshedPanel = buildJobPanel(post, isOriginalLang || detailShowOriginal);
+            jobPanelEl.replaceWith(refreshedPanel);
+            jobPanelEl = refreshedPanel;
+          }
         });
         body.appendChild(toggleBtn);
       } else if (trState && trState.status === "translating") {
@@ -1192,6 +1932,7 @@ var Community = (function () {
         translateBtn.type = "button";
         translateBtn.setAttribute("data-action", "translate-post");
         translateBtn.addEventListener("click", function () {
+          if (!authUser) { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); return; }
           translateBtn.disabled = true;
           translateBtn.textContent = t(COMMUNITY_POST.translating);
           requestPostTranslation(post).then(function (result) {
@@ -1214,52 +1955,77 @@ var Community = (function () {
     wrap.appendChild(body);
     fillDetailText(title, bodyText, aiNotice, post);
 
-    if (post.photos && post.photos.length) {
-      var gallery = el("div", "community-detail-gallery");
-      post.photos.forEach(function (url) {
-        var img = document.createElement("img");
-        img.src = url; img.alt = ""; img.loading = "lazy";
-        gallery.appendChild(img);
-      });
-      wrap.appendChild(gallery);
-    }
-
     if (post.category === "market") wrap.appendChild(buildMarketPanel(post));
     if (post.category === "help") wrap.appendChild(buildHelpPanel(post));
-    if (post.category === "job") wrap.appendChild(buildJobPanel(post));
+    if (post.category === "together") wrap.appendChild(buildTogetherPanel(post));
+    if (post.category === "hometown") wrap.appendChild(buildHometownPanel(post));
+    if (post.category === "job") {
+      jobPanelEl = buildJobPanel(post, isOriginalLang || detailShowOriginal);
+      wrap.appendChild(jobPanelEl);
+    }
 
     if (post.kakaoLink) {
       var kakaoWrap = el("div", "community-kakao-wrap");
       kakaoWrap.appendChild(el("p", "community-kakao-warn", t(COMMUNITY_POST.kakaoWarn)));
       var kakaoBtn = el("a", "community-btn-secondary", t(COMMUNITY_POST.kakaoBtn));
       kakaoBtn.href = post.kakaoLink; kakaoBtn.target = "_blank"; kakaoBtn.rel = "noopener noreferrer";
+      // 작성자에게 연락(카카오톡 오픈채팅)은 참여 기능이라 로그인이
+      // 필요합니다 — 비회원 클릭 시 실제 링크로 이동하지 않고 안내창만 뜹니다.
+      kakaoBtn.addEventListener("click", function (e) {
+        if (!authUser) { e.preventDefault(); showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); }
+      });
       kakaoWrap.appendChild(kakaoBtn);
       wrap.appendChild(kakaoWrap);
+    }
+
+    // 게시글 작성자가 "카카오톡 문의 연결"을 체크한 경우에만 표시합니다.
+    // 게시글에는 boolean(contactViaOwnerKakao)만 저장하고, 실제 이동 링크는
+    // 홈페이지 "사장님께 말해요"(OWNER_CHAT.url, js/menu-data.js)를 그대로
+    // 재사용합니다 — 새 링크를 만들거나 게시글마다 URL을 저장하지 않습니다.
+    if (post.contactViaOwnerKakao && typeof OWNER_CHAT !== "undefined") {
+      var ownerKakaoBtn = el("a", "community-btn-secondary", t(COMMUNITY_POST.ownerKakaoBtn));
+      ownerKakaoBtn.href = OWNER_CHAT.url;
+      ownerKakaoBtn.target = "_blank";
+      ownerKakaoBtn.rel = "noopener noreferrer";
+      wrap.appendChild(ownerKakaoBtn);
     }
 
     var actions = el("div", "community-detail-actions");
     var saveBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.saveBtn));
     saveBtn.type = "button";
-    var saveDocId = authUser ? (authUser.uid + "_" + post.id) : null;
-    if (saveDocId) {
-      db().collection("communitySaves").doc(saveDocId).get().then(function (doc) {
+    if (authUser) {
+      db().collection("communitySaves").doc(authUser.uid + "_" + post.id).get().then(function (doc) {
         if (doc.exists) saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn);
       });
-      saveBtn.addEventListener("click", function () {
-        var ref = db().collection("communitySaves").doc(saveDocId);
-        ref.get().then(function (doc) {
+    }
+    // "저장(좋아요류 참여 기능)"은 비회원도 가능합니다 — 처음 누를 때만
+    // 조용히 익명 로그인을 마치고 바로 저장까지 진행합니다.
+    saveBtn.addEventListener("click", function () {
+      ensureAuth().then(function () {
+        var ref = db().collection("communitySaves").doc(authUser.uid + "_" + post.id);
+        return ref.get().then(function (doc) {
           if (doc.exists) return ref.delete().then(function () { saveBtn.textContent = t(COMMUNITY_POST.saveBtn); });
           return ref.set({ uid: authUser.uid, postId: post.id, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
             .then(function () { saveBtn.textContent = t(COMMUNITY_POST.unsaveBtn); });
         });
-      });
-    }
+      }).catch(function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
+    });
     actions.appendChild(saveBtn);
 
-    if (authUser && post.authorId === authUser.uid) {
+    // 2026-10-09 속닥속닥 지시서 7번 — "일반 사용자 수정·삭제 불가"가
+    // 명시적 요구사항이라, 작성 본인이어도 수정·삭제 버튼을 아예
+    // 보여주지 않습니다(옛 카테고리 게시글은 DB에만 남아있고 화면
+    // 노출을 막았으므로 이 경로로 실제로 열람될 일이 없지만, 혹시
+    // 남아있더라도 기존 동작 그대로 둡니다).
+    if (post.category !== "whisper" && authUser && post.authorId === authUser.uid) {
       var editBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.editPost));
       editBtn.type = "button";
-      editBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write?edit=" + post.id); editPostId = post.id; render(); });
+      // postId는 URL 쿼리(?edit=)로 전달합니다 — 새 라우트를 만들지
+      // 않고 기존 "/write" 글쓰기 화면을 그대로 재사용합니다.
+      // renderWrite()가 location.search에서 직접 읽으므로(아래),
+      // navigate() 이후 별도로 editPostId를 대입/재렌더링할 필요가 없고
+      // "값을 나중에 대입해 첫 렌더가 옛 값으로 실행되는" 문제도 없습니다.
+      editBtn.addEventListener("click", function () { navigate(ROUTE_PREFIX + "/write?edit=" + post.id); });
       actions.appendChild(editBtn);
 
       var delBtn = el("button", "community-btn-danger", t(COMMUNITY_POST.deletePost));
@@ -1267,12 +2033,54 @@ var Community = (function () {
       delBtn.addEventListener("click", function () {
         if (!window.confirm(t(COMMUNITY_POST.deleteConfirm))) return;
         db().collection("communityPosts").doc(post.id).update({ status: "deleted" }).then(function () {
+          state_loadedPostsCategory = null; // 삭제된 글이 목록에서 바로 빠지도록 다음 진입 때 다시 불러옴
           navigate(ROUTE_PREFIX);
         });
       });
       actions.appendChild(delBtn);
-    } else if (authUser) {
+    } else {
+      // 신고(+ 속닥속닥의 "내가 작성한 글 삭제 요청" 사유)는 작성자
+      // 본인을 포함해 비회원도 가능합니다(눌렀을 때 buildReportButton
+      // 내부에서 필요하면 조용히 익명 로그인 후 제출).
       actions.appendChild(buildReportButton("post", post.id));
+    }
+
+    // 좋아요(2026-10-09 지시서 6번) — "저장(communitySaves)"과 똑같은
+    // 패턴을 그대로 재사용한 새 중복방지 컬렉션(communityLikes)만
+    // 추가합니다. 비회원도 가능(처음 누를 때만 조용히 익명 로그인).
+    if (post.category === "whisper") {
+      var likeBtn = el("button", "community-btn-secondary", t(COMMUNITY_POST.likeBtn) + " " + (post.likeCount || 0));
+      likeBtn.type = "button";
+      var likeRef = null;
+      if (authUser) {
+        likeRef = db().collection("communityLikes").doc(authUser.uid + "_" + post.id);
+        likeRef.get().then(function (doc2) {
+          if (doc2.exists) likeBtn.textContent = t(COMMUNITY_POST.unlikeBtn) + " " + (post.likeCount || 0);
+        });
+      }
+      likeBtn.addEventListener("click", function () {
+        ensureAuth().then(function () {
+          var ref = db().collection("communityLikes").doc(authUser.uid + "_" + post.id);
+          var postRef = db().collection("communityPosts").doc(post.id);
+          return ref.get().then(function (doc2) {
+            if (doc2.exists) {
+              return ref.delete().then(function () {
+                return postRef.update({ likeCount: firebase.firestore.FieldValue.increment(-1) });
+              }).then(function () {
+                post.likeCount = Math.max(0, (post.likeCount || 0) - 1);
+                likeBtn.textContent = t(COMMUNITY_POST.likeBtn) + " " + post.likeCount;
+              });
+            }
+            return ref.set({ uid: authUser.uid, postId: post.id, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+              .then(function () { return postRef.update({ likeCount: firebase.firestore.FieldValue.increment(1) }); })
+              .then(function () {
+                post.likeCount = (post.likeCount || 0) + 1;
+                likeBtn.textContent = t(COMMUNITY_POST.unlikeBtn) + " " + post.likeCount;
+              });
+          });
+        }).catch(function () { showAuthGateModal(ROUTE_PREFIX + "/post/" + post.id); });
+      });
+      actions.appendChild(likeBtn);
     }
     wrap.appendChild(actions);
 
@@ -1364,6 +2172,23 @@ var Community = (function () {
     return panel;
   }
 
+  /* "김해맛집 추천"(together) — 카페/음식점/관광지 분류만 표시(상태 없음). */
+  function buildTogetherPanel(post) {
+    var panel = el("div", "community-help-panel");
+    var spotMap = { cafe: COMMUNITY_SPOT.typeCafe, restaurant: COMMUNITY_SPOT.typeRestaurant, tour: COMMUNITY_SPOT.typeTour };
+    if (post.spotType) panel.appendChild(el("p", null, t(COMMUNITY_SPOT.typeLabel) + ": " + t(spotMap[post.spotType])));
+    return panel;
+  }
+
+  /* "나의 고향 알리기"(hometown) — 나라/도시가 있으면 국기와 함께 한 줄로
+     보여줍니다(상태·구인구직 필드 없음). */
+  function buildHometownPanel(post) {
+    var panel = el("div", "community-help-panel");
+    var line = hometownKeyInfo(post);
+    if (line) panel.appendChild(el("p", null, line));
+    return panel;
+  }
+
   function isJobDeadlinePassed(post) {
     if (!post.deadline) return false;
     var today = new Date();
@@ -1371,24 +2196,45 @@ var Community = (function () {
     return post.deadline < todayKey;
   }
 
-  function buildJobPanel(post) {
+  // 구인·구직 상세정보 중 사용자가 직접 입력한 텍스트 필드 키 목록(제목/
+  // 본문과 같은 기존 번역 요청에 묶어서 보낼 대상). deadline은 날짜값이라
+  // 제외합니다. requestPostTranslation()과 buildJobPanel() 양쪽에서 같은
+  // 목록을 재사용해 요청/표시가 어긋나지 않게 합니다.
+  function jobDetailFieldKeys(post) {
+    return post.jobType === "seeking"
+      ? ["desiredIndustry", "availableDays", "availableHours", "desiredLocation", "availableLanguages", "contactMethod", "experience", "koreanLevel"]
+      : ["industry", "workLocation", "jobDescription", "workDays", "workHours", "salary", "contactMethod", "koreanLevel", "experience"];
+  }
+
+  // useOriginal이 false이고 해당 언어 번역 캐시(post.translations[lang].fields)에
+  // 값이 있으면 그 값을, 없으면(미번역/실패/같은 언어) 원문을 그대로 씁니다
+  // — 기존 제목/본문 fillDetailText()와 같은 원문 폴백 원칙.
+  function jobFieldValue(post, useOriginal, key) {
+    if (!useOriginal) {
+      var tr = post.translations && post.translations[lang];
+      if (tr && tr.fields && tr.fields[key]) return tr.fields[key];
+    }
+    return post[key];
+  }
+
+  function buildJobPanel(post, useOriginal) {
     var panel = el("div", "community-help-panel");
     var isHiring = post.jobType === "hiring";
     panel.appendChild(el("p", null, t(COMMUNITY_JOB.typeLabel) + ": " + t(isHiring ? COMMUNITY_JOB.typeHiring : COMMUNITY_JOB.typeSeeking)));
 
     if (isHiring) {
-      [[COMMUNITY_JOB.industryLabel, post.industry], [COMMUNITY_JOB.workLocationLabel, post.workLocation],
-       [COMMUNITY_JOB.jobDescriptionLabel, post.jobDescription], [COMMUNITY_JOB.workDaysLabel, post.workDays],
-       [COMMUNITY_JOB.workHoursLabel, post.workHours], [COMMUNITY_JOB.salaryLabel, post.salary],
-       [COMMUNITY_JOB.deadlineLabel, post.deadline], [COMMUNITY_JOB.contactMethodLabel, post.contactMethod],
-       [COMMUNITY_JOB.koreanLevelLabel, post.koreanLevel], [COMMUNITY_JOB.experienceLabel, post.experience]]
-        .forEach(function (pair) { if (pair[1]) panel.appendChild(el("p", null, t(pair[0]) + ": " + pair[1])); });
+      [[COMMUNITY_JOB.industryLabel, "industry"], [COMMUNITY_JOB.workLocationLabel, "workLocation"],
+       [COMMUNITY_JOB.jobDescriptionLabel, "jobDescription"], [COMMUNITY_JOB.workDaysLabel, "workDays"],
+       [COMMUNITY_JOB.workHoursLabel, "workHours"], [COMMUNITY_JOB.salaryLabel, "salary"],
+       [COMMUNITY_JOB.deadlineLabel, "deadline"], [COMMUNITY_JOB.contactMethodLabel, "contactMethod"],
+       [COMMUNITY_JOB.koreanLevelLabel, "koreanLevel"], [COMMUNITY_JOB.experienceLabel, "experience"]]
+        .forEach(function (pair) { var v = jobFieldValue(post, useOriginal, pair[1]); if (v) panel.appendChild(el("p", null, t(pair[0]) + ": " + v)); });
     } else {
-      [[COMMUNITY_JOB.desiredIndustryLabel, post.desiredIndustry], [COMMUNITY_JOB.availableDaysLabel, post.availableDays],
-       [COMMUNITY_JOB.availableHoursLabel, post.availableHours], [COMMUNITY_JOB.desiredLocationLabel, post.desiredLocation],
-       [COMMUNITY_JOB.availableLanguagesLabel, post.availableLanguages], [COMMUNITY_JOB.contactMethodLabel, post.contactMethod],
-       [COMMUNITY_JOB.experienceLabel, post.experience], [COMMUNITY_JOB.koreanLevelLabel, post.koreanLevel]]
-        .forEach(function (pair) { if (pair[1]) panel.appendChild(el("p", null, t(pair[0]) + ": " + pair[1])); });
+      [[COMMUNITY_JOB.desiredIndustryLabel, "desiredIndustry"], [COMMUNITY_JOB.availableDaysLabel, "availableDays"],
+       [COMMUNITY_JOB.availableHoursLabel, "availableHours"], [COMMUNITY_JOB.desiredLocationLabel, "desiredLocation"],
+       [COMMUNITY_JOB.availableLanguagesLabel, "availableLanguages"], [COMMUNITY_JOB.contactMethodLabel, "contactMethod"],
+       [COMMUNITY_JOB.experienceLabel, "experience"], [COMMUNITY_JOB.koreanLevelLabel, "koreanLevel"]]
+        .forEach(function (pair) { var v = jobFieldValue(post, useOriginal, pair[1]); if (v) panel.appendChild(el("p", null, t(pair[0]) + ": " + v)); });
     }
 
     var effectiveStatus = post.jobStatus;
@@ -1441,7 +2287,11 @@ var Community = (function () {
     var modal = el("div", "modal");
     modal.appendChild(el("h3", "modal-title", t(COMMUNITY_REPORT.reportTitle)));
 
-    var reasons = ["reasonScam", "reasonAbuse", "reasonPrivacy", "reasonIllegal", "reasonAd", "reasonMeet", "reasonEtc"];
+    // 2026-10-09 속닥속닥 지시서 9번 표의 5개 사유만 사용합니다
+    // (reasonScam/reasonIllegal/reasonMeet는 옛 중고거래·구인구직
+    // 카테고리 전용이라 더 이상 쓰지 않지만, 번역 데이터는 그대로
+    // 남겨둡니다 — 재사용 가능).
+    var reasons = ["reasonSelfDelete", "reasonAbuse", "reasonAd", "reasonPrivacy", "reasonEtc"];
     var selected = null;
     var reasonList = el("div", "community-reason-list");
     reasons.forEach(function (key) {
@@ -1463,10 +2313,13 @@ var Community = (function () {
     submitBtn.type = "button";
     submitBtn.addEventListener("click", function () {
       if (!selected) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
-      submitReport(targetType, targetId, selected).then(function (ok) {
+      // 신고도 비회원 가능 — 처음 누를 때만 조용히 익명 로그인 후 제출합니다.
+      ensureAuth().then(function () {
+        return submitReport(targetType, targetId, selected);
+      }).then(function (ok) {
         if (ok) { showToast(t(COMMUNITY_REPORT.reportDone)); overlay.remove(); }
         else errorP.textContent = t(COMMUNITY_REPORT.alreadyReported);
-      });
+      }).catch(function () { errorP.textContent = t(COMMUNITY_MSG.errRequired); });
     });
     modal.appendChild(submitBtn);
 
@@ -1526,9 +2379,26 @@ var Community = (function () {
         postComment(postId, textarea.value.trim(), null).then(function () {
           textarea.value = "";
           loadCommentList(postId, listEl);
+        }).catch(function (err) {
+          showToast((err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric));
         }).finally(function () { submitBtn.disabled = false; });
       });
       container.appendChild(form);
+    } else {
+      // 비회원도 댓글 작성 가능 — 처음 누를 때만 조용히 익명 로그인을
+      // 마치고, 같은 자리에 바로 작성 폼을 보여줍니다.
+      var guestCommentBtn = el("button", "community-btn-secondary", t(COMMUNITY_COMMENT.submitComment));
+      guestCommentBtn.type = "button";
+      guestCommentBtn.addEventListener("click", function () {
+        guestCommentBtn.disabled = true;
+        ensureAuth().then(function () {
+          renderComments(container, postId);
+        }).catch(function () {
+          guestCommentBtn.disabled = false;
+          showAuthGateModal(ROUTE_PREFIX + "/post/" + postId);
+        });
+      });
+      container.appendChild(guestCommentBtn);
     }
 
     var listEl = el("div", "community-comment-list");
@@ -1546,6 +2416,14 @@ var Community = (function () {
     return db().collection("communityRateLimits").doc(authUser.uid + "_" + seoulDateKey());
   }
 
+  // 짧은 시간 반복 글쓰기/댓글 도배 방지(2026-09-12 6단계 지시서) — 새
+  // 보안 서비스 없이, 기존 하루 한도 카운터 문서(communityRateLimits)에
+  // 마지막 작성 시각만 추가로 기록해 재사용합니다. UID별 문서라 닉네임을
+  // 바꿔도 우회할 수 없습니다. 실제 차단은 Firestore 규칙에서도 같은
+  // 간격을 다시 확인합니다(클라이언트만 믿지 않음).
+  var POST_COOLDOWN_MS = 10 * 1000;
+  var COMMENT_COOLDOWN_MS = 5 * 1000;
+
   /* 게시글/댓글을 실제로 쓰는 것과 "하루 작성 한도" 카운터를 같은
      트랜잭션으로 묶어서, 한도를 넘으면 카운터 문서 쓰기 자체가
      보안 규칙에서 거부되어 게시글/댓글 쓰기까지 함께 취소되도록
@@ -1557,7 +2435,15 @@ var Community = (function () {
       return tx.get(rlRef).then(function (snap) {
         var cur = snap.exists ? snap.data() : { postCount: 0, commentCount: 0 };
         var next = { postCount: cur.postCount || 0, commentCount: cur.commentCount || 0 };
-        if (kind === "post") next.postCount += 1; else next.commentCount += 1;
+        if (kind === "post") {
+          if (Date.now() - toMillisSafe(cur.lastPostAt) < POST_COOLDOWN_MS) throw new Error("TOO_SOON");
+          next.postCount += 1;
+          next.lastPostAt = firebase.firestore.FieldValue.serverTimestamp();
+        } else {
+          if (Date.now() - toMillisSafe(cur.lastCommentAt) < COMMENT_COOLDOWN_MS) throw new Error("TOO_SOON");
+          next.commentCount += 1;
+          next.lastCommentAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
         tx.set(rlRef, next, { merge: true });
         return writeFn(tx);
       });
@@ -1572,8 +2458,10 @@ var Community = (function () {
       postId: postId,
       parentCommentId: parentId || null,
       authorId: authUser.uid,
-      authorNameMasked: (profile && profile.name) || "",
+      authorNameMasked: currentDisplayNickname(),
+      authorNameIsNickname: true, // 실명이 아니라 닉네임임을 표시(구 댓글과 구분해 마스킹 처리)
       authorNationality: (profile && profile.nationality) || "",
+      authorIsAnonymous: !!(profile && profile.isAnonymous),
       originalLanguage: lang,
       originalContent: content,
       translations: {},
@@ -1667,7 +2555,12 @@ var Community = (function () {
 
   function buildCommentNode(c, postId, listContainer) {
     var node = el("div", "community-comment");
-    var meta = el("p", "community-comment-meta", maskName(c.authorNameMasked) + " · " + (c.authorNationality || "") + " · " + formatDate(c.createdAt));
+    // 자동 생성된 비회원 닉네임은 실명이 아니므로 마스킹하지 않고 그대로 보여줍니다.
+    // 닉네임(비회원 자동 닉네임/가입회원 닉네임)은 그대로 보여주고,
+    // 이 필드가 생기기 전(구 댓글)에 저장된 실명만 마스킹합니다.
+    var displayName = (c.authorIsAnonymous || c.authorNameIsNickname) ? (c.authorNameMasked || "") : maskName(c.authorNameMasked);
+    var metaText = [displayName, c.authorNationality, formatDate(c.createdAt)].filter(Boolean).join(" · ");
+    var meta = el("p", "community-comment-meta", metaText);
     node.appendChild(meta);
     var textEl = el("p", "community-comment-text", c.originalContent);
     node.appendChild(textEl);
@@ -1709,28 +2602,28 @@ var Community = (function () {
     }
 
     var actions = el("div", "community-comment-actions");
-    if (authUser && c.authorId === authUser.uid) {
-      var delBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.deleteComment));
-      delBtn.type = "button";
-      delBtn.addEventListener("click", function () {
-        if (!window.confirm(t(COMMUNITY_POST.deleteConfirm))) return;
-        db().collection("communityComments").doc(c.id).update({ status: "deleted" }).then(function () {
-          loadCommentList(postId, listContainer);
-        });
-      });
-      actions.appendChild(delBtn);
-    } else if (authUser && !c.parentCommentId) {
+    // 2026-10-09 속닥속닥 지시서 7·8번 — "일반 사용자 수정·삭제 불가,
+    // 관리자만 삭제 가능"이 댓글에도 그대로 적용되어, 작성자 본인이어도
+    // 더 이상 삭제 버튼을 보여주지 않습니다. 모든 댓글(답글 포함)에
+    // 신고·삭제 요청 버튼을 둡니다(이전에는 최상위 댓글에만 있었음).
+    if (!c.parentCommentId && authUser) {
+      // 답글은 기존처럼 로그인(회원/비회원 익명 세션)한 뒤에만 보입니다
+      // (이번 단계에서 새로 넓히는 범위가 아님).
       var replyBtn = el("button", "community-link-btn", t(COMMUNITY_COMMENT.replyLabel));
       replyBtn.type = "button";
       replyBtn.addEventListener("click", function () {
         var content = window.prompt(t(COMMUNITY_COMMENT.replyLabel) + ":");
         if (content && content.trim()) {
-          postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); });
+          postComment(postId, content.trim(), c.id).then(function () { loadCommentList(postId, listContainer); }).catch(function (err) {
+            showToast((err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric));
+          });
         }
       });
       actions.appendChild(replyBtn);
-      actions.appendChild(buildReportButton("comment", c.id));
     }
+    // 신고(+ "내가 작성한 글 삭제 요청" 사유)는 작성자 본인을 포함해
+    // 비회원도 가능합니다.
+    actions.appendChild(buildReportButton("comment", c.id));
     node.appendChild(actions);
     return node;
   }
@@ -1765,6 +2658,26 @@ var Community = (function () {
      부르지 않도록, 호출 전에 먼저 Firestore에 "번역 중" 상태를 표시해
      둡니다(완벽한 잠금은 아니지만 정확히 동시에 누르는 경우가 아니면
      중복 호출을 막습니다). 반환값: true(성공)/false(실패)/"quota"(한도 초과). */
+  // 구인·구직 게시글의 상세정보(직접입력 필드)도 제목/본문과 같은 번역
+  // 요청 1번에 묶어서 보냅니다(API 호출 추가 없음, 비용 최소화). 등록 시
+  // 자동번역(translatePostLanguages)과 방문자 요청 번역(requestPostTranslation)
+  // 양쪽에서 같은 함수를 재사용해 카테고리별 번역 코드를 중복하지 않습니다
+  // (2026-09 자동번역 지시서 12번).
+  // 이모지·숫자·기호만 있는 글은 번역할 실제 문자가 없으므로 API를
+  // 호출하지 않습니다(2026-09 다국어 자동번역 지시서 12번) — 제목·본문
+  // 어디에도 글자(letter)가 하나도 없으면 항상 원문 그대로 보여줍니다.
+  function hasTranslatableText(post) {
+    var re = /\p{L}/u;
+    return re.test(post.originalTitle || "") || re.test(post.originalContent || "");
+  }
+
+  function jobTranslateFields(post) {
+    if (post.category !== "job") return null;
+    var out = {};
+    jobDetailFieldKeys(post).forEach(function (k) { if (post[k]) out[k] = post[k]; });
+    return Object.keys(out).length ? out : null;
+  }
+
   function requestPostTranslation(post) {
     if (!authUser) return Promise.resolve(false);
     var d = db();
@@ -1778,16 +2691,20 @@ var Community = (function () {
       return ref.update(field).catch(function () { /* 표시 갱신 실패해도 번역 결과 자체는 유효 */ });
     }
 
+    var jobFields = jobTranslateFields(post);
+
     return ref.update(claimField).catch(function () {}).then(function () {
       return authUser.getIdToken();
     }).then(function (idToken) {
+      var body = {
+        action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
+        title: post.originalTitle, content: post.originalContent, targetLanguages: [lang]
+      };
+      if (jobFields) body.fields = jobFields;
       return fetch("/.netlify/functions/community-translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
-          title: post.originalTitle, content: post.originalContent, targetLanguages: [lang]
-        })
+        body: JSON.stringify(body)
       });
     }).then(function (res) {
       if (res.status === 429) {
@@ -1796,10 +2713,12 @@ var Community = (function () {
       return res.json().then(function (data) {
         var tr = data && data.translations && data.translations[lang];
         if (tr && tr.title && tr.content) {
-          return setStatus("done", { title: tr.title, content: tr.content }).then(function () {
+          var doneExtra = { title: tr.title, content: tr.content };
+          if (tr.fields) doneExtra.fields = tr.fields;
+          return setStatus("done", doneExtra).then(function () {
             if (postCache[post.id]) {
               postCache[post.id].translations = postCache[post.id].translations || {};
-              postCache[post.id].translations[lang] = { status: "done", title: tr.title, content: tr.content };
+              postCache[post.id].translations[lang] = Object.assign({ status: "done" }, doneExtra);
             }
             return true;
           });
@@ -1808,6 +2727,60 @@ var Community = (function () {
       });
     }).catch(function () {
       return setStatus("failed").then(function () { return false; });
+    });
+  }
+
+  /* 등록·수정 시 자동번역(2026-09 자동번역 지시서) — 지원하는 7개 언어 중
+     원문 언어를 뺀 나머지를 한 번의 AI 호출(community-translate.js의
+     translatePost, targetLanguages 배열)로 모두 번역해 저장합니다. 같은
+     글을 몇 명이 읽든 이 호출은 등록/수정 시 단 한 번만 일어나고,
+     조회·언어변경·재방문 시에는 절대 다시 호출하지 않습니다(저장된
+     translations만 읽음 — requestPostTranslation/fillDetailText 참고).
+     원문 저장은 이 함수 호출 전에 이미 끝나 있으므로, 번역이 실패해도
+     게시글 등록 자체는 항상 성공합니다(실패한 언어는 status:"failed"로
+     남아 관리자 번역관리 탭에서 재시도할 수 있습니다). */
+  function translatePostLanguages(postId, post, onStatus) {
+    var targets = SUPPORTED_LANGS.filter(function (l) { return l !== post.originalLanguage; });
+    if (!targets.length || !authUser || !hasTranslatableText(post)) return Promise.resolve();
+    if (onStatus) onStatus();
+    var ref = db().collection("communityPosts").doc(postId);
+    var jobFields = jobTranslateFields(post);
+
+    function markAllFailed() {
+      var patch = {};
+      targets.forEach(function (l) { patch["translations." + l] = { status: "failed" }; });
+      return ref.update(patch).catch(function () {});
+    }
+
+    return authUser.getIdToken().then(function (idToken) {
+      var body = {
+        action: "translatePost", idToken: idToken, originalLanguage: post.originalLanguage,
+        title: post.originalTitle, content: post.originalContent, targetLanguages: targets
+      };
+      if (jobFields) body.fields = jobFields;
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    }).then(function (res) {
+      if (res.status === 429) return markAllFailed();
+      return res.json().then(function (data) {
+        var patch = {};
+        targets.forEach(function (l) {
+          var tr = data && data.translations && data.translations[l];
+          if (tr && tr.title && tr.content) {
+            var entry = { status: "done", title: tr.title, content: tr.content };
+            if (tr.fields) entry.fields = tr.fields;
+            patch["translations." + l] = entry;
+          } else {
+            patch["translations." + l] = { status: "failed" };
+          }
+        });
+        return ref.update(patch).catch(function () {});
+      });
+    }).catch(function () {
+      return markAllFailed();
     });
   }
 
@@ -1848,22 +2821,78 @@ var Community = (function () {
   }
 
   function renderWrite() {
+    // 수정 모드 여부는 URL 쿼리(?edit=POST_ID)에서 직접 읽습니다(새
+    // 라우트/파싱 로직 추가 없음). navigate()가 history.pushState로
+    // 쿼리까지 반영한 뒤 동기적으로 render()를 호출하므로, editPostId를
+    // 뒤늦게 대입하던 예전 방식과 달리 첫 렌더부터 항상 최신 값입니다.
+    // "글쓰기" 버튼처럼 쿼리 없이 들어오면 자동으로 새 글 모드가 됩니다.
+    var editMatch = /[?&]edit=([^&]+)/.exec(location.search);
+    editPostId = editMatch ? decodeURIComponent(editMatch[1]) : null;
+    var isEdit = !!editPostId;
+    // 상세 화면에서 이미 불러와 둔 postCache를 재사용합니다(새 Firestore
+    // 조회 없음 — 비용 최소화). 캐시가 없거나(직접 URL 접근 등) 본인
+    // 글이 아니면 안전하게 새 글 모드로 되돌립니다(닉네임이 아닌
+    // UID 기준 확인 — Firestore 규칙에서도 동일하게 재확인됨).
+    var editingPost = isEdit ? postCache[editPostId] : null;
+    if (isEdit && (!editingPost || !authUser || editingPost.authorId !== authUser.uid)) {
+      isEdit = false; editPostId = null; editingPost = null;
+    }
+
+    // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 속닥속닥(whisper)
+    // 글쓰기는 아래의 기존 다중 카테고리 글쓰기 폼 전체를 건드리지 않고
+    // 별도의 간단한 폼(제목+내용+사진)으로 대체합니다. 2026-10-11
+    // 지시서로 기존 4개 게시판이 되살아나 COMMUNITY_CATEGORY_ORDER가
+    // 다시 여러 개가 되었으므로, 더 이상 "게시판이 1개뿐이면"이 아니라
+    // "글 종류가 whisper이면"으로 분기합니다(?cat=whisper로 들어온 새
+    // 글, 또는 whisper 카테고리 글의 수정). 일반 사용자는 whisper 글을
+    // 수정할 수 없으므로(지시서 7번) 수정 모드는 실질적으로 발생하지
+    // 않습니다.
+    var writeCatMatch = /[?&]cat=([^&]+)/.exec(location.search);
+    var writeCatParam = writeCatMatch ? decodeURIComponent(writeCatMatch[1]) : null;
+    var writeTargetCategory = (isEdit && editingPost) ? editingPost.category : writeCatParam;
+    if (writeTargetCategory === "whisper") { renderWhisperWrite(); return; }
+
     var wrap = el("div", "community-page community-write");
-    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_POST.writeTitle)));
+    wrap.appendChild(el("h2", "community-page-title", isEdit ? t(COMMUNITY_POST.editPostTitle) : t(COMMUNITY_POST.writeTitle)));
 
     var form = el("form", "community-form");
+
+    // 닉네임(2026-09 "비회원제 전환" 지시서) — 회원가입 없이도 글쓰기
+    // 화면에서 바로 원하는 닉네임을 정할 수 있게 합니다. 기존 MY 페이지
+    // "닉네임 수정"과 같은 필드(profile.name/nickname)를 그대로 재사용
+    // (새 필드·새 컬렉션 없음). 현재 닉네임(자동 생성값 포함)을 기본값으로
+    // 채워 두고, 제출 시 바뀐 경우에만 저장합니다.
+    var nicknameInput = el("input"); nicknameInput.type = "text"; nicknameInput.maxLength = 20; nicknameInput.required = true;
+    nicknameInput.value = currentDisplayNickname();
+    form.appendChild(formField(COMMUNITY_POST.nicknameLabel, nicknameInput));
+
     var catSelect = el("select");
     COMMUNITY_CATEGORY_ORDER.forEach(function (cat) {
       var o = el("option", null, t(COMMUNITY_CATEGORIES[cat])); o.value = cat;
       catSelect.appendChild(o);
     });
+    // 카테고리 블록의 "이 카테고리에 글쓰기"에서 넘어온 경우(?cat=)
+    // 새 글 모드에서만 해당 카테고리를 자동 선택합니다(수정 모드는
+    // 기존 게시글의 category를 그대로 씀 — 아래 editingPost 블록).
+    if (!isEdit) {
+      var catMatch = /[?&]cat=([^&]+)/.exec(location.search);
+      var catParam = catMatch ? decodeURIComponent(catMatch[1]) : null;
+      if (catParam && COMMUNITY_CATEGORY_ORDER.indexOf(catParam) !== -1) catSelect.value = catParam;
+    }
     form.appendChild(formField(COMMUNITY_POST.categoryLabel, catSelect));
 
+    if (isEdit) {
+      trackVirtualPage("community_edit", null, editPostId);
+    } else {
+      var writeGaCat = catParam && COMMUNITY_CATEGORY_ORDER.indexOf(catParam) !== -1 ? (GA_COMMUNITY_CATEGORY_MAP[catParam] || catParam) : null;
+      trackVirtualPage("community_write", writeGaCat);
+    }
+
     var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
-    form.appendChild(formField(COMMUNITY_POST.titleLabel, titleInput));
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
 
     var contentArea = el("textarea"); contentArea.maxLength = CONTENT_MAX_LEN; contentArea.required = true;
-    form.appendChild(formField(COMMUNITY_POST.contentLabel, contentArea));
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
 
     var langSelect = el("select");
     SUPPORTED_LANGS.forEach(function (code) {
@@ -1901,6 +2930,33 @@ var Community = (function () {
     helpFields.appendChild(formField(COMMUNITY_HELP.typeLabel, helpTypeSelect));
     helpFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HELP.emergencyNotice)));
     form.appendChild(helpFields);
+
+    /* "김해맛집 추천"(together) — 카페/음식점/관광지 분류 */
+    var togetherFields = el("div", "community-together-fields");
+    var spotTypeSelect = el("select");
+    [["cafe", COMMUNITY_SPOT.typeCafe], ["restaurant", COMMUNITY_SPOT.typeRestaurant], ["tour", COMMUNITY_SPOT.typeTour]].forEach(function (p) {
+      var o = el("option", null, t(p[1])); o.value = p[0]; spotTypeSelect.appendChild(o);
+    });
+    togetherFields.appendChild(formField(COMMUNITY_SPOT.typeLabel, spotTypeSelect));
+    form.appendChild(togetherFields);
+
+    /* "나의 고향 알리기"(hometown) — 구인구직이 아니라 고향 소개 게시판.
+       복잡한 입력폼 없이 나라/도시(둘 다 선택 입력)만 추가합니다(2026-09
+       "나의 고향 알리기 정상화" 지시서 4번). 나라는 회원가입 화면과 같은
+       text+datalist(COUNTRY_LIST)를 재사용, 새 국가 데이터 없음. */
+    var hometownFields = el("div", "community-hometown-fields");
+    hometownFields.appendChild(el("p", "community-safety-notice", t(COMMUNITY_HOMETOWN.contentGuide)));
+    var hCountry = el("input"); hCountry.type = "text";
+    if (typeof COUNTRY_LIST !== "undefined") hCountry.setAttribute("list", "communityHometownCountryList");
+    hometownFields.appendChild(formField(COMMUNITY_HOMETOWN.countryLabel, hCountry));
+    if (typeof COUNTRY_LIST !== "undefined") {
+      var hCountryDatalist = el("datalist"); hCountryDatalist.id = "communityHometownCountryList";
+      COUNTRY_LIST.forEach(function (c) { var o = el("option"); o.value = c; hCountryDatalist.appendChild(o); });
+      hometownFields.appendChild(hCountryDatalist);
+    }
+    var hCity = el("input"); hCity.type = "text";
+    hometownFields.appendChild(formField(COMMUNITY_HOMETOWN.cityLabel, hCity));
+    form.appendChild(hometownFields);
 
     /* 구인·구직 */
     var jobFields = el("div", "community-job-fields");
@@ -1963,6 +3019,7 @@ var Community = (function () {
       var max = (catSelect.value === "job" && jobTypeSelect.value === "seeking") ? JOB_INTRO_MAX_LEN : CONTENT_MAX_LEN;
       contentArea.maxLength = max;
       if (contentArea.value.length > max) contentArea.value = contentArea.value.slice(0, max);
+      if (contentArea.__updateCharCount) contentArea.__updateCharCount();
     }
 
     function toggleJobTypeFields() {
@@ -1976,27 +3033,151 @@ var Community = (function () {
     var kakaoInput = el("input"); kakaoInput.type = "url"; kakaoInput.placeholder = "https://open.kakao.com/...";
     form.appendChild(formField({ ko: "카카오톡 오픈채팅 링크(선택)", zh: "KakaoTalk 链接（可选）", vi: "Link KakaoTalk (không bắt buộc)", en: "KakaoTalk link (optional)", mn: "KakaoTalk холбоос (сонголт)", bn: "কাকাওটক ওপেন চ্যাট লিংক (ঐচ্ছিক)", my: "KakaoTalk Open Chat လင့်ခ် (ရွေးချယ်ခွင့်)" }, kakaoInput));
 
+    // "사장님께 말해요"(OWNER_CHAT.url, js/menu-data.js)에 이미 연결된
+    // 카카오톡 오픈채팅 링크를 그대로 재사용합니다 — 여기서는 게시글에
+    // 연결 여부(boolean)만 저장하고, 새 링크는 만들지 않습니다.
+    var ownerKakaoRow = el("label", "community-checkbox-row");
+    var ownerKakaoInput = el("input"); ownerKakaoInput.type = "checkbox";
+    ownerKakaoRow.appendChild(ownerKakaoInput);
+    ownerKakaoRow.appendChild(document.createTextNode(" " + t(COMMUNITY_POST.ownerKakaoCheckbox)));
+    form.appendChild(ownerKakaoRow);
+
+    // 사진 첨부(2026-09 "커뮤니티 이미지 업로드" 지시서) — 모든 게시판
+    // 공통(글쓰기 화면 하나로 처리), 게시글당 최대 1장. 새 이미지
+    // 시스템이 아니라 기존 file input + 압축(compressImage)/업로드
+    // (uploadPhotos) 파이프라인을 그대로 재사용합니다.
     var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
     form.appendChild(photoLabel);
-    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.multiple = true;
+    // 실제 파일 선택은 기존 브라우저 file input 그대로 재사용하되, 화면에는
+    // 숨기고 [+ 사진 추가]/[사진 변경] 버튼을 눌렀을 때만 클릭을 대신
+    // 실행합니다(새 카메라 API 없음 — input accept="image/*"가 모바일에서
+    // 촬영/앨범 선택을 그대로 제공).
+    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.hidden = true;
     form.appendChild(photoInput);
+    var photoAddBtn = el("button", "community-btn-secondary", t(COMMUNITY_MSG.photoAddBtn));
+    photoAddBtn.type = "button";
+    form.appendChild(photoAddBtn);
     var photoPreview = el("div", "community-photo-preview");
     form.appendChild(photoPreview);
+    var photoActions = el("div", "community-photo-actions");
+    var photoChangeBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoChangeBtn));
+    photoChangeBtn.type = "button";
+    var photoRemoveBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoRemoveBtn));
+    photoRemoveBtn.type = "button";
+    photoActions.appendChild(photoChangeBtn);
+    photoActions.appendChild(photoRemoveBtn);
+    form.appendChild(photoActions);
     var pendingFiles = [];
+    var hasExistingPhoto = false; // 수정 모드에서 기존에 업로드된 사진이 있었는지
+    var photosRemoved = false; // "사진 삭제"로 기존 사진을 지우기로 했는지(새 파일 선택 시 초기화)
+    var PHOTO_ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    // 사진이 있으면(선택했거나 기존 사진이 남아있으면) [+ 사진 추가] 대신
+    // [사진 변경]/[사진 삭제] 버튼만 보여줍니다(비용 최소화 — 새 업로더
+    // UI 없이 같은 input을 재사용).
+    function updatePhotoUI() {
+      var hasPhoto = pendingFiles.length > 0 || (hasExistingPhoto && !photosRemoved);
+      photoAddBtn.hidden = hasPhoto;
+      photoActions.hidden = !hasPhoto;
+    }
+
+    photoAddBtn.addEventListener("click", function () { photoInput.click(); });
+    photoChangeBtn.addEventListener("click", function () { photoInput.click(); });
+    photoRemoveBtn.addEventListener("click", function () {
+      pendingFiles = [];
+      photoPreview.innerHTML = "";
+      if (hasExistingPhoto) photosRemoved = true;
+      errorP.textContent = "";
+      updatePhotoUI();
+    });
+
+    // 수정 모드: 기존 게시글 값을 폼에 채웁니다(제목/본문/카테고리/기타
+    // 필드). 사진은 그대로 두면(pendingFiles 비어있음) 저장 시
+    // createOrUpdatePost가 photos 필드를 아예 보내지 않아 기존 이미지
+    // URL이 그대로 유지됩니다 — 새 파일을 고를 때만 기존 업로드
+    // 로직(uploadPhotos)이 실행됩니다.
+    if (isEdit && editingPost) {
+      catSelect.value = editingPost.category || "market";
+      titleInput.value = editingPost.originalTitle || "";
+      contentArea.value = editingPost.originalContent || "";
+      langSelect.value = editingPost.originalLanguage || lang;
+      kakaoInput.value = editingPost.kakaoLink || "";
+      ownerKakaoInput.checked = !!editingPost.contactViaOwnerKakao;
+
+      if (editingPost.category === "market") {
+        dealTypeSelect.value = editingPost.dealType || "sell";
+        priceInput.value = (editingPost.price !== null && editingPost.price !== undefined) ? editingPost.price : "";
+        freeInput.checked = !!editingPost.isFree;
+        locationInput.value = editingPost.dealLocation || "";
+        conditionInput.value = editingPost.itemCondition || "";
+      } else if (editingPost.category === "help") {
+        helpTypeSelect.value = editingPost.helpType || "etc";
+      } else if (editingPost.category === "together") {
+        spotTypeSelect.value = editingPost.spotType || "restaurant";
+      } else if (editingPost.category === "hometown") {
+        hCountry.value = editingPost.spotCountry || "";
+        hCity.value = editingPost.spotCity || "";
+      } else if (editingPost.category === "job") {
+        jobTypeSelect.value = editingPost.jobType || "hiring";
+        if (editingPost.jobType === "seeking") {
+          jDesiredIndustry.value = editingPost.desiredIndustry || "";
+          jAvailableDays.value = editingPost.availableDays || "";
+          jAvailableHours.value = editingPost.availableHours || "";
+          jDesiredLocation.value = editingPost.desiredLocation || "";
+          jAvailableLanguages.value = editingPost.availableLanguages || "";
+          jSeekingContact.value = editingPost.contactMethod || "";
+          jSeekingExperience.value = editingPost.experience || "";
+          jSeekingKorean.value = editingPost.koreanLevel || "";
+        } else {
+          jIndustry.value = editingPost.industry || "";
+          jWorkLocation.value = editingPost.workLocation || "";
+          jJobDescription.value = editingPost.jobDescription || "";
+          jWorkDays.value = editingPost.workDays || "";
+          jWorkHours.value = editingPost.workHours || "";
+          jSalary.value = editingPost.salary || "";
+          jDeadline.value = editingPost.deadline || "";
+          jHiringContact.value = editingPost.contactMethod || "";
+          jHiringKorean.value = editingPost.koreanLevel || "";
+          jHiringExperience.value = editingPost.experience || "";
+        }
+      }
+
+      if (editingPost.photos && editingPost.photos.length) {
+        hasExistingPhoto = true;
+        editingPost.photos.forEach(function (url) {
+          var existingImg = document.createElement("img");
+          existingImg.src = url; existingImg.alt = "";
+          photoPreview.appendChild(existingImg);
+        });
+      }
+
+      // 위에서 바꾼 catSelect/jobTypeSelect 값에 맞춰 숨김 영역과 글자
+      // 수 제한을 다시 계산합니다(두 함수 모두 이 시점에 이미
+      // 선언되어 있음 — 함수 선언 호이스팅).
+      toggleJobTypeFields();
+      toggleCategoryFields();
+    }
+    updatePhotoUI();
+
     photoInput.addEventListener("change", function () {
       var files = Array.prototype.slice.call(photoInput.files || []);
-      var maxNow = currentMaxPhotos();
-      if (pendingFiles.length + files.length > maxNow) {
-        errorP.textContent = t(COMMUNITY_MSG.errPhotoLimit);
-        files = files.slice(0, maxNow - pendingFiles.length);
-      }
-      files.forEach(function (f) {
-        pendingFiles.push(f);
-        var img = document.createElement("img");
-        img.src = URL.createObjectURL(f);
-        photoPreview.appendChild(img);
-      });
       photoInput.value = "";
+      if (!files.length) return;
+      // 게시글당 사진 최대 1장(비용 최소화) — 한 장만 쓰고 선택은 항상
+      // 기존 사진을 "교체"합니다(추가가 아님).
+      var file = files[0];
+      if (PHOTO_ACCEPTED_TYPES.indexOf(file.type) === -1) {
+        errorP.textContent = t(COMMUNITY_MSG.errPhotoUnsupported);
+        return;
+      }
+      errorP.textContent = "";
+      pendingFiles = [file];
+      photosRemoved = false;
+      photoPreview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      photoPreview.appendChild(img);
+      updatePhotoUI();
     });
 
     function currentMaxPhotos() { return MAX_PHOTOS; } // 모든 카테고리 사진 1장(비용 최소화)
@@ -2004,7 +3185,9 @@ var Community = (function () {
     function toggleCategoryFields() {
       marketFields.hidden = catSelect.value !== "market";
       helpFields.hidden = catSelect.value !== "help";
+      togetherFields.hidden = catSelect.value !== "together";
       jobFields.hidden = catSelect.value !== "job";
+      hometownFields.hidden = catSelect.value !== "hometown";
       updateContentMaxLength();
       while (pendingFiles.length > currentMaxPhotos()) {
         pendingFiles.pop();
@@ -2025,7 +3208,7 @@ var Community = (function () {
       e.preventDefault();
       errorP.textContent = "";
       jobWarningP.textContent = "";
-      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      if (!nicknameInput.value.trim() || !titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
 
       var extra = {};
       if (catSelect.value === "market") {
@@ -2037,6 +3220,10 @@ var Community = (function () {
         };
       } else if (catSelect.value === "help") {
         extra = { helpType: helpTypeSelect.value, helpStatus: "needed" };
+      } else if (catSelect.value === "together") {
+        extra = { spotType: spotTypeSelect.value };
+      } else if (catSelect.value === "hometown") {
+        extra = { spotCountry: hCountry.value.trim() || null, spotCity: hCity.value.trim() || null };
       } else if (catSelect.value === "job") {
         if (jobTypeSelect.value === "hiring") {
           if (!jIndustry.value.trim() || !jWorkLocation.value.trim() || !jJobDescription.value.trim() ||
@@ -2081,14 +3268,167 @@ var Community = (function () {
       }
 
       submitBtn.disabled = true;
-      createOrUpdatePost({
-        category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
-        originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null, extra: extra,
-        photoFiles: pendingFiles
+      // 닉네임을 바꿨으면(비회원은 profile.name, 회원은 profile.nickname)
+      // 게시글을 저장하기 전에 먼저 반영합니다 — MY 페이지 "닉네임 수정"과
+      // 같은 필드를 그대로 재사용(새 필드 없음). 실패해도 글쓰기 자체는
+      // 막지 않고 이전 닉네임으로 계속 진행합니다.
+      var newNickname = nicknameInput.value.trim();
+      var nicknameSave = Promise.resolve();
+      if (newNickname && newNickname !== currentDisplayNickname()) {
+        var isAnonNow = !!(profile && profile.isAnonymous);
+        var nicknamePayload = isAnonNow ? { name: newNickname } : { nickname: newNickname };
+        nicknameSave = db().collection("communityUsers").doc(authUser.uid).update(nicknamePayload).then(function () {
+          if (isAnonNow) profile.name = newNickname; else profile.nickname = newNickname;
+        }).catch(function () { /* 실패해도 글쓰기는 계속 진행 */ });
+      }
+      // 큰 사진을 고른 경우 압축/업로드에 시간이 걸릴 수 있어, 멈춘 것으로
+      // 오해하지 않도록 단계별 상태 문구를 보여줍니다(비용 최소화 지시서
+      // 13번) — 등록 버튼은 이미 비활성화되어 중복 제출도 막습니다.
+      if (pendingFiles.length) errorP.textContent = t(COMMUNITY_MSG.photoCompressing);
+      nicknameSave.then(function () {
+        return createOrUpdatePost({
+          category: catSelect.value, title: titleInput.value.trim(), content: contentArea.value.trim(),
+          originalLanguage: langSelect.value, kakaoLink: kakaoInput.value.trim() || null,
+          contactViaOwnerKakao: ownerKakaoInput.checked, extra: extra,
+          photoFiles: pendingFiles, photosRemoved: photosRemoved,
+          onPhotoStatus: function (phase) {
+            errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
+          },
+          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); }
+        });
       }).then(function (postId) {
         navigate(ROUTE_PREFIX + "/post/" + postId, true);
       }).catch(function (err) {
-        errorP.textContent = (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge) : t(COMMUNITY_MSG.errGeneric);
+        errorP.textContent = (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge)
+          : (err && err.message === "IMAGE_LOAD_FAILED") ? t(COMMUNITY_MSG.errPhotoUnsupported)
+          : (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon) : t(COMMUNITY_MSG.errGeneric);
+      }).finally(function () { submitBtn.disabled = false; });
+    });
+
+    wrap.appendChild(form);
+    els.root.appendChild(wrap);
+  }
+
+  /* 속닥속닥 글쓰기(2026-10-11 홈페이지/속닥속닥 개편 지시서 5번) —
+     제목(최대 40자)+내용(최대 500자)+사진 최대 1장만 입력하는 폼입니다.
+     닉네임 입력·카테고리 선택·카카오링크 등 기존 다중 카테고리 폼의
+     부가 입력은 넣지 않고(지시서가 "제목/내용/사진/비회원 글쓰기 정책"만
+     나열), 저장은 기존 createOrUpdatePost/withRateLimit/
+     translatePostLanguages·사진 압축(compressImage)/업로드(uploadPhotos)
+     파이프라인을 그대로 재사용합니다(새 저장 로직 없음). 작성자 닉네임은
+     currentDisplayNickname()이 항상 고정 "익명" 라벨을 돌려주므로 여기서
+     따로 처리하지 않습니다.
+     (2026-10-09 "제목 없이 바로 쓰기" 지시서로 한 번 제거됐던 제목·사진
+     입력을 이번 지시서로 되돌립니다 — deriveWhisperTitle 자동 제목 생성은
+     더 이상 쓰지 않습니다.) */
+  function renderWhisperWrite() {
+    var wrap = el("div", "community-page community-write community-whisper-write");
+    wrap.appendChild(el("h2", "community-page-title", t(COMMUNITY_HOME.title)));
+    wrap.appendChild(el("p", "community-safety-notice", t(COMMUNITY_POST.whisperWriteNotice)));
+
+    trackVirtualPage("community_write", "whisper");
+
+    var form = el("form", "community-form");
+
+    var titleInput = el("input"); titleInput.type = "text"; titleInput.maxLength = TITLE_MAX_LEN; titleInput.required = true;
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.titleLabel, titleInput), titleInput));
+
+    var contentArea = el("textarea", "community-whisper-content-input");
+    contentArea.maxLength = CONTENT_MAX_LEN;
+    contentArea.required = true;
+    contentArea.placeholder = t(COMMUNITY_POST.contentLabel);
+    form.appendChild(appendCharCounter(formField(COMMUNITY_POST.contentLabel, contentArea), contentArea));
+    // 바로 적을 수 있도록 화면에 들어오자마자 커서를 제목칸에 둡니다.
+    setTimeout(function () { titleInput.focus(); }, 0);
+
+    // 사진 첨부(최대 1장) — 기존 다중 카테고리 글쓰기 폼(renderWrite)의
+    // file input + 압축(compressImage)/업로드(uploadPhotos) 파이프라인과
+    // 똑같은 패턴을 그대로 재사용합니다(새 업로더 UI 없음).
+    var photoLabel = el("label", "community-label", t(COMMUNITY_POST.photoLabel));
+    form.appendChild(photoLabel);
+    var photoInput = el("input"); photoInput.type = "file"; photoInput.accept = "image/jpeg,image/jpg,image/png,image/webp"; photoInput.hidden = true;
+    form.appendChild(photoInput);
+    var photoAddBtn = el("button", "community-btn-secondary", t(COMMUNITY_MSG.photoAddBtn));
+    photoAddBtn.type = "button";
+    form.appendChild(photoAddBtn);
+    var photoPreview = el("div", "community-photo-preview");
+    form.appendChild(photoPreview);
+    var photoActions = el("div", "community-photo-actions");
+    var photoChangeBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoChangeBtn));
+    photoChangeBtn.type = "button";
+    var photoRemoveBtn = el("button", "community-link-btn", t(COMMUNITY_MSG.photoRemoveBtn));
+    photoRemoveBtn.type = "button";
+    photoActions.appendChild(photoChangeBtn);
+    photoActions.appendChild(photoRemoveBtn);
+    form.appendChild(photoActions);
+    var pendingFiles = [];
+    var PHOTO_ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    function updatePhotoUI() {
+      var hasPhoto = pendingFiles.length > 0;
+      photoAddBtn.hidden = hasPhoto;
+      photoActions.hidden = !hasPhoto;
+    }
+    updatePhotoUI();
+
+    var errorP = el("p", "community-form-error");
+
+    photoAddBtn.addEventListener("click", function () { photoInput.click(); });
+    photoChangeBtn.addEventListener("click", function () { photoInput.click(); });
+    photoRemoveBtn.addEventListener("click", function () {
+      pendingFiles = [];
+      photoPreview.innerHTML = "";
+      errorP.textContent = "";
+      updatePhotoUI();
+    });
+    photoInput.addEventListener("change", function () {
+      var files = Array.prototype.slice.call(photoInput.files || []);
+      photoInput.value = "";
+      if (!files.length) return;
+      var file = files[0]; // 사진 최대 1장 — 항상 교체(추가 아님)
+      if (PHOTO_ACCEPTED_TYPES.indexOf(file.type) === -1) {
+        errorP.textContent = t(COMMUNITY_MSG.errPhotoUnsupported);
+        return;
+      }
+      errorP.textContent = "";
+      pendingFiles = [file];
+      photoPreview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      photoPreview.appendChild(img);
+      updatePhotoUI();
+    });
+
+    form.appendChild(errorP);
+
+    var submitBtn = el("button", "community-btn-primary", t(COMMUNITY_POST.submitPost));
+    submitBtn.type = "submit";
+    form.appendChild(submitBtn);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      errorP.textContent = "";
+      if (!titleInput.value.trim() || !contentArea.value.trim()) { errorP.textContent = t(COMMUNITY_MSG.errRequired); return; }
+      submitBtn.disabled = true;
+      var title = titleInput.value.trim();
+      var content = contentArea.value.trim();
+      ensureAuth().then(function () {
+        return createOrUpdatePost({
+          category: "whisper", title: title, content: content,
+          originalLanguage: lang, kakaoLink: null, contactViaOwnerKakao: false, extra: {},
+          photoFiles: pendingFiles, photosRemoved: false,
+          onTranslateStatus: function () { errorP.textContent = t(COMMUNITY_POST.translating); },
+          onPhotoStatus: function (phase) {
+            errorP.textContent = t(phase === "upload" ? COMMUNITY_MSG.photoUploading : COMMUNITY_MSG.photoCompressing);
+          }
+        });
+      }).then(function (postId) {
+        navigate(ROUTE_PREFIX + "/post/" + postId, true);
+      }).catch(function (err) {
+        errorP.textContent = (err && err.message === "TOO_SOON") ? t(COMMUNITY_MSG.errTooSoon)
+          : (err && err.message === "PHOTO_TOO_LARGE") ? t(COMMUNITY_MSG.errPhotoTooLarge)
+          : (err && err.message === "IMAGE_LOAD_FAILED") ? t(COMMUNITY_MSG.errPhotoUnsupported)
+          : t(COMMUNITY_MSG.errGeneric);
       }).finally(function () { submitBtn.disabled = false; });
     });
 
@@ -2141,7 +3481,8 @@ var Community = (function () {
     });
   }
 
-  function compressImage(file) {
+  function compressImage(file, onStatus) {
+    if (onStatus) onStatus("compress");
     return loadImageSource(file).then(function (source) {
       return canvasToWebp(drawToCanvas(source, MAX_PHOTO_DIMENSION), PHOTO_QUALITY_INITIAL).then(function (blob) {
         if (blob.size <= PHOTO_MAX_BYTES) { releaseImageSource(source); return blob; }
@@ -2161,11 +3502,14 @@ var Community = (function () {
     if (source && typeof source.close === "function") source.close();
   }
 
-  function uploadPhotos(postId, files) {
+  function uploadPhotos(postId, files, onStatus) {
     var st = storage();
     if (!st || !files.length) return Promise.resolve([]);
     return Promise.all(files.map(function (file, i) {
-      return compressImage(file).then(function (blob) {
+      return compressImage(file, onStatus).then(function (blob) {
+        if (onStatus) onStatus("upload");
+        // 파일명은 사용자가 올린 원본 파일명을 쓰지 않고 postId+시각으로
+        // 새로 만듭니다(기존 방식 그대로 재사용 — 안전한 파일명 생성).
         var ref = st.ref().child("communityImages/" + postId + "/" + Date.now() + "-" + i + ".webp");
         return ref.put(blob).then(function () { return ref.getDownloadURL(); });
       });
@@ -2175,38 +3519,74 @@ var Community = (function () {
   function createOrUpdatePost(fields) {
     var d = db();
     var isEdit = !!editPostId;
+    // 수정 권한은 Firestore 규칙(request.auth.uid == resource.data.authorId)
+    // 에서 이미 강제되지만, 잘못된 요청을 애초에 보내지 않도록
+    // 클라이언트에서도 postCache(닉네임이 아닌 authorId=UID)로 한 번 더
+    // 확인합니다 — 새 조회 없이 기존 캐시만 사용(비용 최소화).
+    if (isEdit && (!postCache[editPostId] || !authUser || postCache[editPostId].authorId !== authUser.uid)) {
+      return Promise.reject(new Error("FORBIDDEN"));
+    }
     var ref = isEdit ? d.collection("communityPosts").doc(editPostId) : d.collection("communityPosts").doc();
     var postId = ref.id;
+    // 수정 시 원문(제목/본문)이 실제로 바뀐 경우에만 재번역합니다(2026-09
+    // 자동번역 지시서 10번 — 수정하지 않은 다른 게시글은 건드리지 않음).
+    var prevOriginalTitle = isEdit && postCache[editPostId] ? postCache[editPostId].originalTitle : null;
+    var prevOriginalContent = isEdit && postCache[editPostId] ? postCache[editPostId].originalContent : null;
 
-    return uploadPhotos(postId, fields.photoFiles).then(function (urls) {
+    return uploadPhotos(postId, fields.photoFiles, fields.onPhotoStatus).then(function (urls) {
       var base = {
         category: fields.category,
         originalLanguage: fields.originalLanguage,
         originalTitle: fields.title,
         originalContent: fields.content,
         kakaoLink: fields.kakaoLink,
-        authorId: authUser.uid,
-        authorNameMasked: (profile && profile.name) || "",
+        contactViaOwnerKakao: !!fields.contactViaOwnerKakao,
+        // 수정 시 authorId/작성자 소유권은 절대 건드리지 않습니다
+        // (undefined는 아래에서 base 키 자체를 지워 update() 대상에서
+        // 제외 — createdAt과 동일한 기존 패턴 재사용).
+        authorId: isEdit ? undefined : authUser.uid,
+        authorNameMasked: currentDisplayNickname(),
+        authorNameIsNickname: true, // 실명이 아니라 닉네임임을 표시(구 게시글과 구분해 마스킹 처리)
         authorNationality: (profile && profile.nationality) || "",
+        authorIsAnonymous: !!(profile && profile.isAnonymous),
         status: "visible",
         reportCount: 0,
         commentCount: isEdit ? undefined : 0,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        // 번역은 등록 시점에 미리 하지 않고, 방문자가 "선택한 언어로
-        // 번역하기"를 눌렀을 때만 합니다(비용 최소화). 원문을 수정하면
-        // 예전 번역이 남아있지 않도록 비워서, 다음에 보는 사람이 새로
-        // 번역하게 합니다(원문이 안 바뀌면 이 값은 그대로 유지됨).
-        translations: {}
+        // 2026-10-09 속닥속닥 지시서 6번 — 목록/상세에 조회수·좋아요 수를
+        // 보여주기 위한 새 카운터 2개(기존 reportCount/commentCount와 같은
+        // 패턴, 원자적 증가만 사용). 새 글에만 0으로 초기화합니다.
+        viewCount: isEdit ? undefined : 0,
+        likeCount: isEdit ? undefined : 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      // 새 사진을 올렸으면 그 URL로, 새 사진 없이 "사진 삭제"만 눌렀으면
+      // 빈 배열로 명시 저장(기존 사진 URL 제거). 둘 다 아니면(그대로 두면)
+      // photos 키 자체를 건드리지 않아 기존 사진이 그대로 유지됩니다.
       if (urls.length) base.photos = urls;
+      else if (fields.photosRemoved) base.photos = [];
       if (!isEdit) base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       Object.keys(fields.extra || {}).forEach(function (k) { base[k] = fields.extra[k]; });
+      // 원문(제목/본문)이 바뀌는 경우에만 translations를 비웁니다 — 새 글은
+      // 항상 비우고, 수정 글은 실제로 바뀔 때만 비웁니다(원문이 안 바뀌면
+      // 기존 번역을 그대로 유지 — 지시서 10번).
+      var titleChanged = !isEdit || base.originalTitle !== prevOriginalTitle;
+      var contentChanged = !isEdit || base.originalContent !== prevOriginalContent;
+      var needsTranslate = titleChanged || contentChanged;
+      if (needsTranslate) base.translations = {};
       Object.keys(base).forEach(function (k) { if (base[k] === undefined) delete base[k]; });
 
       var writeOp = isEdit ? ref.update(base) : withRateLimit("post", function (tx) { tx.set(ref, base); });
       return writeOp.then(function () {
         editPostId = null;
-        return postId;
+        // 새 글/수정 글이 목록에 바로 반영되도록, 다음 목록 진입 때는
+        // 캐시를 재사용하지 않고 1번 다시 불러오게 합니다.
+        state_loadedPostsCategory = null;
+        if (!needsTranslate) return postId;
+        // 등록/수정 시 자동번역 — 원문 저장은 이미 끝났으므로, 이 호출이
+        // 실패해도 게시글 등록 자체는 이미 성공한 상태입니다(지시서 9번).
+        // base에는 category/jobType과 구인·구직 상세필드(industry 등)가
+        // 모두 평탄화되어 있어 jobTranslateFields(base)가 그대로 읽습니다.
+        return translatePostLanguages(postId, base, fields.onTranslateStatus).then(function () { return postId; });
       });
     });
   }
@@ -2231,7 +3611,7 @@ var Community = (function () {
         // 최초 진입 시 회원이 저장해둔 언어를 존중(이미 로컬에 언어가
         // 없을 때만) — 기존 저장방식(LANG_KEY)을 그대로 사용합니다.
       }
-      return profile;
+      return ensureMemberNickname(uid);
     }).catch(function () { profile = null; return null; });
   }
 
@@ -2257,22 +3637,42 @@ var Community = (function () {
     var a = auth();
     if (a) {
       a.onAuthStateChanged(function (user) {
+        // ensureAuth()가 이 호출을 직접 유발한 경우, 참여 버튼 핸들러가
+        // 이미 스스로 화면을 갱신하므로 여기서는 render()를 건너뜁니다
+        // (동시에 render()가 또 실행되어 방금 갱신한 DOM을 덮어쓰는 경쟁
+        // 상태를 막기 위함 — authUser/profile 갱신 자체는 그대로 합니다).
+        var shouldRender = !suppressNextAuthRender;
+        suppressNextAuthRender = false;
         authUser = user;
         if (user) {
           loadProfile(user.uid).then(function () {
-            if (!profile) {
+            // profile.isAnonymous인데 실제 Firebase Auth 사용자는 이미
+            // isAnonymous가 아닌 경우 = 방금 linkWithPopup/linkWithCredential로
+            // 계정을 연결(승계)했지만 국적/약관 동의는 아직 못 받은 상태
+            // (5단계, Anonymous Account Linking) — 문서가 없는 것과 똑같이
+            // 취급해 국적/약관 동의 화면(renderCompleteProfile)으로 보냅니다.
+            var needsCompletion = !profile || (profile.isAnonymous && !user.isAnonymous);
+            if (needsCompletion) {
+              // 비회원(익명) 세션인데 아직 프로필 문서가 없으면 이름/국적
+              // 입력 없이 자동 닉네임 프로필을 바로 만듭니다(가입 화면 없음).
+              if (user.isAnonymous) {
+                createAnonymousProfile(user.uid).then(function () {
+                  if (shouldRender && isCommunityPath(location.pathname)) render();
+                });
+                return;
+              }
               // 로그인은 되어 있지만 회원 정보 문서가 없는 계정입니다
               // (Google 첫 로그인, 또는 예전에 가입 도중 문제가 있었던
               // 계정) — 국적/언어/약관 동의부터 받는 화면으로 보냅니다.
               pendingProfileUser = user;
-              if (isCommunityPath(location.pathname)) render();
+              if (shouldRender && isCommunityPath(location.pathname)) render();
               return;
             }
             pendingProfileUser = null;
             if (db()) db().collection("communityUsers").doc(user.uid).update({
               lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(function () {});
-            if (isCommunityPath(location.pathname)) render();
+            if (shouldRender && isCommunityPath(location.pathname)) render();
           });
         } else {
           profile = null;
@@ -2285,7 +3685,35 @@ var Community = (function () {
     route();
   }
 
-  return { init: init, setLang: setLang, isCommunityPath: isCommunityPath };
+  // 2026-10-09 "제목 없이 바로 쓰기" 지시서 — 홈 최상단 바를 누르면
+  // 게시판 목록을 거치지 않고 곧장 글쓰기 화면으로 이동합니다. 기존
+  // "글쓰기" 버튼(.community-write-btn)과 완전히 같은 인증 흐름
+  // (ensureAuth 성공 시 이동, 실패 시 로그인 안내창)만 공개 API로
+  // 노출한 것입니다 — 새 라우팅/새 인증 로직 없음.
+  function goToWrite() {
+    var writeTarget = ROUTE_PREFIX + "/write?cat=whisper";
+    ensureAuth().then(function () {
+      navigate(writeTarget);
+    }).catch(function () { showAuthGateModal(writeTarget); });
+  }
+
+  return {
+    init: init,
+    setLang: setLang,
+    isCommunityPath: isCommunityPath,
+    navigate: navigate,
+    navigateToCategory: navigateToCategory,
+    goToWrite: goToWrite,
+    routePrefix: ROUTE_PREFIX,
+    fetchLatestPosts: fetchLatestPostsForHome,
+    showToast: showToast,
+    // 2026-09-30 지시서 — 커뮤니티 이벤트 배너/팝업이 홈 화면(js/app.js)
+    // 에서도 쓰이므로 공개 API에 추가(새 모듈 없이 기존 Community
+    // 모듈 재사용).
+    showEventPopup: showCouponBoardsModal,
+    maybeShowEventPopupOnEntry: maybeShowEventPopupOnEntry,
+    isEventBannerDismissedToday: isEventBannerDismissedToday
+  };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {

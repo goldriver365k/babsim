@@ -40,6 +40,8 @@ css/style.css, js/translations.js, js/menu-data.js, js/app.js 등의 원본
    Netlify에는 이미 완성된 index.html·admin.html만 그대로 올리면 됩니다.)
 """
 import os
+import json
+from datetime import datetime, timezone
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -62,6 +64,11 @@ def build():
     pwa = read("js/pwa.js")
     community_translations = read("js/community-translations.js")
     community = read("js/community.js")
+    site_popup = read("js/site-popup.js")
+    hometown_popup = read("js/hometown-popup.js")
+    site_update = read("js/site-update.js")
+    menu_likes = read("js/menu-likes.js")
+    room_finder = read("js/room-finder.js")
     app = read("js/app.js")
 
     html = """<!DOCTYPE html>
@@ -71,6 +78,23 @@ def build():
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>모인관(인제대학교)</title>
 <meta name="description" content="인제대학교 모인관 - 밥심, 만권화밥, 후루룩찹찹 온라인 메뉴판">
+
+<!-- Google Analytics 4(gtag.js, GA 2단계 최소 설치) — Firebase Analytics
+     SDK는 추가하지 않고 공식 gtag.js만 최소로 씁니다. Measurement ID는
+     js/firebase-config.js의 FIREBASE_CONFIG.measurementId와 같은 값을
+     그대로 옮겨 적었습니다(정적 사이트라 런타임에 JS 값을 다시 읽어오는
+     구조를 만들지 않고, 값이 바뀌면 두 곳을 함께 고치는 가장 단순한
+     방식을 씁니다). gtag('config', ...)가 첫 페이지 조회를 자동으로
+     1회만 보내므로, 별도의 수동 page_view 호출은 넣지 않습니다(중복
+     방지). 이벤트 추적(서비스 클릭/커뮤니티/팝업 등)은 이번 단계에
+     포함하지 않습니다. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6YN63KKXNW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-6YN63KKXNW');
+</script>
 
 <!-- 홈 화면 추가(PWA) 아이콘 -->
 <link rel="manifest" href="/manifest.webmanifest">
@@ -96,25 +120,47 @@ def build():
 
 <header class="site-header">
   <div class="header-top">
-    <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
-    <div class="lang-select" role="group" aria-label="언어 선택" id="langSelect">
-      <button type="button" class="lang-btn" data-lang="ko" aria-label="한국어">한국어</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="zh" aria-label="中文">中文</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="en" aria-label="English">English</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
-      <span class="lang-sep" aria-hidden="true">|</span>
-      <button type="button" class="lang-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+    <div class="site-brand">
+      <!-- 공식 로고(모바일 UI 개선 10단계: 사용자 제공 인제대학교 공식
+           마크, images/icon/site-logo.jpg) — 원본 그대로 사용, 비율
+           왜곡 없이 height 기준으로만 표시합니다. 클릭 시 기존 홈
+           라우팅(goHome)을 재사용해 메인 홈으로 이동합니다. -->
+      <button type="button" class="site-logo-btn" id="siteLogoBtn" aria-label="인제대학교 — 홈으로 이동">
+        <img class="site-logo" id="siteLogo" src="/images/icon/site-logo.jpg" alt="인제대학교">
+      </button>
+      <div class="site-brand-text">
+        <!-- "babsim.store"는 언어와 무관한 고정 브랜드/도메인 표기라
+             번역하지 않고 그대로 둡니다(참고 이미지 지시서 3번). 매장별로
+             실제 바뀌는 기존 정보(건물명·대학명)는 그대로 siteTitle에
+             유지하되 보조 줄로 내립니다. -->
+        <p class="site-brand-name">babsim.store</p>
+        <h1 class="site-title" id="siteTitle">모인관(인제대학교)</h1>
+        <p class="site-tagline" id="siteTagline"></p>
+      </div>
+    </div>
+    <!-- 언어 선택 — 기존 7개 버튼(.lang-bar-btn)과 클릭 로직(setLang)은
+         그대로 두고, 항상 펼쳐진 줄 대신 작은 🌐 토글 버튼을 눌렀을 때만
+         드롭다운으로 보이게 표시 방식만 바꿉니다(참고 이미지 지시서
+         3번 — 새 번역/저장 시스템 없음, 기존 것 재사용). -->
+    <div class="lang-compact" id="langCompact">
+      <button type="button" class="lang-compact-btn" id="langCompactBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langBar">
+        <span class="lang-compact-icon" aria-hidden="true">🌐</span>
+        <span class="lang-compact-label" id="langCompactLabel">한국어</span>
+        <span class="lang-compact-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-bar" id="langBar" role="group" aria-label="언어 선택" hidden>
+        <button type="button" class="lang-bar-btn" data-lang="ko" aria-label="한국어">한국어</button>
+        <button type="button" class="lang-bar-btn" data-lang="zh" aria-label="中文">中文</button>
+        <button type="button" class="lang-bar-btn" data-lang="vi" aria-label="Tiếng Việt">Tiếng Việt</button>
+        <button type="button" class="lang-bar-btn" data-lang="en" aria-label="English">English</button>
+        <button type="button" class="lang-bar-btn" data-lang="mn" aria-label="Монгол">Монгол</button>
+        <button type="button" class="lang-bar-btn" data-lang="bn" aria-label="বাংলা">বাংলা</button>
+        <button type="button" class="lang-bar-btn" data-lang="my" aria-label="မြန်မာ">မြန်မာ</button>
+      </div>
     </div>
   </div>
   <nav class="store-tabs" id="storeTabs" aria-label="매장 선택">
-    <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="유학생 커뮤니티">
+    <button type="button" class="store-tab community-tab" id="communityTabBtn" aria-label="밥심 커뮤니티">
       <span class="community-tab-line1"></span><span class="community-tab-line2"></span>
     </button>
     <button type="button" class="store-tab" data-store="bapsim">밥심<br>1층</button>
@@ -122,6 +168,153 @@ def build():
     <button type="button" class="store-tab" data-store="hururuk">후루룩찹찹<br>2층</button>
   </nav>
 </header>
+
+<!-- 홈 화면(js/app.js의 renderHome()이 내용을 채웁니다). 기본으로
+     보이는 화면이며, 매장(밥심 등)을 고르거나 커뮤니티로 이동하면
+     숨겨집니다(main 이하 / #communityRoot와 서로 배타적). -->
+<section class="home-view" id="homeView">
+  <div class="home-hero">
+    <!-- 히어로 이미지 placeholder — images/icon/home-hero.jpg 파일을
+         나중에 올리기만 하면 코드 수정 없이 적용됩니다. 파일이 없는
+         동안은 js/app.js가 자동으로 숨깁니다(임의 이미지 제작 없음). -->
+    <img class="home-hero-img" id="homeHeroImg" src="/images/icon/home-hero.jpg" alt="">
+  </div>
+
+  <!-- MZ LEGO 홈 보드(리뉴얼 1단계) — 서로 다른 크기 블록 10개가 맞물린
+       구조입니다. 순서/이동 대상은 작업지시서 4·15번을 그대로 따르고,
+       모든 블록은 기존 id·data-store·클릭 핸들러를 재사용합니다(새
+       route/새 컬렉션/새 CMS 없음). 배치는 css/style.css의 .lego-* 규칙이
+       담당하고, 여기서는 DOM 순서(읽기 순서)만 그 우선순위를 따릅니다. -->
+  <div class="lego-board" id="homeLegoBoard">
+    <!-- 1. EVENT — 기존 팝업(js/site-popup.js)을 다시 열어 보여주는
+         진입점. 새 이벤트 CMS를 만들지 않습니다. -->
+    <button type="button" class="lego-block lego-event" id="homeLegoEventBtn">
+      <span class="lego-eyebrow">EVENT</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoEventLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+    </button>
+
+    <!-- 2. 천원의 아침밥 — 기존 id/클릭 핸들러 그대로(밥심 내부 아침밥 화면).
+         "1,000원"을 블록을 채우는 큰 숫자로 씁니다(교정 지시서 4번). -->
+    <button type="button" class="lego-block lego-breakfast" id="homeCardBreakfast">
+      <span class="lego-hero-number" id="homeCardBreakfastPrice"></span>
+      <span class="lego-title-line"><span class="lego-title" id="homeCardBreakfastName"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+      <span class="home-service-loc" id="homeCardBreakfastLoc" hidden></span>
+    </button>
+
+    <!-- 3. 방 구하기(js/room-finder.js) — 기존 id 그대로, 클릭하면
+         room-finder.js가 언어 선택 → 입력폼 모달을 띄웁니다. 제목은
+         기존 ROOM_FINDER.title 다국어 데이터를 그대로 재사용합니다
+         (js/app.js renderHome()에서 채움 — 브랜드명이 아닌 일반 UI
+         문구라 언어별로 바뀌어야 합니다, 교정 지시서 14번). -->
+    <button type="button" class="lego-block lego-room" id="roomFinderCardBtn" aria-label="방 구하기 - Find a Room, 找房, Tìm phòng">
+      <span class="lego-eyebrow">ROOM</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoRoomTitle"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+    </button>
+
+    <!-- 4. 밥심 — 기존 data-store 그대로. 매장 브랜드명은 헤더 탭과
+         마찬가지로 항상 한국어 고정입니다(기존 정책, 새 번역 없음). -->
+    <button type="button" class="home-service-card lego-block lego-bapsim" data-store="bapsim">
+      <span class="lego-title-line"><span class="lego-title">밥심</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+      <span class="home-service-loc" id="homeCardBapsimLoc" hidden></span>
+    </button>
+
+    <!-- 5. 후루룩찹찹 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-hururuk" data-store="hururuk">
+      <span class="lego-eyebrow">NOODLE · RICE</span>
+      <span class="lego-title-line"><span class="lego-title">후루룩찹찹</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+      <span class="home-service-loc" id="homeCardHururukLoc" hidden></span>
+    </button>
+
+    <!-- 6. 만권화밥 — 기존 data-store 그대로. -->
+    <button type="button" class="home-service-card lego-block lego-mangwon" data-store="mangwon">
+      <span class="lego-title-line"><span class="lego-title">만권화밥</span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+      <span class="home-service-loc" id="homeCardMangwonLoc" hidden></span>
+    </button>
+
+    <!-- 7. 나의 고향 이야기 — 새 게시판 없이 기존 밥심 커뮤니티의
+         hometown 카테고리로 바로 들어갑니다(js/community.js
+         navigateToCategory, 새 route 아님). -->
+    <button type="button" class="lego-block lego-hometown" id="homeLegoHometownBtn">
+      <span class="lego-eyebrow">HOMETOWN</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoHometownLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+    </button>
+
+    <!-- 8. 친구 만들기 — 기존 밥심 커뮤니티의 friends 카테고리로 이동. -->
+    <button type="button" class="lego-block lego-friends" id="homeLegoFriendsBtn">
+      <span class="lego-eyebrow">CONNECT</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoFriendsLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+    </button>
+
+    <!-- 9. 한국어 공부 — 기존 hellokorean.site 연결(id/href/GA 클릭 추적)
+         그대로. 부제/버튼/URL 텍스트는 기존 로직이 계속 채우지만(빈
+         상태로 두면 안 됨), LEGO 보드에서는 보이지 않게만 둡니다. -->
+    <a class="lego-block lego-korean" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
+      <span class="lego-eyebrow">KOREAN</span>
+      <span class="lego-title-line"><span class="lego-title" id="helloKoreanTitle"></span><span class="lego-arrow" aria-hidden="true"> ↗</span></span>
+      <span class="hellokorean-desc" id="helloKoreanDesc" hidden></span>
+      <span class="hellokorean-btn" id="helloKoreanBtn" hidden></span>
+      <span class="hellokorean-url" hidden><span id="helloKoreanUrl">hellokorean.site</span></span>
+    </a>
+
+    <!-- 10. 사장님에게 말하기 — 기존 footer/FAB(#ownerChatBanner/#ownerChatFab)
+         과 똑같은 카카오톡 오픈채팅 주소를 그대로 재사용합니다(새 링크
+         아님). 기존 footer/FAB은 그대로 두고, 홈 보드 안에도 같은
+         진입점을 하나 더 둡니다. -->
+    <a class="lego-block lego-ownerchat" id="homeLegoOwnerChatLink" href="https://open.kakao.com/o/sxJlUwMi" target="_blank" rel="noopener noreferrer">
+      <span class="lego-eyebrow">TALK</span>
+      <span class="lego-title-line"><span class="lego-title" id="homeLegoOwnerChatLabel"></span><span class="lego-arrow" aria-hidden="true"> →</span></span>
+    </a>
+  </div>
+
+  <h2 class="home-section-title" id="homeCommunityLatestTitle"></h2>
+  <div class="home-community-latest" id="homeCommunityLatest"></div>
+</section>
+
+<!-- 하단 내비게이션 — 홈/커뮤니티 두 화면만 빠르게 오갈 수 있게 합니다
+     (이번 단계는 홈 화면 관련 범위라, 우선 홈 화면에서만 보입니다). -->
+<!-- 모바일 UI 개선 8단계: 하단 내비게이션을 홈/검색/글쓰기/알림/MY
+     5개로 정리(천원의 아침밥·유학생 커뮤니티 등 핵심 서비스 5개는
+     메인 홈 카드에서만 접근 — 여기에 넣지 않음). 화면(홈/매장/커뮤니티)
+     과 무관하게 항상 고정 표시됩니다. -->
+<nav class="bottom-nav" id="bottomNav" aria-label="하단 내비게이션">
+  <button type="button" class="bottom-nav-btn" id="bottomNavHomeBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🏠</span>
+    <span class="bottom-nav-label" id="bottomNavHomeLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavSearchBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🔍</span>
+    <span class="bottom-nav-label" id="bottomNavSearchLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn bottom-nav-btn-write" id="bottomNavWriteBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">✏️</span>
+    <span class="bottom-nav-label" id="bottomNavWriteLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavNotifyBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">🔔</span>
+    <span class="bottom-nav-label" id="bottomNavNotifyLabel"></span>
+  </button>
+  <button type="button" class="bottom-nav-btn" id="bottomNavMyBtn">
+    <span class="bottom-nav-icon" aria-hidden="true">👤</span>
+    <span class="bottom-nav-label">MY</span>
+  </button>
+</nav>
+
+<!-- 당일 첫 방문 천원의 아침밥 평가 팝업(모바일 UI 개선 6단계, 평가 UI
+     수정 단계에서 본문 평가 영역을 이 팝업 안으로 이동). 평가 완료 여부
+     확인에는 localStorage만 쓰고 별도 Firebase 조회는 하지 않습니다
+     (js/app.js의 maybeShowBreakfastPopup). 평가 위젯 자체(#baRating 이하)는
+     js/breakfast-rating.js가 기존 로직 그대로 채웁니다 — 새 평가
+     시스템이 아니라 같은 위젯을 화면 본문에서 팝업으로 옮긴 것입니다. -->
+<div class="breakfast-popup-overlay" id="breakfastPopupOverlay" hidden>
+  <div class="breakfast-popup-sheet" role="dialog" aria-modal="true" aria-labelledby="baRatingTitle">
+    <button type="button" class="breakfast-popup-close-btn" id="breakfastPopupCloseBtn"></button>
+    <div class="ba-rating" id="baRating" hidden>
+      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
+      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
+      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
+    </div>
+  </div>
+</div>
 
 <!-- 유학생 커뮤니티(js/community.js가 내용을 채웁니다). /community 경로일
      때만 보이고, 그 외에는 기존 매장 화면(main 이하)이 그대로 보입니다. -->
@@ -136,7 +329,7 @@ def build():
   <button type="button" class="cola-banner-btn" id="colaBannerBtn">쿠폰 보기</button>
 </div>
 
-<main>
+<main hidden>
   <h2 class="store-heading" id="storeHeading">밥심1층</h2>
 
   <div class="bapsim-subtabs" id="bapsimSubtabs" hidden role="group" aria-label="밥심 화면 전환">
@@ -151,11 +344,9 @@ def build():
     <h3 class="ba-title" id="baTitle">천원의 아침밥</h3>
     <p class="ba-price" id="baPriceValue">1,000원</p>
 
-    <div class="ba-rating" id="baRating" hidden>
-      <h4 class="ba-rating-title" id="baRatingTitle"></h4>
-      <div class="ba-rating-options" id="baRatingOptions" role="group"></div>
-      <p class="ba-rating-message" id="baRatingMessage" aria-live="polite" hidden></p>
-    </div>
+    <!-- 평가 위젯은 더 이상 이 화면 본문에 표시하지 않습니다(평가 UI
+         수정 단계) — 당일 첫 방문 팝업(#breakfastPopupOverlay)에서만
+         보여줍니다. -->
 
     <div class="ba-meal-cards">
       <div class="ba-meal-card ba-meal-card-today">
@@ -194,15 +385,6 @@ def build():
 
   <p class="fallback-msg" id="fallbackMsg" hidden></p>
 </main>
-
-<section class="hellokorean-card">
-  <a class="hellokorean-link" id="helloKoreanLink" href="https://hellokorean.site/?utm_source=babsim.store&utm_medium=website&utm_campaign=korean_learning" target="_blank" rel="noopener noreferrer" aria-label="hellokorean.site 새 창에서 열기">
-    <h3 class="hellokorean-title" id="helloKoreanTitle">무료 한국어 공부</h3>
-    <p class="hellokorean-desc" id="helloKoreanDesc">한국어를 쉽고 재미있게 배워보세요</p>
-    <span class="hellokorean-btn" id="helloKoreanBtn">무료로 시작하기 ↗</span>
-    <span class="hellokorean-url"><span id="helloKoreanUrl">hellokorean.site</span> <span aria-hidden="true">↗</span></span>
-  </a>
-</section>
 
 <footer class="owner-chat-banner" id="ownerChatBanner">
   <h3 class="owner-chat-title" id="ownerChatTitle">사장님께 말해요</h3>
@@ -332,6 +514,21 @@ def build():
 """ + community + """
 </script>
 <script>
+""" + site_popup + """
+</script>
+<script>
+""" + hometown_popup + """
+</script>
+<script>
+""" + site_update + """
+</script>
+<script>
+""" + menu_likes + """
+</script>
+<script>
+""" + room_finder + """
+</script>
+<script>
 """ + app + """
 </script>
 </body>
@@ -352,8 +549,12 @@ def build_admin():
     admin_css = read("css/admin.css")
     firebase_config = read("js/firebase-config.js")
     community_translations = read("js/community-translations.js")
+    menu_data = read("js/menu-data.js")
     admin_js = read("js/admin.js")
     admin_community = read("js/admin-community.js")
+    admin_popup = read("js/admin-popup.js")
+    admin_menu = read("js/admin-menu.js")
+    admin_room_inquiry = read("js/admin-room-inquiry.js")
 
     html = """<!DOCTYPE html>
 <html lang="ko">
@@ -394,6 +595,9 @@ def build_admin():
       <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
       <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
+      <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="roomInquiry">방 구하기 문의</button>
     </nav>
   </header>
 
@@ -741,6 +945,130 @@ def build_admin():
         <div id="commAdminTranslationsBody"></div>
       </div>
     </section>
+
+    <!-- ================= 팝업 관리 ================= -->
+    <section class="admin-page" id="pagePopup" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">팝업을 등록·수정·삭제하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이 단계는 팝업을
+          등록해 두는 화면까지만이며, 학생 화면에 실제로 팝업을 띄우는 기능은 다음 단계에서 연결합니다.</p>
+      </div>
+
+      <div class="admin-card">
+        <h2 id="popupFormTitle">팝업 등록</h2>
+        <form class="weekly-auth-box" id="popupForm" style="max-width:420px;">
+          <label for="popupTitleInput">팝업 제목</label>
+          <input type="text" id="popupTitleInput" maxlength="60">
+
+          <label for="popupImageInput">팝업 이미지</label>
+          <div class="image-upload-box">
+            <div class="image-upload-row">
+              <input type="file" id="popupImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+            </div>
+            <p class="image-upload-caption">권장 800×1000px · 500KB 이하 · WebP/JPG 권장</p>
+            <div class="image-preview-wrap" id="popupImagePreviewWrap" hidden>
+              <img id="popupImagePreviewImg" alt="팝업 이미지 미리보기">
+            </div>
+            <p class="form-error" id="popupImageError"></p>
+          </div>
+
+          <label for="popupLinkInput">링크 URL(선택)</label>
+          <input type="url" id="popupLinkInput" placeholder="https://...">
+
+          <label class="week-open-toggle"><input type="checkbox" id="popupActiveInput" checked> 사용함(ON)</label>
+
+          <label for="popupStartInput">시작일시(선택)</label>
+          <input type="datetime-local" id="popupStartInput">
+
+          <label for="popupEndInput">종료일시(선택)</label>
+          <input type="datetime-local" id="popupEndInput">
+
+          <button type="submit" id="popupSaveBtn">등록</button>
+          <button type="button" id="popupCancelEditBtn" hidden>새로 등록으로 취소</button>
+        </form>
+        <p class="publish-status" id="popupFormStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>등록된 팝업</h2>
+        <div class="table-scroll" id="popupListBody"></div>
+      </div>
+    </section>
+
+    <section class="admin-page" id="pageMenu" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">메뉴를 등록·수정·삭제하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이 단계는 매장 메뉴를
+          등록해 두는 화면까지만이며, 학생 화면 반영은 다음 단계에서 연결합니다.</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>매장 선택</h2>
+        <nav class="admin-nav" id="menuStoreNav">
+          <button type="button" class="admin-nav-btn active" data-store="hururuk">후루룩찹찹</button>
+          <button type="button" class="admin-nav-btn" data-store="mangwon">만권화밥</button>
+          <button type="button" class="admin-nav-btn" data-store="bapsim">밥심</button>
+        </nav>
+      </div>
+
+      <div class="admin-card">
+        <h2 id="menuFormTitle">새 메뉴 등록</h2>
+        <form class="weekly-auth-box" id="menuForm" style="max-width:420px;">
+          <label for="menuNameInput">메뉴명</label>
+          <input type="text" id="menuNameInput" maxlength="60">
+
+          <label for="menuDescriptionInput">메뉴 설명(선택)</label>
+          <textarea id="menuDescriptionInput" rows="3" maxlength="200"></textarea>
+
+          <label for="menuPriceInput">가격(원)</label>
+          <input type="number" id="menuPriceInput" min="0" step="100">
+
+          <label for="menuImageInput">메뉴 이미지</label>
+          <div class="image-upload-box">
+            <div class="image-upload-row">
+              <input type="file" id="menuImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+            </div>
+            <p class="image-upload-caption">권장 정사각형 · 500KB 이하 · WebP/JPG 권장</p>
+            <div class="image-preview-wrap" id="menuImagePreviewWrap" hidden>
+              <img id="menuImagePreviewImg" alt="메뉴 이미지 미리보기">
+            </div>
+            <p class="form-error" id="menuImageError"></p>
+          </div>
+
+          <button type="submit" id="menuSaveBtn">등록</button>
+          <button type="button" id="menuCancelEditBtn" hidden>새로 등록으로 취소</button>
+        </form>
+        <p class="publish-status" id="menuFormStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>등록된 메뉴</h2>
+        <div class="table-scroll" id="menuListBody"></div>
+      </div>
+    </section>
+
+    <!-- ================= 방 구하기 문의 ================= -->
+    <section class="admin-page" id="pageRoomInquiry" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">문자 수신번호를 저장하거나 문의 상태를 바꾸려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다).</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>문자 수신번호</h2>
+        <form class="weekly-auth-box" id="roomInquiryPhoneForm" style="max-width:320px;">
+          <label for="roomInquiryPhoneInput">방 구하기 문의를 받을 번호</label>
+          <input type="tel" id="roomInquiryPhoneInput" placeholder="010-1234-5678">
+          <button type="submit" id="roomInquiryPhoneSaveBtn">저장</button>
+        </form>
+        <p class="publish-status" id="roomInquiryPhoneStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>문의 목록</h2>
+        <div class="table-scroll" id="roomInquiryListBody"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -755,10 +1083,22 @@ def build_admin():
 """ + community_translations + """
 </script>
 <script>
+""" + menu_data + """
+</script>
+<script>
 """ + admin_js + """
 </script>
 <script>
 """ + admin_community + """
+</script>
+<script>
+""" + admin_popup + """
+</script>
+<script>
+""" + admin_menu + """
+</script>
+<script>
+""" + admin_room_inquiry + """
 </script>
 </body>
 </html>
@@ -770,6 +1110,17 @@ def build_admin():
     print("admin.html 갱신 완료:", len(html), "바이트")
 
 
+def write_version_file():
+    # 새 버전 자동 업데이트(js/site-update.js)용 정적 파일 — DB/API 없이
+    # 빌드 시각만 담아 저장소 루트에 그대로 배포합니다.
+    version = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    path = os.path.join(BASE, "version.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"version": version}, f)
+    print("version.json 갱신 완료:", version)
+
+
 if __name__ == "__main__":
     build()
     build_admin()
+    write_version_file()

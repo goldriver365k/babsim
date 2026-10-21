@@ -290,11 +290,34 @@ table.results-table {
 
 .results-table td.menu-cell { text-align: left; white-space: normal; max-width: 220px; overflow-wrap: anywhere; }
 
+.results-table td.desc-cell {
+  text-align: left;
+  white-space: normal;
+  max-width: 180px;
+  overflow-wrap: anywhere;
+  color: var(--text-mid);
+}
+
+.results-table td.desc-cell .desc-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .results-table tbody tr { cursor: pointer; }
 .results-table tbody tr:hover { background: #f4f7fd; }
 .results-table tbody tr.selected { background: #eaf1fc; }
+/* 방 구하기 문의 — "신규" 문의를 목록에서 쉽게 구분(굵은 글씨만, 새
+   애니메이션/라이브러리 없음). */
+.results-table tbody tr.room-inquiry-new { font-weight: 700; }
+.results-table tbody tr.room-inquiry-new.selected { background: #eaf1fc; }
 
 .empty-note { color: var(--text-mid); font-size: 13px; padding: 10px 2px; }
+
+/* 커뮤니티 게시글 관리 — 첨부 사진 작은 썸네일(2026-09 "커뮤니티 이미지
+   업로드" 지시서 17번). 클릭하면 원본 URL을 새 탭으로 엽니다. */
+.admin-post-photo-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-gray); }
 
 /* ---- 최근 7일 평균평점 추이 ---- */
 
@@ -333,12 +356,18 @@ table.results-table {
   max-width: 360px;
 }
 
-.weekly-auth-box input {
+.weekly-auth-box input,
+.weekly-auth-box textarea {
   min-height: 42px;
   padding: 8px 12px;
   border: 1px solid var(--border-gray);
   border-radius: var(--radius-sm);
   font-size: 14px;
+  font-family: inherit;
+}
+
+.weekly-auth-box textarea {
+  resize: vertical;
 }
 
 .weekly-auth-box button {
@@ -409,7 +438,10 @@ table.results-table {
 }
 
 @media (min-width: 900px) {
-  .week-day-grid { grid-template-columns: repeat(5, 1fr); }
+  /* 2026-10-15 지시 — 요일 카드가 5개(월~금)에서 7개(월~일)로 늘어나
+     고정 5열로는 일·토요일 카드가 밀려나므로, 카드 폭(최소 200px)만
+     보장하고 화면 폭에 맞게 자동으로 줄 수를 늘리도록 바꿉니다. */
+  .week-day-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 }
 
 .week-day-card {
@@ -867,7 +899,11 @@ table.results-table {
       <button type="button" class="admin-nav-btn" data-page="language">언어 통계</button>
       <button type="button" class="admin-nav-btn" data-page="hellokorean">한국어 학습</button>
       <button type="button" class="admin-nav-btn" data-page="weeklymenu">주간메뉴 관리</button>
-      <button type="button" class="admin-nav-btn" data-page="community">커뮤니티</button>
+      <button type="button" class="admin-nav-btn" data-page="community">속닥속닥 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="popup">팝업 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="menu">메뉴 관리</button>
+      <button type="button" class="admin-nav-btn" data-page="roomInquiry">방 구하기 문의</button>
+      <button type="button" class="admin-nav-btn" data-page="weekendSurvey">주말·공휴일 설문</button>
     </nav>
   </header>
 
@@ -1132,10 +1168,11 @@ table.results-table {
 
         <div class="admin-card">
           <h2>방식 1 · 이미지로 자동 인식</h2>
-          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB) 이미지 분석이 안 되더라도 방식 2로 바로 입력해 게시할 수 있습니다.</p>
+          <p class="image-upload-caption">주간메뉴표 스크린샷을 올리면 월~금 날짜와 일반식·간편식 메뉴를 자동으로 읽어 아래 표에 채워줍니다. 결과는 게시 전에 반드시 확인·수정할 수 있습니다. (jpg, jpeg, png, webp / 최대 10MB, 이미지를 복사한 뒤 [붙여넣기] 버튼을 누르거나 이 화면에서 Ctrl+V로 바로 붙여넣기도 가능합니다) 이미지 분석이 안 되더라도 방식 2로 바로 입력해 게시할 수 있습니다.</p>
           <div class="image-upload-box">
             <div class="image-upload-row">
               <input type="file" id="weekImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+              <button type="button" class="image-upload-btn" id="weekPasteBtn">붙여넣기</button>
               <button type="button" class="image-upload-btn" id="weekAnalyzeBtn">이미지 분석하기</button>
             </div>
             <div class="image-preview-wrap" id="weekImagePreviewWrap" hidden>
@@ -1184,6 +1221,7 @@ table.results-table {
         <nav class="filter-bar" id="commAdminSubNav">
           <button type="button" class="filter-btn active" id="commAdminTabStats">통계</button>
           <button type="button" class="filter-btn" id="commAdminTabPosts">게시글 관리</button>
+          <button type="button" class="filter-btn" id="commAdminTabReports">신고·삭제 요청</button>
           <button type="button" class="filter-btn" id="commAdminTabUsers">회원관리</button>
           <button type="button" class="filter-btn" id="commAdminTabTranslations">번역관리</button>
         </nav>
@@ -1205,6 +1243,13 @@ table.results-table {
         <div class="table-scroll" id="commAdminPostsBody"></div>
       </div>
 
+      <div class="admin-card" id="commAdminPageReports" hidden>
+        <h2>신고·삭제 요청 관리</h2>
+        <p class="empty-note" style="padding:0 0 10px;">"게시글 숨김"/"댓글 숨김" 버튼은 신고된 대상을 바로 숨기고
+          처리 상태를 "처리 완료"로 바꿉니다. 게시글 전체 삭제는 위 "게시글 관리" 탭에서 할 수 있습니다.</p>
+        <div class="table-scroll" id="commAdminReportsBody"></div>
+      </div>
+
       <div class="admin-card" id="commAdminPageUsers" hidden>
         <h2>회원관리</h2>
         <div class="table-scroll" id="commAdminUsersBody"></div>
@@ -1215,6 +1260,198 @@ table.results-table {
         <div id="commAdminTranslationsBody"></div>
       </div>
     </section>
+
+    <!-- ================= 팝업 관리 ================= -->
+    <section class="admin-page" id="pagePopup" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">팝업을 등록·수정·삭제하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이 단계는 팝업을
+          등록해 두는 화면까지만이며, 학생 화면에 실제로 팝업을 띄우는 기능은 다음 단계에서 연결합니다.</p>
+      </div>
+
+      <div class="admin-card">
+        <h2 id="popupFormTitle">팝업 등록</h2>
+        <form class="weekly-auth-box" id="popupForm" style="max-width:420px;">
+          <label for="popupTitleInput">팝업 제목</label>
+          <input type="text" id="popupTitleInput" maxlength="60">
+
+          <label for="popupImageInput">팝업 이미지</label>
+          <div class="image-upload-box">
+            <div class="image-upload-row">
+              <input type="file" id="popupImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+            </div>
+            <p class="image-upload-caption">권장 800×1000px · 500KB 이하 · WebP/JPG 권장</p>
+            <div class="image-preview-wrap" id="popupImagePreviewWrap" hidden>
+              <img id="popupImagePreviewImg" alt="팝업 이미지 미리보기">
+            </div>
+            <p class="form-error" id="popupImageError"></p>
+          </div>
+
+          <label for="popupLinkInput">링크 URL(선택)</label>
+          <input type="url" id="popupLinkInput" placeholder="https://...">
+
+          <label class="week-open-toggle"><input type="checkbox" id="popupActiveInput" checked> 사용함(ON)</label>
+
+          <label for="popupStartInput">시작일시(선택)</label>
+          <input type="datetime-local" id="popupStartInput">
+
+          <label for="popupEndInput">종료일시(선택)</label>
+          <input type="datetime-local" id="popupEndInput">
+
+          <button type="submit" id="popupSaveBtn">등록</button>
+          <button type="button" id="popupCancelEditBtn" hidden>새로 등록으로 취소</button>
+        </form>
+        <p class="publish-status" id="popupFormStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>등록된 팝업</h2>
+        <div class="table-scroll" id="popupListBody"></div>
+      </div>
+    </section>
+
+    <section class="admin-page" id="pageMenu" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">메뉴를 등록·수정·삭제하려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다). 이 단계는 매장 메뉴를
+          등록해 두는 화면까지만이며, 학생 화면 반영은 다음 단계에서 연결합니다.</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>매장 선택</h2>
+        <nav class="admin-nav" id="menuStoreNav">
+          <button type="button" class="admin-nav-btn active" data-store="hururuk">후루룩찹찹</button>
+          <button type="button" class="admin-nav-btn" data-store="mangwon">만권화밥</button>
+          <button type="button" class="admin-nav-btn" data-store="bapsim">밥심</button>
+        </nav>
+      </div>
+
+      <div class="admin-card">
+        <h2 id="menuFormTitle">새 메뉴 등록</h2>
+        <form class="weekly-auth-box" id="menuForm" style="max-width:420px;">
+          <label for="menuNameInput">메뉴명</label>
+          <input type="text" id="menuNameInput" maxlength="60">
+
+          <label for="menuDescriptionInput">메뉴 설명(선택)</label>
+          <textarea id="menuDescriptionInput" rows="3" maxlength="200"></textarea>
+
+          <label for="menuPriceInput">가격(원)</label>
+          <input type="number" id="menuPriceInput" min="0" step="100">
+
+          <label for="menuImageInput">메뉴 이미지</label>
+          <div class="image-upload-box">
+            <div class="image-upload-row">
+              <input type="file" id="menuImageInput" accept="image/jpeg,image/jpg,image/png,image/webp">
+            </div>
+            <p class="image-upload-caption">권장 정사각형 · 500KB 이하 · WebP/JPG 권장</p>
+            <div class="image-preview-wrap" id="menuImagePreviewWrap" hidden>
+              <img id="menuImagePreviewImg" alt="메뉴 이미지 미리보기">
+            </div>
+            <p class="form-error" id="menuImageError"></p>
+          </div>
+
+          <button type="submit" id="menuSaveBtn">등록</button>
+          <button type="button" id="menuCancelEditBtn" hidden>새로 등록으로 취소</button>
+        </form>
+        <p class="publish-status" id="menuFormStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>등록된 메뉴</h2>
+        <div class="table-scroll" id="menuListBody"></div>
+      </div>
+    </section>
+
+    <!-- ================= 방 구하기 문의 ================= -->
+    <section class="admin-page" id="pageRoomInquiry" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">문자 수신번호를 저장하거나 문의 상태를 바꾸려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다).</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>문자 수신번호</h2>
+        <form class="weekly-auth-box" id="roomInquiryPhoneForm" style="max-width:320px;">
+          <label for="roomInquiryPhoneInput">방 구하기 문의를 받을 번호</label>
+          <input type="tel" id="roomInquiryPhoneInput" placeholder="010-1234-5678">
+          <button type="submit" id="roomInquiryPhoneSaveBtn">저장</button>
+        </form>
+        <p class="publish-status" id="roomInquiryPhoneStatus" hidden></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>문의 목록</h2>
+        <p class="empty-note" style="padding:0 0 10px;">행을 클릭하면 아래에 상세 내용이 표시됩니다.</p>
+        <div class="table-scroll" id="roomInquiryListBody"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>문의 상세보기</h2>
+        <div id="roomInquiryDetailBody"><p class="empty-note">문의를 선택해주세요.</p></div>
+      </div>
+    </section>
+
+    <section class="admin-page" id="pageWeekendSurvey" hidden>
+      <div class="admin-card">
+        <p class="empty-note" style="padding:0 0 10px;">통계를 보려면 먼저 "주간메뉴 관리" 탭에서
+          관리자 계정으로 로그인해야 합니다(같은 로그인을 그대로 씁니다).</p>
+      </div>
+
+      <div class="admin-card">
+        <h2>총 참여 인원</h2>
+        <p class="weekend-survey-stat-row" id="weekendSurveyTotalCount">0명</p>
+        <label for="weekendSurveyLangFilter">언어 필터</label>
+        <select id="weekendSurveyLangFilter">
+          <option value="all">전체</option>
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="bn">বাংলা</option>
+        </select>
+        <!-- 결과 취합 다운로드(2026-09-30 지시서) — 현재 화면 통계와 같은
+             집계를 CSV 한 장으로 내려받습니다(새 라이브러리 없음). 언어
+             필터를 바꾼 뒤 누르면 그 필터 기준으로 다시 취합됩니다. -->
+        <button type="button" class="filter-apply-btn" id="weekendSurveyExportBtn" style="margin-top:10px;">결과 취합 다운로드(CSV)</button>
+      </div>
+
+      <div class="admin-card">
+        <h2>선택 언어 통계</h2>
+        <div id="weekendSurveyLangStats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 1 — 한국인 학생 / 유학생</h2>
+        <div id="weekendSurveyQ1Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 2 — 생활 형태</h2>
+        <div id="weekendSurveyQ2Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 3 — 희망 운영시간</h2>
+        <div id="weekendSurveyQ3Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 4 — 메뉴 구성</h2>
+        <div id="weekendSurveyQ4Stats"></div>
+        <h3>기타 의견</h3>
+        <div id="weekendSurveyQ4Other"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>질문 5 — 이용 의향</h2>
+        <div id="weekendSurveyQ5Stats"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>건의사항</h2>
+        <div id="weekendSurveySuggestions"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -1222,8 +1459,7 @@ table.results-table {
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    Firebase 프로젝트 연결 설정
    - babsim-46284 프로젝트 값으로 연결되어 있습니다 (2026-09-09 연동 완료).
    - Firestore(DB)는 학생 화면(천원의 아침밥 평가, 언어 통계, 주간메뉴)과
@@ -1282,6 +1518,14 @@ table.results-table {
             allow write: if request.auth != null;   // 관리자 로그인 필요
           }
 
+          // 홈 팝업(관리자 등록, 팝업 기능 1단계) — "주간메뉴 관리"와 같은
+          // 관리자 로그인을 그대로 재사용합니다. 학생 화면에 실제로
+          // 띄우는 기능은 다음 단계에서 이 컬렉션을 읽어 연결합니다.
+          match /sitePopups/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
+
           // 메뉴 번역 사전(문서 ID = 한글 메뉴명). 같은 메뉴를 매주 다시
           // 번역하지 않기 위한 캐시입니다. parse-weekly-menu 함수가 읽고,
           // 관리자 게시 시 클라이언트가 새로 번역된 항목만 씁니다.
@@ -1323,9 +1567,19 @@ table.results-table {
             // Firebase 콘솔에서 문서를 직접 고쳐야만 가능합니다. 이름·국적은
             // Google 로그인으로 가입하더라도(이메일/비밀번호 없이도) 반드시
             // 채워야만 문서가 만들어지도록 서버(규칙)에서도 검사합니다.
+            // 비회원(익명, Firebase Anonymous Auth)은 회원가입 절차 없이
+            // 자동 생성된 nickname(name 필드 재사용)만으로 문서를 만들 수
+            // 있습니다 — request.auth.token.firebase.sign_in_provider는
+            // 서버가 검증한 값이라 클라이언트가 위조할 수 없습니다.
             allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user'
-              && request.resource.data.name is string && request.resource.data.name.size() > 0
-              && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0;
+              && (
+                (request.resource.data.name is string && request.resource.data.name.size() > 0
+                  && request.resource.data.nationality is string && request.resource.data.nationality.size() > 0)
+                ||
+                (request.auth.token.firebase.sign_in_provider == 'anonymous'
+                  && request.resource.data.isAnonymous == true
+                  && request.resource.data.name is string && request.resource.data.name.size() > 0)
+              );
             allow update: if (isSignedIn() && request.auth.uid == uid
                 && request.resource.data.role == resource.data.role) // 본인은 role을 못 바꿈
               || isAdmin();
@@ -1391,6 +1645,13 @@ table.results-table {
           // 초기화됩니다(별도 초기화 스케줄 불필요).
           function rlPrev(field) { return resource != null && field in resource.data ? resource.data[field] : 0; }
           function rlNext(field) { return field in request.resource.data ? request.resource.data[field] : 0; }
+          // 짧은 시간 반복 글쓰기/댓글 도배 방지(2026-09-12 6단계 지시서) —
+          // 새 컬렉션·서비스 없이 이 문서에 마지막 작성 시각만 더 기록해
+          // 재사용합니다. 그 날의 첫 글/댓글(=이전 시각 없음)은 항상 허용.
+          function tooSoon(field, seconds) {
+            return resource != null && field in resource.data
+              && request.time < resource.data[field] + duration.value(seconds, 's');
+          }
           match /communityRateLimits/{docId} {
             allow read: if isSignedIn() && docId.matches(request.auth.uid + '_.*');
             allow write: if isActiveMember() && docId.matches(request.auth.uid + '_.*')
@@ -1403,11 +1664,13 @@ table.results-table {
               && (
                 (rlNext('postCount') == rlPrev('postCount') + 1
                   && rlNext('commentCount') == rlPrev('commentCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastPostAt', 10))
                 ||
                 (rlNext('commentCount') == rlPrev('commentCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
-                  && rlNext('translationCount') == rlPrev('translationCount'))
+                  && rlNext('translationCount') == rlPrev('translationCount')
+                  && !tooSoon('lastCommentAt', 5))
                 ||
                 (rlNext('translationCount') == rlPrev('translationCount') + 1
                   && rlNext('postCount') == rlPrev('postCount')
@@ -1464,6 +1727,83 @@ table.results-table {
             allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
             allow update: if false;
           }
+
+          // ---------------- 메뉴 좋아요(js/menu-likes.js, 2026-09-16 추가)
+          // ---------------- 매장 메뉴명 옆 ♡/♥ + 누적 좋아요 숫자. 이후
+          // 밥심 커뮤니티 "인기 메뉴"도 menuLikeCounts를 그대로 재사용합니다.
+
+          // 메뉴별 누적 좋아요 수 — 문서 1개(id="all")에 { 메뉴id: 숫자 }
+          // 형태로 모아 두어, 메뉴가 몇 개든 읽기는 항상 1회입니다. 누구나
+          // 볼 수 있어야 하므로 읽기는 공개, 쓰기(증가/감소)는 로그인
+          // (비회원 포함 Anonymous Auth)한 사용자만 가능합니다.
+          match /menuLikeCounts/{docId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
+
+          // 사용자별 좋아요 표시(문서 id="{uid}_{menuId}") — 같은 사용자가
+          // 같은 메뉴를 중복으로 좋아요 하지 못하도록 존재 여부만 확인합니다.
+          // "내가 좋아요한 메뉴 목록"은 where(uid==내uid) 쿼리 1회로 가져오며,
+          // communitySaves와 같은 이유로 resource == null(아직 없는 문서를
+          // get()하는 경우)도 허용합니다.
+          match /menuLikeUsers/{likeId} {
+            allow read, delete: if isSignedIn() && (resource == null || request.auth.uid == resource.data.uid);
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+          }
+
+          // ---------------- 매장 메뉴관리(js/admin-menu.js, 2026-09-16
+          // 추가) ---------------- 관리자가 후루룩찹찹/만권화밥/밥심 메뉴를
+          // 등록·수정·순서변경·품절·삭제(soft delete)하는 화면용. 문서 id가
+          // 그대로 menuId이며(js/menu-likes.js의 menuLikeCounts/menuLikeUsers
+          // 와 같은 값을 쓸 수 있음), 누구나 볼 수 있어야 하므로 읽기는
+          // 공개, 쓰기는 관리자 로그인(주간메뉴 관리와 같은 계정)만
+          // 가능합니다.
+          match /storeMenus/{menuId} {
+            allow read: if true;
+            allow write: if isSignedIn();
+          }
+
+          // ---------------- 방 구하기(js/room-finder.js, 2026-09-21 추가)
+          // ---------------- 학생이 직접 씀(누구나 생성만 가능). 이름·전화번호
+          // 등 개인정보가 포함되므로 조회/상태변경은 관리자 로그인(주간메뉴
+          // 관리와 같은 계정)만 가능하고, 일반 사용자 화면에는 절대 공개하지
+          // 않습니다.
+          match /roomInquiries/{docId} {
+            allow create: if request.resource.data.name is string && request.resource.data.name.size() > 0
+              && request.resource.data.phone is string && request.resource.data.phone.size() > 0
+              && request.resource.data.status == 'new';
+            allow read, update: if request.auth != null;   // 관리자 로그인 필요
+            allow delete: if false;
+          }
+
+          // ---------------- 1,000원의 아침밥 주말·공휴일 설문조사
+          // (js/weekend-survey.js, 2026-09 추가) ---------------- 로그인/
+          // 회원가입 없이 누구나 딱 1건만 생성 가능(익명 설문 — 개인정보
+          // 없음). 수정/삭제는 아무도 할 수 없고, 조회는 관리자(주간메뉴
+          // 관리와 같은 계정)만 가능합니다(관리자 통계 화면용).
+          match /weekendBreakfastSurveys/{docId} {
+            allow create: if request.resource.data.selectedLanguage in ['ko','en','zh','vi','bn']
+              && request.resource.data.nationalityType in ['korean','international']
+              && request.resource.data.livingType in ['dorm','offcampus','commute']
+              && request.resource.data.preferredTime in ['0730','0800']
+              && request.resource.data.menuPreference in ['simple','simple_korean','other']
+              && request.resource.data.usageIntent in ['often','sometimes','unsure','no']
+              && request.resource.data.surveyVersion is int;
+            allow read: if request.auth != null;   // 관리자 로그인 필요
+            // 테스트/스팸 응답을 관리자가 직접 지울 수 있어야 해서 삭제만
+            // 허용합니다(내용 수정은 불가 — 응답을 조작할 수 없도록).
+            allow update: if false;
+            allow delete: if request.auth != null;   // 관리자 로그인 필요
+          }
+
+          // 사이트 설정(현재는 방 구하기 SMS 수신번호 roomInquiryPhone
+          // 하나뿐 — 문서 1개, id="main"). 학생 화면이 문자 앱을 열 때
+          // 수신번호를 읽어야 하므로 읽기는 공개, 쓰기는 관리자만.
+          match /siteSettings/{docId} {
+            allow read: if true;
+            allow write: if request.auth != null;   // 관리자 로그인 필요
+          }
         }
       }
 
@@ -1481,6 +1821,14 @@ table.results-table {
               && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
+          // 홈 팝업 이미지(관리자 등록, 팝업 기능 1단계) — weeklyMenuImages와
+          // 같은 조건(관리자 로그인 필요, 10MB 이하 이미지)을 그대로 재사용.
+          match /sitePopupImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
           // 커뮤니티 게시글 사진(게시글당 최대 1장, 브라우저에서 WebP로
           // 압축해 200KB 이하로 만든 뒤에만 올립니다 — 비용 최소화
           // 지시서). 500KB로 한도를 두어 클라이언트 압축 로직을 우회해도
@@ -1489,6 +1837,15 @@ table.results-table {
             allow read: if true;
             allow write: if request.auth != null
               && request.resource.size < 500 * 1024
+              && request.resource.contentType.matches('image/.*');
+          }
+          // 매장 메뉴 이미지(관리자 메뉴관리, 2026-09-16 추가) —
+          // weeklyMenuImages/sitePopupImages와 같은 조건(관리자 로그인
+          // 필요, 10MB 이하 이미지)을 그대로 재사용.
+          match /storeMenuImages/{allPaths=**} {
+            allow read: if true;
+            allow write: if request.auth != null
+              && request.resource.size < 10 * 1024 * 1024
               && request.resource.contentType.matches('image/.*');
           }
         }
@@ -1596,10 +1953,8 @@ function getFirebaseStorage() {
     return null;
   }
 }
-
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    유학생 커뮤니티 다국어 문구 (js/community-translations.js)
    - js/translations.js와 같은 패턴({ko,zh,vi,en,mn,bn,my})을 그대로 따릅니다.
    - babsim.store에서 선택한 언어(js/app.js state.lang, localStorage
@@ -1607,32 +1962,211 @@ function getFirebaseStorage() {
    - 2026-09-10: 벵골어(bn)·미얀마어(my) 지원 추가.
    ========================================================================== */
 
-/* 상단 커뮤니티 버튼(두 줄) */
+/* 상단 커뮤니티 버튼(두 줄) — "유학생 커뮤니티" → "밥심 커뮤니티" 명칭 변경
+   (한국학생+유학생+비회원이 함께 쓰는 커뮤니티로 재포지셔닝, 기존 번역
+   구조/키 그대로 재사용, 새 시스템 없음) */
 var COMMUNITY_NAV = {
-  line1: { ko: "유학생", zh: "留学生", vi: "Cộng đồng", en: "International", mn: "Олон улсын", bn: "আন্তর্জাতিক শিক্ষার্থী", my: "နိုင်ငံတကာကျောင်းသား" },
-  line2: { ko: "커뮤니티", zh: "社区", vi: "Du học sinh", en: "Community", mn: "Оюутнууд", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
+  line1: { ko: "밥심", zh: "Babsim", vi: "Babsim", en: "Babsim", mn: "Babsim", bn: "Babsim", my: "Babsim" },
+  line2: { ko: "커뮤니티", zh: "社区", vi: "Cộng đồng", en: "Community", mn: "Нийгэмлэг", bn: "কমিউনিটি", my: "အသိုင်းအဝိုင်း" }
 };
 
 /* 커뮤니티 첫 화면(비회원도 보이는 부분) 제목/소개 — 2026-09-10
    "비회원 노출" 지시서. 상단 COMMUNITY_NAV(두 줄 버튼)와는 별개로,
    목록 화면 안에 큰 제목+짧은 소개를 둡니다. */
+// 2026-10-11 "밥심커뮤니티 중간 페이지 제거" 지시서 — 기존 4개 게시판이
+// 다시 공유 목록 화면(renderList)을 쓰므로, 그 화면 상단 제목을 특정
+// 게시판 이름(속닥속닥)이 아닌 원래의 공용 문구로 되돌립니다. 속닥속닥
+// 전용 화면(renderWhisperList)은 COMMUNITY_CATEGORIES.whisper/
+// COMMUNITY_CATEGORY_DESC.whisper를 직접 씁니다(이미 존재, 새 키 없음).
 var COMMUNITY_HOME = {
-  title: { ko: "유학생 커뮤니티", zh: "留学生社区", vi: "Cộng đồng du học sinh", en: "International Student Community", mn: "Олон улсын оюутнуудын нийгэмлэг", bn: "আন্তর্জাতিক শিক্ষার্থী কমিউনিটি", my: "နိုင်ငံတကာကျောင်းသားများ အသိုင်းအဝိုင်း" },
-  tagline: { ko: "친구를 만나고, 물건을 나누고, 서로 도움을 주고받으세요.", zh: "结交朋友，分享物品，互相帮助。", vi: "Kết bạn, chia sẻ đồ dùng và giúp đỡ lẫn nhau.", en: "Meet friends, share items, and help each other.", mn: "Найзуудтай танилцаж, зүйл хуваалцаж, бие биедээ туслаарай.", bn: "বন্ধু তৈরি করুন, জিনিসপত্র শেয়ার করুন এবং একে অপরকে সাহায্য করুন।", my: "သူငယ်ချင်းတွေ့ဆုံပါ၊ ပစ္စည်းများဝေမျှပါ၊ အချင်းချင်းကူညီကြပါ။" }
+  title: { ko: "밥심 커뮤니티", zh: "Babsim社区", vi: "Cộng đồng Babsim", en: "Babsim Community", mn: "Babsim нийгэмлэг", bn: "Babsim কমিউনিটি", my: "Babsim အသိုင်းအဝိုင်း" },
+  tagline: { ko: "한국학생과 유학생이 함께하는 공간", zh: "韩国学生和留学生共同使用的空间", vi: "Không gian dành cho sinh viên Hàn Quốc và du học sinh cùng sử dụng", en: "A space for Korean and international students together", mn: "Солонгос болон гадаад оюутнууд хамтдаа ашигладаг орон зай", bn: "কোরিয়ান ও আন্তর্জাতিক শিক্ষার্থীদের একসাথে ব্যবহারের জায়গা", my: "ကိုရီးယားကျောင်းသားနှင့် နိုင်ငံတကာကျောင်းသားများ အတူတကွသုံးသည့်နေရာ" }
 };
 
-/* 게시판 5개 카테고리 — "생활정보"는 2026-09-10에 "구인·구직"으로
-   교체되었습니다. life는 예전 게시글 표시(관리자 이동 전까지)를 위해
-   번역만 남겨두고 선택 목록(COMMUNITY_CATEGORY_ORDER)에서는 뺐습니다. */
+/* 홈 최상단 바로가기 바(2026-10-09 지시서 5번) — "속닥속닥 | 익명으로
+   자유롭게 이야기하세요 →" 형식. 게시판명(COMMUNITY_HOME.title)은 그대로
+   재사용하고, 뒤에 붙는 짧은 행동 유도 문구만 이 사전에 따로 둡니다. */
+var WHISPER_BAR = {
+  cta: { ko: "익명으로 자유롭게 이야기하세요", zh: "匿名畅所欲言吧", vi: "Hãy thoải mái trò chuyện ẩn danh", en: "Chat freely, anonymously", mn: "Нэргүйгээр чөлөөтэй ярилцаарай", bn: "বেনামে খোলামেলা কথা বলুন", my: "အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောပါ" }
+};
+
+/* 카테고리 4개 개편(2026-09): 사용자에게 보이는 선택 목록은 아래 4개만
+   사용합니다. market/help/free/life는 과거 게시글의 배지·상세 라벨
+   표시를 위해 COMMUNITY_CATEGORIES 자체에는 남겨두지만(카테고리명 변경
+   지시서의 "기존 게시글 열람이 깨지지 않도록"), 선택 목록(아래
+   COMMUNITY_CATEGORY_ORDER)에서는 빠져 있어 목록/글쓰기/필터에는 더
+   이상 나타나지 않습니다 — 기존 게시글 category 값/데이터는 그대로
+   유지되고, 게시글 조회·수정 자체도 그대로 동작합니다. */
 var COMMUNITY_CATEGORIES = {
   friends: { ko: "친구 만들기", zh: "交朋友", vi: "Kết bạn", en: "Make Friends", mn: "Найзтай болох", bn: "বন্ধু তৈরি করুন", my: "သူငယ်ချင်းဖွဲ့ရန်" },
   market: { ko: "중고거래", zh: "二手交易", vi: "Chợ đồ cũ", en: "Marketplace", mn: "Хуучин барааны худалдаа", bn: "পুরোনো পণ্য কেনাবেচা", my: "တစ်ပတ်ရစ်ပစ္စည်း အရောင်းအဝယ်" },
   help: { ko: "도움 요청", zh: "求助", vi: "Yêu cầu trợ giúp", en: "Help Requests", mn: "Тусламж хүсэх", bn: "সাহায্যের অনুরোধ", my: "အကူအညီတောင်းရန်" },
-  together: { ko: "같이 해요", zh: "一起参加", vi: "Cùng tham gia", en: "Let's Meet", mn: "Хамтдаа оролцох", bn: "একসঙ্গে করি", my: "အတူတူလုပ်ကြမယ်" },
-  job: { ko: "구인·구직", zh: "招聘·求职", vi: "Tuyển dụng · Tìm việc", en: "Jobs", mn: "Ажил олголт · Ажил хайх", bn: "চাকরি ও চাকরিপ্রার্থী", my: "အလုပ်ခေါ်ယူခြင်းနှင့် အလုပ်ရှာဖွေခြင်း" },
-  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" }
+  // "속닥속닥"(2026-10-09 밥심커뮤니티 → 단일 익명게시판 전면 개편
+  // 지시서) — COMMUNITY_CATEGORIES/COMMUNITY_CATEGORY_ORDER의 기존 구조를
+  // 그대로 재사용하고 새 카테고리 값 하나(whisper)만 추가합니다. 기존
+  // 글쓰기·목록·상세·댓글·신고 로직(communityPosts/communityComments
+  // 컬렉션, status/reportCount 등 필드)은 전혀 바꾸지 않고 그대로 재사용—
+  // 새 컬렉션·새 데이터 구조 없음. 지시서 4번 표의 공식 번역을 그대로
+  // 사용(직역이 아닌 자연스러운 현지 표현).
+  whisper: { ko: "속닥속닥", zh: "悄悄话", vi: "Thì Thầm", en: "Whisper Whisper", mn: "Шивнээ", bn: "ফিসফিস", my: "တိုးတိုးပြောကြမယ်" },
+  // "김해맛집 추천" → "주말에 가볼 만한 곳"으로 명칭 변경(2026-09 지시서).
+  // category value("together")와 기존 게시글 데이터는 그대로 유지하고
+  // 라벨(7개 언어)만 교체 — 맛집도 주말 나들이 장소의 하나로 포함됨.
+  together: { ko: "주말에 가볼 만한 곳", zh: "周末去处推荐", vi: "Nơi đáng đi vào cuối tuần", en: "Weekend Spots to Visit", mn: "Амралтын өдрүүдэд зочлох газрууд", bn: "সাপ্তাহিক ছুটিতে ঘোরার জায়গা", my: "စနေ၊တနင်္ဂနွေ သွားရောက်လည်ပတ်စရာနေရာများ" },
+  // 신규 카테고리(카테고리 4개 개편 지시서) — value는 프로젝트의 기존
+  // 짧은 영문 키 명명 규칙(friends/market/help/together/job/free)을 따름.
+  // "나의 고향 소개"/"나의 고향 이야기" 등 혼재된 명칭을 "나의 고향
+  // 알리기"로 통일(2026-09 지시서). category value(hometown)와 기존
+  // 게시글 데이터는 그대로 유지하고 라벨(7개 언어)만 교체.
+  hometown: { ko: "나의 고향 알리기", zh: "分享我的家乡", vi: "Giới thiệu quê hương tôi", en: "Share My Hometown", mn: "Төрсөн нутгаа танилцуулах", bn: "আমার নিজ শহর জানাই", my: "ကျွန်ုပ်၏ဇာတိမြို့ မိတ်ဆက်ပါ" },
+  // 홈 화면 리디자인 지시서(구인·구직 → 나의 학교생활 교체 확인 후)에
+  // 따라 라벨을 교체 — 기존 typeSchool("학교생활") 번역을 그대로
+  // 재사용해 새 번역을 만들지 않았습니다.
+  job: { ko: "나의 학교생활", zh: "我的校园生活", vi: "Đời sống học đường của tôi", en: "My Campus Life", mn: "Миний сургуулийн амьдрал", bn: "আমার ক্যাম্পাস জীবন", my: "ကျွန်ုပ်၏ကျောင်းဘဝ" },
+  life: { ko: "생활정보", zh: "生活信息", vi: "Thông tin cuộc sống", en: "Life Information", mn: "Амьдралын мэдээлэл", bn: "জীবনযাত্রার তথ্য", my: "နေထိုင်မှုဆိုင်ရာအချက်အလက်" },
+  free: { ko: "자유게시판", zh: "自由板块", vi: "Bảng tự do", en: "Free Board", mn: "Чөлөөт хэсэг", bn: "মুক্ত বোর্ড", my: "လွတ်လပ်သောဘုတ်" }
 };
-var COMMUNITY_CATEGORY_ORDER = ["friends", "market", "help", "together", "job"];
+// 2026-10-11 "밥심커뮤니티 중간 페이지 제거" 지시서 — 기존 4개 게시판을
+// 다시 선택 목록에 포함합니다(2026-10-09 지시서로 whisper 1개만 남겼던
+// 것을 되돌림). 데이터는 그 사이에도 전혀 지워지지 않았으므로 그대로
+// 다시 보입니다. whisper는 홈 카드에서 전용 화면(renderWhisperList)으로
+// 바로 들어가 이 목록의 탭 UI 대상이 아니지만, 다른 4개 게시판 화면의
+// 탭에는 함께 나타나도 무방해 순서만 맞춰 둡니다.
+var COMMUNITY_CATEGORY_ORDER = ["whisper", "together", "hometown", "job", "friends"];
+
+// 카테고리 블록(목록 화면)에 쓰는 짧은 한 줄 설명.
+var COMMUNITY_CATEGORY_DESC = {
+  // 지시서 4번 안내 문구 — 직역이 아닌 자연스러운 현지 표현.
+  whisper: { ko: "누구나 익명으로 자유롭게 이야기하는 공간", zh: "任何人都能匿名自由畅聊的空间", vi: "Không gian để mọi người thoải mái trò chuyện ẩn danh", en: "A space where anyone can chat freely and anonymously", mn: "Хэн ч нэргүйгээр чөлөөтэй ярилцах орон зай", bn: "যে কেউ বেনামে খোলামেলা কথা বলতে পারার জায়গা", my: "လူတိုင်း အမည်မဖော်ဘဲ လွတ်လပ်စွာ စကားပြောနိုင်တဲ့ နေရာ" },
+  together: { ko: "김해·부산 맛집, 카페, 나들이 장소 추천", zh: "金海·釜山美食、咖啡厅、周边景点推荐", vi: "Gợi ý quán ăn, quán cà phê, địa điểm dạo chơi ở Gimhae · Busan", en: "Gimhae & Busan food, cafes, and weekend spots", mn: "Гимхэ · Бусан хотын хоол, кафе, амралтын газрын зөвлөмж", bn: "গিমহে · বুসানের খাবার, ক্যাফে ও ঘোরার জায়গার সুপারিশ", my: "ဂျင်ဟေး · ပူဆန်၏ အစားအစာ၊ ကော်ဖီဆိုင်နှင့် လည်ပတ်စရာနေရာများ" },
+  // "여러분의 고향을 소개해 주세요."(2026-09 "나의 고향 알리기 정상화"
+  // 지시서 3번) — 구인구직이 아니라 고향 소개 게시판임을 분명히 함.
+  hometown: { ko: "여러분의 고향을 소개해 주세요.", zh: "向大家介绍一下你的家乡吧。", vi: "Hãy giới thiệu quê hương của bạn nhé.", en: "Introduce your hometown to everyone.", mn: "Төрсөн нутгаа танилцуулаарай.", bn: "তোমার নিজ শহরের পরিচয় দাও।", my: "သင့်ဇာတိမြို့ကို မိတ်ဆက်ပေးပါ။" },
+  job: { ko: "캠퍼스에서의 일상과 이야기를 나눠요", zh: "分享校园里的日常与故事", vi: "Chia sẻ cuộc sống và câu chuyện trong khuôn viên trường", en: "Share your everyday campus life and stories", mn: "Кампусын өдөр тутмын амьдрал, түүхээ хуваалцаарай", bn: "ক্যাম্পাস জীবনের গল্প ভাগ করুন", my: "ကျောင်းဘဝနေ့စဉ်အကြောင်းများကို မျှဝေပါ" },
+  friends: { ko: "새로운 친구를 만나요", zh: "结交新朋友", vi: "Kết bạn mới", en: "Meet new friends", mn: "Шинэ найзуудтай уулзацгаая", bn: "নতুন বন্ধু তৈরি করুন", my: "သူငယ်ချင်းအသစ်များနှင့်တွေ့ဆုံပါ" }
+};
+
+/* "커뮤니티에 글 올리면 아침식사 1,000원 무료쿠폰 증정" 행사 배너/팝업
+   (2026-09 다국어 자동번역 지시서 2번, 2026-09-30 "이벤트 바 + 다국어
+   번역 최종 수정 지시문"으로 "커뮤니티 4곳" 표현 삭제 + 자연스러운
+   현지 표현으로 교체) — 4개 게시판 이름은 새로 만들지 않고 위
+   COMMUNITY_CATEGORIES를 그대로 재사용합니다.
+   popupDescLine1/bannerTitle은 직역이 아니라 지시서가 직접 준 자연스러운
+   현지 표현을 그대로 사용합니다(예: 영어는 "Post in all 4 community
+   boards"가 아니라 "Post in the community", 중국어는 "在4个社区板块
+   发帖后"가 아니라 "在社区发帖"처럼 짧고 자연스러운 안내 문구).
+   bannerEyebrow는 이 사이트의 다른 뱃지형 짧은 문구(예: HOMETOWN_POPUP의
+   "NEW MENU", WEEKEND_SURVEY의 영문 배지 등)와 같은 관례로 언어와 무관하게
+   영문 그대로 고정합니다(번역 데이터 자체는 지시서대로 7개 언어 항목을
+   모두 채워 두되, 값은 모두 동일한 영문입니다).
+   getCoupon/joinComplete 2개는 지시서에 번역 대상으로 명시돼 있지만,
+   지금 화면 구조(배너 1개 + 안내 팝업 1개, 별도 쿠폰 발급/참여 추적
+   시스템 없음)에는 자연스럽게 들어갈 자리가 없어 실제로 화면에 쓰지는
+   않습니다 — 번역 데이터만 만들어 두고 완료 보고에 이 판단을 그대로
+   알립니다(지시서의 "UI를 복잡하게 만들지 않는다"/"대규모 리팩터링
+   금지" 원칙에 따른 선택). joinNow("지금 참여하기")는 이번 지시서에서
+   팝업에 반드시 포함하라고 명시해 참여 게시판 목록 위 CTA 문구로
+   추가했습니다. */
+var COMMUNITY_EVENT = {
+  bannerEyebrow: { ko: "BABSIM COMMUNITY EVENT", zh: "BABSIM COMMUNITY EVENT", vi: "BABSIM COMMUNITY EVENT", en: "BABSIM COMMUNITY EVENT", mn: "BABSIM COMMUNITY EVENT", bn: "BABSIM COMMUNITY EVENT", my: "BABSIM COMMUNITY EVENT" },
+  bannerTitle: { ko: "아침식사 1,000원 무료쿠폰 증정", zh: "领取1,000韩元早餐免费券", vi: "Nhận phiếu ăn sáng miễn phí 1.000 won", en: "Get a free ₩1,000 breakfast coupon", mn: "1,000 воны өглөөний хоолны купон аваарай", bn: "১,০০০ ওনের ফ্রি ব্রেকফাস্ট কুপন পান", my: "ဝမ် 1,000 တန် မနက်စာကူပွန် အခမဲ့ရယူပါ" },
+  bannerSub: { ko: "게시글 작성 후 쿠폰을 받아가세요", zh: "发帖后即可领取优惠券", vi: "Viết bài để nhận phiếu giảm giá", en: "Write a post and get your coupon", mn: "Нийтлэл бичээд купон аваарай", bn: "পোস্ট লিখে কুপন সংগ্রহ করুন", my: "ပို့စ်ရေးပြီး ကူပွန်ယူပါ" },
+  popupTitle: { ko: "게시글 작성 후 쿠폰 받기", zh: "发帖后领取优惠券", vi: "Nhận phiếu giảm giá sau khi đăng bài", en: "Get a Coupon After Posting", mn: "Нийтлэл бичсэний дараа купон авах", bn: "পোস্ট লিখে কুপন নিন", my: "ပို့စ်ရေးပြီးနောက် ကူပွန်ရယူရန်" },
+  popupDescLine1: { ko: "커뮤니티에 글 올리면", zh: "在社区发帖", vi: "Đăng bài trong cộng đồng", en: "Post in the community", mn: "Комьюнитид нийтлэл оруулаарай", bn: "কমিউনিটিতে পোস্ট করুন", my: "ကွန်မြူနတီမှာ ပို့စ်တင်ပါ" },
+  popupDesc: { ko: "참여하면 아침식사 1,000원 무료쿠폰을 드립니다", zh: "参与即可获赠早餐1,000韩元免费优惠券", vi: "Tham gia để nhận phiếu giảm giá bữa sáng 1.000 won miễn phí", en: "Take part and we'll give you a free ₩1,000 breakfast coupon", mn: "Оролцвол өглөөний цайны 1,000 воны үнэгүй купон өгнө", bn: "অংশগ্রহণ করলে সকালের নাস্তার ১,০০০ ওন ফ্রি কুপন দেওয়া হবে", my: "ပါဝင်ပါက မနက်စာ ၁,၀၀၀ ဝမ် အခမဲ့ကူပွန်ပေးပါမည်" },
+  boardsLabel: { ko: "참여 게시판", zh: "参与板块", vi: "Bảng tham gia", en: "Boards to join", mn: "Оролцох самбар", bn: "অংশগ্রহণের বোর্ড", my: "ပါဝင်ရမည့်ဘုတ်" },
+  close: { ko: "닫기", zh: "关闭", vi: "Đóng", en: "Close", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" },
+  closeAriaLabel: { ko: "닫기", zh: "关闭", vi: "Đóng", en: "Close", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" },
+  dismissToday: { ko: "오늘 하루 보지 않기", zh: "今天不再显示", vi: "Không hiện lại hôm nay", en: "Don't show again today", mn: "Өнөөдөр дахин бүү харуул", bn: "আজ আর দেখাবেন না", my: "ယနေ့ ထပ်မပြပါနှင့်" },
+  joinNow: { ko: "지금 참여하기", zh: "立即参与", vi: "Tham gia ngay", en: "Join now", mn: "Одоо оролцох", bn: "এখনই অংশগ্রহণ করুন", my: "ယခုပါဝင်ရန်" },
+  getCoupon: { ko: "쿠폰 받기", zh: "领取优惠券", vi: "Nhận phiếu giảm giá", en: "Get coupon", mn: "Купон авах", bn: "কুপন নিন", my: "ကူပွန်ရယူရန်" },
+  joinComplete: { ko: "참여 완료", zh: "参与完成", vi: "Đã hoàn tất tham gia", en: "Participation complete", mn: "Оролцоо дууссан", bn: "অংশগ্রহণ সম্পন্ন", my: "ပါဝင်မှု ပြီးစီးပါပြီ" }
+};
+
+/* ==========================================================================
+   "김해 MZ 추천 카페 10곳" — 밥심커뮤니티 > 김해맛집 추천(together) 카테고리
+   안의 고정 콘텐츠 블록입니다. 새 카테고리/새 Firestore 컬렉션 없이 목록에
+   항상 노출되고, 클릭하면 정적 상세 화면(js/community.js의
+   renderMzCafeDetail)이 렌더링됩니다 — 실제 게시글 문서가 아니므로
+   댓글/수정/삭제 기능은 없습니다.
+   주소는 검색으로 확인된 실제 주소를 씁니다(카페로무드/레베랑스과자점은
+   정확한 지번을 확인하지 못해 "지도 검색으로 확인"으로 안내). 대표메뉴·
+   장점·이동방법은 간단한 안내 문구이며, 정확한 버스 노선 번호는 저장하지
+   않고 "실시간 노선 확인" 버튼(카카오맵)으로 안내합니다.
+   ========================================================================== */
+var MZ_CAFE_POST_TITLE = { ko: "김해 MZ 추천 카페 10곳", zh: "金海MZ推荐咖啡厅10家", vi: "10 quán cà phê được giới trẻ Gimhae yêu thích", en: "10 MZ-Recommended Cafes in Gimhae", mn: "Гимхэйн MZ үеийнхний санал болгосон кафе 10", bn: "গিমহের এমজেড প্রজন্মের প্রিয় ১০টি ক্যাফে", my: "ဂျင်ဟေး MZ မျိုးဆက် နှစ်သက်ရာ ကော်ဖီဆိုင် ၁၀ခု" };
+var MZ_CAFE_INTRO = { ko: "인제대 학생들이 자주 찾는 김해 카페 10곳을 소개합니다.", zh: "为您介绍仁济大学学生常去的金海10家咖啡厅。", vi: "Giới thiệu 10 quán cà phê ở Gimhae được sinh viên ĐH Inje yêu thích.", en: "Introducing 10 Gimhae cafes popular with Inje University students.", mn: "Инже их сургуулийн оюутнууд их зорьдог Гимхэ хотын 10 кафег танилцуулж байна.", bn: "ইনজে বিশ্ববিদ্যালয়ের শিক্ষার্থীদের প্রিয় গিমহের ১০টি ক্যাফে পরিচিতি।", my: "အင်ဂျေတက္ကသိုလ်ကျောင်းသားများ နှစ်သက်ရာ ဂျင်ဟေး ကော်ဖီဆိုင် ၁၀ခုကို မိတ်ဆက်ပါသည်။" };
+var MZ_CAFE_PINNED_LABEL = { ko: "고정", zh: "置顶", vi: "Ghim", en: "Pinned", mn: "Бэхлэгдсэн", bn: "পিন করা", my: "ပင်ထိုးထား" };
+var MZ_CAFE_LIST_META = { ko: "카페 10곳 정보", zh: "10家咖啡厅信息", vi: "Thông tin 10 quán cà phê", en: "Info on 10 cafes", mn: "10 кафегийн мэдээлэл", bn: "১০টি ক্যাফের তথ্য", my: "ကော်ဖီဆိုင် ၁၀ခု၏ အချက်အလက်" };
+
+var MZ_CAFE_FIELD_LABELS = {
+  address: { ko: "주소", zh: "地址", vi: "Địa chỉ", en: "Address", mn: "Хаяг", bn: "ঠিকানা", my: "လိပ်စာ" },
+  menu: { ko: "대표메뉴", zh: "招牌菜单", vi: "Món đặc trưng", en: "Signature Menu", mn: "Онцлох цэс", bn: "সিগনেচার মেনু", my: "အထူးအစားအစာ" },
+  pros: { ko: "장점", zh: "特色", vi: "Điểm nổi bật", en: "Highlights", mn: "Давуу тал", bn: "বিশেষত্ব", my: "အားသာချက်" },
+  fromInje: { ko: "인제대에서 가는 방법", zh: "从仁济大学出发的方法", vi: "Cách đi từ ĐH Inje", en: "How to get there from Inje Univ.", mn: "Инже их сургуулиас хэрхэн явах", bn: "ইনজে বিশ্ববিদ্যালয় থেকে যাওয়ার উপায়", my: "အင်ဂျေတက္ကသိုလ်မှ သွားနည်း" },
+  transit: { ko: "버스·대중교통 이용방법", zh: "公交·大众交通方式", vi: "Cách đi xe buýt/phương tiện công cộng", en: "Bus / Public Transit", mn: "Автобус · нийтийн тээвэр", bn: "বাস · গণপরিবহন", my: "ဘတ်စ်ကား · အများသုံးသယ်ယူပို့ဆောင်ရေး" }
+};
+
+var MZ_CAFE_BUTTONS = {
+  viewOnMap: { ko: "지도에서 보기", zh: "在地图查看", vi: "Xem trên bản đồ", en: "View on Map", mn: "Газрын зураг дээр харах", bn: "ম্যাপে দেখুন", my: "မြေပုံတွင်ကြည့်ရန်" },
+  directionsFromInje: { ko: "인제대에서 길찾기", zh: "从仁济大学导航", vi: "Chỉ đường từ ĐH Inje", en: "Directions from Inje Univ.", mn: "Инже их сургуулиас чиглэл", bn: "ইনজে বিশ্ববিদ্যালয় থেকে দিকনির্দেশ", my: "အင်ဂျေတက္ကသိုလ်မှ လမ်းညွှန်" },
+  liveTransit: { ko: "실시간 노선 확인", zh: "查看实时路线", vi: "Xem lộ trình trực tiếp", en: "Check Live Route", mn: "Бодит цагийн чиглэл шалгах", bn: "লাইভ রুট দেখুন", my: "လက်ရှိလိုင်းစစ်ဆေးရန်" }
+};
+
+// 대표메뉴(10곳 중 겹치는 값은 같은 객체를 재사용)
+var MZ_M1 = { ko: "에스프레소, 드립커피", zh: "意式浓缩, 手冲咖啡", vi: "Espresso, cà phê pour-over", en: "Espresso, drip coffee", mn: "Эспрессо, дринк кофе", bn: "এসপ্রেসো, ড্রিপ কফি", my: "အက်စပရက်စို၊ ဒရစ်ပ်ကော်ဖီ" };
+var MZ_M2 = { ko: "커피, 디저트", zh: "咖啡, 甜点", vi: "Cà phê, bánh ngọt", en: "Coffee, dessert", mn: "Кофе, амттан", bn: "কফি, ডেজার্ট", my: "ကော်ဖီ၊ အချိုပွဲ" };
+var MZ_M3 = { ko: "커피, 베이커리", zh: "咖啡, 烘焙", vi: "Cà phê, bánh", en: "Coffee, bakery", mn: "Кофе, бэйкери", bn: "কফি, বেকারি", my: "ကော်ဖီ၊ ဘေကာရီ" };
+var MZ_M4 = { ko: "케이크, 디저트", zh: "蛋糕, 甜点", vi: "Bánh kem, bánh ngọt", en: "Cake, dessert", mn: "Бялуу, амттан", bn: "কেক, ডেজার্ট", my: "ကိတ်မုန့်၊ အချိုပွဲ" };
+var MZ_M5 = { ko: "브런치, 디저트", zh: "早午餐, 甜点", vi: "Brunch, bánh ngọt", en: "Brunch, dessert", mn: "Бранч, амттан", bn: "ব্রাঞ্চ, ডেজার্ট", my: "ဘရန်ချ်၊ အချိုပွဲ" };
+var MZ_M6 = { ko: "커피, 브런치", zh: "咖啡, 早午餐", vi: "Cà phê, brunch", en: "Coffee, brunch", mn: "Кофе, бранч", bn: "কফি, ব্রাঞ্চ", my: "ကော်ဖီ၊ ဘရန်ချ်" };
+var MZ_M7 = { ko: "커피, 음료", zh: "咖啡, 饮品", vi: "Cà phê, đồ uống", en: "Coffee, drinks", mn: "Кофе, ундаа", bn: "কফি, পানীয়", my: "ကော်ဖီ၊ သောက်စက်" };
+var MZ_M9 = { ko: "드립커피", zh: "手冲咖啡", vi: "Cà phê pour-over", en: "Drip coffee", mn: "Дринк кофе", bn: "ড্রিপ কফি", my: "ဒရစ်ပ်ကော်ဖီ" };
+var MZ_M10 = { ko: "수제 디저트", zh: "手工甜点", vi: "Bánh ngọt handmade", en: "Handmade dessert", mn: "Гар хийцийн амттан", bn: "হাতে তৈরি ডেজার্ট", my: "လက်လုပ်အချိုပွဲ" };
+
+// 장점(카페마다 고유)
+var MZ_P1 = { ko: "이색적인 에스프레소 바", zh: "独特风格的浓缩咖啡吧", vi: "Quầy espresso độc đáo", en: "Unique-concept espresso bar", mn: "Өвөрмөц концепт бүхий эспрессо бар", bn: "অনন্য কনসেপ্টের এসপ্রেসো বার", my: "ထူးခြားသောပုံစံ အက်စပရက်စိုဘား" };
+var MZ_P2 = { ko: "공사장 컨셉의 이색 인테리어", zh: "工地风格的独特装潮", vi: "Nội thất độc đáo phong cách công trường", en: "Construction-site concept interior", mn: "Барилгын талбай сэдэвтэй өвөрмөц дотоод засал", bn: "নির্মাণ সাইট থিমের অনন্য ইন্টেরিয়র", my: "အလုပ်ရုံပုံစံ ထူးခြားသောအတွင်းဆင်ဆောင်" };
+var MZ_P3 = { ko: "유러피안 빈티지 포토존", zh: "欧式复古拍照打卡点", vi: "Góc chụp ảnh vintage châu Âu", en: "European vintage photo spot", mn: "Европ ретро загварын зургийн булан", bn: "ইউরোপীয় ভিনটেজ ফটো স্পট", my: "ဥရောပ ဗင်တိတ်ဇ်ဓာတ်ပုံရိုက်ကွင်း" };
+var MZ_P4 = { ko: "디저트 전문 과자점", zh: "甜点专卖店", vi: "Tiệm bánh chuyên về bánh ngọt", en: "Dessert-specialty bakery", mn: "Амттан мэргэшсэн нарийн боовны газар", bn: "ডেজার্ট স্পেশালিটি বেকারি", my: "အချိုပွဲအထူးပြုမုန့်ဆိုင်" };
+var MZ_P5 = { ko: "인제대 인근 삼계동 브런치 카페", zh: "仁济大学附近三溪洞早午餐咖啡厅", vi: "Quán brunch ở Samgye-dong, gần ĐH Inje", en: "Brunch cafe in Samgye-dong, near Inje Univ.", mn: "Инже их сургуулийн ойролцоох Самгэ-донгийн бранч кафе", bn: "ইনজে বিশ্ববিদ্যালয়ের কাছে সামগে-ডং ব্রাঞ্চ ক্যাফে", my: "အင်ဂျေတက္ကသိုလ်အနီး ဆမ်ဂျေဒေါင်ရှိ ဘရန်ချ်ကော်ဖီဆိုင်" };
+var MZ_P6 = { ko: "국내 최대급 루프탑 카페", zh: "韩国最大规模的屋顶咖啡厅之一", vi: "Một trong những quán cà phê rooftop lớn nhất Hàn Quốc", en: "One of Korea's largest rooftop cafes", mn: "Солонгосын хамгийн том арын ирмэгийн кафенуудын нэг", bn: "কোরিয়ার অন্যতম বৃহত্তম রুফটপ ক্যাফে", my: "ကိုရီးယား၏အကြီးဆုံးအမိုးပေါ်ကော်ဖီဆိုင်များထဲမှတစ်ခု" };
+var MZ_P7 = { ko: "초록빛 식물원 카페", zh: "绿意盎然的植物园咖啡厅", vi: "Quán cà phê vườn thực vật xanh mát", en: "Green botanical-garden cafe", mn: "Ногоон ургамлын цэцэрлэгтэй кафе", bn: "সবুজ বোটানিক্যাল গার্ডেন ক্যাফে", my: "အစိမ်းရင့်ဥယျာဉ်ကော်ဖီဆိုင်" };
+var MZ_P8 = { ko: "식물원을 갖춘 대형 카페", zh: "设有植物园的大型咖啡厅", vi: "Quán cà phê lớn có vườn thực vật", en: "Large cafe with a botanical garden", mn: "Ургамлын цэцэрлэгтэй том хэмжээний кафе", bn: "বোটানিক্যাল গার্ডেনসহ বড় ক্যাফে", my: "ဥယျာဉ်ပါရှိသော ကြီးမားသည့်ကော်ဖီဆိုင်" };
+var MZ_P9 = { ko: "봉리단길 조용한 커피 맛집", zh: "凤里团街安静的咖啡名店", vi: "Quán cà phê ngon, yên tĩnh ở Bongridan-gil", en: "Quiet coffee spot in Bongridan-gil", mn: "Бонридан-гилийн тайван кофе газар", bn: "বংরিদান-গিলের শান্ত কফি স্পট", my: "ဘွန်ရီဒန်လမ်းရှိ တိတ်ဆိတ်သောကော်ဖီဆိုင်" };
+var MZ_P10 = { ko: "봉리단길 수제 디저트 카페", zh: "凤里团街手工甜点咖啡厅", vi: "Quán cà phê bánh ngọt handmade ở Bongridan-gil", en: "Handmade dessert cafe in Bongridan-gil", mn: "Бонридан-гил дэх гар хийцийн амттантай кафе", bn: "বংরিদান-গিলের হাতে তৈরি ডেজার্ট ক্যাফে", my: "ဘွန်ရီဒန်လမ်းရှိ လက်လုပ်အချိုပွဲကော်ဖီဆိုင်" };
+
+// 인제대에서 가는 방법(지역이 같으면 재사용)
+var MZ_WAY_A = { ko: "인제대 → 율하 방면 이동", zh: "仁济大学 → 往律下方向", vi: "ĐH Inje → hướng Yulha", en: "Inje Univ. → toward Yulha", mn: "Инже их сургууль → Юльха чиглэл", bn: "ইনজে বিশ্ববিদ্যালয় → ইউলহা দিকে", my: "အင်ဂျေတက္ကသိုလ် → ယူလဟာဘက်သို့" };
+var MZ_WAY_B = { ko: "인제대 → 인제대역 → 경전철 → 봉황역 → 도보", zh: "仁济大学 → 仁济大站 → 轻轨 → 凤凰站 → 步行", vi: "ĐH Inje → Ga Inje Univ. → tàu điện nhẹ → Ga Bonghwang → đi bộ", en: "Inje Univ. → Inje Univ. Stn. → light rail → Bonghwang Stn. → walk", mn: "Инже их сургууль → Инже станц → хөнгөн метро → Бонхуан станц → явган", bn: "ইনজে বিশ্ববিদ্যালয় → ইনজে স্টেশন → লাইট রেল → বংহোয়াং স্টেশন → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → အင်ဂျေဘူတာ → မြင်းရွန်းရထား → ဘွန်ဟွမ်းဘူတာ → လမ်းလျှောက်" };
+var MZ_WAY_C = { ko: "인제대 → 지도 검색으로 경로 확인", zh: "仁济大学 → 请用地图搜索路线", vi: "ĐH Inje → kiểm tra lộ trình bằng bản đồ", en: "Inje Univ. → check route via map search", mn: "Инже их сургууль → газрын зургаар чиглэл шалгах", bn: "ইনজে বিশ্ববিদ্যালয় → ম্যাপ সার্চে রুট দেখুন", my: "အင်ဂျေတက္ကသိုလ် → မြေပုံရှာဖွေမှုဖြင့်စစ်ဆေးပါ" };
+var MZ_WAY_D = { ko: "인제대 → 삼계동 도보·버스 이동", zh: "仁济大学 → 步行或乘车往三溪洞", vi: "ĐH Inje → đi bộ hoặc xe buýt đến Samgye-dong", en: "Inje Univ. → walk or bus to Samgye-dong", mn: "Инже их сургууль → Самгэ-донг руу алхах/автобус", bn: "ইনজে বিশ্ববিদ্যালয় → হেঁটে/বাসে সামগে-ডং", my: "အင်ဂျေတက္ကသိုလ် → ဆမ်ဂျေဒေါင်သို့ လမ်းလျှောက်/ဘတ်စ်" };
+var MZ_WAY_E = { ko: "인제대 → 인제대역 → 경전철 → 부원역 → 도보", zh: "仁济大学 → 仁济大站 → 轻轨 → 府院站 → 步行", vi: "ĐH Inje → Ga Inje Univ. → tàu điện nhẹ → Ga Buwon → đi bộ", en: "Inje Univ. → Inje Univ. Stn. → light rail → Buwon Stn. → walk", mn: "Инже их сургууль → Инже станц → хөнгөн метро → Буwon станц → явган", bn: "ইনজে বিশ্ববিদ্যালয় → ইনজে স্টেশন → লাইট রেল → বুওন স্টেশন → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → အင်ဂျေဘူတာ → မြင်းရွန်းရထား → ဘူဝမ်းဘူတာ → လမ်းလျှောက်" };
+var MZ_WAY_F = { ko: "인제대 → 대동면 방면 버스·택시 이동", zh: "仁济大学 → 乘公交/出租车往大东面", vi: "ĐH Inje → xe buýt/taxi đến Daedong-myeon", en: "Inje Univ. → bus/taxi to Daedong-myeon", mn: "Инже их сургууль → Даэдонг тосгон руу автобус/такси", bn: "ইনজে বিশ্ববিদ্যালয় → বাস/ট্যাক্সিতে দায়েদোং-মিয়ন", my: "အင်ဂျေတက္ကသိုလ် → ဒေဒွန်းမြိုနယ်သို့ ဘတ်စ်/တက္ကစီ" };
+
+// 버스·대중교통 이용방법("실시간 노선 확인" 버튼이 정확한 최신 정보를 보완)
+var MZ_BUS_A = { ko: "인제대 → 율하 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往律下方向公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Yulha → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Yulha → nearby stop → walk", mn: "Инже их сургууль → Юльха чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → ইউলহা দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ယူလဟာဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_B = { ko: "인제대 → 봉리단길 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往凤里团街公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Bongridan-gil → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Bongridan-gil → nearby stop → walk", mn: "Инже их сургууль → Бонридан-гил чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → বংরিদান-গিল দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ဘွန်ရီဒန်လမ်းဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_C = { ko: "인제대 → 지도 검색으로 노선 확인", zh: "仁济大学 → 请用地图搜索公交路线", vi: "ĐH Inje → kiểm tra tuyến bằng bản đồ", en: "Inje Univ. → check route via map search", mn: "Инже их сургууль → газрын зургаар чиглэл шалгах", bn: "ইনজে বিশ্ববিদ্যালয় → ম্যাপ সার্চে রুট দেখুন", my: "အင်ဂျေတက္ကသိုလ် → မြေပုံရှာဖွေမှုဖြင့်စစ်ဆေးပါ" };
+var MZ_BUS_D = { ko: "인제대 → 삼계동 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往三溪洞公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Samgye-dong → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Samgye-dong → nearby stop → walk", mn: "Инже их сургууль → Самгэ-донг чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → সামগে-ডং দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ဆမ်ဂျေဒေါင်ဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_E = { ko: "인제대 → 내외동 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往内外洞公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Naewoe-dong → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Naewoe-dong → nearby stop → walk", mn: "Инже их сургууль → Наэвэ-донг чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → নেওয়ে-ডং দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → နဲဝဲဒေါင်ဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+var MZ_BUS_F = { ko: "인제대 → 대동면 방면 버스 → 인근 정류장 → 도보", zh: "仁济大学 → 往大东面公交 → 附近站 → 步行", vi: "ĐH Inje → xe buýt hướng Daedong-myeon → trạm gần đó → đi bộ", en: "Inje Univ. → bus toward Daedong-myeon → nearby stop → walk", mn: "Инже их сургууль → Даэдонг чиглэлийн автобус → ойрын буудал → явган", bn: "ইনজে বিশ্ববিদ্যালয় → দায়েদোং-মিয়ন দিকে বাস → কাছের স্টপ → হাঁটা", my: "အင်ဂျေတက္ကသိုလ် → ဒေဒွန်းမြိုနယ်ဘက်ဘတ်စ် → အနီးဆုံမှတ်တိုင် → လမ်းလျှောက်" };
+
+// 실제 검색으로 확인한 주소(2026-09 기준). 카페로무드/레베랑스과자점은
+// 정확한 지번을 확인하지 못해 시 단위로만 표기 — 지도 버튼은 상호명으로
+// 검색되어 정상 동작합니다.
+var MZ_CAFE_LIST = [
+  { name: "쿼크커피바", address: "경남 김해시 율하6로 55, 2층", menu: MZ_M1, pros: MZ_P1, fromInje: MZ_WAY_A, transit: MZ_BUS_A },
+  { name: "플럼버", address: "경남 김해시 김해대로2325번길 44, 1층", menu: MZ_M2, pros: MZ_P2, fromInje: MZ_WAY_B, transit: MZ_BUS_B },
+  { name: "카페로무드", address: "경남 김해시(정확한 주소는 지도에서 확인)", menu: MZ_M3, pros: MZ_P3, fromInje: MZ_WAY_C, transit: MZ_BUS_C },
+  { name: "레베랑스과자점", address: "경남 김해시(정확한 주소는 지도에서 확인)", menu: MZ_M4, pros: MZ_P4, fromInje: MZ_WAY_C, transit: MZ_BUS_C },
+  { name: "애월당", address: "경남 김해시 삼계로205번길 21, 1층", menu: MZ_M5, pros: MZ_P5, fromInje: MZ_WAY_D, transit: MZ_BUS_D },
+  { name: "헤이브", address: "경남 김해시 내외로77번길 12, 17~18층", menu: MZ_M6, pros: MZ_P6, fromInje: MZ_WAY_E, transit: MZ_BUS_E },
+  { name: "파우제앤숨", address: "경남 김해시 대동면 동남로41번길 94", menu: MZ_M7, pros: MZ_P7, fromInje: MZ_WAY_F, transit: MZ_BUS_F },
+  { name: "카페 알베로", address: "경남 김해시 대동면 동남로49번길 93-14", menu: MZ_M2, pros: MZ_P8, fromInje: MZ_WAY_F, transit: MZ_BUS_F },
+  { name: "퓨어오버", address: "경남 김해시 김해대로2301번길 11", menu: MZ_M9, pros: MZ_P9, fromInje: MZ_WAY_B, transit: MZ_BUS_B },
+  { name: "오프하우스", address: "경상남도 김해시 봉황대길 59", menu: MZ_M10, pros: MZ_P10, fromInje: MZ_WAY_B, transit: MZ_BUS_B }
+];
 
 /* 로그인/회원가입/이메일 인증/비밀번호 찾기 */
 var COMMUNITY_AUTH = {
@@ -1666,10 +2200,15 @@ var COMMUNITY_AUTH = {
   orDivider: { ko: "또는", zh: "或", vi: "Hoặc", en: "or", mn: "эсвэл", bn: "অথবা", my: "သို့မဟုတ်" },
   completeProfileTitle: { ko: "추가 정보 입력", zh: "填写更多信息", vi: "Hoàn tất thông tin", en: "Complete Your Profile", mn: "Мэдээллээ бөглөнө үү", bn: "অতিরিক্ত তথ্য প্রদান করুন", my: "နောက်ထပ်အချက်အလက်ဖြည့်ရန်" },
   completeProfileDesc: { ko: "커뮤니티 이용을 위해 몇 가지 정보가 더 필요합니다.", zh: "使用社区还需要填写一些信息。", vi: "Cần thêm một vài thông tin để sử dụng cộng đồng.", en: "A few more details are needed to use the community.", mn: "Нийгэмлэгийг ашиглахын тулд зарим нэмэлт мэдээлэл шаардлагатай.", bn: "কমিউনিটি ব্যবহারের জন্য আরও কিছু তথ্য প্রয়োজন।", my: "အသိုင်းအဝိုင်းကို အသုံးပြုရန် နောက်ထပ်အချက်အလက်အနည်းငယ် လိုအပ်ပါသည်။" },
-  // 비회원이 로그인 필요한 행동(상세보기/글쓰기/댓글/번역/연락/신고/내정보 등)을
-  // 시도했을 때 뜨는 안내창 문구 — 2026-09-10 "회원가입 노출 방식 변경" 지시서.
-  authGateDesc: { ko: "커뮤니티 활동을 하려면 회원가입이 필요합니다.", zh: "参与社区活动需要注册会员。", vi: "Bạn cần đăng ký để tham gia cộng đồng.", en: "Sign up to participate in the community.", mn: "Нийгэмлэгт оролцохын тулд бүртгүүлнэ үү.", bn: "কমিউনিটিতে অংশ নিতে নিবন্ধন করুন।", my: "အသိုင်းအဝိုင်းတွင် ပါဝင်ရန် အကောင့်ဖွင့်ပါ။" },
-  authGateCancel: { ko: "취소", zh: "取消", vi: "Hủy", en: "Cancel", mn: "Цуцлах", bn: "বাতিল করুন", my: "ပယ်ဖျက်ရန်" }
+  // 2026-09 "비회원제 전환" 지시서 — 글쓰기/댓글 등은 이제 회원가입 없이
+  // ensureAuth()의 조용한 익명 로그인만으로 진행됩니다. 이 안내창은
+  // 그 익명 로그인 자체가 실패했을 때(네트워크 등 기술적 오류)만 뜨는
+  // 예외 상황이므로, "가입이 필요합니다" 대신 오류/재시도 안내로 바꿉니다.
+  authGateDesc: { ko: "일시적인 오류로 진행할 수 없습니다. 다시 시도하거나 로그인해 주세요.", zh: "出现临时错误，请重试或登录。", vi: "Có lỗi tạm thời xảy ra. Vui lòng thử lại hoặc đăng nhập.", en: "A temporary error occurred. Please try again or log in.", mn: "Түр зуурын алдаа гарлаа. Дахин оролдох эсвэл нэвтэрнэ үү.", bn: "সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন বা লগইন করুন।", my: "ယာယီအမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ သို့မဟုတ် လော့ဂ်အင်ဝင်ပါ။" },
+  authGateCancel: { ko: "취소", zh: "取消", vi: "Hủy", en: "Cancel", mn: "Цуцлах", bn: "বাতিল করুন", my: "ပယ်ဖျက်ရန်" },
+  signupInviteDesc: { ko: "가입하면 내 활동을 계속 보관할 수 있어요.", zh: "注册后可以持续保存我的活动记录。", vi: "Đăng ký để lưu lại hoạt động của bạn.", en: "Sign up to keep your activity saved.", mn: "Бүртгүүлбэл миний үйл ажиллагааг хадгалж болно.", bn: "নিবন্ধন করলে আপনার কার্যকলাপ সংরক্ষিত থাকবে।", my: "အကောင့်ဖွင့်ပါက သင့်လှုပ်ရှားမှုများကို ဆက်လက်သိမ်းဆည်းနိုင်ပါသည်။" },
+  signupInviteAccept: { ko: "가입하기", zh: "去注册", vi: "Đăng ký", en: "Sign Up", mn: "Бүртгүүлэх", bn: "নিবন্ধন করুন", my: "အကောင့်ဖွင့်ရန်" },
+  signupInviteLater: { ko: "나중에", zh: "以后再说", vi: "Để sau", en: "Later", mn: "Дараа", bn: "পরে", my: "နောက်မှ" }
 };
 
 /* 회원 메뉴/내 정보 */
@@ -1678,6 +2217,7 @@ var COMMUNITY_MY = {
   myPosts: { ko: "내가 작성한 글", zh: "我写的帖子", vi: "Bài viết của tôi", en: "My Posts", mn: "Миний бичсэн зурвас", bn: "আমার লেখা পোস্ট", my: "ကျွန်ုပ်ရေးသားထားသောပို့စ်များ" },
   myComments: { ko: "내가 작성한 댓글", zh: "我写的评论", vi: "Bình luận của tôi", en: "My Comments", mn: "Миний сэтгэгдэл", bn: "আমার মন্তব্য", my: "ကျွန်ုပ်ရေးသားထားသောမှတ်ချက်များ" },
   savedPosts: { ko: "저장한 글", zh: "已保存的帖子", vi: "Bài đã lưu", en: "Saved Posts", mn: "Хадгалсан зурвас", bn: "সংরক্ষিত পোস্ট", my: "သိမ်းဆည်းထားသောပို့စ်များ" },
+  editNickname: { ko: "닉네임 수정(게시글·댓글에 표시)", zh: "修改昵称（显示在帖子·评论中）", vi: "Sửa biệt danh (hiển thị trên bài viết·bình luận)", en: "Edit Nickname (shown on posts/comments)", mn: "Хоч засах (нийтлэл·сэтгэгдэлд харагдана)", bn: "নিকনেম সম্পাদনা (পোস্ট·মন্তব্যে দেখানো হয়)", my: "အမည်ဝှက်ပြင်ဆင်ရန် (ပို့စ်၊ မှတ်ချက်တွင်ပြမည်)" },
   editName: { ko: "이름 수정", zh: "修改姓名", vi: "Sửa họ tên", en: "Edit Name", mn: "Нэр засах", bn: "নাম সম্পাদনা", my: "အမည်ပြင်ဆင်ရန်" },
   editNationality: { ko: "국적 수정", zh: "修改国籍", vi: "Sửa quốc tịch", en: "Edit Nationality", mn: "Иргэншил засах", bn: "জাতীয়তা সম্পাদনা", my: "နိုင်ငံသားပြင်ဆင်ရန်" },
   editLang: { ko: "선택 언어 변경", zh: "更改语言", vi: "Đổi ngôn ngữ", en: "Change Language", mn: "Хэл солих", bn: "ভাষা পরিবর্তন", my: "ဘာသာစကားပြောင်းရန်" },
@@ -1690,6 +2230,10 @@ var COMMUNITY_MY = {
 /* 게시글/댓글 작성, 상세, 목록, 검색 */
 var COMMUNITY_POST = {
   writeTitle: { ko: "글쓰기", zh: "写帖子", vi: "Viết bài", en: "Write a Post", mn: "Зурвас бичих", bn: "পোস্ট লিখুন", my: "ပို့စ်ရေးရန်" },
+  editPostTitle: { ko: "게시글 수정", zh: "编辑帖子", vi: "Sửa bài viết", en: "Edit Post", mn: "Нийтлэлийг засах", bn: "পোস্ট সম্পাদনা", my: "ပို့စ်ကို ပြင်ဆင်ရန်" },
+  // 2026-09 "비회원제 전환" 지시서 — 글쓰기 화면에서 바로 닉네임을 정할
+  // 수 있게 추가(기존 MY 페이지 "닉네임 수정"과 같은 값을 씁니다).
+  nicknameLabel: { ko: "닉네임", zh: "昵称", vi: "Biệt danh", en: "Nickname", mn: "Хоч", bn: "নিকনেম", my: "အမည်ဝှက်" },
   categoryLabel: { ko: "카테고리", zh: "分类", vi: "Danh mục", en: "Category", mn: "Ангилал", bn: "বিভাগ", my: "အမျိုးအစား" },
   titleLabel: { ko: "제목", zh: "标题", vi: "Tiêu đề", en: "Title", mn: "Гарчиг", bn: "শিরোনাম", my: "ခေါင်းစဉ်" },
   contentLabel: { ko: "본문", zh: "内容", vi: "Nội dung", en: "Content", mn: "Агуулга", bn: "বিষয়বস্তু", my: "အကြောင်းအရာ" },
@@ -1716,7 +2260,18 @@ var COMMUNITY_POST = {
   saveBtn: { ko: "저장", zh: "收藏", vi: "Lưu", en: "Save", mn: "Хадгалах", bn: "সংরক্ষণ", my: "သိမ်းဆည်းရန်" },
   unsaveBtn: { ko: "저장 취소", zh: "取消收藏", vi: "Bỏ lưu", en: "Unsave", mn: "Хадгалахыг цуцлах", bn: "সংরক্ষণ বাতিল", my: "သိမ်းဆည်းမှုပယ်ဖျက်ရန်" },
   kakaoWarn: { ko: "개인정보 공개와 오프라인 만남에 주의하세요.", zh: "请注意个人信息公开及线下见面的风险。", vi: "Hãy cẩn thận khi công khai thông tin cá nhân và gặp mặt ngoài đời.", en: "Be careful about sharing personal info and meeting offline.", mn: "Хувийн мэдээлэл ил гарах, гадуур уулзахаас болгоомжлоорой.", bn: "ব্যক্তিগত তথ্য প্রকাশ এবং অফলাইন সাক্ষাতে সতর্ক থাকুন।", my: "ကိုယ်ရေးအချက်အလက်ဖော်ပြခြင်းနှင့် အော့ဖ်လိုင်းတွေ့ဆုံခြင်းတွင် သတိထားပါ။" },
-  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" }
+  kakaoBtn: { ko: "카카오톡 오픈채팅", zh: "KakaoTalk 开放聊天", vi: "KakaoTalk Open Chat", en: "KakaoTalk Open Chat", mn: "KakaoTalk нээлттэй чат", bn: "কাকাওটক ওপেন চ্যাট", my: "KakaoTalk Open Chat" },
+  // "카카오톡 문의 연결" — 홈페이지 "사장님께 말해요"(OWNER_CHAT) 링크를
+  // 그대로 재사용하는 체크박스/버튼 문구(게시글마다 새 링크 없음).
+  ownerKakaoCheckbox: { ko: "카카오톡 문의 연결", zh: "连接KakaoTalk咨询", vi: "Kết nối hỏi đáp qua KakaoTalk", en: "Connect KakaoTalk inquiry", mn: "KakaoTalk-аар лавлагаа холбох", bn: "কাকাওটক জিজ্ঞাসা সংযুক্ত করুন", my: "KakaoTalk မေးမြန်းမှု ချိတ်ဆက်ရန်" },
+  ownerKakaoBtn: { ko: "카카오톡 문의", zh: "KakaoTalk咨询", vi: "Hỏi đáp qua KakaoTalk", en: "KakaoTalk Inquiry", mn: "KakaoTalk лавлагаа", bn: "কাকাওটক জিজ্ঞাসা", my: "KakaoTalk မေးမြန်းရန်" },
+  // 2026-10-09 속닥속닥 단일 익명게시판 지시서 — 작성자 고정 표시(닉네임
+  // 선택 없이 모두 "익명"), 글쓰기 화면 안내, 목록/상세의 조회수·좋아요.
+  anonymousLabel: { ko: "익명", zh: "匿名", vi: "Ẩn danh", en: "Anonymous", mn: "Нэргүй", bn: "বেনামী", my: "အမည်မသိ" },
+  whisperWriteNotice: { ko: "등록한 글은 직접 수정하거나 삭제할 수 없습니다. 삭제가 필요한 경우 신고·삭제 요청을 이용해 주세요.", zh: "发布后的帖子无法自行修改或删除。如需删除，请使用举报·删除请求功能。", vi: "Bài viết đã đăng không thể tự chỉnh sửa hoặc xóa. Nếu cần xóa, vui lòng dùng chức năng báo cáo · yêu cầu xóa.", en: "Once posted, you cannot edit or delete it yourself. If you need it removed, please use the report/delete-request button.", mn: "Нийтэлсэн зурвасыг өөрөө засах, устгах боломжгүй. Устгах шаардлагатай бол мэдээлэх·устгах хүсэлт функцийг ашиглана уу.", bn: "পোস্ট করা লেখা নিজে সম্পাদনা বা মুছে ফেলা যাবে না। মুছে ফেলার প্রয়োজন হলে রিপোর্ট·মুছে ফেলার অনুরোধ ব্যবহার করুন।", my: "တင်ပြီးသောပို့စ်ကို ကိုယ်တိုင်ပြင်ဆင်/ဖျက်၍မရပါ။ ဖျက်ရန်လိုအပ်ပါက တိုင်ကြား·ဖျက်ရန်တောင်းဆိုမှုကို သုံးပါ။" },
+  viewCountLabel: { ko: "조회", zh: "浏览", vi: "Lượt xem", en: "Views", mn: "Үзсэн", bn: "দেখা হয়েছে", my: "ကြည့်ရှုမှု" },
+  likeBtn: { ko: "좋아요", zh: "赞", vi: "Thích", en: "Like", mn: "Таалагдсан", bn: "লাইক", my: "နှစ်သက်ပါသည်" },
+  unlikeBtn: { ko: "좋아요 취소", zh: "取消赞", vi: "Bỏ thích", en: "Unlike", mn: "Таалагдсаныг цуцлах", bn: "লাইক বাতিল", my: "နှစ်သက်မှုပယ်ဖျက်ရန်" }
 };
 
 /* 중고거래 */
@@ -1753,6 +2308,32 @@ var COMMUNITY_HELP = {
   typeLife: { ko: "생활 도움", zh: "生活帮助", vi: "Hỗ trợ sinh hoạt", en: "Daily Help", mn: "Амьдралын тусламж", bn: "জীবনযাত্রার সাহায্য", my: "နေထိုင်မှုအကူအညီ" },
   typeEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" },
   emergencyNotice: { ko: "긴급하거나 위험한 상황은 경찰, 학교 담당 부서 등 공식 기관에 연락하세요.", zh: "紧急或危险情况请联系警察或学校相关部门等官方机构。", vi: "Trường hợp khẩn cấp hoặc nguy hiểm, hãy liên hệ công an hoặc bộ phận phụ trách của trường.", en: "For urgent or dangerous situations, contact the police or your school's official office.", mn: "Яаралтай, аюултай тохиолдолд цагдаа, сургуулийн албан ёсны газарт хандана уу.", bn: "জরুরি বা বিপজ্জনক পরিস্থিতিতে পুলিশ, বিশ্ববিদ্যালয়ের সংশ্লিষ্ট বিভাগের মতো সরকারি প্রতিষ্ঠানে যোগাযোগ করুন।", my: "အရေးပေါ်သို့မဟုတ်အန္တရာယ်ရှိသောအခြေအနေများတွင် ရဲသို့မဟုတ်ကျောင်း၏တာဝန်ရှိဌာနကဲ့သို့သောတရားဝင်အဖွဲ့အစည်းသို့ ဆက်သွယ်ပါ။" }
+};
+
+/* "김해맛집 추천"(together) 게시글 분류(카페/음식점/관광지) — help의
+   typeLabel/typeXxx 패턴을 그대로 재사용, 상태 추적 없이 분류만 표시. */
+var COMMUNITY_SPOT = {
+  typeLabel: { ko: "분류", zh: "分类", vi: "Phân loại", en: "Type", mn: "Төрөл", bn: "শ্রেণী", my: "အမျိုးအစား" },
+  typeCafe: { ko: "카페", zh: "咖啡厅", vi: "Cà phê", en: "Cafe", mn: "Кафе", bn: "ক্যাফে", my: "ကော်ဖီဆိုင်" },
+  typeRestaurant: { ko: "음식점", zh: "餐厅", vi: "Nhà hàng", en: "Restaurant", mn: "Хоолны газар", bn: "রেস্তোরাঁ", my: "စားသောက်ဆိုင်" },
+  typeTour: { ko: "관광지", zh: "旅游景点", vi: "Điểm du lịch", en: "Tourist Spot", mn: "Аялал жуулчлалын газар", bn: "পর্যটন স্থান", my: "ဧည့်လမ်းညွှန်ခရီးစဉ်" }
+};
+
+/* "나의 고향 알리기"(hometown) — 국가/도시는 선택 입력, 안내문만 재사용
+   가능한 최소 구조(2026-09 "나의 고향 알리기 정상화" 지시서). 새 국가
+   라이브러리 없이 기존 COUNTRY_LIST(datalist)만 재사용합니다. */
+var COMMUNITY_HOMETOWN = {
+  countryLabel: { ko: "나라(선택)", zh: "国家（选填）", vi: "Quốc gia (không bắt buộc)", en: "Country (optional)", mn: "Улс (сонголт)", bn: "দেশ (ঐচ্ছিক)", my: "နိုင်ငံ (ရွေးချယ်ခွင့်)" },
+  cityLabel: { ko: "도시/지역(선택)", zh: "城市/地区（选填）", vi: "Thành phố / khu vực (không bắt buộc)", en: "City / Region (optional)", mn: "Хот / бүс нутаг (сонголт)", bn: "শহর/অঞ্চল (ঐচ্ছিক)", my: "မြို့ / ဒေသ (ရွေးချယ်ခွင့်)" },
+  contentGuide: {
+    ko: "내 고향의 음식, 관광지, 문화, 축제와 이야기를 친구들에게 소개해 주세요.",
+    zh: "向朋友们介绍一下你家乡的美食、景点、文化和节日吧。",
+    vi: "Hãy giới thiệu ẩm thực, danh lam thắng cảnh, văn hóa và lễ hội quê hương bạn cho bạn bè.",
+    en: "Introduce your hometown's food, sights, culture, and festivals to your friends.",
+    mn: "Найзууддаа төрсөн нутгийнхаа хоол, үзмэр, соёл, наадмын тухай танилцуулаарай.",
+    bn: "তোমার শহরের খাবার, দর্শনীয় স্থান, সংস্কৃতি ও উৎসবের গল্প বন্ধুদের সাথে শেয়ার করো।",
+    my: "သင့်ဇာတိမြို့၏ အစားအစာ၊ ကြည့်ရှုစရာနေရာများ၊ ယဉ်ကျေးမှုနှင့် ပွဲတော်များကို သူငယ်ချင်းများကို မိတ်ဆက်ပေးပါ။"
+  }
 };
 
 /* 구인·구직 (2026-09-10, "생활정보" 카테고리를 대체) */
@@ -1817,9 +2398,15 @@ var COMMUNITY_REPORT = {
   reasonIllegal: { ko: "불법 또는 위험 물품", zh: "非法或危险物品", vi: "Hàng hóa bất hợp pháp/nguy hiểm", en: "Illegal/Dangerous Item", mn: "Хууль бус эсвэл аюултай бараа", bn: "অবৈধ বা বিপজ্জনক পণ্য", my: "တရားမဝင် သို့မဟုတ် အန္တရာယ်ရှိသောပစ္စည်း" },
   reasonAd: { ko: "광고·도배", zh: "广告·刷屏", vi: "Quảng cáo/spam", en: "Ad/Spam", mn: "Сурталчилгаа/спам", bn: "বিজ্ঞাপন/স্প্যাম", my: "ကြော်ငြာ/စပမ်း" },
   reasonMeet: { ko: "부적절한 만남 요구", zh: "不当约见要求", vi: "Yêu cầu gặp mặt không phù hợp", en: "Inappropriate Meeting Request", mn: "Зохисгүй уулзалт хүсэлт", bn: "অনুপযুক্ত সাক্ষাতের অনুরোধ", my: "မသင့်လျော်သောတွေ့ဆုံမှုတောင်းဆိုခြင်း" },
+  // 2026-10-09 속닥속닥 지시서 9번 — "내가 작성한 글 삭제 요청"(5개 사유
+  // 목록의 1번). 비밀번호·회원가입 없이도 자기 글을 지워달라고 요청할
+  // 수 있는 유일한 경로(관리자가 검토 후 처리).
+  reasonSelfDelete: { ko: "내가 작성한 글 삭제 요청", zh: "请求删除我写的帖子", vi: "Yêu cầu xóa bài tôi đã viết", en: "Request to delete my own post", mn: "Өөрийн бичсэн зурвасыг устгуулах хүсэлт", bn: "আমার লেখা পোস্ট মুছে ফেলার অনুরোধ", my: "ကျွန်ုပ်ရေးသားခဲ့သောပို့စ်ကိုဖျက်ပေးရန်တောင်းဆိုခြင်း" },
   reasonEtc: { ko: "기타", zh: "其他", vi: "Khác", en: "Other", mn: "Бусад", bn: "অন্যান্য", my: "အခြား" },
   submitReport: { ko: "신고 제출", zh: "提交举报", vi: "Gửi báo cáo", en: "Submit Report", mn: "Мэдээллийг илгээх", bn: "রিপোর্ট জমা দিন", my: "တိုင်ကြားချက်တင်ရန်" },
-  reportDone: { ko: "신고가 접수되었습니다.", zh: "举报已提交。", vi: "Đã gửi báo cáo.", en: "Report submitted.", mn: "Мэдээлэл хүлээн авагдлаа.", bn: "রিপোর্ট গ্রহণ করা হয়েছে।", my: "တိုင်ကြားချက်လက်ခံရရှိပါပြီ။" },
+  // 2026-10-09 속닥속닥 지시서 9번 — 접수 완료 문구를 지시서가 준 문장
+  // 그대로 사용(관리자에게 전달됐음을 분명히 알림).
+  reportDone: { ko: "관리자에게 요청이 전달되었습니다.", zh: "您的请求已传达给管理员。", vi: "Yêu cầu của bạn đã được chuyển đến quản trị viên.", en: "Your request has been sent to the admin.", mn: "Таны хүсэлт админд хүргэгдлээ.", bn: "আপনার অনুরোধ অ্যাডমিনের কাছে পাঠানো হয়েছে।", my: "သင့်တောင်းဆိုချက်ကို စီမံခန့်ခွဲသူထံပို့ပြီးပါပြီ။" },
   alreadyReported: { ko: "이미 신고한 게시물입니다.", zh: "您已举报过该内容。", vi: "Bạn đã báo cáo nội dung này.", en: "You have already reported this.", mn: "Та энэ зурвасыг аль хэдийн мэдээлсэн байна.", bn: "আপনি ইতিমধ্যে এটি রিপোর্ট করেছেন।", my: "သင်ဤပို့စ်ကို တိုင်ကြားပြီးဖြစ်သည်။" },
   hiddenNotice: { ko: "신고가 누적되어 임시 숨김 처리되었습니다.", zh: "因举报累计已被临时隐藏。", vi: "Đã bị ẩn tạm thời do bị báo cáo nhiều lần.", en: "This has been temporarily hidden due to multiple reports.", mn: "Олон удаа мэдээлэгдсэний улмаас түр нуугдлаа.", bn: "একাধিক রিপোর্টের কারণে এটি সাময়িকভাবে লুকানো হয়েছে।", my: "တိုင်ကြားချက်များစုပုံလာသဖြင့် ယာယီဖျောက်ထားပါသည်။" }
 };
@@ -1841,7 +2428,16 @@ var COMMUNITY_MSG = {
   errLogin: { ko: "이메일 또는 비밀번호가 올바르지 않습니다.", zh: "邮箱或密码不正确。", vi: "Email hoặc mật khẩu không đúng.", en: "Incorrect email or password.", mn: "И-мэйл эсвэл нууц үг буруу байна.", bn: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।", my: "အီးမေးလ် သို့မဟုတ် စကားဝှက်မှားနေသည်။" },
   errPhotoLimit: { ko: "사진은 1장만 첨부할 수 있습니다.", zh: "只能上传1张照片。", vi: "Chỉ có thể đính kèm 1 ảnh.", en: "You can attach only 1 photo.", mn: "Зөвхөн 1 зураг хавсаргах боломжтой.", bn: "শুধুমাত্র ১টি ছবি সংযুক্ত করা যাবে।", my: "ဓာတ်ပုံ ၁ ပုံသာ ပူးတွဲနိုင်ပါသည်။" },
   errPhotoTooLarge: { ko: "사진 용량이 너무 커서 압축 후에도 등록할 수 없습니다. 다른 사진을 선택해 주세요.", zh: "照片文件过大，压缩后仍无法上传，请选择其他照片。", vi: "Ảnh quá lớn, sau khi nén vẫn không thể đăng. Vui lòng chọn ảnh khác.", en: "This photo is too large to upload even after compression. Please choose a different photo.", mn: "Зургийн хэмжээ хэт том тул шахсны дараа ч оруулах боломжгүй байна. Өөр зураг сонгоно уу.", bn: "ছবির আকার অনেক বড় হওয়ায় কম্প্রেস করার পরও আপলোড করা যাচ্ছে না। অন্য ছবি বেছে নিন।", my: "ဓာတ်ပုံအရွယ်အစားကြီးလွန်းသောကြောင့် ချုံ့ပြီးနောက်တွင်ပင် တင်၍မရပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
+  // 2026-09 "커뮤니티 이미지 업로드" 지시서 — 지원하지 않는 파일 형식(사진으로
+  // 디코딩 자체가 실패한 경우, HEIC 등 포함) 안내 문구.
+  errPhotoUnsupported: { ko: "지원하지 않는 파일입니다. 다른 사진을 선택해 주세요.", zh: "不支持该文件格式，请选择其他照片。", vi: "Không hỗ trợ định dạng tệp này. Vui lòng chọn ảnh khác.", en: "This file type isn't supported. Please choose a different photo.", mn: "Энэ файлын төрөл дэмжигдэхгүй байна. Өөр зураг сонгоно уу.", bn: "এই ফাইলটি সমর্থিত নয়। অন্য ছবি বেছে নিন।", my: "ဤဖိုင်အမျိုးအစားကို ပံ့ပိုးမထားပါ။ တခြားဓာတ်ပုံရွေးချယ်ပါ။" },
+  photoCompressing: { ko: "사진을 압축하고 있습니다...", zh: "正在压缩照片...", vi: "Đang nén ảnh...", en: "Compressing photo...", mn: "Зургийг шахаж байна...", bn: "ছবি সংকুচিত করা হচ্ছে...", my: "ဓာတ်ပုံချုံ့နေပါသည်..." },
+  photoUploading: { ko: "사진을 업로드하고 있습니다...", zh: "正在上传照片...", vi: "Đang tải ảnh lên...", en: "Uploading photo...", mn: "Зургийг байршуулж байна...", bn: "ছবি আপলোড করা হচ্ছে...", my: "ဓာတ်ပုံတင်နေပါသည်..." },
+  photoAddBtn: { ko: "+ 사진 추가", zh: "+ 添加照片", vi: "+ Thêm ảnh", en: "+ Add Photo", mn: "+ Зураг нэмэх", bn: "+ ছবি যোগ করুন", my: "+ ဓာတ်ပုံထည့်ရန်" },
+  photoChangeBtn: { ko: "사진 변경", zh: "更换照片", vi: "Đổi ảnh", en: "Change Photo", mn: "Зураг солих", bn: "ছবি পরিবর্তন করুন", my: "ဓာတ်ပုံပြောင်းရန်" },
+  photoRemoveBtn: { ko: "사진 삭제", zh: "删除照片", vi: "Xóa ảnh", en: "Remove Photo", mn: "Зураг устгах", bn: "ছবি মুছুন", my: "ဓာတ်ပုံဖျက်ရန်" },
   errGeneric: { ko: "오류가 발생했습니다. 다시 시도해 주세요.", zh: "发生错误，请重试。", vi: "Đã xảy ra lỗi. Vui lòng thử lại.", en: "Something went wrong. Please try again.", mn: "Алдаа гарлаа. Дахин оролдоно уу.", bn: "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।", my: "အမှားတစ်ခုဖြစ်ပွားပါသည်။ ထပ်မံကြိုးစားပါ။" },
+  errTooSoon: { ko: "너무 빠르게 반복해서 작성할 수 없습니다. 잠시 후 다시 시도해 주세요.", zh: "发布过于频繁，请稍后再试。", vi: "Bạn đang đăng quá nhanh. Vui lòng thử lại sau ít phút.", en: "You're posting too quickly. Please wait a moment and try again.", mn: "Хэт хурдан дахин бичиж болохгүй. Түр хүлээгээд дахин оролдоно уу.", bn: "খুব দ্রুত বারবার লেখা যাবে না। একটু পর আবার চেষ্টা করুন।", my: "လျင်မြန်လွန်းစွာ ထပ်ခါထပ်ခါရေးနေပါသည်။ ခဏစောင့်ပြီးထပ်ကြိုးစားပါ။" },
   doneSaved: { ko: "저장되었습니다.", zh: "已保存。", vi: "Đã lưu.", en: "Saved.", mn: "Хадгалагдлаа.", bn: "সংরক্ষিত হয়েছে।", my: "သိမ်းဆည်းပြီးပါပြီ။" },
   doneDeleted: { ko: "삭제되었습니다.", zh: "已删除。", vi: "Đã xóa.", en: "Deleted.", mn: "Устгагдлаа.", bn: "মুছে ফেলা হয়েছে।", my: "ဖျက်ပြီးပါပြီ။" }
 };
@@ -1890,10 +2486,841 @@ var COUNTRY_LIST = [
   "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
   "Yemen", "Zambia", "Zimbabwe"
 ];
-
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
+   메뉴 데이터
+   - 이 파일만 수정하면 가격/품절/메뉴명이 바로 반영됩니다.
+   - price: 숫자만 입력 (화면에는 자동으로 쉼표+원이 붙습니다)
+   - soldOut: true 로 바꾸면 품절 표시가 나타납니다.
+   - needsReview: true 인 항목은 원본 사진과 이름/가격이 다르게 보이거나
+     확인이 필요한 항목입니다. 확인 후 false 로 바꿔주세요.
+   - image: null 인 항목은 원본 사진에서 음식 이미지를 추출할 수 없었던
+     항목입니다. "이미지 준비 중"으로 표시됩니다.
+   ========================================================================== */
+
+const MENU_DATA = [
+
+  /* ------------------------- 밥심 1층 ------------------------- */
+  {
+    id: "bapsim-breakfast-1000",
+    store: "bapsim", group: 1, order: 1,
+    image: null,
+    name: { ko: "천원의아침밥", en: "Breakfast for 1,000 Won", zh: "1000韩元早餐", vi: "Bữa sáng 1.000 Won", mn: "1,000 воны өглөөний хоол", bn: "১,০০০ ওনের সকালের খাবার", my: "ဝမ် ၁,၀၀၀ နံနက်စာ" },
+    price: 1000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-breakfast-buffet",
+    store: "bapsim", group: 1, order: 2,
+    image: "/images/bapsim/breakfast-buffet-icon.jpg",
+    name: { ko: "아침뷔페", en: "Breakfast Buffet", zh: "早餐自助", vi: "Buffet sáng", mn: "Өглөөний буфет", bn: "সকালের বুফে", my: "မနက်စာ ဗူဖေး" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-lunch-buffet",
+    store: "bapsim", group: 1, order: 3,
+    image: "/images/bapsim/lunch-buffet-icon.jpg",
+    name: { ko: "점심뷔페", en: "Lunch Buffet", zh: "午餐自助", vi: "Buffet trưa", mn: "Өдрийн хоолны буфет", bn: "দুপুরের বুফে", my: "နေ့လယ်စာ ဗူဖေး" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-lunch-buffet-ramen",
+    store: "bapsim", group: 1, order: 4,
+    image: "/images/bapsim/korean-buffet-instant-ramen.png",
+    name: { ko: "한식뷔페 즉석라면", en: "Korean Buffet + Instant Ramen", zh: "韩式自助餐＋方便面", vi: "Buffet Hàn Quốc + Mì ăn liền", mn: "Солонгос хоолны буфет + Бэлэн рамен", bn: "কোরিয়ান বুফে + ইনস্ট্যান্ট রামেন", my: "ကိုရီးယားဗူဖေး + ရာမန်" },
+    price: 8000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-self-ramen",
+    store: "bapsim", group: 1, order: 5,
+    image: "/images/bapsim/self-ramen.jpg",
+    name: { ko: "셀프라면", en: "Self-Serve Ramen", zh: "自助拉面", vi: "Mì tự phục vụ", mn: "Өөрөө хийх рамен", bn: "সেলফ-সার্ভ রামেন", my: "ကိုယ်တိုင်ချက် ရာမန်" },
+    price: 3000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-fried-eggs",
+    store: "bapsim", group: 1, order: 6,
+    image: "/images/bapsim/fried-eggs.jpg",
+    name: { ko: "계란후라이 2개", en: "2 Fried Eggs", zh: "煎蛋2个", vi: "2 quả trứng ốp la", mn: "2 ширхэг шарсан өндөг", bn: "২টি ডিম ভাজা", my: "ကြက်ဥကြော် ၂ လုံး" },
+    price: 1000, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-pork-bulbaek",
+    store: "bapsim", group: 1, order: 7,
+    image: null,
+    name: { ko: "돼지불백 한접시 200g", en: "Pork Bulgogi Plate 200g", zh: "烤猪肉一份200g", vi: "Thịt heo nướng 200g", mn: "Амталж шарсан гахайн мах 200г таваг", bn: "শুয়োরের বুলগোগি ২০০ গ্রাম", my: "ဝက်သား ဘူဂိုဂီ ၂၀၀ ဂရမ်" },
+    price: null, soldOut: true, needsReview: true
+    // 원본 키오스크 사진과 정확한 가격 확인 필요 (가격이 취소선으로 가려져 있음)
+  },
+  {
+    id: "bapsim-cola",
+    store: "bapsim", group: 1, order: 8,
+    image: "/images/bapsim/cola.jpg",
+    name: { ko: "콜라(355ml)밥심", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола (355мл)", bn: "কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ (၃၅၅ မီလီလီတာ)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-zero-cola",
+    store: "bapsim", group: 1, order: 9,
+    image: "/images/bapsim/zero-cola.jpg",
+    name: { ko: "제로콜라(355ml)밥심", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола (355мл)", bn: "জিরো কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ ဇီးရို (၃၅၅ မီလီလီတာ)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-fanta-pine",
+    store: "bapsim", group: 1, order: 10,
+    image: "/images/bapsim/fanta-pine.jpg",
+    name: { ko: "환타파인(355ml)밥심", en: "Fanta Pineapple (355ml)", zh: "芬达菠萝(355ml)", vi: "Fanta Dứa (355ml)", mn: "Фанта ананас (355мл)", bn: "ফ্যান্টা পাইনঅ্যাপল (৩৫৫ মিলি)", my: "ဖန်တာ နာနတ်သီး (၃၅၅ မီလီလီတာ)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "bapsim-sprite",
+    store: "bapsim", group: 1, order: 11,
+    image: "/images/bapsim/sprite.jpg",
+    name: { ko: "스프라이트(355ml)밥심", en: "Sprite (355ml)", zh: "雪碧(355ml)", vi: "Sprite (355ml)", mn: "Спрайт (355мл)", bn: "স্প্রাইট (৩৫৫ মিলি)", my: "စပရိုက် (၃၅၅ မီလီလီတာ)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 만권화밥 1층 - 화면1 ------------------------- */
+  {
+    id: "mangwon-mul-naengmyeon",
+    store: "mangwon", group: 1, order: 1,
+    image: "/images/mangwon/mul-naengmyeon.jpg",
+    name: { ko: "물냉면", en: "Mul Naengmyeon (Cold Noodle Soup)", zh: "水冷面", vi: "Mì lạnh nước", mn: "Хүйтэн шөлтэй гоймон", bn: "মুল নেংম্যিওন (ঠান্ডা নুডলস স্যুপ)", my: "မူလ်နန်မျွန် (အေးအေးခေါက်ဆွဲဟင်း)" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-mul-naengmyeon-bulgogi",
+    store: "mangwon", group: 1, order: 2,
+    image: "/images/mangwon/mul-naengmyeon-bulgogi.jpg",
+    name: { ko: "물냉면 + 돼지불고기", en: "Mul Naengmyeon + Pork Bulgogi", zh: "水冷面+烤猪肉", vi: "Mì lạnh nước + Thịt heo nướng", mn: "Хүйтэн шөлтэй гоймон + Амталж шарсан гахайн мах", bn: "মুল নেংম্যিওন + পর্ক বুলগোগি", my: "မူလ်နန်မျွန် + ဝက်သားဘူဂိုဂီ" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bibim-naengmyeon",
+    store: "mangwon", group: 1, order: 3,
+    image: "/images/mangwon/bibim-naengmyeon.jpg",
+    name: { ko: "비빔냉면", en: "Bibim Naengmyeon (Spicy Cold Noodles)", zh: "拌冷面", vi: "Mì lạnh trộn cay", mn: "Халуун ногоотой хүйтэн гоймон", bn: "বিবিম নেংম্যিওন (ঝাল ঠান্ডা নুডলস)", my: "ဗီဘင်နန်မျွန် (စပ်သောအေးအေးခေါက်ဆွဲ)" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bibim-naengmyeon-bulgogi",
+    store: "mangwon", group: 1, order: 4,
+    image: "/images/mangwon/bibim-naengmyeon-bulgogi.jpg",
+    name: { ko: "비빔냉면 + 돼지불고기", en: "Bibim Naengmyeon + Pork Bulgogi", zh: "拌冷面+烤猪肉", vi: "Mì lạnh trộn cay + Thịt heo nướng", mn: "Халуун ногоотой хүйтэн гоймон + Амталж шарсан гахайн мах", bn: "বিবিম নেংম্যিওন + পর্ক বুলগোগি", my: "ဗီဘင်နန်မျွန် + ဝက်သားဘူဂိုဂီ" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-seafood-sundubu",
+    store: "mangwon", group: 1, order: 5,
+    image: "/images/mangwon/seafood-sundubu.jpg",
+    name: { ko: "해물순두부(공기밥포함)", en: "Seafood Sundubu (Rice Included)", zh: "海鲜豆腐汤(含米饭)", vi: "Canh đậu phụ hải sản (kèm cơm)", mn: "Далайн бүтээгдэхүүнтэй зөөлөн дүпүний шөл (будаатай)", bn: "সিফুড সুনদুবু (ভাতসহ)", my: "ပင်လယ်စာ ဆွန်ဒူဘူ (ထမင်းပါ)" },
+    price: 6000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-usamgyeop-sundubu",
+    store: "mangwon", group: 1, order: 6,
+    image: "/images/mangwon/usamgyeop-sundubu.jpg",
+    name: { ko: "우삼겹순두부", en: "Beef Belly Sundubu", zh: "牛五花豆腐汤", vi: "Canh đậu phụ ba chỉ bò", mn: "Үхрийн цээжний махтай зөөлөн дүпүний шөл", bn: "বিফ বেলি সুনদুবু", my: "နွားသားရင်ညွှန့် ဆွန်ဒူဘူ" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-jikhwa-beef-deopbap",
+    store: "mangwon", group: 1, order: 7,
+    image: "/images/mangwon/jikhwa-beef-deopbap.jpg",
+    name: { ko: "직화소고기덮밥", en: "Grilled Beef Rice Bowl", zh: "炭烤牛肉盖饭", vi: "Cơm bò nướng", mn: "Гал дээр шарсан үхрийн махтай будаа", bn: "গ্রিলড বিফ রাইস বোল", my: "မီးကင်နွားသား ထမင်းခွက်" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dwaeji-bulbaek",
+    store: "mangwon", group: 1, order: 8,
+    image: "/images/mangwon/dwaeji-bulbaek.jpg",
+    name: { ko: "돼지불백", en: "Pork Bulgogi", zh: "烤猪肉", vi: "Thịt heo nướng", mn: "Амталж шарсан гахайн мах", bn: "পর্ক বুলগোগি", my: "ဝက်သားဘူဂိုဂီ" },
+    price: 6500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-jikhwa-beef-kimchi-deopbap",
+    store: "mangwon", group: 1, order: 9,
+    image: "/images/mangwon/bulhyang-jikhwa-beef-kimchi-deopbap.jpg",
+    name: { ko: "불향직화소고기김치덮밥", en: "Smoky Grilled Beef Kimchi Rice Bowl", zh: "炭火牛肉泡菜盖饭", vi: "Cơm bò nướng kimchi", mn: "Утаат гал дээр шарсан үхэр, кимчитэй будаа", bn: "স্মোকি গ্রিলড বিফ কিমচি রাইস বোল", my: "မီးခိုးရနံ့နွားသားကင်နှင့်ကင်မချီ ထမင်းခွက်" },
+    price: 7400, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-jikhwa-pork-kimchi-deopbap",
+    store: "mangwon", group: 1, order: 10,
+    image: "/images/mangwon/bulhyang-jikhwa-pork-kimchi-deopbap.jpg",
+    name: { ko: "불향직화돼지김치덮밥", en: "Smoky Grilled Pork Kimchi Rice Bowl", zh: "炭火猪肉泡菜盖饭", vi: "Cơm heo nướng kimchi", mn: "Утаат гал дээр шарсан гахай, кимчитэй будаа", bn: "স্মোকি গ্রিলড পর্ক কিমচি রাইস বোল", my: "မီးခိုးရနံ့ဝက်သားကင်နှင့်ကင်မချီ ထမင်းခွက်" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dwaeji-kimchi-jjigae",
+    store: "mangwon", group: 1, order: 11,
+    image: "/images/mangwon/dwaeji-kimchi-jjigae.jpg",
+    name: { ko: "돼지김치찌개(공기밥포함)", en: "Pork Kimchi Stew (Rice Included)", zh: "猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo (kèm cơm)", mn: "Гахайн кимчийн шөл (будаатай)", bn: "পর্ক কিমচি স্ট্যু (ভাতসহ)", my: "ဝက်သားကင်မချီဟင်း (ထမင်းပါ)" },
+    price: 6500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-spam-dwaeji-kimchi-jjigae",
+    store: "mangwon", group: 1, order: 12,
+    image: "/images/mangwon/spam-dwaeji-kimchi-jjigae.jpg",
+    name: { ko: "스팸돼지김치찌개(공기밥포함)", en: "Spam & Pork Kimchi Stew (Rice Included)", zh: "午餐肉猪肉泡菜汤(含米饭)", vi: "Canh kimchi thịt heo & Spam (kèm cơm)", mn: "Спам, гахайн кимчийн шөл (будаатай)", bn: "স্প্যাম ও পর্ক কিমচি স্ট্যু (ভাতসহ)", my: "စပမ်နှင့်ဝက်သားကင်မချီဟင်း (ထမင်းပါ)" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 만권화밥 1층 - 화면2 ------------------------- */
+  {
+    id: "mangwon-spam-sundubu",
+    store: "mangwon", group: 2, order: 1,
+    image: "/images/mangwon/spam-sundubu.jpg",
+    name: { ko: "스팸순두부(공기밥포함)", en: "Spam Sundubu (Rice Included)", zh: "午餐肉豆腐汤(含米饭)", vi: "Canh đậu phụ Spam (kèm cơm)", mn: "Спамтай зөөлөн дүпүний шөл (будаатай)", bn: "স্প্যাম সুনদুবু (ভাতসহ)", my: "စပမ် ဆွန်ဒူဘူ (ထမင်းပါ)" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-jikhwa-beef-jjigae-set",
+    store: "mangwon", group: 2, order: 2,
+    image: "/images/mangwon/jikhwa-beef-jjigae-set.jpg",
+    name: { ko: "직화소고기 + 찌개", en: "Grilled Beef + Stew Set", zh: "炭烤牛肉+汤套餐", vi: "Bò nướng + Canh", mn: "Гал дээр шарсан үхрийн мах + шөл", bn: "গ্রিলড বিফ + স্ট্যু সেট", my: "မီးကင်နွားသား + ဟင်း အစုံ" },
+    price: 9900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dwaeji-bulbaek-jjigae-set",
+    store: "mangwon", group: 2, order: 3,
+    image: "/images/mangwon/dwaeji-bulbaek-jjigae-set.jpg",
+    name: { ko: "돼지불백 + 찌개", en: "Pork Bulgogi + Stew Set", zh: "烤猪肉+汤套餐", vi: "Thịt heo nướng + Canh", mn: "Амталж шарсан гахайн мах + шөл", bn: "পর্ক বুলগোগি + স্ট্যু সেট", my: "ဝက်သားဘူဂိုဂီ + ဟင်း အစုံ" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-garlic-soy-chicken-deopbap",
+    store: "mangwon", group: 2, order: 4,
+    image: "/images/mangwon/garlic-soy-chicken-deopbap.jpg",
+    name: { ko: "갈릭소이치킨덮밥", en: "Garlic Soy Chicken Rice Bowl", zh: "蒜香酱油鸡肉盖饭", vi: "Cơm gà sốt tỏi tương", mn: "Сармис-соевын соустай тахианы будаа", bn: "গার্লিক সয়া চিকেন রাইস বোল", my: "ကြက်သွန်ဖြူ၊ ပဲငံပြာရည်ကြက်သား ထမင်းခွက်" },
+    price: 5900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-gochujang-chicken-deopbap",
+    store: "mangwon", group: 2, order: 5,
+    image: "/images/mangwon/bulhyang-gochujang-chicken-deopbap.jpg",
+    name: { ko: "불향고추장치킨덮밥", en: "Smoky Gochujang Chicken Rice Bowl", zh: "炭火辣椒酱鸡肉盖饭", vi: "Cơm gà sốt ớt cay", mn: "Утаат гочужан соустай тахианы будаа", bn: "স্মোকি গোচুজাং চিকেন রাইস বোল", my: "မီးခိုးရနံ့ ဂိုချူဂျန်ကြက်သား ထမင်းခွက်" },
+    price: 5900, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-garlic-soy-chicken-deopbap-jjigae-set",
+    store: "mangwon", group: 2, order: 6,
+    image: "/images/mangwon/garlic-soy-chicken-deopbap-jjigae-set.jpg",
+    name: { ko: "갈릭소이치킨덮밥 + 찌개", en: "Garlic Soy Chicken Rice Bowl + Stew", zh: "蒜香酱油鸡肉盖饭+汤", vi: "Cơm gà sốt tỏi tương + Canh", mn: "Сармис-соевын соустай тахианы будаа + шөл", bn: "গার্লিক সয়া চিকেন রাইস বোল + স্ট্যু", my: "ကြက်သွန်ဖြူ၊ ပဲငံပြာရည်ကြက်သား ထမင်းခွက် + ဟင်း" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-bulhyang-gochujang-chicken-deopbap-jjigae-set",
+    store: "mangwon", group: 2, order: 7,
+    image: "/images/mangwon/bulhyang-gochujang-chicken-deopbap-jjigae-set.jpg",
+    name: { ko: "불향고추장치킨덮밥 + 찌개", en: "Smoky Gochujang Chicken Rice Bowl + Stew", zh: "炭火辣椒酱鸡肉盖饭+汤", vi: "Cơm gà sốt ớt cay + Canh", mn: "Утаат гочужан соустай тахианы будаа + шөл", bn: "স্মোকি গোচুজাং চিকেন রাইস বোল + স্ট্যু", my: "မီးခိုးရနံ့ ဂိုချူဂျန်ကြက်သား ထမင်းခွက် + ဟင်း" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-flying-fish-roe-bap",
+    store: "mangwon", group: 2, order: 8,
+    image: "/images/mangwon/flying-fish-roe-bap.jpg",
+    name: { ko: "날아라날치알밥", en: "Flying Fish Roe Rice Bowl", zh: "飞鱼子拌饭", vi: "Cơm trứng cá bay", mn: "Нисдэг загасны өндөгтэй будаа", bn: "ফ্লাইং ফিশ রো রাইস বোল", my: "ပျံသန်းငါးဥ ထမင်းခွက်" },
+    price: 7000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-spam-flying-fish-roe-bap",
+    store: "mangwon", group: 2, order: 9,
+    image: "/images/mangwon/spam-flying-fish-roe-bap.jpg",
+    name: { ko: "스팸날치알밥", en: "Spam & Flying Fish Roe Rice Bowl", zh: "午餐肉飞鱼子拌饭", vi: "Cơm trứng cá bay & Spam", mn: "Спамтай нисдэг загасны өндөгний будаа", bn: "স্প্যাম ও ফ্লাইং ফিশ রো রাইস বোল", my: "စပမ်နှင့်ပျံသန်းငါးဥ ထမင်းခွက်" },
+    price: 7000, soldOut: false, needsReview: true
+    // 원본 키오스크 사진과 정확한 메뉴명 확인 필요 (사진에는 "스팸펄알밥"으로 보임, 지시서 기준 "스팸날치알밥" 사용)
+  },
+  {
+    id: "mangwon-dukkeobi-yukgaejang",
+    store: "mangwon", group: 2, order: 10,
+    image: "/images/mangwon/dukkeobi-yukgaejang.jpg",
+    name: { ko: "두꺼비육개장", en: "Dukkeobi Yukgaejang (Spicy Beef Soup)", zh: "杜鸡比牛肉辣汤", vi: "Canh cay Yukgaejang Dukkeobi", mn: "Дуккэби югэжан (халуун үхрийн шөл)", bn: "দুক্কেওবি ইয়ুকগেজাং (ঝাল বিফ স্যুপ)", my: "ဒွတ်ကိုဘီ ယွတ်ကဲဂျန် (စပ်သောနွားသားဟင်း)" },
+    price: 5000, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-dukkeobi-udon-yukgaejang",
+    store: "mangwon", group: 2, order: 11,
+    image: "/images/mangwon/dukkeobi-udon-yukgaejang.jpg",
+    name: { ko: "두꺼비우동육개장", en: "Dukkeobi Udon Yukgaejang", zh: "杜鸡比乌冬辣汤", vi: "Canh cay Yukgaejang Udon Dukkeobi", mn: "Дуккэби удон югэжан", bn: "দুক্কেওবি উদোন ইয়ুকগেজাং", my: "ဒွတ်ကိုဘီ အူဒွန် ယွတ်ကဲဂျန်" },
+    price: 5500, soldOut: false, needsReview: false
+  },
+  {
+    id: "mangwon-jikhwa-samgyeop-deopbap",
+    store: "mangwon", group: 2, order: 12,
+    image: "/images/mangwon/jikhwa-samgyeop-deopbap.jpg",
+    name: { ko: "직화삼겹덮밥", en: "Grilled Pork Belly Rice Bowl", zh: "炭烤五花肉盖饭", vi: "Cơm ba chỉ nướng", mn: "Гал дээр шарсан цээжний махтай будаа", bn: "গ্রিলড পর্ক বেলি রাইস বোল", my: "မီးကင်ဝက်သားရင်ညွှန့် ထမင်းခွက်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면1 ------------------------- */
+  /* 2026-10-21 키오스크 사진 기준 전면 수정 — "왕다리쌀국수"/"이태리
+     바삭포크치즈덮밥"은 새 키오스크 화면 4장(화면1~4) 어디에도 보이지
+     않아 판매 종료로 보고 목록에서 뺐습니다(사진에 더 있었다면 추가
+     사진을 올려주세요). 새 메뉴는 아직 실제 사진이 없어 image: null로
+     "이미지 준비 중"으로 표시됩니다 — 사진이 오면 채워 넣으면 됩니다.
+     화면1 맨 윗줄은 사진이 살짝 잘려 있어 혹시 빠진 항목이 있다면
+     알려주세요. */
+  {
+    id: "hururuk-usamgyeop-malatang",
+    store: "hururuk", group: 1, order: 1,
+    image: "/images/hururuk/usamgyeop-malatang.jpg",
+    name: { ko: "우삼겹마라탕", en: "Beef Belly Malatang", zh: "牛五花麻辣烫", vi: "Malatang ba chỉ bò", mn: "Үхрийн цээжний махтай малатан", bn: "বিফ বেলি মালাথাং", my: "နွားသားရင်ညွှန့်မာလာသန်" },
+    price: 8900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-malatang-samgak-kimbap-set",
+    store: "hururuk", group: 1, order: 2,
+    image: "/images/hururuk/usamgyeop-malatang-samgak-kimbap-set.jpg",
+    name: { ko: "우삼겹마라탕삼각김밥세트", en: "Beef Belly Malatang + Triangle Kimbap Set", zh: "牛五花麻辣烫+三角紫菜包饭套餐", vi: "Malatang ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай малатан + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি মালাথাং + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်မာလာသန် + တြိဂံကင်းဘတ်ပ် အစုံ" },
+    price: 11900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-clam-chowder-spaghetti",
+    store: "hururuk", group: 1, order: 3,
+    image: "/images/hururuk/clam-chowder-spaghetti.jpg",
+    name: { ko: "클램차우더 스파게티", en: "Clam Chowder Spaghetti", zh: "蛤蜊浓汤意面", vi: "Spaghetti sốt súp nghêu", mn: "Хясаа шөлтэй спагетти", bn: "ক্ল্যাম চাউডার স্প্যাগেটি", my: "ခရုမြောက်ချောင်ဒါစပါဂက်တီ" },
+    price: 7900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-kimchi-cream-pasta",
+    store: "hururuk", group: 1, order: 4,
+    image: "/images/hururuk/bulhyang-usamgyeop-kimchi-cream-pasta.jpg",
+    name: { ko: "불향우삼겹 김치크림파스타", en: "Smoky Beef Belly Kimchi Cream Pasta", zh: "炭火牛五花泡菜奶油意面", vi: "Mì Ý kem kimchi ba chỉ bò", mn: "Утаат үхрийн цээжний мах, кимчи-крем паста", bn: "স্মোকি বিফ বেলি কিমচি ক্রিম পাস্তা", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ကင်မချီကရင်မ်ပါစတာ" },
+    price: 9500, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-kimchi-bulgogi-deopbap",
+    store: "hururuk", group: 1, order: 5,
+    image: "/images/hururuk/bulhyang-kimchi-bulgogi-deopbap.jpg",
+    name: { ko: "불향김치소불고기덮밥", en: "Smoky Kimchi Bulgogi Rice Bowl", zh: "炭火泡菜烤牛肉盖饭", vi: "Cơm bulgogi kimchi", mn: "Утаат кимчи, шарсан үхрийн махтай будаа", bn: "স্মোকি কিমচি বুলগোগি রাইস বোল", my: "မီးခိုးရနံ့ကင်မချီဘူဂိုဂီ ထမင်းခွက်" },
+    price: 7900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-tomato-pork-curry",
+    store: "hururuk", group: 1, order: 6,
+    image: "/images/hururuk/tomato-pork-curry.jpg",
+    name: { ko: "토마토포크커리", en: "Tomato Pork Curry", zh: "番茄猪肉咖喱", vi: "Cà ri thịt heo sốt cà chua", mn: "Улаан лоолийтэй гахайн махны карри", bn: "টমেটো পর্ক কারি", my: "ခရမ်းချဉ်သီးဝက်သားကရီ" },
+    price: 7900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-ramen-rice",
+    store: "hururuk", group: 1, order: 7,
+    image: null,
+    name: { ko: "우삼겹라면 + 공기밥", en: "Beef Belly Ramen + Rice", zh: "牛五花拉面+米饭", vi: "Mì ramen ba chỉ bò + Cơm", mn: "Үхрийн цээжний махтай рамен + будаа", bn: "বিফ বেলি রামেন + ভাত", my: "နွားသားရင်ညွှန့်ရာမန် + ထမင်း" },
+    price: 6900, soldOut: true, needsReview: false
+  },
+  {
+    id: "hururuk-cola",
+    store: "hururuk", group: 1, order: 8,
+    image: "/images/hururuk/cola.jpg",
+    name: { ko: "콜라 355ml", en: "Coke (355ml)", zh: "可乐(355ml)", vi: "Coca-Cola (355ml)", mn: "Кола 355мл", bn: "কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ (၃၅၅ မီလီလီတာ)" },
+    price: 2000, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-zero-cola",
+    store: "hururuk", group: 1, order: 9,
+    image: "/images/hururuk/zero-cola.jpg",
+    name: { ko: "제로콜라 355ml", en: "Coke Zero (355ml)", zh: "零度可乐(355ml)", vi: "Coca-Cola Zero (355ml)", mn: "Зеро кола 355мл", bn: "জিরো কোকা-কোলা (৩৫৫ মিলি)", my: "ကိုကာကိုလာ ဇီးရို (၃၅၅ မီလီလီတာ)" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sprite",
+    store: "hururuk", group: 1, order: 10,
+    image: null,
+    name: { ko: "스프라이트", en: "Sprite", zh: "雪碧", vi: "Sprite", mn: "Спрайт", bn: "স্প্রাইট", my: "စပရိုက်" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-fanta",
+    store: "hururuk", group: 1, order: 11,
+    image: "/images/hururuk/fanta.jpg",
+    name: { ko: "환타", en: "Fanta", zh: "芬达", vi: "Fanta", mn: "Фанта", bn: "ফ্যান্টা", my: "ဖန်တာ" },
+    price: 1500, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면2 ------------------------- */
+  {
+    id: "hururuk-hwakkeun-gochujang-usamgyeop-bokkeummyeon",
+    store: "hururuk", group: 2, order: 1,
+    image: "/images/hururuk/hwakkeun-gochujang-usamgyeop-bokkeummyeon.jpg",
+    name: { ko: "화끈고추장우삼겹볶음면", en: "Fiery Gochujang Beef Belly Stir-Fried Noodles", zh: "香辣辣椒酱牛五花炒面", vi: "Mì xào ba chỉ bò sốt ớt cay", mn: "Халуун гочужан соустай үхрийн цээжний хуурсан гоймон", bn: "ঝাল গোচুজাং বিফ বেলি স্টার-ফ্রাই নুডলস", my: "စပ်သောဂိုချူဂျန်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-salmon-jang-deopbap",
+    store: "hururuk", group: 2, order: 2,
+    image: null,
+    name: { ko: "연어장덮밥", en: "Salmon Jang Rice Bowl", zh: "酱汁三文鱼盖饭", vi: "Cơm cá hồi ngâm tương", mn: "Соёвын хулдтай будаа", bn: "স্যামন জ্যাং রাইস বোল", my: "ဆယ်လမွန်ဆော့စ် ထမင်းခွက်" },
+    price: 8500, soldOut: true, needsReview: true
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-deopbap",
+    store: "hururuk", group: 2, order: 3,
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-deopbap.jpg",
+    name: { ko: "불향우삼겹 라구덮밥", en: "Smoky Beef Belly Ragu Rice Bowl", zh: "炭火牛五花肉酱盖饭", vi: "Cơm sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу будаа", bn: "স্মোকি বিফ বেলি রাগু রাইস বোল", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂု ထမင်းခွက်" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-meat-ragu-deopbap",
+    store: "hururuk", group: 2, order: 4,
+    image: "/images/hururuk/meat-ragu-deopbap.jpg",
+    name: { ko: "고기듬뿍 라구덮밥", en: "Meat-Loaded Ragu Rice Bowl", zh: "肉酱盖饭(加量)", vi: "Cơm sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай будаа", bn: "প্রচুর মাংসসহ রাগু রাইস বোল", my: "အသားအပြည့်ရာဂု ထမင်းခွက်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sausage-ragu-deopbap",
+    store: "hururuk", group: 2, order: 5,
+    image: "/images/hururuk/sausage-ragu-deopbap.jpg",
+    name: { ko: "통소세지 라구덮밥", en: "Whole Sausage Ragu Rice Bowl", zh: "整根香肠肉酱盖饭", vi: "Cơm sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай будаа", bn: "গোটা সসেজ রাগু রাইস বোল", my: "ဝက်အူချောင်းတစ်ချောင်းလုံးရာဂု ထမင်းခွက်" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-meat-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 6,
+    image: "/images/hururuk/meat-ragu-spaghetti.jpg",
+    name: { ko: "고기듬뿍 라구스파게티", en: "Meat-Loaded Ragu Spaghetti", zh: "肉酱意大利面(加量)", vi: "Spaghetti sốt ragu nhiều thịt", mn: "Мах ихтэй рагу соустай спагетти", bn: "প্রচুর মাংসসহ রাগু স্প্যাগেটি", my: "အသားအပြည့်ရာဂုစပါဂက်တီ" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sausage-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 7,
+    image: "/images/hururuk/sausage-ragu-spaghetti.jpg",
+    name: { ko: "통소세지 라구스파게티", en: "Whole Sausage Ragu Spaghetti", zh: "整根香肠肉酱意面", vi: "Spaghetti sốt ragu xúc xích nguyên cây", mn: "Бүтэн хиамтай рагу соустай спагетти", bn: "গোটা সসেজ রাগু স্প্যাগেটি", my: "ဝက်အူချောင်းတစ်ချောင်းလုံးရာဂုစပါဂက်တီ" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 8,
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-spaghetti.jpg",
+    name: { ko: "불향우삼겹 라구스파게티", en: "Smoky Beef Belly Ragu Spaghetti", zh: "炭火牛五花肉酱意面", vi: "Spaghetti sốt ragu ba chỉ bò", mn: "Утаат үхрийн цээжний махтай рагу соустай спагетти", bn: "স্মোকি বিফ বেলি রাগু স্প্যাগেটি", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုစပါဂက်တီ" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-ragu-spaghetti",
+    store: "hururuk", group: 2, order: 9,
+    image: "/images/hururuk/duthum-chashu-ragu-spaghetti.jpg",
+    name: { ko: "두툼차슈 라구스파게티", en: "Thick-Cut Chashu Ragu Spaghetti", zh: "厚切叉烧肉酱意面", vi: "Spaghetti sốt ragu xá xíu dày", mn: "Зузаан чашүтэй рагу соустай спагетти", bn: "পুরু চাশু রাগু স্প্যাগেটি", my: "ထူသောချာရှူးရာဂုစပါဂက်တီ" },
+    price: 9500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set",
+    store: "hururuk", group: 2, order: 10,
+    image: "/images/hururuk/bulhyang-usamgyeop-ragu-pasta-samgak-kimbap-set.jpg",
+    name: { ko: "불향우삼겹 라구파스타 삼각김밥세트", en: "Smoky Beef Belly Ragu Pasta + Triangle Kimbap Set", zh: "炭火牛五花肉酱意面+三角紫菜包饭套餐", vi: "Mì Ý sốt ragu ba chỉ bò + Cơm nắm tam giác", mn: "Утаат үхрийн цээжний махтай рагу паста + гурвалжин будаа боовны иж бүрдэл", bn: "স্মোকি বিফ বেলি রাগু পাস্তা + ত্রিভুজ কিম্বাপ সেট", my: "မီးခိုးရနံ့နွားသားရင်ညွှန့်ရာဂုပါစတာ + တြိဂံကင်းဘတ်ပ် အစုံ" },
+    price: 12500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-deopbap",
+    store: "hururuk", group: 2, order: 11,
+    image: "/images/hururuk/duthum-chashu-deopbap.jpg",
+    name: { ko: "두툼차슈덮밥", en: "Thick-Cut Chashu Rice Bowl", zh: "厚切叉烧盖饭", vi: "Cơm xá xíu dày", mn: "Зузаан чашүтэй будаа", bn: "পুরু চাশু রাইস বোল", my: "ထူသောချာရှူး ထမင်းခွက်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-pork-malatang",
+    store: "hururuk", group: 2, order: 12,
+    image: "/images/hururuk/pork-malatang.jpg",
+    name: { ko: "돼지고기마라탕", en: "Pork Malatang", zh: "猪肉麻辣烫", vi: "Malatang thịt heo", mn: "Гахайн махтай малатан", bn: "পর্ক মালাথাং", my: "ဝက်သားမာလာသန်" },
+    price: 7900, soldOut: true, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면3 ------------------------- */
+  {
+    id: "hururuk-mala-hwasan-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 3, order: 1,
+    image: null,
+    name: { ko: "마라화산불백+100g쌀국수", en: "Mala Volcano Bulbaek + 100g Pho", zh: "麻辣火山不百+100g米粉", vi: "Bulbaek núi lửa vị Mala + Phở 100g", mn: "Мала галт уулын булбэг + 100г будааны гоймон", bn: "মালা ভলকানো বুলবেক + ১০০গ্রাম ফো", my: "မာလာမီးတောင်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-eolkeun-haemul-haejang-pasta",
+    store: "hururuk", group: 3, order: 2,
+    image: null,
+    name: { ko: "얼큰해물해장파스타", en: "Spicy Seafood Hangover Pasta", zh: "辣味海鲜解酒意面", vi: "Mì Ý cay giải rượu hải sản", mn: "Халуун ногоотой далайн хоолтой, сэргээх паста", bn: "ঝাল সিফুড হ্যাংওভার পাস্তা", my: "စပ်သောပင်လယ်စာအရက်ပြေဆေးပါစတာ" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-eolkeun-usamgyeop-haejang-pasta",
+    store: "hururuk", group: 3, order: 3,
+    image: "/images/hururuk/eolkeun-usamgyeop-haejang-pasta.jpg",
+    name: { ko: "얼큰우삼겹 해장파스타", en: "Spicy Beef Belly Hangover Pasta", zh: "辣味牛五花解酒意面", vi: "Mì Ý cay giải rượu ba chỉ bò", mn: "Халуун ногоотой үхрийн цээжний мах, сэргээх паста", bn: "ঝাল বিফ বেলি হ্যাংওভার পাস্তা", my: "စပ်သောနွားသားရင်ညွှန့် အရက်ပြေဆေးပါစတာ" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bokkeum-pasta",
+    store: "hururuk", group: 3, order: 4,
+    image: null,
+    name: { ko: "우삼겹볶음파스타", en: "Beef Belly Stir-Fried Pasta", zh: "牛五花炒意面", vi: "Mì Ý xào ba chỉ bò", mn: "Үхрийн цээжний махтай хуурсан паста", bn: "বিফ বেলি স্টার-ফ্রাই পাস্তা", my: "နွားသားရင်ညွှန့်ကြော်ပါစတာ" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-haesanmul-bokkeum-pasta",
+    store: "hururuk", group: 3, order: 5,
+    image: null,
+    name: { ko: "해산물볶음파스타", en: "Seafood Stir-Fried Pasta", zh: "海鲜炒意面", vi: "Mì Ý xào hải sản", mn: "Далайн хоолтой хуурсан паста", bn: "সিফুড স্টার-ফ্রাই পাস্তা", my: "ပင်လယ်စာကြော်ပါစတာ" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-garlic-pork-deopbap",
+    store: "hururuk", group: 3, order: 6,
+    image: "/images/hururuk/garlic-pork-deopbap.jpg",
+    name: { ko: "갈릭포크덮밥", en: "Garlic Pork Rice Bowl", zh: "蒜香猪肉盖饭", vi: "Cơm thịt heo sốt tỏi", mn: "Сармистай гахайн махны будаа", bn: "গার্লিক পর্ক রাইস বোল", my: "ကြက်သွန်ဖြူဝက်သား ထမင်းခွက်" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bomb-riceNoodle-samgak-kimbap-set",
+    store: "hururuk", group: 3, order: 7,
+    image: "/images/hururuk/usamgyeop-bomb-riceNoodle-samgak-kimbap-set.jpg",
+    name: { ko: "우삼겹폭탄쌀국수 삼각김밥세트", en: "Beef Belly Loaded Pho + Triangle Kimbap Set", zh: "牛五花爆量米粉+三角紫菜包饭套餐", vi: "Phở đầy đặn ba chỉ bò + Cơm nắm tam giác", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон + гурвалжин будаа боовны иж бүрдэл", bn: "বিফ বেলি ভরপুর ফো + ত্রিভুজ কিম্বাপ সেট", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့ + တြိဂံကင်းဘတ်ပ် အစုံ" },
+    price: 11900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sobaeksan",
+    store: "hururuk", group: 3, order: 8,
+    image: null,
+    name: { ko: "소백산(소고기간장불백)", en: "Sobaeksan (Beef Soy Bulbaek)", zh: "小白山(酱油牛肉不百)", vi: "Sobaeksan (Bulbaek bò sốt tương)", mn: "Собэксан (үхрийн махтай соёвын булбэг)", bn: "সোবায়েকসান (বিফ সয় বুলবেক)", my: "ဆိုဘဲစန် (နွားသားစွယ်ဆော့စ်ဘူဘိတ်)" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-sobaeksan-rice-noodle-set",
+    store: "hururuk", group: 3, order: 9,
+    image: null,
+    name: { ko: "소백산+100g쌀국수", en: "Sobaeksan + 100g Pho", zh: "小白山+100g米粉", vi: "Sobaeksan + Phở 100g", mn: "Собэксан + 100г будааны гоймон", bn: "সোবায়েকসান + ১০০গ্রাম ফো", my: "ဆိုဘဲစန် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 11900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-mala-hwasan-bulbaek",
+    store: "hururuk", group: 3, order: 10,
+    image: null,
+    name: { ko: "마라화산불백", en: "Mala Volcano Bulbaek", zh: "麻辣火山不百", vi: "Bulbaek núi lửa vị Mala", mn: "Мала галт уулын булбэг", bn: "মালা ভলকানো বুলবেক", my: "မာလာမီးတောင်ဘူဘိတ်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-jikhwa-ganjang-bulbaek",
+    store: "hururuk", group: 3, order: 11,
+    image: null,
+    name: { ko: "직화간장불백", en: "Flame-Grilled Soy Bulbaek", zh: "直火酱油不百", vi: "Bulbaek sốt tương nướng lửa", mn: "Нүүрсэн дээр шарсан соёвын булбэг", bn: "ফ্লেম-গ্রিলড সয় বুলবেক", my: "မီးတိုက်ကင်စွယ်ဆော့စ်ဘူဘိတ်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-bulhyang-ganjang-usamgyeop-bokkeummyeon",
+    store: "hururuk", group: 3, order: 12,
+    image: "/images/hururuk/bulhyang-ganjang-usamgyeop-bokkeummyeon.jpg",
+    name: { ko: "불향간장우삼겹볶음면", en: "Smoky Soy Beef Belly Stir-Fried Noodles", zh: "炭火酱油牛五花炒面", vi: "Mì xào ba chỉ bò sốt tương", mn: "Утаат соёвын соустай үхрийн цээжний хуурсан гоймон", bn: "স্মোকি সয়া বিফ বেলি স্টার-ফ্রাই নুডলস", my: "မီးခိုးရနံ့စွယ်ဆော့စ်နွားသားရင်ညွှန့်ကြော်ခေါက်ဆွဲ" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+
+  /* ------------------------- 후루룩찹찹 2층 - 화면4 ------------------------- */
+  {
+    id: "hururuk-padak-chicken",
+    store: "hururuk", group: 4, order: 1,
+    image: null,
+    name: { ko: "파닭(chicken)", en: "Scallion Chicken", zh: "葱香鸡", vi: "Gà hành lá", mn: "Ногоотой тахиа", bn: "স্ক্যালিয়ন চিকেন", my: "ကြက်သွန်မြိတ်ကြက်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-cheese-buldak-chicken",
+    store: "hururuk", group: 4, order: 2,
+    image: null,
+    name: { ko: "치즈불닭(chicken)", en: "Cheese Fire Chicken", zh: "芝士火鸡", vi: "Gà cay phô mai", mn: "Бяслагтай халуун тахиа", bn: "চিজ ফায়ার চিকেন", my: "ချိစ်မီးကြက်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-gyeran-pumeun-padak-chicken",
+    store: "hururuk", group: 4, order: 3,
+    image: null,
+    name: { ko: "계란품은파닭(chicken)", en: "Egg-Topped Scallion Chicken", zh: "鸡蛋葱香鸡", vi: "Gà hành lá phủ trứng", mn: "Өндөгтэй ногоотой тахиа", bn: "ডিম-টপড স্ক্যালিয়ন চিকেন", my: "ကြက်ဥဖုံးကြက်သွန်မြိတ်ကြက်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-hwasan-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 4, order: 4,
+    image: null,
+    name: { ko: "화산불백+100g쌀국수", en: "Volcano Bulbaek + 100g Pho", zh: "火山不百+100g米粉", vi: "Bulbaek núi lửa + Phở 100g", mn: "Галт уулын булбэг + 100г будааны гоймон", bn: "ভলকানো বুলবেক + ১০০গ্রাম ফো", my: "မီးတောင်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-gochujang-butter-hwasan-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 4, order: 5,
+    image: null,
+    name: { ko: "고추장버터화산불백+100g쌀국수", en: "Gochujang Butter Volcano Bulbaek + 100g Pho", zh: "辣椒酱黄油火山不百+100g米粉", vi: "Bulbaek núi lửa bơ tương ớt + Phở 100g", mn: "Гочужан-цөцгийн тостой галт уулын булбэг + 100г будааны гоймон", bn: "গোচুজাং বাটার ভলকানো বুলবেক + ১০০গ্রাম ফো", my: "ဂိုချူဂျန်ထောပတ်မီးတောင်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-hwasan-bulbaek",
+    store: "hururuk", group: 4, order: 6,
+    image: null,
+    name: { ko: "화산불백", en: "Volcano Bulbaek", zh: "火山不百", vi: "Bulbaek núi lửa", mn: "Галт уулын булбэг", bn: "ভলকানো বুলবেক", my: "မီးတောင်ဘူဘိတ်" },
+    price: 7500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-gochujang-butter-hwasan-bulbaek",
+    store: "hururuk", group: 4, order: 7,
+    image: null,
+    name: { ko: "고추장버터화산불백", en: "Gochujang Butter Volcano Bulbaek", zh: "辣椒酱黄油火山不百", vi: "Bulbaek núi lửa bơ tương ớt", mn: "Гочужан-цөцгийн тостой галт уулын булбэг", bn: "গোচুজাং বাটার ভলকানো বুলবেক", my: "ဂိုချူဂျန်ထောပတ်မီးတောင်ဘူဘိတ်" },
+    price: 7900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-shrimp-wonton-rice-noodle",
+    store: "hururuk", group: 4, order: 8,
+    image: "/images/hururuk/shrimp-wonton-rice-noodle.webp",
+    name: { ko: "새우완자쌀국수", en: "Shrimp Wonton Pho", zh: "虾丸米粉", vi: "Phở viên tôm", mn: "Сам хорхойн бөөрөнхийтэй будааны гоймон", bn: "চিংড়ি ওয়ান্টন ফো", my: "ပုဇွန်ဝမ်တန်ဖို့" },
+    price: 5500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-usamgyeop-bomb-rice-noodle",
+    store: "hururuk", group: 4, order: 9,
+    image: "/images/hururuk/usamgyeop-bomb-rice-noodle.jpg",
+    name: { ko: "우삼겹 폭탄쌀국수", en: "Beef Belly Loaded Pho", zh: "牛五花爆量米粉", vi: "Phở đầy đặn ba chỉ bò", mn: "Үхрийн цээжний махтай ихэссэн будааны гоймон", bn: "বিফ বেলি ভরপুর ফো", my: "နွားသားရင်ညွှန့်ဖြည့်ဖို့" },
+    price: 8900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-chicken-chashu-rice-noodle",
+    store: "hururuk", group: 4, order: 10,
+    image: null,
+    name: { ko: "치킨차슈쌀국수(Chicken Rice Noodle)", en: "Chicken Chashu Pho", zh: "鸡肉叉烧米粉", vi: "Phở xá xíu gà", mn: "Тахианы чашүтэй будааны гоймон", bn: "চিকেন চাশু ফো", my: "ကြက်သားချာရှူးဖို့" },
+    price: 6900, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-duthum-chashu-rice-noodle",
+    store: "hururuk", group: 4, order: 11,
+    image: "/images/hururuk/duthum-chashu-rice-noodle.jpg",
+    name: { ko: "두툼차슈쌀국수", en: "Thick-Cut Chashu Pho", zh: "厚切叉烧米粉", vi: "Phở xá xíu dày", mn: "Зузаан чашүтэй будааны гоймон", bn: "পুরু চাশু ফো", my: "ထူသောချာရှူးဖို့" },
+    price: 8500, soldOut: false, needsReview: false
+  },
+  {
+    id: "hururuk-jikhwa-ganjang-bulbaek-rice-noodle-set",
+    store: "hururuk", group: 4, order: 12,
+    image: null,
+    name: { ko: "직화간장불백+100g쌀국수", en: "Flame-Grilled Soy Bulbaek + 100g Pho", zh: "直火酱油不百+100g米粉", vi: "Bulbaek sốt tương nướng lửa + Phở 100g", mn: "Нүүрсэн дээр шарсан соёвын булбэг + 100г будааны гоймон", bn: "ফ্লেম-গ্রিলড সয় বুলবেক + ১০০গ্রাম ফো", my: "မီးတိုက်ကင်စွယ်ဆော့စ်ဘူဘိတ် + ဖို့ ၁၀၀ ဂရမ်" },
+    price: 10500, soldOut: false, needsReview: false
+  }
+];
+
+/* 천원의 아침밥 안내 (밥심 화면 상단 고정 안내칸 + 상세 모달 공용 데이터) */
+const BREAKFAST_INFO = {
+  title: { ko: "천원의 아침밥", en: "1,000 Won Breakfast", zh: "1,000韩元早餐", vi: "Bữa sáng 1.000 won", mn: "1,000 воны өглөөний хоол", bn: "১,০০০ ওনের সকালের খাবার", my: "ဝမ် ၁,၀၀၀ နံနက်စာ" },
+  // 세부페이지 리디자인(비용 최소화)의 라벤더 히어로용 한 줄 설명 —
+  // 새 이벤트/데이터가 아니라 title/price와 같은 자리에 놓이는 문구.
+  heroTagline: {
+    ko: "아침을 여는 가장 든든한 한 끼",
+    en: "A hearty meal to start your morning",
+    zh: "开启元气满满的一天",
+    vi: "Bữa sáng no đủ để bắt đầu ngày mới",
+    mn: "Өглөөг эрч хүчтэй эхлүүлэх хамгийн шимтэй хоол",
+    bn: "সকালকে শক্তিশালীভাবে শুরু করার সবচেয়ে পরিতৃপ্তিকর খাবার",
+    my: "မနက်ခင်းကို အားအင်ပြည့်ဝစွာ စတင်ဖို့ အကောင်းဆုံးအစားအစာ"
+  },
+  tabLabel: { ko: "일반 메뉴", en: "Menu", zh: "普通菜单", vi: "Thực đơn thường", mn: "Ерөнхий цэс", bn: "সাধারণ মেনু", my: "ယေဘုယျမီနူး" },
+  todayMenuTitle: { ko: "오늘의 아침 메뉴", en: "Today\u2019s Breakfast Menu", zh: "今日早餐菜单", vi: "Thực đơn bữa sáng hôm nay", mn: "Өнөөдрийн өглөөний цэс", bn: "আজকের সকালের খাবারের মেনু", my: "ယနေ့ နံနက်စာမီနူး" },
+  tomorrowMenuTitle: { ko: "내일의 아침 메뉴", en: "Tomorrow\u2019s Breakfast Menu", zh: "明日早餐菜单", vi: "Thực đơn bữa sáng ngày mai", mn: "Маргаашийн өглөөний цэс", bn: "আগামীকালের সকালের খাবারের মেনু", my: "မနက်ဖြန် နံနက်စာမီနူး" },
+  todayClosedMessage: {
+    ko: "오늘은 천원의 아침밥을 운영하지 않습니다.",
+    en: "The 1,000 Won Breakfast is not available today.",
+    zh: "今天不提供1,000韩元早餐。",
+    vi: "Hôm nay không phục vụ bữa sáng 1.000 won.",
+    mn: "Өнөөдөр 1,000 воны өглөөний хоол үйлчлэхгүй.",
+    bn: "আজ ১,০০০ ওনের সকালের খাবার পরিবেশন করা হবে না।",
+    my: "ယနေ့ ဝမ် ၁,၀၀၀ နံနက်စာ မရရှိနိုင်ပါ။"
+  },
+  tomorrowClosedMessage: {
+    ko: "내일은 천원의 아침밥을 운영하지 않습니다.",
+    en: "The 1,000 Won Breakfast is not available tomorrow.",
+    zh: "明天不提供1,000韩元早餐。",
+    vi: "Ngày mai không phục vụ bữa sáng 1.000 won.",
+    mn: "Маргааш 1,000 воны өглөөний хоол үйлчлэхгүй.",
+    bn: "আগামীকাল ১,০০০ ওনের সকালের খাবার পরিবেশন করা হবে না।",
+    my: "မနက်ဖြန် ဝမ် ၁,၀၀၀ နံနက်စာ မရရှိနိုင်ပါ။"
+  },
+  /* 운영일이지만 아직 메뉴가 등록되지 않았을 때 (휴무 문구와는 다름) */
+  menuPreparingMessage: {
+    ko: "메뉴를 준비 중입니다.",
+    en: "The menu is being prepared.",
+    zh: "菜单准备中。",
+    vi: "Thực đơn đang được chuẩn bị.",
+    mn: "Цэсийг бэлтгэж байна.",
+    bn: "মেনু প্রস্তুত করা হচ্ছে।",
+    my: "မီနူးကို ပြင်ဆင်နေပါသည်။"
+  },
+  mealFieldLabels: {
+    rice: { ko: "밥", en: "Rice", zh: "米饭", vi: "Cơm", mn: "Будаа", bn: "ভাত", my: "ထမင်း" },
+    soup: { ko: "국", en: "Soup", zh: "汤", vi: "Canh", mn: "Шөл", bn: "স্যুপ", my: "ဟင်းရည်" },
+    main: { ko: "주메뉴", en: "Main", zh: "主菜", vi: "Món chính", mn: "Гол хоол", bn: "প্রধান খাবার", my: "အဓိကဟင်းလျာ" },
+    side1: { ko: "반찬1", en: "Side 1", zh: "小菜1", vi: "Món phụ 1", mn: "Дагалдах хоол 1", bn: "সাইড ডিশ ১", my: "ဘေးထွက်ဟင်း ၁" },
+    side2: { ko: "반찬2", en: "Side 2", zh: "小菜2", vi: "Món phụ 2", mn: "Дагалдах хоол 2", bn: "সাইড ডিশ ২", my: "ဘေးထွက်ဟင်း ၂" },
+    kimchi: { ko: "김치", en: "Kimchi", zh: "泡菜", vi: "Kim chi", mn: "Кимчи", bn: "কিমচি", my: "ကင်မချီ" },
+    regular: { ko: "일반식", en: "Regular Meal", zh: "普通餐", vi: "Suất thường", mn: "Энгийн хоол", bn: "নিয়মিত খাবার", my: "ပုံမှန်အစားအစာ" },
+    simple: { ko: "간편식", en: "Simple Meal", zh: "简餐", vi: "Suất đơn giản", mn: "Хялбар хоол", bn: "সহজ খাবার", my: "လွယ်ကူသောအစားအစာ" }
+  },
+  tagline: {
+    ko: "단돈 1,000원으로 든든한 아침을 시작하세요.",
+    en: "Start your day with a filling breakfast for only \u20A91,000.",
+    zh: "只需1,000韩元，即可享用一份丰盛的早餐。",
+    vi: "Bắt đầu ngày mới với bữa sáng đầy đủ chỉ với 1.000 won.",
+    mn: "Ердөө 1,000 воноор цатгалан өглөөгөө эхлүүлээрэй.",
+    bn: "মাত্র ১,০০০ ওনে ভরপেট সকালের নাস্তা শুরু করুন।",
+    my: "ဝမ် ၁,၀၀၀ တည်းဖြင့် ဝစွာနံနက်စာစားပြီး တစ်နေ့တာကိုစတင်ပါ။"
+  },
+  fieldLabels: {
+    location: { ko: "장소", en: "Location", zh: "地点", vi: "Địa điểm", mn: "Байршил", bn: "স্থান", my: "တည်နေရာ" },
+    hours: { ko: "운영시간", en: "Hours", zh: "时间", vi: "Thời gian", mn: "Ажиллах цаг", bn: "সময়সূচী", my: "ဖွင့်ချိန်" },
+    price: { ko: "이용요금", en: "Price", zh: "价格", vi: "Giá", mn: "Үнэ", bn: "মূল্য", my: "ဈေးနှုန်း" },
+    eligibility: { ko: "이용대상", en: "Eligibility", zh: "适用对象", vi: "Đối tượng sử dụng", mn: "Хэрэглэгч", bn: "যোগ্যতা", my: "အရည်အချင်း" },
+    steps: { ko: "이용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" }
+  },
+  location: { ko: "밥심, 1층", en: "밥심, 1st Floor", zh: "밥심, 1楼", vi: "밥심, tầng 1", mn: "밥심, 1-р давхар", bn: "밥심, ১ম তলা", my: "밥심, ပထမထပ်" },
+  hours: { ko: "오전 7:30~9:30", en: "7:30 AM\u20139:30 AM", zh: "上午7:30\u20139:30", vi: "7:30\u20139:30", mn: "Өглөө 7:30~9:30", bn: "সকাল ৭:৩০~৯:৩০", my: "မနက် ၇:၃၀~၉:၃၀" },
+  price: { ko: "1,000원", en: "\u20A91,000", zh: "1,000韩元", vi: "1.000 won", mn: "1,000 вон", bn: "১,০০০ ওন", my: "၁,၀၀၀ ဝမ်" },
+  eligibility: {
+    ko: ["인제대학교 학생", "외국인 유학생", "인제글로벌어학원\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
+    en: ["Inje University students", "International students", "INJE GLOBAL LANGUAGE INSTITUTE students"],
+    zh: ["仁济大学学生", "外国留学生", "INJE GLOBAL LANGUAGE INSTITUTE 学生"],
+    vi: ["Sinh viên Đại học Inje", "Du học sinh quốc tế", "Học viên INJE GLOBAL LANGUAGE INSTITUTE"],
+    mn: ["Inje их сургуулийн оюутан", "Гадаад оюутан", "Inje глобал хэлний сургууль\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
+    bn: ["ইনজে বিশ্ববিদ্যালয়ের শিক্ষার্থী", "বিদেশী আন্তর্জাতিক শিক্ষার্থী", "ইনজে গ্লোবাল ল্যাঙ্গুয়েজ ইনস্টিটিউট\n(INJE GLOBAL LANGUAGE INSTITUTE)"],
+    my: ["အင်ဂျေတက္ကသိုလ်ကျောင်းသား", "နိုင်ငံခြားနိုင်ငံတကာကျောင်းသား", "အင်ဂျေ ဂလိုဘယ်ဘာသာစကားသင်တန်းကျောင်း\n(INJE GLOBAL LANGUAGE INSTITUTE)"]
+  },
+  steps: {
+    ko: ["헤이영 앱에서 QR 인증", "1,000원 식권 구매", "밥 또는 빵 라인 중 한 곳 선택"],
+    en: ["Verify the QR code using the HeyYoung app.", "Purchase a \u20A91,000 meal ticket.", "Choose either the rice line or the bread line."],
+    zh: ["使用HeyYoung应用程序进行二维码认证。", "购买1,000韩元餐券。", "米饭餐线和面包餐线中选择一种。"],
+    vi: ["Xác thực mã QR bằng ứng dụng HeyYoung.", "Mua phiếu ăn giá 1.000 won.", "Chọn một trong hai quầy: cơm hoặc bánh mì."],
+    mn: ["HeyYoung апп-аар QR код баталгаажуулах", "1,000 воны хоолны тасалбар худалдаж авах", "Будаа эсвэл талхны эгнээнээс сонгох"],
+    bn: ["HeyYoung অ্যাপে QR কোড যাচাই করুন", "১,০০০ ওনের খাবার টিকিট কিনুন", "ভাত অথবা রুটি লাইনের যেকোনো একটি বেছে নিন"],
+    my: ["HeyYoung အက်ပ်တွင် QR ကုဒ် စစ်ဆေးပါ", "ဝမ် ၁,၀၀၀ အစားအစာလက်မှတ် ဝယ်ယူပါ", "ထမင်း သို့မဟုတ် ပေါင်မုန့် တန်းတစ်ခုကို ရွေးချယ်ပါ"]
+  },
+  notes: {
+    ko: ["준비된 수량 소진 시 조기 종료될 수 있습니다.", "밥과 빵은 중복 이용할 수 없습니다."],
+    en: ["Available while supplies last.", "You may use only one line: rice or bread."],
+    zh: ["数量有限，售完即止。", "米饭和面包不可重复领取。"],
+    vi: ["Có thể kết thúc sớm khi hết suất.", "Không được sử dụng đồng thời cả hai quầy."],
+    mn: ["Бэлтгэсэн хэмжээ дуусвал эрт зогсож болно.", "Будаа, талхыг давхар ашиглах боломжгүй."],
+    bn: ["প্রস্তুতকৃত পরিমাণ শেষ হলে আগেই বন্ধ হতে পারে।", "ভাত ও রুটি একসাথে ব্যবহার করা যাবে না।"],
+    my: ["ပြင်ဆင်ထားသောပမာဏကုန်ပါက စောစီးစွာ ရပ်နားနိုင်ပါသည်။", "ထမင်းနှင့်ပေါင်မုန့်ကို တစ်ပြိုင်နက် အသုံးပြု၍မရပါ။"]
+  }
+};
+
+/* 무료 콜라 쿠폰 (만권화밥 · 후루룩찹찹 전용 배너 + 상세창 + 직원 제시 화면) */
+const COLA_COUPON = {
+  eligibleStores: ["mangwon", "hururuk"],
+  banner: {
+    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН", bn: "ফ্রি কোকা-কোলা কুপন", my: "အခမဲ့ ကိုကာကိုလာ ကူပွန်" },
+    subtitle: {
+      ko: "음식 주문하고 콜라 1캔 무료로 받으세요!",
+      en: "Order food and get 1 can of Coke free!",
+      zh: "点餐即可免费获得1罐可乐！",
+      vi: "Gọi món và nhận miễn phí 1 lon Coca-Cola!",
+      mn: "Хоол захиалаад 1 лааз кола үнэгүй аваарай!",
+      bn: "খাবার অর্ডার করুন এবং ১ ক্যান কোকা-কোলা ফ্রি পান!",
+      my: "အစားအစာမှာပြီး ကိုကာကိုလာ ၁ ဘူး အခမဲ့ ရယူလိုက်ပါ!"
+    },
+    button: { ko: "쿠폰 보기", en: "View Coupon", zh: "查看优惠券", vi: "Xem phiếu", mn: "Купон харах", bn: "কুপন দেখুন", my: "ကူပွန်ကြည့်ရန်" }
+  },
+  detail: {
+    title: { ko: "무료 콜라 쿠폰", en: "Free Coke Coupon", zh: "免费可乐券", vi: "Phiếu Coca-Cola miễn phí", mn: "ҮНЭГҮЙ КОЛАНЫ КУПОН", bn: "ফ্রি কোকা-কোলা কুপন", my: "အခမဲ့ ကိုကာကိုလာ ကူပွန်" },
+    subtitle: {
+      ko: "음식 구매 시 콜라 1캔 무료!",
+      en: "Get 1 can of Coke free with any food purchase!",
+      zh: "购买餐点即可免费获得1罐可乐！",
+      vi: "Mua món ăn được tặng miễn phí 1 lon Coca-Cola!",
+      mn: "Хоол худалдаж авахад 1 лааз кола үнэгүй!",
+      bn: "খাবার কিনলেই ১ ক্যান কোকা-কোলা ফ্রি!",
+      my: "အစားအစာဝယ်ယူပါက ကိုကာကိုလာ ၁ ဘူး အခမဲ့!"
+    },
+    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар", bn: "ব্যবহারযোগ্য দোকান", my: "အသုံးပြုနိုင်သောဆိုင်များ" },
+    stores: [
+      { brand: "만권화밥", floor: { ko: "1층", en: "1F", zh: "1楼", vi: "tầng 1", mn: "1-р давхар", bn: "১ম তলা", my: "ပထမထပ်" } },
+      { brand: "후루룩찹찹", floor: { ko: "2층", en: "2F", zh: "2楼", vi: "tầng 2", mn: "2-р давхар", bn: "২য় তলা", my: "ဒုတိယထပ်" } }
+    ],
+    conditionLabel: { ko: "사용 조건", en: "Conditions", zh: "使用条件", vi: "Điều kiện sử dụng", mn: "Ашиглах нөхцөл", bn: "ব্যবহারের শর্ত", my: "အသုံးပြုရန်စည်းကမ်းချက်" },
+    conditions: {
+      ko: ["음식 1개 구매 시 1인 1매", "콜라 1캔 무료 제공"],
+      en: ["1 coupon per person with 1 food item purchased", "1 free can of Coke provided"],
+      zh: ["购买1份餐点，每人限用1张", "赠送可乐1罐"],
+      vi: ["Mỗi người 1 phiếu khi mua 1 món ăn", "Tặng 1 lon Coca-Cola miễn phí"],
+      mn: ["Хоол худалдаж авах үед нэг хүн нэг купон ашиглана.", "1 лааз кола үнэгүй өгнө."],
+      bn: ["১টি খাবার কিনলে প্রতিজনে ১টি কুপন", "১ ক্যান কোকা-কোলা ফ্রি প্রদান করা হয়"],
+      my: ["အစားအစာ ၁ ခု ဝယ်ယူပါက တစ်ဦးလျှင် ၁ စောင်", "ကိုကာကိုလာ ၁ ဘူး အခမဲ့ ပေးအပ်ပါသည်"]
+    },
+    countLabel: { ko: "사용 횟수", en: "Usage Limit", zh: "使用次数", vi: "Số lần sử dụng", mn: "Ашиглах тоо", bn: "ব্যবহারের সংখ্যা", my: "အသုံးပြုနိုင်သောအကြိမ်" },
+    count: { ko: "횟수 제한 없음", en: "No limit", zh: "次数不限", vi: "Không giới hạn", mn: "Ашиглах давтамжийн хязгааргүй", bn: "সীমাহীন ব্যবহার", my: "ကန့်သတ်ချက်မရှိ" },
+    howToLabel: { ko: "사용방법", en: "How to Use", zh: "使用方法", vi: "Cách sử dụng", mn: "Хэрхэн ашиглах", bn: "ব্যবহারের পদ্ধতি", my: "အသုံးပြုနည်း" },
+    howTo: {
+      ko: "음식을 제공받을 때 직원에게 이 쿠폰을 보여주세요.",
+      en: "Show this coupon to staff when you receive your food.",
+      zh: "领取餐点时向工作人员出示此优惠券。",
+      vi: "Xuất trình phiếu này cho nhân viên khi nhận món ăn.",
+      mn: "Хоолоо авахдаа купоноо үзүүлнэ үү.",
+      bn: "খাবার গ্রহণের সময় কর্মীকে এই কুপনটি দেখান।",
+      my: "အစားအစာလက်ခံရရှိချိန်တွင် ဝန်ထမ်းအား ဤကူပွန်ကို ပြသပါ။"
+    },
+    captureLabel: { ko: "캡처 화면", en: "Screenshot", zh: "截图", vi: "Ảnh chụp màn hình", mn: "Дэлгэцийн зураг", bn: "স্ক্রিনশট", my: "မျက်နှာပြင်ဓာတ်ပုံ" },
+    capture: {
+      ko: "캡처한 쿠폰 화면도 사용할 수 있습니다.",
+      en: "A screenshot of this coupon can also be used.",
+      zh: "截图保存的优惠券画面同样可以使用。",
+      vi: "Có thể sử dụng ảnh chụp màn hình của phiếu này.",
+      mn: "Дэлгэцийн зураг ашиглаж болно.",
+      bn: "স্ক্রিনশট নেওয়া কুপনও ব্যবহার করা যাবে।",
+      my: "ဖမ်းယူထားသော ကူပွန်ပုံကိုလည်း အသုံးပြုနိုင်ပါသည်။"
+    },
+    periodLabel: { ko: "사용기간", en: "Valid Until", zh: "使用期限", vi: "Thời hạn sử dụng", mn: "Хугацаа", bn: "ব্যবহারের মেয়াদ", my: "သက်တမ်း" },
+    period: {
+      ko: "2026년 9월 30일까지",
+      en: "Until September 30, 2026",
+      zh: "至2026年9月30日",
+      vi: "Đến hết ngày 30/9/2026",
+      mn: "2026 оны 9-р сарын 30 хүртэл",
+      bn: "২০২৬ সালের ৩০ সেপ্টেম্বর পর্যন্ত",
+      my: "၂၀၂၆ ခုနှစ် စက်တင်ဘာလ ၃၀ ရက်အထိ"
+    },
+    notes: {
+      ko: ["음식 구매 고객에게만 제공됩니다.", "음식 1개 구매 시 콜라 1캔을 제공합니다.", "매장 사정에 따라 제공 음료가 변경되거나 조기 종료될 수 있습니다."],
+      en: ["Available only to customers who purchase food.", "1 can of Coke is provided per 1 food item purchased.", "The provided drink may change or the offer may end early depending on store circumstances."],
+      zh: ["仅限购买餐点的顾客使用。", "购买1份餐点可获得可乐1罐。", "根据门店情况，提供的饮品可能变更或提前结束。"],
+      vi: ["Chỉ áp dụng cho khách hàng mua món ăn.", "Mua 1 món ăn được tặng 1 lon Coca-Cola.", "Loại nước uống cung cấp có thể thay đổi hoặc chương trình có thể kết thúc sớm tùy tình hình cửa hàng."],
+      mn: ["Зөвхөн хоол худалдаж авсан үйлчлүүлэгчид олгоно.", "1 хоол авахад 1 лааз кола өгнө.", "Дэлгүүрийн нөхцөл байдлаас шалтгаалан ундаа солигдох эсвэл эрт дуусч болно."],
+      bn: ["শুধুমাত্র খাবার ক্রয়কারী গ্রাহকদের জন্য প্রযোজ্য।", "১টি খাবার কিনলে ১ ক্যান কোকা-কোলা দেওয়া হয়।", "দোকানের পরিস্থিতি অনুযায়ী প্রদত্ত পানীয় পরিবর্তন হতে পারে বা আগেই শেষ হতে পারে।"],
+      my: ["အစားအစာဝယ်ယူသောဖောက်သည်များအတွက်သာ ရရှိနိုင်ပါသည်။", "အစားအစာ ၁ ခု ဝယ်ယူပါက ကိုကာကိုလာ ၁ ဘူး ပေးအပ်ပါသည်။", "ဆိုင်၏အခြေအနေပေါ်မူတည်၍ ပေးအပ်သောဖျော်ရည် ပြောင်းလဲနိုင်သည် သို့မဟုတ် စောစီးစွာရပ်နားနိုင်ပါသည်။"]
+    },
+    showButton: { ko: "직원에게 보여주기", en: "Show to Staff", zh: "出示给工作人员", vi: "Xuất trình cho nhân viên", mn: "Ажилтанд үзүүлэх", bn: "কর্মীকে দেখান", my: "ဝန်ထမ်းအားပြရန်" },
+    closeButton: { ko: "닫기", en: "Close", zh: "关闭", vi: "Đóng", mn: "Хаах", bn: "বন্ধ করুন", my: "ပိတ်ရန်" }
+  },
+  staffShow: {
+    title: { ko: "무료 콜라 1캔", en: "1 Free Coke", zh: "免费可乐1罐", vi: "1 lon Coca-Cola miễn phí", mn: "1 лааз үнэгүй кола", bn: "১ ক্যান ফ্রি কোকা-কোলা", my: "အခမဲ့ကိုကာကိုလာ ၁ ဘူး" },
+    subtitle: {
+      ko: "음식 수령 시 직원에게 보여주세요.",
+      en: "Show this to staff when you receive your food.",
+      zh: "领取餐点时请出示给工作人员。",
+      vi: "Vui lòng xuất trình cho nhân viên khi nhận món ăn.",
+      mn: "Хоолоо авахдаа ажилтанд үзүүлнэ үү.",
+      bn: "খাবার নেওয়ার সময় কর্মীকে দেখান।",
+      my: "အစားအစာလက်ခံသည့်အခါ ဝန်ထမ်းအားပြပါ။"
+    },
+    storesLabel: { ko: "사용 가능 매장", en: "Available Stores", zh: "可用门店", vi: "Cửa hàng áp dụng", mn: "Ашиглах газар", bn: "ব্যবহারযোগ্য দোকান", my: "အသုံးပြုနိုင်သောဆိုင်များ" },
+    storesValue: "만권화밥 · 후루룩찹찹",
+    period: { ko: "2026. 9. 30.까지", en: "Until 2026. 9. 30.", zh: "至2026.9.30.", vi: "Đến 30.9.2026", mn: "2026.9.30 хүртэл", bn: "২০২৬. ৯. ৩০. পর্যন্ত", my: "၂၀၂၆.၉.၃၀ အထိ" }
+  }
+};
+
+/* 사장님께 말해요 (하단 안내칸 + 모바일 고정 버튼, 카카오톡 오픈채팅 연결) */
+const OWNER_CHAT = {
+  url: "https://open.kakao.com/o/sxJlUwMi",
+  title: { ko: "사장님께 말해요", en: "Talk to the Owner", zh: "告诉店主", vi: "Nhắn với chủ quán", mn: "Эзэнд нь хэлэх", bn: "মালিকের সাথে কথা বলুন", my: "ပိုင်ရှင်ကိုပြောပါ" },
+  desc: {
+    ko: ["메뉴 제안, 칭찬, 불편사항을 편하게 알려주세요.", "작성한 내용은 홈페이지에 공개되거나 저장되지 않습니다."],
+    en: ["Share your menu suggestions, compliments, or concerns with us.", "Your message will not be posted or stored on this website."],
+    zh: ["欢迎通过KakaoTalk告诉我们您的菜单建议、意见或遇到的问题。", "您的留言不会在本网站公开或保存。"],
+    vi: ["Hãy chia sẻ đề xuất món ăn, lời khen hoặc điều bất tiện với chúng tôi.", "Nội dung của bạn sẽ không được đăng hoặc lưu trên trang web này."],
+    mn: ["Цэсийн санал, магтаал, эсвэл тав тухгүй зүйлээ чөлөөтэй мэдэгдээрэй.", "Таны бичсэн зүйл вэбсайтад нийтлэгдэхгүй, хадгалагдахгүй."],
+    bn: ["মেনুর পরামর্শ, প্রশংসা বা অসুবিধা নির্দ্বিধায় জানান।", "আপনার লেখা বিষয়বস্তু ওয়েবসাইটে প্রকাশ বা সংরক্ষণ করা হয় না।"],
+    my: ["မီနူးအကြံပြုချက်၊ ချီးမွမ်းစကား၊ မကျေနပ်ချက်များကို လွတ်လပ်စွာ ပြောပြပါ။", "သင်ရေးသားသောအကြောင်းအရာသည် ဝဘ်ဆိုက်တွင် ထုတ်ဖော်ခြင်း သို့မဟုတ် သိမ်းဆည်းခြင်း မပြုပါ။"]
+  },
+  button: { ko: "카카오톡으로 말하기", en: "Chat on KakaoTalk", zh: "通过KakaoTalk联系", vi: "Trò chuyện qua KakaoTalk", mn: "KakaoTalk-аар холбогдох", bn: "কাকাওটক-এ কথা বলুন", my: "KakaoTalk ဖြင့်ပြောရန်" }
+};
+</script>
+<script>/* ==========================================================================
    관리자 페이지 (js/admin.js)
    4개 탭: 대시보드 / 메뉴 평가 / 언어 통계 / 주간메뉴 관리
    - Firestore(breakfastRatings, languageStats, weeklyMenus, weeklyMenuImages)
@@ -1925,7 +3352,13 @@ var COUNTRY_LIST = [
     { code: "tue", label: "화요일", offset: 1 },
     { code: "wed", label: "수요일", offset: 2 },
     { code: "thu", label: "목요일", offset: 3 },
-    { code: "fri", label: "금요일", offset: 4 }
+    { code: "fri", label: "금요일", offset: 4 },
+    // 2026-10-15 지시 — 주말 천원의 아침밥(토·일 08:00~10:00) 운영에 맞춰
+    // 입력 범위를 금요일에서 토·일요일까지로 늘립니다. 날짜 계산
+    // (addDaysToKey)과 카드 렌더링(renderWeekDayGrid)이 모두 이 배열을
+    // 그대로 순회하므로 코드 변경 없이 항목만 추가하면 됩니다.
+    { code: "sat", label: "토요일", offset: 5 },
+    { code: "sun", label: "일요일", offset: 6 }
   ];
 
   var els = {};
@@ -2303,7 +3736,7 @@ var COUNTRY_LIST = [
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup", menu: "pageMenu", roomInquiry: "pageRoomInquiry" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -2326,6 +3759,9 @@ var COUNTRY_LIST = [
     else if (page === "hellokorean") initHelloKoreanPage();
     else if (page === "weeklymenu") initWeeklyMenuPage();
     else if (page === "community") { if (window.AdminCommunity) AdminCommunity.init(); }
+    else if (page === "popup") { if (window.AdminPopup) AdminPopup.init(); }
+    else if (page === "menu") { if (window.AdminMenu) AdminMenu.init(); }
+    else if (page === "roomInquiry") { if (window.AdminRoomInquiry) AdminRoomInquiry.init(); }
   }
 
   /* ================================================================
@@ -3300,11 +4736,13 @@ var COUNTRY_LIST = [
       scheduleAutosave();
     }
 
-    fileInput.addEventListener("change", function () {
+    // 파일 선택(change)과 붙여넣기(paste) 둘 다 같은 검증·미리보기
+    // 로직을 타도록 공통 함수로 뺐습니다(새 저장 로직 없음, 기존
+    // 흐름 그대로 재사용).
+    function applySelectedImageFile(file) {
       errorEl.textContent = "";
       statusEl.hidden = true;
       resetAnalyzeFailureActions();
-      var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (ALLOWED_IMAGE_TYPES.indexOf(file.type) === -1) {
         errorEl.textContent = "jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.";
@@ -3325,7 +4763,58 @@ var COUNTRY_LIST = [
         weeklyMenuState.pendingImageMimeType = resized.mimeType;
         scheduleAutosave();
       }).catch(function () { /* 미리보기 실패는 무시 — 분석 시도 시 다시 시도됨 */ });
+    }
+
+    fileInput.addEventListener("change", function () {
+      var file = fileInput.files && fileInput.files[0];
+      applySelectedImageFile(file);
     });
+
+    // 주간메뉴표 스크린샷을 클립보드에서 바로 붙여넣기(Ctrl+V) — 파일
+    // 저장 없이 캡처 도구에서 복사한 이미지를 즉시 쓸 수 있게 합니다.
+    // "주간메뉴 관리" 탭이 보이는 동안에만 가로채고, 다른 탭/화면에서는
+    // 평소처럼 텍스트 붙여넣기가 그대로 동작합니다.
+    document.addEventListener("paste", function (e) {
+      var pageEl = qs("pageWeeklyMenu");
+      if (!pageEl || pageEl.hidden) return;
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      var imageItem = null;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) { imageItem = items[i]; break; }
+      }
+      if (!imageItem) return; // 이미지가 없는 일반 붙여넣기는 건드리지 않음
+      e.preventDefault();
+      var file = imageItem.getAsFile();
+      if (file) applySelectedImageFile(file);
+    });
+
+    // [붙여넣기] 버튼 — Ctrl+V를 모르거나 포커스 문제로 키보드 붙여넣기가
+    // 안 먹힐 때를 위한 눈에 보이는 대안입니다. 비동기 클립보드
+    // API(navigator.clipboard.read)로 클립보드의 이미지를 직접 읽어와
+    // 같은 applySelectedImageFile로 넘깁니다 — 저장/분석 로직은 전혀
+    // 새로 만들지 않고 그대로 재사용.
+    var pasteBtn = qs("weekPasteBtn");
+    if (pasteBtn) {
+      pasteBtn.addEventListener("click", function () {
+        errorEl.textContent = "";
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+          errorEl.textContent = "이 브라우저는 버튼으로 붙여넣기를 지원하지 않습니다. Ctrl+V를 이용해 주세요.";
+          return;
+        }
+        navigator.clipboard.read().then(function (clipItems) {
+          for (var i = 0; i < clipItems.length; i++) {
+            var imgType = clipItems[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
+            if (!imgType) continue;
+            return clipItems[i].getType(imgType).then(function (blob) {
+              applySelectedImageFile(new File([blob], "pasted." + (imgType.split("/")[1] || "png"), { type: imgType }));
+            });
+          }
+          errorEl.textContent = "클립보드에 복사된 이미지가 없습니다. 먼저 스크린샷을 복사해 주세요.";
+        }).catch(function () {
+          errorEl.textContent = "클립보드 읽기 권한이 필요합니다. 브라우저 권한 요청을 허용해 주세요.";
+        });
+      });
+    }
 
     function runAnalyze() {
       var user = requireAdminUser();
@@ -3767,7 +5256,10 @@ var COUNTRY_LIST = [
 
   function initApp() {
     els.warnBanner = qs("adminFirebaseWarning");
-    els.navBtns = document.querySelectorAll(".admin-nav-btn");
+    // "메뉴 관리"의 매장 선택 버튼(#menuStoreNav)도 같은 admin-nav-btn
+    // 스타일을 재사용하므로, 페이지 탭 목록은 #adminNav로 범위를 좁혀
+    // 서로 섞이지 않게 합니다.
+    els.navBtns = document.querySelectorAll("#adminNav .admin-nav-btn");
 
     var configured = (typeof isFirebaseConfigured === "function") && isFirebaseConfigured();
     els.warnBanner.hidden = configured;
@@ -3781,10 +5273,8 @@ var COUNTRY_LIST = [
 
   document.addEventListener("DOMContentLoaded", initGate);
 })();
-
 </script>
-<script>
-/* ==========================================================================
+<script>/* ==========================================================================
    관리자 페이지 - 유학생 커뮤니티 관리 (js/admin-community.js)
    - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
      "커뮤니티" 탭 하나를 추가합니다(새 관리자 사이트 아님).
@@ -3854,6 +5344,7 @@ var AdminCommunity = (function () {
     else if (tab === "posts") loadPosts();
     else if (tab === "users") loadUsers();
     else if (tab === "translations") loadTranslations();
+    else if (tab === "reports") loadReports();
   }
 
   /* ---------------- 통계 ---------------- */
@@ -3995,7 +5486,7 @@ var AdminCommunity = (function () {
 
       var table = document.createElement("table");
       table.className = "results-table";
-      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>작성자</th><th>상태</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
+      table.innerHTML = "<thead><tr><th>카테고리</th><th>제목</th><th>사진</th><th>작성자</th><th>상태</th><th>번역</th><th>신고</th><th>등록일</th><th>작업</th></tr></thead>";
       var tbody = document.createElement("tbody");
       snap.forEach(function (doc) {
         var p = doc.data();
@@ -4009,6 +5500,26 @@ var AdminCommunity = (function () {
         tdTitle.textContent = p.originalTitle || "";
         tr.appendChild(tdTitle);
 
+        // 관리자가 게시글을 확인할 때 첨부 사진도 같이 볼 수 있도록
+        // 작은 썸네일만 추가(2026-09 "커뮤니티 이미지 업로드" 지시서
+        // 17번) — 새 상세보기 화면 없이 원본 URL을 새 탭으로 엽니다.
+        var tdPhoto = document.createElement("td");
+        if (p.photos && p.photos.length) {
+          var photoLink = document.createElement("a");
+          photoLink.href = p.photos[0];
+          photoLink.target = "_blank";
+          photoLink.rel = "noopener noreferrer";
+          var photoThumb = document.createElement("img");
+          photoThumb.src = p.photos[0];
+          photoThumb.alt = "";
+          photoThumb.className = "admin-post-photo-thumb";
+          photoLink.appendChild(photoThumb);
+          tdPhoto.appendChild(photoLink);
+        } else {
+          tdPhoto.textContent = "-";
+        }
+        tr.appendChild(tdPhoto);
+
         var tdAuthor = document.createElement("td");
         tdAuthor.textContent = p.authorNameMasked || "";
         tr.appendChild(tdAuthor);
@@ -4016,6 +5527,15 @@ var AdminCommunity = (function () {
         var tdStatus = document.createElement("td");
         tdStatus.textContent = p.status || "";
         tr.appendChild(tdStatus);
+
+        // 원문 언어를 뺀 나머지 언어 중 번역 완료 개수(예: "6/6", 실패가
+        // 있으면 "5/6 ✕" 처럼 표시) — 지시서 15번 "번역 상태 확인".
+        var tdTranslation = document.createElement("td");
+        var trSummary = translationDoneCount(p);
+        tdTranslation.textContent = trSummary.total
+          ? trSummary.done + "/" + trSummary.total + (trSummary.done < trSummary.total ? " ✕" : " ✓")
+          : "-";
+        tr.appendChild(tdTranslation);
 
         var tdReport = document.createElement("td");
         tdReport.textContent = String(p.reportCount || 0);
@@ -4166,14 +5686,27 @@ var AdminCommunity = (function () {
 
   /* ---------------- 번역 관리 ---------------- */
 
-  // 게시글은 이제 등록 시점에 미리 번역하지 않고 방문자가 요청할 때만
-  // 번역하므로(비용 최소화), "번역 실패"는 언어별 translations 맵 안에
-  // status:"failed"로 남습니다. 전용 색인 필드가 없어 최근 글을 훑어
-  // 찾습니다(관리자 화면이라 다른 통계와 동일하게 스캔 방식 사용).
+  // 2026-09 자동번역 지시서부터 게시글은 등록/수정 시점에 원문 언어를 뺀
+  // 나머지 언어를 한 번에 자동번역합니다(비용 최소화 — 조회 시에는 저장된
+  // translations만 읽고 다시 번역하지 않음). "번역 실패"는 언어별
+  // translations 맵 안에 status:"failed"로 남습니다. 전용 색인 필드가
+  // 없어 최근 글을 훑어 찾습니다(관리자 화면이라 다른 통계와 동일하게
+  // 스캔 방식 사용).
+  var TRANSLATE_LANGS = ["ko", "zh", "vi", "en", "mn", "bn", "my"];
+
   function postHasFailedTranslation(p) {
     var tr = p.translations;
     if (!tr) return false;
     return Object.keys(tr).some(function (l) { return tr[l] && tr[l].status === "failed"; });
+  }
+
+  // 원문 언어를 뺀 나머지 6개 언어 중 번역 완료 개수 — 게시글 목록 표의
+  // "번역" 열에 짧게("6/6") 보여주기 위한 요약입니다.
+  function translationDoneCount(p) {
+    var targets = TRANSLATE_LANGS.filter(function (l) { return l !== p.originalLanguage; });
+    var tr = p.translations || {};
+    var done = targets.filter(function (l) { return tr[l] && tr[l].status === "done"; }).length;
+    return { done: done, total: targets.length };
   }
 
   function loadTranslations() {
@@ -4198,8 +5731,18 @@ var AdminCommunity = (function () {
         card.appendChild(title);
         var meta = document.createElement("p");
         meta.className = "empty-note";
-        meta.textContent = "원문 언어: " + p.originalLanguage + " · 번역 실패한 언어: " + failedLangs.join(", ");
+        meta.textContent = "원문: " + p.originalLanguage;
         card.appendChild(meta);
+
+        // 언어별 상태 그리드(지시서 15번 예시 형식: KO ✓ / VI 원문 / MY ✕).
+        var grid = document.createElement("p");
+        grid.className = "empty-note";
+        grid.textContent = TRANSLATE_LANGS.map(function (l) {
+          if (l === p.originalLanguage) return l.toUpperCase() + " 원문";
+          var st = p.translations && p.translations[l] && p.translations[l].status;
+          return l.toUpperCase() + " " + (st === "done" ? "✓" : "✕");
+        }).join("   ");
+        card.appendChild(grid);
 
         var retryBtn = document.createElement("button");
         retryBtn.type = "button";
@@ -4246,16 +5789,118 @@ var AdminCommunity = (function () {
     });
   }
 
+  /* ---------------- 신고·삭제 요청 관리(2026-10-09 속닥속닥 지시서 10번) ----------------
+     신고 자체는 기존 communityReports 컬렉션(js/community.js의
+     submitReport가 신고 1건당 문서 1개, status:"pending"으로 이미 저장)을
+     그대로 재사용합니다 — 새 컬렉션 없음. 여기서는 그 문서의 status만
+     "검토 중/처리 완료/반려"로 바꿀 수 있게 하고, 대상(게시글/댓글)을
+     바로 숨기는 단축 버튼만 추가합니다. */
+  var REPORT_STATUS_LABELS = { pending: "접수", reviewing: "검토 중", done: "처리 완료", rejected: "반려" };
+  var REPORT_REASON_LABELS = {
+    reasonSelfDelete: "본인 글 삭제 요청", reasonAbuse: "욕설·비방", reasonAd: "광고·도배",
+    reasonPrivacy: "개인정보 노출", reasonEtc: "기타",
+    // 옛 카테고리에서 쓰던 사유도 과거 신고 기록을 그대로 보여주기 위해 남겨둡니다.
+    reasonScam: "사기 의심", reasonIllegal: "불법·위험 물품", reasonMeet: "부적절한 만남 요구"
+  };
+
+  function loadReports() {
+    var d = db();
+    var body = els.reportsBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("communityReports").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">접수된 신고·삭제 요청이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>구분</th><th>사유</th><th>접수일</th><th>상태</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      snap.forEach(function (doc) {
+        var r = doc.data();
+        var tr = document.createElement("tr");
+
+        var tdTarget = document.createElement("td");
+        tdTarget.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " · " + r.targetId;
+        tr.appendChild(tdTarget);
+
+        var tdReason = document.createElement("td");
+        tdReason.textContent = REPORT_REASON_LABELS[r.reason] || r.reason || "-";
+        tr.appendChild(tdReason);
+
+        var tdDate = document.createElement("td");
+        tdDate.textContent = fmtDate(r.createdAt);
+        tr.appendChild(tdDate);
+
+        var tdStatus = document.createElement("td");
+        tdStatus.textContent = REPORT_STATUS_LABELS[r.status] || r.status || "접수";
+        tr.appendChild(tdStatus);
+
+        var tdActions = document.createElement("td");
+        [["reviewing", "검토 중으로"], ["done", "처리 완료로"], ["rejected", "반려"]].forEach(function (pair) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = pair[1];
+          btn.addEventListener("click", function () { updateReportStatus(doc.id, pair[0], btn); });
+          tdActions.appendChild(btn);
+        });
+        var hideBtn = document.createElement("button");
+        hideBtn.type = "button";
+        hideBtn.textContent = (r.targetType === "comment" ? "댓글" : "게시글") + " 숨김";
+        hideBtn.addEventListener("click", function () { hideReportedTarget(r.targetType, r.targetId, doc.id, hideBtn); });
+        tdActions.appendChild(hideBtn);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function (err) {
+      body.innerHTML = "<p class=\"empty-note\">불러오기 실패: " + (err && err.message ? err.message : "오류") + "</p>";
+    });
+  }
+
+  function updateReportStatus(reportId, status, btn) {
+    var d = db();
+    if (!d) return;
+    btn.disabled = true;
+    d.collection("communityReports").doc(reportId).update({ status: status }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("상태 변경 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
+  function hideReportedTarget(targetType, targetId, reportId, btn) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("이 " + (targetType === "comment" ? "댓글" : "게시글") + "을(를) 숨김 처리하시겠습니까?")) return;
+    btn.disabled = true;
+    var collectionName = targetType === "comment" ? "communityComments" : "communityPosts";
+    d.collection(collectionName).doc(targetId).update({ status: "hidden" }).then(function () {
+      return d.collection("communityReports").doc(reportId).update({ status: "done" });
+    }).then(function () {
+      loadReports();
+    }).catch(function (err) {
+      window.alert("숨김 처리 실패(관리자 권한이 없을 수 있습니다): " + (err && err.message ? err.message : "오류"));
+      btn.disabled = false;
+    });
+  }
+
   /* ---------------- 초기화 ---------------- */
 
   function init() {
     els.subTabs = {
       stats: qs("commAdminTabStats"), posts: qs("commAdminTabPosts"),
-      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations")
+      users: qs("commAdminTabUsers"), translations: qs("commAdminTabTranslations"),
+      reports: qs("commAdminTabReports")
     };
     els.subPages = {
       stats: qs("commAdminPageStats"), posts: qs("commAdminPagePosts"),
-      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations")
+      users: qs("commAdminPageUsers"), translations: qs("commAdminPageTranslations"),
+      reports: qs("commAdminPageReports")
     };
     if (!els.subTabs.stats) return; // 커뮤니티 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
 
@@ -4263,6 +5908,7 @@ var AdminCommunity = (function () {
     els.postsBody = qs("commAdminPostsBody");
     els.usersBody = qs("commAdminUsersBody");
     els.translationsBody = qs("commAdminTranslationsBody");
+    els.reportsBody = qs("commAdminReportsBody");
 
     Object.keys(els.subTabs).forEach(function (key) {
       els.subTabs[key].addEventListener("click", function () { showTab(key); });
@@ -4285,7 +5931,1563 @@ var AdminCommunity = (function () {
 
   return { init: init, refresh: function () { showTab(currentTab); } };
 })();
+</script>
+<script>
+/* ==========================================================================
+   관리자 페이지 - 팝업 관리 (js/admin-popup.js)
+   - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
+     "팝업 관리" 탭 하나를 추가합니다(새 관리자 사이트 아님).
+   - 로그인은 "주간메뉴 관리"에서 이미 로그인한 Firebase 계정을 그대로
+     씁니다(별도 로그인 화면 없음). 이미지 업로드도 그 화면과 같은
+     Firebase Storage를 그대로 재사용하고, 경로만 sitePopupImages/로
+     새로 둡니다(새 스토리지 구조 아님).
+   - 이 단계는 관리자가 팝업을 등록·수정·삭제·ON/OFF하는 화면까지만
+     만듭니다. 실제 학생 화면에 팝업을 띄우는 기능은 다음 단계입니다.
+   ========================================================================== */
 
+var AdminPopup = (function () {
+  "use strict";
+
+  var els = {};
+  var editingId = null;      // null=새로 등록, 값이 있으면 그 문서를 수정 중
+  var editingImageUrl = "";  // 수정 중인 팝업의 기존 이미지(새 파일을 안 고르면 유지)
+  var pendingCompressPromise = null; // 방금 고른 파일의 압축 결과(Promise<Blob|null>)
+
+  // 팝업 이미지 속도 2단계: 업로드 전 브라우저에서 800×1000 이내로 축소
+  // 합니다(원본 비율 유지). 4:5(800×1000) 권장 규격과 맞춘 값입니다.
+  var POPUP_MAX_WIDTH = 800;
+  var POPUP_MAX_HEIGHT = 1000;
+  var POPUP_PHOTO_QUALITY = 0.8; // 사진 계열(투명 없음) 압축 품질
+  var POPUP_WARN_BYTES = 500 * 1024; // 이 이상이면 업로드는 막지 않고 경고만
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+  function storage() { return (typeof getFirebaseStorage === "function") ? getFirebaseStorage() : null; }
+  function currentAdminUser() {
+    var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
+    return auth && auth.currentUser ? auth.currentUser : null;
+  }
+
+  function fmtDateTime(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : (typeof ts === "string" ? new Date(ts) : null);
+    if (!d || isNaN(d.getTime())) return "-";
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  // <input type="datetime-local"> 값("YYYY-MM-DDTHH:mm", 로컬시간) <-> Date.
+  function localInputToDate(value) {
+    if (!value) return null;
+    var d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function dateToLocalInputValue(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : null;
+    if (!d) return "";
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function setStatus(text, isError) {
+    if (!els.formStatus) return;
+    if (!text) { els.formStatus.hidden = true; return; }
+    els.formStatus.hidden = false;
+    els.formStatus.textContent = text;
+    els.formStatus.className = "publish-status" + (isError ? " error" : " success");
+  }
+
+  function resetForm() {
+    editingId = null;
+    editingImageUrl = "";
+    pendingCompressPromise = null;
+    els.form.reset();
+    els.activeInput.checked = true;
+    els.imagePreviewWrap.hidden = true;
+    els.imagePreviewImg.src = "";
+    els.formTitle.textContent = "팝업 등록";
+    els.saveBtn.textContent = "등록";
+    els.cancelEditBtn.hidden = true;
+    setStatus("");
+  }
+
+  function startEdit(id, p) {
+    editingId = id;
+    editingImageUrl = p.imageUrl || "";
+    pendingCompressPromise = null;
+    els.titleInput.value = p.title || "";
+    els.linkInput.value = p.linkUrl || "";
+    els.activeInput.checked = !!p.isActive;
+    els.startInput.value = dateToLocalInputValue(p.startAt);
+    els.endInput.value = dateToLocalInputValue(p.endAt);
+    els.imageInput.value = "";
+    if (editingImageUrl) {
+      els.imagePreviewImg.src = editingImageUrl;
+      els.imagePreviewWrap.hidden = false;
+    } else {
+      els.imagePreviewWrap.hidden = true;
+    }
+    els.formTitle.textContent = "팝업 수정";
+    els.saveBtn.textContent = "수정 저장";
+    els.cancelEditBtn.hidden = false;
+    setStatus("");
+    els.form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // 업로드 전 이미지 로딩(커뮤니티 게시글 사진 압축, js/community.js
+  // compressImage와 같은 Canvas API 방식 재사용 — 새 라이브러리 없음).
+  function loadPopupImageSource(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: "from-image" }).catch(function () {
+        return loadPopupImageViaTag(file);
+      });
+    }
+    return loadPopupImageViaTag(file);
+  }
+  function loadPopupImageViaTag(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("IMAGE_LOAD_FAILED")); };
+      img.src = url;
+    });
+  }
+
+  // 캔버스에 투명 픽셀이 하나라도 있으면 PNG로 유지(무조건 JPEG로 바꿔
+  // 투명 배경을 깨뜨리지 않기 위함). 확인 자체가 실패하면 안전하게
+  // 투명으로 간주합니다.
+  function popupCanvasHasAlpha(canvas) {
+    try {
+      var data = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+      for (var i = 3; i < data.length; i += 4) { if (data[i] < 255) return true; }
+      return false;
+    } catch (e) { return true; }
+  }
+
+  // 업로드 전 브라우저에서 800×1000 이내로 축소(원본 비율 유지) + 압축합니다.
+  // 투명 배경이 있으면 PNG로, 없으면 WebP 품질 0.8로 저장합니다. 실패하면
+  // null을 돌려주고 호출부에서 원본 파일을 그대로 올립니다(업로드를
+  // 막지 않음 — 구조가 복잡해지거나 위험하면 압축을 강행하지 않음).
+  function compressPopupImage(file) {
+    return loadPopupImageSource(file).then(function (source) {
+      var srcW = source.width, srcH = source.height;
+      var scale = Math.min(1, POPUP_MAX_WIDTH / srcW, POPUP_MAX_HEIGHT / srcH);
+      var w = Math.max(1, Math.round(srcW * scale));
+      var h = Math.max(1, Math.round(srcH * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+      if (source && typeof source.close === "function") source.close();
+
+      var keepPng = popupCanvasHasAlpha(canvas);
+      return new Promise(function (resolve, reject) {
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob); else reject(new Error("COMPRESS_FAILED"));
+        }, keepPng ? "image/png" : "image/webp", keepPng ? undefined : POPUP_PHOTO_QUALITY);
+      });
+    }).catch(function () { return null; });
+  }
+
+  function extFromBlob(blob, fallbackName) {
+    if (blob) {
+      if (blob.type === "image/webp") return "webp";
+      if (blob.type === "image/png") return "png";
+      if (blob.type === "image/jpeg") return "jpg";
+    }
+    return (fallbackName && fallbackName.split(".").pop()) || "jpg";
+  }
+
+  function uploadPopupImage(blob, fallbackName) {
+    var st = storage();
+    if (!st || !blob) return Promise.resolve(null);
+    var ext = extFromBlob(blob, fallbackName);
+    var ref = st.ref().child("sitePopupImages/popup_" + Date.now() + "." + ext);
+    return ref.put(blob).then(function () { return ref.getDownloadURL(); });
+  }
+
+  function warnIfLarge(size) {
+    els.imageError.textContent = (typeof size === "number" && size > POPUP_WARN_BYTES)
+      ? "이미지 용량이 커서 팝업 표시가 느려질 수 있습니다."
+      : "";
+  }
+
+  function handleImagePick() {
+    var file = els.imageInput.files[0];
+    els.imageError.textContent = "";
+    pendingCompressPromise = null;
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      els.imagePreviewImg.src = reader.result;
+      els.imagePreviewWrap.hidden = false;
+    };
+    reader.readAsDataURL(file);
+
+    pendingCompressPromise = compressPopupImage(file).then(function (blob) {
+      warnIfLarge(blob ? blob.size : file.size);
+      return blob;
+    });
+  }
+
+  function handleSave(e) {
+    e.preventDefault();
+    var d = db();
+    if (!d) { setStatus("Firebase가 연결되지 않았습니다.", true); return; }
+    if (!currentAdminUser()) { setStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
+    var title = els.titleInput.value.trim();
+    if (!title) { setStatus("팝업 제목을 입력해주세요.", true); return; }
+
+    els.saveBtn.disabled = true;
+    setStatus("저장 중...", false);
+
+    var file = els.imageInput.files[0];
+    var uploadPromise = !file
+      ? Promise.resolve(null)
+      : Promise.resolve(pendingCompressPromise || compressPopupImage(file)).then(function (blob) {
+          return uploadPopupImage(blob || file, file.name);
+        });
+
+    uploadPromise.then(function (newUrl) {
+      var imageUrl = newUrl || editingImageUrl;
+      if (!imageUrl) throw new Error("IMAGE_REQUIRED");
+      var data = {
+        title: title,
+        imageUrl: imageUrl,
+        linkUrl: els.linkInput.value.trim(),
+        isActive: els.activeInput.checked,
+        startAt: localInputToDate(els.startInput.value),
+        endAt: localInputToDate(els.endInput.value)
+      };
+      if (editingId) return d.collection("sitePopups").doc(editingId).update(data);
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      return d.collection("sitePopups").add(data);
+    }).then(function () {
+      setStatus(editingId ? "수정되었습니다." : "등록되었습니다.", false);
+      resetForm();
+      loadPopups();
+    }).catch(function (err) {
+      setStatus(err && err.message === "IMAGE_REQUIRED" ? "팝업 이미지를 선택해주세요." : "저장에 실패했습니다.", true);
+    }).finally(function () { els.saveBtn.disabled = false; });
+  }
+
+  function toggleActive(id, next, btn) {
+    var d = db();
+    if (!d) return;
+    if (btn) btn.disabled = true;
+    d.collection("sitePopups").doc(id).update({ isActive: next }).then(function () {
+      loadPopups();
+    }).catch(function () {
+      if (btn) btn.disabled = false;
+    });
+  }
+
+  function deletePopup(id) {
+    var d = db();
+    if (!d || !window.confirm("정말 삭제하시겠습니까?")) return;
+    d.collection("sitePopups").doc(id).delete().then(function () {
+      if (editingId === id) resetForm();
+      loadPopups();
+    });
+  }
+
+  function loadPopups() {
+    var d = db();
+    var body = els.listBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("sitePopups").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">등록된 팝업이 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>이미지</th><th>제목</th><th>링크</th><th>시작</th><th>종료</th><th>사용</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+
+      snap.forEach(function (doc) {
+        var p = doc.data();
+        var tr = document.createElement("tr");
+
+        var tdImg = document.createElement("td");
+        if (p.imageUrl) {
+          var thumb = document.createElement("img");
+          thumb.src = p.imageUrl;
+          thumb.alt = "";
+          thumb.style.width = "48px";
+          thumb.style.height = "48px";
+          thumb.style.objectFit = "cover";
+          thumb.style.borderRadius = "6px";
+          tdImg.appendChild(thumb);
+        }
+        tr.appendChild(tdImg);
+
+        var tdTitle = document.createElement("td");
+        tdTitle.textContent = p.title || "";
+        tr.appendChild(tdTitle);
+
+        var tdLink = document.createElement("td");
+        tdLink.className = "menu-cell";
+        tdLink.textContent = p.linkUrl || "-";
+        tr.appendChild(tdLink);
+
+        var tdStart = document.createElement("td");
+        tdStart.textContent = fmtDateTime(p.startAt);
+        tr.appendChild(tdStart);
+
+        var tdEnd = document.createElement("td");
+        tdEnd.textContent = fmtDateTime(p.endAt);
+        tr.appendChild(tdEnd);
+
+        var tdActive = document.createElement("td");
+        tdActive.textContent = p.isActive ? "ON" : "OFF";
+        tr.appendChild(tdActive);
+
+        var tdActions = document.createElement("td");
+        var toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.textContent = p.isActive ? "끄기" : "켜기";
+        toggleBtn.addEventListener("click", function () { toggleActive(doc.id, !p.isActive, toggleBtn); });
+        tdActions.appendChild(toggleBtn);
+
+        var editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.textContent = "수정";
+        editBtn.addEventListener("click", function () { startEdit(doc.id, p); });
+        tdActions.appendChild(editBtn);
+
+        var delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", function () { deletePopup(doc.id); });
+        tdActions.appendChild(delBtn);
+
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function () {
+      body.innerHTML = "<p class=\"empty-note\">불러오지 못했습니다.</p>";
+    });
+  }
+
+  function init() {
+    els.form = qs("popupForm");
+    if (!els.form) return; // 팝업 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+
+    els.formTitle = qs("popupFormTitle");
+    els.titleInput = qs("popupTitleInput");
+    els.imageInput = qs("popupImageInput");
+    els.imagePreviewWrap = qs("popupImagePreviewWrap");
+    els.imagePreviewImg = qs("popupImagePreviewImg");
+    els.imageError = qs("popupImageError");
+    els.linkInput = qs("popupLinkInput");
+    els.activeInput = qs("popupActiveInput");
+    els.startInput = qs("popupStartInput");
+    els.endInput = qs("popupEndInput");
+    els.saveBtn = qs("popupSaveBtn");
+    els.cancelEditBtn = qs("popupCancelEditBtn");
+    els.formStatus = qs("popupFormStatus");
+    els.listBody = qs("popupListBody");
+
+    els.imageInput.addEventListener("change", handleImagePick);
+    els.form.addEventListener("submit", handleSave);
+    els.cancelEditBtn.addEventListener("click", resetForm);
+
+    loadPopups();
+  }
+
+  return { init: init };
+})();
+
+</script>
+<script>
+/* ==========================================================================
+   관리자 페이지 - 매장 메뉴관리 (js/admin-menu.js)
+   - 기존 admin.js 탭 구조("메뉴 관리")와 admin-popup.js의 등록/수정/이미지
+     업로드/목록 패턴을 그대로 재사용합니다(새 관리자 사이트/디자인 아님).
+   - 로그인은 "주간메뉴 관리"에서 이미 로그인한 Firebase 계정을 그대로
+     씁니다. 이미지 업로드도 같은 Firebase Storage를 재사용하고 경로만
+     storeMenuImages/로 새로 둡니다.
+   - 매장 구분은 js/menu-data.js MENU_DATA가 이미 쓰는 store 값
+     (hururuk/mangwon/bapsim)을 그대로 재사용합니다. 이 단계는 새
+     Firestore 컬렉션(storeMenus)에 등록하는 메뉴만 관리하며, 기존 정적
+     메뉴 데이터를 옮기거나 바꾸지 않습니다(사용자 메뉴판 연결은 다음
+     단계).
+   - 좋아요 숫자는 menuLikeCounts/all 문서(js/menu-likes.js가 이미 쓰는
+     같은 문서)를 한 번만 읽어 표시만 합니다 — 새 좋아요 시스템이나
+     메뉴별 listener를 만들지 않습니다.
+   ========================================================================== */
+
+var AdminMenu = (function () {
+  "use strict";
+
+  var els = {};
+  var currentStore = "hururuk";
+  var editingId = null;
+  var editingImageUrl = "";
+  var editingOriginalName = null; // 수정 중인 메뉴의 기존 name 객체(다국어 보존용)
+  var editingOriginalDescription = null; // 수정 중인 메뉴의 기존 description(문자열 또는 다국어 객체, 보존용)
+  var editingOriginalDescriptionKo = ""; // 위 값의 한국어만 — 변경 여부 판단(재번역 필요성)용
+  var TRANSLATE_TARGET_LANGS = ["zh", "vi", "en", "mn", "bn", "my"];
+  var pendingCompressPromise = null;
+  var currentMenus = []; // 현재 매장의 메뉴 목록(순서대로) — 순서 이동 계산에 재사용
+  var likeCounts = {};   // menuLikeCounts/all 문서 1회 캐시(menuId -> count)
+  var likeCountsLoaded = false;
+
+  var MENU_MAX_WIDTH = 800;
+  var MENU_MAX_HEIGHT = 800;
+  var MENU_PHOTO_QUALITY = 0.8;
+  var MENU_WARN_BYTES = 500 * 1024;
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+  function storage() { return (typeof getFirebaseStorage === "function") ? getFirebaseStorage() : null; }
+  function currentAdminUser() {
+    var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
+    return auth && auth.currentUser ? auth.currentUser : null;
+  }
+
+  // name/description은 다국어 객체({ko:"...", en:"...", ...})로 저장되지만,
+  // 기존(번역 전) 데이터는 description이 아직 순수 문자열일 수 있습니다 —
+  // 관리 화면은 항상 한국어만 다루므로 두 경우 모두 한국어 값만 꺼냅니다.
+  function descriptionKoOf(m) {
+    if (!m || !m.description) return "";
+    return typeof m.description === "object" ? (m.description.ko || "") : m.description;
+  }
+
+  function setStatus(text, isError) {
+    if (!els.formStatus) return;
+    if (!text) { els.formStatus.hidden = true; return; }
+    els.formStatus.hidden = false;
+    els.formStatus.textContent = text;
+    els.formStatus.className = "publish-status" + (isError ? " error" : " success");
+  }
+
+  function resetForm() {
+    editingId = null;
+    editingImageUrl = "";
+    editingOriginalName = null;
+    editingOriginalDescription = null;
+    editingOriginalDescriptionKo = "";
+    pendingCompressPromise = null;
+    els.form.reset();
+    els.imagePreviewWrap.hidden = true;
+    els.imagePreviewImg.src = "";
+    els.formTitle.textContent = "새 메뉴 등록";
+    els.saveBtn.textContent = "등록";
+    els.cancelEditBtn.hidden = true;
+    setStatus("");
+  }
+
+  function startEdit(id, m) {
+    editingId = id;
+    editingImageUrl = m.image || "";
+    editingOriginalName = m.name || null;
+    editingOriginalDescription = m.description || null;
+    editingOriginalDescriptionKo = descriptionKoOf(m);
+    pendingCompressPromise = null;
+    els.nameInput.value = (m.name && m.name.ko) || "";
+    els.descriptionInput.value = editingOriginalDescriptionKo;
+    els.priceInput.value = typeof m.price === "number" ? m.price : "";
+    els.imageInput.value = "";
+    if (editingImageUrl) {
+      els.imagePreviewImg.src = editingImageUrl;
+      els.imagePreviewWrap.hidden = false;
+    } else {
+      els.imagePreviewWrap.hidden = true;
+    }
+    els.formTitle.textContent = "메뉴 수정";
+    els.saveBtn.textContent = "수정 저장";
+    els.cancelEditBtn.hidden = false;
+    setStatus("");
+    els.form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* ---------------- 이미지 압축(팝업 이미지 업로드와 같은 Canvas 방식 재사용) ---------------- */
+
+  function loadMenuImageSource(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: "from-image" }).catch(function () {
+        return loadMenuImageViaTag(file);
+      });
+    }
+    return loadMenuImageViaTag(file);
+  }
+  function loadMenuImageViaTag(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("IMAGE_LOAD_FAILED")); };
+      img.src = url;
+    });
+  }
+  function menuCanvasHasAlpha(canvas) {
+    try {
+      var data = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+      for (var i = 3; i < data.length; i += 4) { if (data[i] < 255) return true; }
+      return false;
+    } catch (e) { return true; }
+  }
+  function compressMenuImage(file) {
+    return loadMenuImageSource(file).then(function (source) {
+      var srcW = source.width, srcH = source.height;
+      var scale = Math.min(1, MENU_MAX_WIDTH / srcW, MENU_MAX_HEIGHT / srcH);
+      var w = Math.max(1, Math.round(srcW * scale));
+      var h = Math.max(1, Math.round(srcH * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+      if (source && typeof source.close === "function") source.close();
+
+      var keepPng = menuCanvasHasAlpha(canvas);
+      return new Promise(function (resolve, reject) {
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob); else reject(new Error("COMPRESS_FAILED"));
+        }, keepPng ? "image/png" : "image/webp", keepPng ? undefined : MENU_PHOTO_QUALITY);
+      });
+    }).catch(function () { return null; });
+  }
+  function extFromBlob(blob, fallbackName) {
+    if (blob) {
+      if (blob.type === "image/webp") return "webp";
+      if (blob.type === "image/png") return "png";
+      if (blob.type === "image/jpeg") return "jpg";
+    }
+    return (fallbackName && fallbackName.split(".").pop()) || "jpg";
+  }
+  function uploadMenuImage(blob, fallbackName) {
+    var st = storage();
+    if (!st || !blob) return Promise.resolve(null);
+    var ext = extFromBlob(blob, fallbackName);
+    var ref = st.ref().child("storeMenuImages/menu_" + Date.now() + "." + ext);
+    return ref.put(blob).then(function () { return ref.getDownloadURL(); });
+  }
+  function warnIfLarge(size) {
+    els.imageError.textContent = (typeof size === "number" && size > MENU_WARN_BYTES)
+      ? "이미지 용량이 커서 표시가 느려질 수 있습니다."
+      : "";
+  }
+  function handleImagePick() {
+    var file = els.imageInput.files[0];
+    els.imageError.textContent = "";
+    pendingCompressPromise = null;
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      els.imagePreviewImg.src = reader.result;
+      els.imagePreviewWrap.hidden = false;
+    };
+    reader.readAsDataURL(file);
+
+    pendingCompressPromise = compressMenuImage(file).then(function (blob) {
+      warnIfLarge(blob ? blob.size : file.size);
+      return blob;
+    });
+  }
+
+  /* ---------------- 메뉴명/설명 번역(기존 커뮤니티 번역 서버 함수 재사용) ----------------
+     새 Netlify Function/새 API를 만들지 않고, 커뮤니티 게시글 번역에 이미
+     쓰이는 netlify/functions/community-translate.js의 translatePost
+     액션을 그대로 재사용합니다(이미 로그인된 관리자 계정의 idToken 사용).
+     메뉴명(title)+메뉴설명(content)을 한 번의 호출로 6개 언어 모두
+     번역합니다 — 메뉴마다 여러 번 호출하지 않습니다. 설명이 비어 있으면
+     content 필수 조건을 맞추기 위해 메뉴명을 대신 넣어 호출하되, 그
+     번역 결과는 저장하지 않습니다(설명 없음 상태 유지). 실패하면 null을
+     돌려주고 호출부가 기존 한국어만 저장하는 방식으로 안전하게 돌아갑니다.
+     ========================================================================== */
+  // 항상 { ok: true, name, description } 또는 { ok: false, reason: "..." }를
+  // 돌려줍니다 — 실패 이유를 handleSave가 저장 완료 메시지에 그대로
+  // 붙여서 보여줄 수 있도록(브라우저 개발자도구 없이도 관리자가 원인을
+  // 바로 확인 가능).
+  function translateMenuText(nameKo, descriptionKo) {
+    var user = currentAdminUser();
+    if (!user) return Promise.resolve({ ok: false, reason: "관리자 로그인 정보 없음" });
+    return user.getIdToken().then(function (idToken) {
+      return fetch("/.netlify/functions/community-translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translatePost",
+          idToken: idToken,
+          originalLanguage: "ko",
+          title: nameKo,
+          content: descriptionKo || nameKo,
+          targetLanguages: TRANSLATE_TARGET_LANGS
+        })
+      }).then(function (res) {
+        if (!res.ok) {
+          return res.json().catch(function () { return null; }).then(function (errBody) {
+            return { ok: false, reason: "서버 응답 " + res.status + (errBody && errBody.error ? "(" + errBody.error + ")" : "") };
+          });
+        }
+        return res.json().then(function (data) { return { ok: true, data: data }; });
+      });
+    }).then(function (result) {
+      if (!result.ok) return result;
+      var data = result.data;
+      if (!data || !data.translations) return { ok: false, reason: "번역 결과 형식 오류" };
+      var nameOut = { ko: nameKo };
+      var descOut = descriptionKo ? { ko: descriptionKo } : null;
+      var translatedCount = 0;
+      TRANSLATE_TARGET_LANGS.forEach(function (lang) {
+        var tr = data.translations[lang];
+        // AI가 가끔 번역 대신 원문을 그대로 돌려줄 때가 있습니다 — 한국어
+        // 원문과 글자까지 완전히 같으면(다른 언어 문자 체계상 정상 번역이면
+        // 거의 있을 수 없는 일) 번역 실패로 간주해 저장하지 않습니다(다음
+        // 저장 때 다시 시도되도록).
+        if (tr && typeof tr.title === "string" && tr.title.trim() && tr.title !== nameKo) {
+          nameOut[lang] = tr.title;
+          translatedCount++;
+        }
+        if (descriptionKo && tr && typeof tr.content === "string" && tr.content.trim() && tr.content !== descriptionKo) {
+          descOut[lang] = tr.content;
+        }
+      });
+      if (!translatedCount) return { ok: false, reason: "번역된 언어 0개(AI가 원문을 그대로 반환)" };
+      return { ok: true, name: nameOut, description: descOut };
+    }).catch(function (e) {
+      return { ok: false, reason: "요청 실패(" + (e && e.message ? e.message : "네트워크 오류") + ")" };
+    });
+  }
+
+  /* ---------------- 저장(등록/수정 — 같은 폼을 재사용) ---------------- */
+
+  function handleSave(e) {
+    e.preventDefault();
+    var d = db();
+    if (!d) { setStatus("Firebase가 연결되지 않았습니다.", true); return; }
+    if (!currentAdminUser()) { setStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
+    var name = els.nameInput.value.trim();
+    if (!name) { setStatus("메뉴명을 입력해주세요.", true); return; }
+    var description = els.descriptionInput.value.trim(); // 선택 입력 — 비워도 됨
+    var priceNum = Number(els.priceInput.value);
+    if (els.priceInput.value === "" || isNaN(priceNum) || priceNum < 0) { setStatus("가격을 올바르게 입력해주세요.", true); return; }
+
+    els.saveBtn.disabled = true;
+    setStatus("저장 중...", false);
+    var lastTranslateNote = ""; // 번역 성공/실패 메모 — 저장 완료 메시지에 그대로 붙여 보여줌
+
+    var file = els.imageInput.files[0];
+    var uploadPromise = !file
+      ? Promise.resolve(null)
+      : Promise.resolve(pendingCompressPromise || compressMenuImage(file)).then(function (blob) {
+          return uploadMenuImage(blob || file, file.name);
+        });
+
+    uploadPromise.then(function (newUrl) {
+      var imageUrl = newUrl || editingImageUrl;
+      if (!imageUrl) throw new Error("IMAGE_REQUIRED");
+
+      // 메뉴명/설명 텍스트가 바뀌었거나, 아직 다국어 번역이 채워지지 않은
+      // (예: 번역 기능이 생기기 전에 등록된) 기존 메뉴라면 번역을
+      // 다시 요청합니다. 이미 7개 언어가 모두 채워진 메뉴를 가격/이미지만
+      // 바꿔 저장할 때는 번역 API를 부르지 않습니다(반복 호출 방지).
+      // AI가 번역 대신 원문을 그대로 돌려준 적이 있으면(한국어와 글자가
+      // 완전히 같음) 언어 칸이 채워져 있어도 "아직 번역 안 됨"으로 보고
+      // 다음 저장 때 다시 시도합니다.
+      var hasFullNameTranslation = !!(editingOriginalName && TRANSLATE_TARGET_LANGS.every(function (l) {
+        var v = editingOriginalName[l];
+        return typeof v === "string" && v && v !== editingOriginalName.ko;
+      }));
+      var hasFullDescriptionTranslation = !editingOriginalDescriptionKo || !!(
+        editingOriginalDescription && typeof editingOriginalDescription === "object" &&
+        TRANSLATE_TARGET_LANGS.every(function (l) {
+          var v = editingOriginalDescription[l];
+          return typeof v === "string" && v && v !== editingOriginalDescription.ko;
+        })
+      );
+      var needsTranslate = !editingId || !hasFullNameTranslation || !hasFullDescriptionTranslation ||
+        name !== ((editingOriginalName && editingOriginalName.ko) || "") ||
+        description !== editingOriginalDescriptionKo;
+      var translatedPromise = needsTranslate ? translateMenuText(name, description) : Promise.resolve(null);
+
+      return translatedPromise.then(function (translateResult) {
+        // 번역을 시도하지 않은 저장(가격/이미지만 수정, 이미 번역 완료된
+        // 메뉴)에서는 결과가 없어도 정상입니다. needsTranslate가 true였을
+        // 때는 성공/실패를 반드시 명확히 남깁니다(모호한 빈 문구 방지).
+        lastTranslateNote = !needsTranslate ? "" : (translateResult && translateResult.ok ? " (번역 완료)" : " (번역 실패: " + ((translateResult && translateResult.reason) || "알 수 없음") + ")");
+        var translated = translateResult && translateResult.ok ? translateResult : null;
+        // 수정: 기존 document를 UPDATE만 합니다(menuId/createdAt/좋아요 변경 없음).
+        if (editingId) {
+          // 기존(다국어 번역이 있을 수 있는) name 객체에 새 번역(또는
+          // 최소한 한국어)만 덮어써서 저장합니다 — 통째로 교체하면 기존
+          // 메뉴 연결로 들어온 다른 언어 번역이 사라집니다.
+          var nextName = Object.assign({}, editingOriginalName, (translated && translated.name) || { ko: name });
+          // 설명을 지우면 필드 자체를 제거합니다(빈 문자열로 남겨 화면에
+          // 빈 줄이 생기지 않도록). 새로 번역되면 그 결과를, 아니면(가격만
+          // 수정 등) 기존 다국어 설명 객체에 한국어만 갱신해 다른 언어
+          // 번역이 사라지지 않게 합니다(레거시 문자열 데이터는 그대로 유지).
+          var nextDescription;
+          if (!description) {
+            nextDescription = firebase.firestore.FieldValue.delete();
+          } else if (translated && translated.description) {
+            nextDescription = translated.description;
+          } else if (editingOriginalDescription && typeof editingOriginalDescription === "object") {
+            nextDescription = Object.assign({}, editingOriginalDescription, { ko: description });
+          } else {
+            nextDescription = description;
+          }
+          return d.collection("storeMenus").doc(editingId).update({
+            name: nextName,
+            description: nextDescription,
+            price: priceNum,
+            image: imageUrl,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        // 새 등록: 이때만 새 menuId(Firestore 자동 문서 id)가 생성됩니다.
+        var nextOrder = currentMenus.reduce(function (max, m) {
+          return Math.max(max, typeof m.order === "number" ? m.order : 0);
+        }, 0) + 1;
+        var newDoc = {
+          store: currentStore,
+          name: (translated && translated.name) || { ko: name },
+          price: priceNum,
+          image: imageUrl,
+          soldOut: false,
+          isActive: true,
+          order: nextOrder,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (description) newDoc.description = (translated && translated.description) || description; // 비어 있으면 필드 자체를 만들지 않음
+        return d.collection("storeMenus").add(newDoc);
+      });
+    }).then(function () {
+      // resetForm()이 내부적으로 setStatus("")를 호출해 메시지를 곧바로
+      // 숨기므로, 반드시 resetForm() 이후에 저장 완료 메시지를 다시
+      // 띄워야 실제로 화면에 보입니다(이전에는 매번 순간적으로 가려짐).
+      var wasEdit = !!editingId;
+      resetForm();
+      setStatus((wasEdit ? "수정되었습니다." : "등록되었습니다.") + lastTranslateNote, !!lastTranslateNote);
+      loadMenus();
+    }).catch(function (err) {
+      setStatus(err && err.message === "IMAGE_REQUIRED" ? "메뉴 이미지를 선택해주세요." : "저장에 실패했습니다.", true);
+    }).finally(function () { els.saveBtn.disabled = false; });
+  }
+
+  /* ---------------- 판매중 / 품절 ---------------- */
+
+  function toggleSoldOut(id, next, btn) {
+    var d = db();
+    if (!d) return;
+    if (btn) btn.disabled = true;
+    d.collection("storeMenus").doc(id).update({
+      soldOut: next,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      loadMenus();
+    }).catch(function () {
+      if (btn) btn.disabled = false;
+    });
+  }
+
+  /* ---------------- 삭제(soft delete — isActive만 false로) ---------------- */
+
+  function deleteMenu(id) {
+    var d = db();
+    if (!d || !window.confirm("이 메뉴를 삭제하시겠습니까?")) return;
+    d.collection("storeMenus").doc(id).update({
+      isActive: false,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      if (editingId === id) resetForm();
+      loadMenus();
+    });
+  }
+
+  /* ---------------- 순서 변경(인접한 두 document만 교환) ---------------- */
+
+  function moveMenu(id, direction) {
+    var idx = currentMenus.findIndex(function (m) { return m.id === id; });
+    if (idx === -1) return;
+    var targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= currentMenus.length) return;
+    var d = db();
+    if (!d) return;
+    var a = currentMenus[idx];
+    var b = currentMenus[targetIdx];
+    var batch = d.batch();
+    batch.update(d.collection("storeMenus").doc(a.id), { order: b.order, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    batch.update(d.collection("storeMenus").doc(b.id), { order: a.order, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    batch.commit().then(function () { loadMenus(); });
+  }
+
+  /* ---------------- 목록 ---------------- */
+
+  // menuLikeCounts/all은 매장을 바꿔도 다시 읽지 않고 세션 동안 1번만
+  // 읽습니다(js/menu-likes.js와 동일한 문서를 그대로 표시용으로만 재사용).
+  function loadLikeCounts() {
+    var d = db();
+    if (!d || likeCountsLoaded) return Promise.resolve();
+    return d.collection("menuLikeCounts").doc("all").get().then(function (doc) {
+      likeCounts = (doc.exists && doc.data()) || {};
+      likeCountsLoaded = true;
+    }).catch(function () { /* 실패해도 좋아요 0으로 표시, 메뉴 관리 자체는 계속 동작 */ });
+  }
+
+  function renderMenuRow(tbody, m) {
+    var tr = document.createElement("tr");
+
+    var tdImg = document.createElement("td");
+    if (m.image) {
+      var thumb = document.createElement("img");
+      thumb.src = m.image;
+      thumb.alt = "";
+      thumb.style.width = "48px";
+      thumb.style.height = "48px";
+      thumb.style.objectFit = "cover";
+      thumb.style.borderRadius = "6px";
+      tdImg.appendChild(thumb);
+    }
+    tr.appendChild(tdImg);
+
+    var tdName = document.createElement("td");
+    tdName.className = "menu-cell";
+    tdName.textContent = (m.name && m.name.ko) || "";
+    tr.appendChild(tdName);
+
+    var tdDesc = document.createElement("td");
+    tdDesc.className = "desc-cell";
+    var descClamp = document.createElement("span");
+    descClamp.className = "desc-clamp";
+    descClamp.textContent = descriptionKoOf(m) || "-";
+    tdDesc.appendChild(descClamp);
+    tr.appendChild(tdDesc);
+
+    var tdPrice = document.createElement("td");
+    tdPrice.textContent = typeof m.price === "number" ? m.price.toLocaleString("ko-KR") + "원" : "-";
+    tr.appendChild(tdPrice);
+
+    var tdLike = document.createElement("td");
+    tdLike.textContent = "♥ " + (likeCounts[m.id] || 0);
+    tr.appendChild(tdLike);
+
+    var tdOrder = document.createElement("td");
+    var upBtn = document.createElement("button");
+    upBtn.type = "button";
+    upBtn.textContent = "↑";
+    upBtn.disabled = currentMenus.indexOf(m) === 0;
+    upBtn.addEventListener("click", function () { moveMenu(m.id, -1); });
+    var downBtn = document.createElement("button");
+    downBtn.type = "button";
+    downBtn.textContent = "↓";
+    downBtn.disabled = currentMenus.indexOf(m) === currentMenus.length - 1;
+    downBtn.addEventListener("click", function () { moveMenu(m.id, 1); });
+    tdOrder.appendChild(upBtn);
+    tdOrder.appendChild(downBtn);
+    tr.appendChild(tdOrder);
+
+    var tdSoldOut = document.createElement("td");
+    var soldOutBtn = document.createElement("button");
+    soldOutBtn.type = "button";
+    soldOutBtn.textContent = m.soldOut ? "품절" : "판매중";
+    soldOutBtn.addEventListener("click", function () { toggleSoldOut(m.id, !m.soldOut, soldOutBtn); });
+    tdSoldOut.appendChild(soldOutBtn);
+    tr.appendChild(tdSoldOut);
+
+    var tdActions = document.createElement("td");
+    var editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.textContent = "수정";
+    editBtn.addEventListener("click", function () { startEdit(m.id, m); });
+    tdActions.appendChild(editBtn);
+
+    var delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.textContent = "삭제";
+    delBtn.addEventListener("click", function () { deleteMenu(m.id); });
+    tdActions.appendChild(delBtn);
+
+    tr.appendChild(tdActions);
+    tbody.appendChild(tr);
+  }
+
+  // 기존 정적 메뉴(js/menu-data.js MENU_DATA)를 storeMenus에 1회만
+  // 안전하게 연결합니다. 문서 id는 기존 id를 그대로 써서(menuId 보존,
+  // 좋아요 연결 유지) 이미 연결된 항목은 건너뛰므로(idempotent) 화면을
+  // 다시 열어도 중복 생성되지 않습니다. 버튼 없이 목록 조회 시 조용히
+  // 한 번만 확인·보완합니다 — admin.html에 함께 실려 있는 MENU_DATA를
+  // 그대로 재사용하며 새 조회는 만들지 않습니다.
+  // allExistingIds는 삭제(숨김, isActive=false)된 문서까지 포함한 "이미
+  // storeMenus에 존재하는 모든 문서 id" 집합입니다 — 화면에 보이는 목록
+  // (existingMenus, 삭제된 항목 제외)만 기준으로 판단하면 삭제한 기존
+  // 메뉴가 "아직 연결 안 된 메뉴"로 오인되어 매번 되살아납니다.
+  function backfillLegacyMenus(store, existingMenus, allExistingIds) {
+    if (typeof MENU_DATA === "undefined") return Promise.resolve(existingMenus);
+    var d = db();
+    if (!d) return Promise.resolve(existingMenus);
+
+    // 기존 화면(js/app.js)이 보여주던 순서(그룹 → 그룹 내 순서)를 그대로
+    // 이어받아 sortOrder를 매깁니다.
+    var legacyItems = MENU_DATA
+      .filter(function (item) { return item.store === store && !allExistingIds[item.id]; })
+      .sort(function (a, b) { return (a.group - b.group) || (a.order - b.order); });
+    if (!legacyItems.length) return Promise.resolve(existingMenus);
+
+    var nextOrder = existingMenus.reduce(function (max, m) {
+      return Math.max(max, typeof m.order === "number" ? m.order : 0);
+    }, 0);
+
+    var batch = d.batch();
+    var added = [];
+    legacyItems.forEach(function (item) {
+      nextOrder += 1;
+      var data = {
+        store: store,
+        name: item.name, // 다국어 번역을 그대로 보존(한국어만 남기지 않음)
+        price: typeof item.price === "number" ? item.price : null,
+        image: item.image || null, // 기존 이미지 경로 그대로(재업로드 없음)
+        soldOut: !!item.soldOut,
+        isActive: true,
+        order: nextOrder,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      batch.set(d.collection("storeMenus").doc(item.id), data);
+      added.push(Object.assign({ id: item.id }, data));
+    });
+    return batch.commit().then(function () {
+      return existingMenus.concat(added);
+    }).catch(function () {
+      return existingMenus; // 실패해도 기존 목록은 그대로 보여주고, 다음 방문 때 다시 시도
+    });
+  }
+
+  // 매장 하나를 선택하면 그 매장의 메뉴 목록을 한 번의 조회로 모두
+  // 가져옵니다(메뉴별 개별 조회/실시간 listener 없음).
+  function loadMenus() {
+    var d = db();
+    var body = els.listBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    loadLikeCounts().then(function () {
+      return d.collection("storeMenus").where("store", "==", currentStore).get();
+    }).then(function (snap) {
+      var menus = [];
+      var allExistingIds = {}; // 삭제(숨김)된 문서까지 포함 — 백필이 되살리지 않도록
+      snap.forEach(function (doc) {
+        allExistingIds[doc.id] = true;
+        var data = doc.data();
+        if (data.isActive === false) return; // 삭제(숨김)된 메뉴는 관리 목록에도 표시하지 않음
+        menus.push(Object.assign({ id: doc.id }, data));
+      });
+      return backfillLegacyMenus(currentStore, menus, allExistingIds);
+    }).then(function (menus) {
+      menus.sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+      currentMenus = menus;
+
+      body.innerHTML = "";
+      if (!menus.length) { body.innerHTML = "<p class=\"empty-note\">등록된 메뉴가 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>이미지</th><th>메뉴명</th><th>메뉴 설명</th><th>가격</th><th>좋아요</th><th>순서</th><th>상태</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      menus.forEach(function (m) { renderMenuRow(tbody, m); });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function () {
+      body.innerHTML = "<p class=\"empty-note\">불러오지 못했습니다.</p>";
+    });
+  }
+
+  function selectStore(store) {
+    if (currentStore === store) return;
+    currentStore = store;
+    Array.prototype.forEach.call(els.storeBtns, function (btn) {
+      btn.classList.toggle("active", btn.dataset.store === store);
+    });
+    resetForm();
+    loadMenus();
+  }
+
+  function init() {
+    els.form = qs("menuForm");
+    if (!els.form) return; // 메뉴 관리 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+
+    els.formTitle = qs("menuFormTitle");
+    els.nameInput = qs("menuNameInput");
+    els.descriptionInput = qs("menuDescriptionInput");
+    els.priceInput = qs("menuPriceInput");
+    els.imageInput = qs("menuImageInput");
+    els.imagePreviewWrap = qs("menuImagePreviewWrap");
+    els.imagePreviewImg = qs("menuImagePreviewImg");
+    els.imageError = qs("menuImageError");
+    els.saveBtn = qs("menuSaveBtn");
+    els.cancelEditBtn = qs("menuCancelEditBtn");
+    els.formStatus = qs("menuFormStatus");
+    els.listBody = qs("menuListBody");
+    els.storeBtns = document.querySelectorAll("#menuStoreNav .admin-nav-btn");
+
+    els.imageInput.addEventListener("change", handleImagePick);
+    els.form.addEventListener("submit", handleSave);
+    els.cancelEditBtn.addEventListener("click", resetForm);
+    Array.prototype.forEach.call(els.storeBtns, function (btn) {
+      btn.addEventListener("click", function () { selectStore(btn.dataset.store); });
+    });
+
+    loadMenus();
+  }
+
+  return { init: init };
+})();
+
+</script>
+<script>/* ==========================================================================
+   관리자 페이지 - 방 구하기 문의 (js/admin-room-inquiry.js)
+   - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
+     "방 구하기 문의" 탭 하나를 추가합니다(새 관리자 사이트 아님).
+   - 로그인은 "주간메뉴 관리"에서 이미 로그인한 Firebase 계정을 그대로
+     씁니다(별도 로그인 화면 없음). js/admin-popup.js와 같은 방식입니다.
+   - 문자(SMS) 수신번호(roomInquiryPhone)는 siteSettings/main 문서
+     하나에 저장합니다(전화번호 하나만을 위한 새 설정 시스템을 만들지
+     않음 — 기존 문서·필드 재사용).
+   - 2026-09 "관리자 저장 기능 추가" 지시서 — 목록 컬럼(접수일/이름/국적/
+     지역/입주일/인원/보증금/월세/상태)과 클릭 시 상세보기를 추가합니다.
+     상세보기는 새 모달 라이브러리 없이 기존 ratings 탭의 "행 클릭 →
+     .selected 표시 → 아래 패널 갱신" 패턴(admin.html selectRatingDate)을
+     그대로 재사용합니다.
+   ========================================================================== */
+
+var AdminRoomInquiry = (function () {
+  "use strict";
+
+  var els = {};
+  // siteSettings/main 캐시(같은 화면에서 반복 read 방지). null=아직 안 읽음.
+  var cachedPhone = null;
+  var inquiryCache = {}; // doc.id -> 마지막으로 불러온 문의 데이터(상세 패널 재사용)
+  var selectedId = null;
+  // "확인" 단계는 기존에 processing 값으로 저장되어 있어 값은 그대로 두고
+  // 화면에 보이는 한글 라벨만 지시서 6번(신규/확인/완료)에 맞춥니다.
+  var STATUS_LABEL = { new: "신규", processing: "확인", completed: "완료" };
+  var STATUS_ORDER = ["new", "processing", "completed"];
+  var REGION_LABEL = { injeUniv: "인제대학교 근처", gimhae: "김해", busan: "부산", etc: "기타" };
+  var OCCUPANTS_LABEL = { "1": "1명", "2": "2명" };
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+  function currentAdminUser() {
+    var auth = (typeof getFirebaseAuth === "function") ? getFirebaseAuth() : null;
+    return auth && auth.currentUser ? auth.currentUser : null;
+  }
+
+  function fmtDateTime(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : null;
+    if (!d || isNaN(d.getTime())) return "-";
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function normalizePhoneDigits(v) { return (v || "").replace(/[^0-9]/g, ""); }
+
+  function regionText(v) { return REGION_LABEL[v] || v || "-"; }
+  function occupantsText(v) { return OCCUPANTS_LABEL[v] || v || "-"; }
+  function moneyText(v) { return v ? (v + "만원") : "-"; }
+
+  // 지나치게 복잡한 검증은 만들지 않습니다 — 하이픈 유무만 허용하고
+  // 자릿수만 느슨하게 확인합니다.
+  function isValidPhoneLoose(v) {
+    var digits = normalizePhoneDigits(v);
+    return digits.length >= 9 && digits.length <= 11;
+  }
+
+  function setPhoneStatus(text, isError) {
+    if (!els.phoneStatus) return;
+    if (!text) { els.phoneStatus.hidden = true; return; }
+    els.phoneStatus.hidden = false;
+    els.phoneStatus.textContent = text;
+    els.phoneStatus.className = "publish-status" + (isError ? " error" : " success");
+  }
+
+  function loadPhone() {
+    var d = db();
+    if (!d || !els.phoneInput) return;
+    d.collection("siteSettings").doc("main").get().then(function (doc) {
+      cachedPhone = (doc.exists && doc.data().roomInquiryPhone) || "";
+      els.phoneInput.value = cachedPhone;
+    }).catch(function () {
+      setPhoneStatus("불러오지 못했습니다.", true);
+    });
+  }
+
+  function handlePhoneSave(e) {
+    e.preventDefault();
+    var d = db();
+    if (!d) { setPhoneStatus("Firebase가 연결되지 않았습니다.", true); return; }
+    if (!currentAdminUser()) { setPhoneStatus("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.", true); return; }
+
+    var value = els.phoneInput.value.trim();
+    if (!value) { setPhoneStatus("전화번호를 입력해주세요.", true); return; }
+    if (!isValidPhoneLoose(value)) { setPhoneStatus("올바른 전화번호 형식이 아닙니다.", true); return; }
+
+    els.phoneSaveBtn.disabled = true;
+    setPhoneStatus("저장 중...", false);
+    d.collection("siteSettings").doc("main").set({ roomInquiryPhone: value }, { merge: true }).then(function () {
+      cachedPhone = value; // 재배포 없이 바로 다음 문의부터 적용(학생 화면은 자체적으로 다시 읽음)
+      setPhoneStatus("저장되었습니다.", false);
+    }).catch(function () {
+      setPhoneStatus("저장에 실패했습니다.", true);
+    }).finally(function () { els.phoneSaveBtn.disabled = false; });
+  }
+
+  function updateStatus(id, next, selectEl, prevValue) {
+    var d = db();
+    if (!d) return;
+    if (!currentAdminUser()) {
+      window.alert("먼저 \"주간메뉴 관리\" 탭에서 관리자 계정으로 로그인해주세요.");
+      selectEl.value = prevValue;
+      return;
+    }
+    selectEl.disabled = true;
+    d.collection("roomInquiries").doc(id).update({ status: next }).then(function () {
+      if (inquiryCache[id]) inquiryCache[id].status = next;
+      // 목록의 상태 텍스트·"신규" 강조(굵게 표시)를 재조회 없이 바로 갱신.
+      var row = els.listBody && els.listBody.querySelector('tr[data-id="' + id + '"]');
+      if (row) {
+        row.classList.toggle("room-inquiry-new", next === "new");
+        var statusCell = row.querySelector("td:last-child");
+        if (statusCell) statusCell.textContent = STATUS_LABEL[next];
+      }
+    }).catch(function () {
+      selectEl.value = prevValue;
+    }).finally(function () {
+      selectEl.disabled = false;
+    });
+  }
+
+  // ratings 탭의 "행 클릭 → 선택 표시 → 아래 패널 갱신" 패턴을 그대로
+  // 재사용(selectRatingDate와 같은 방식, 새 모달 없음).
+  function selectInquiry(id) {
+    selectedId = id;
+    Array.prototype.forEach.call(els.listBody.querySelectorAll("tr[data-id]"), function (tr) {
+      tr.classList.toggle("selected", tr.dataset.id === id);
+    });
+    renderDetail(inquiryCache[id]);
+  }
+
+  function renderDetail(r) {
+    if (!els.detailBody) return;
+    if (!r) { els.detailBody.innerHTML = "<p class=\"empty-note\">문의를 선택해주세요.</p>"; return; }
+
+    els.detailBody.innerHTML = "";
+    var rows = [
+      ["접수일", fmtDateTime(r.createdAt)],
+      ["이름", r.name || "-"],
+      ["국적", r.nationality || "-"],
+      ["희망지역", regionText(r.region)],
+      ["입주 희망일", r.moveInDate || "-"],
+      ["입주인원", occupantsText(r.occupants)],
+      ["보증금", moneyText(r.deposit)],
+      ["월세", moneyText(r.rent)]
+    ];
+    rows.forEach(function (pair) {
+      var p = document.createElement("p");
+      p.innerHTML = "<strong>" + pair[0] + ":</strong> ";
+      p.appendChild(document.createTextNode(pair[1]));
+      els.detailBody.appendChild(p);
+    });
+
+    // 전화번호만 tel: 링크(모바일 기본 전화 기능 재사용, 새 전화 API 없음).
+    var phoneP = document.createElement("p");
+    phoneP.innerHTML = "<strong>전화번호:</strong> ";
+    if (r.phone) {
+      var a = document.createElement("a");
+      a.href = "tel:" + normalizePhoneDigits(r.phone);
+      a.textContent = r.phone;
+      phoneP.appendChild(a);
+    } else {
+      phoneP.appendChild(document.createTextNode("-"));
+    }
+    els.detailBody.appendChild(phoneP);
+
+    var statusRow = document.createElement("p");
+    statusRow.innerHTML = "<strong>처리상태:</strong> ";
+    var select = document.createElement("select");
+    STATUS_ORDER.forEach(function (s) {
+      var opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = STATUS_LABEL[s];
+      if ((r.status || "new") === s) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", function () {
+      var prev = r.status || "new";
+      r.status = select.value;
+      updateStatus(r.id, select.value, select, prev);
+    });
+    statusRow.appendChild(select);
+    els.detailBody.appendChild(statusRow);
+  }
+
+  function loadInquiries() {
+    var d = db();
+    var body = els.listBody;
+    if (!d || !body) return;
+    body.innerHTML = "<p class=\"loading-note\">불러오는 중...</p>";
+
+    d.collection("roomInquiries").orderBy("createdAt", "desc").limit(200).get().then(function (snap) {
+      body.innerHTML = "";
+      inquiryCache = {};
+      selectedId = null;
+      renderDetail(null);
+      if (snap.empty) { body.innerHTML = "<p class=\"empty-note\">등록된 문의가 없습니다.</p>"; return; }
+
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr>" +
+        "<th>접수일</th><th>이름</th><th>국적</th><th>지역</th><th>입주일</th><th>인원</th><th>보증금</th><th>월세</th><th>상태</th>" +
+        "</tr></thead>";
+      var tbody = document.createElement("tbody");
+
+      snap.forEach(function (doc) {
+        var r = doc.data();
+        r.id = doc.id;
+        inquiryCache[doc.id] = r;
+
+        var tr = document.createElement("tr");
+        tr.dataset.id = doc.id;
+        // 신규 문의는 굵게 표시해 눈에 띄게 합니다(새 라이브러리/애니메이션 없음).
+        if ((r.status || "new") === "new") tr.classList.add("room-inquiry-new");
+        tr.innerHTML =
+          "<td>" + fmtDateTime(r.createdAt) + "</td>" +
+          "<td>" + (r.name || "-") + "</td>" +
+          "<td>" + (r.nationality || "-") + "</td>" +
+          "<td>" + regionText(r.region) + "</td>" +
+          "<td>" + (r.moveInDate || "-") + "</td>" +
+          "<td>" + occupantsText(r.occupants) + "</td>" +
+          "<td>" + moneyText(r.deposit) + "</td>" +
+          "<td>" + moneyText(r.rent) + "</td>" +
+          "<td>" + STATUS_LABEL[r.status || "new"] + "</td>";
+        tr.addEventListener("click", function () { selectInquiry(doc.id); });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }).catch(function () {
+      body.innerHTML = "<p class=\"empty-note\">불러오지 못했습니다(관리자 로그인이 필요할 수 있습니다).</p>";
+    });
+  }
+
+  function init() {
+    els.phoneForm = qs("roomInquiryPhoneForm");
+    if (!els.phoneForm) return; // 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+    els.phoneInput = qs("roomInquiryPhoneInput");
+    els.phoneSaveBtn = qs("roomInquiryPhoneSaveBtn");
+    els.phoneStatus = qs("roomInquiryPhoneStatus");
+    els.listBody = qs("roomInquiryListBody");
+    els.detailBody = qs("roomInquiryDetailBody");
+
+    els.phoneForm.addEventListener("submit", handlePhoneSave);
+
+    loadPhone();
+    loadInquiries();
+    renderDetail(null);
+  }
+
+  return { init: init };
+})();
+</script>
+<script>/* ==========================================================================
+   관리자 페이지 - 1,000원의 아침밥 주말·공휴일 설문조사
+   (js/admin-weekend-survey.js)
+   - 기존 admin.js의 탭 구조(admin-nav-btn / admin-page)를 그대로 재사용해
+     "주말·공휴일 설문" 탭 하나를 추가합니다(js/admin-room-inquiry.js와
+     같은 방식). 로그인은 "주간메뉴 관리"에서 이미 로그인한 Firebase
+     계정을 그대로 씁니다.
+   - 탭을 열 때 weekendBreakfastSurveys를 딱 1번만 조회하고(실시간 리스너
+     없음), 이후 언어 필터는 이미 받아온 데이터를 브라우저에서 다시 계산만
+     합니다(재조회 없음 — 비용 최소화 지시서 40번).
+   - Chart.js 등 새 차트 라이브러리 없이 "인원 + %" 텍스트만 사용합니다
+     (36번).
+   ========================================================================== */
+
+var AdminWeekendSurvey = (function () {
+  "use strict";
+
+  var els = {};
+  var allDocs = null; // 최초 조회 결과 캐시(.get() 1회) — 언어 필터는 이 배열을 다시 계산
+
+  var LANG_LABEL = { ko: "한국어", en: "English", zh: "中文", vi: "Tiếng Việt", bn: "বাংলা" };
+  var LANG_ORDER = ["ko", "en", "zh", "vi", "bn"];
+  var Q1_LABEL = { korean: "한국인 학생", international: "유학생" };
+  var Q2_LABEL = { dorm: "기숙사 생활", offcampus: "자취", commute: "통학" };
+  var Q3_LABEL = { "0730": "오전 7:30 ~ 오전 9:30", "0800": "오전 8:00 ~ 오전 10:00" };
+  var Q4_LABEL = { simple: "간편식", simple_korean: "간편식 + 한식", other: "기타 의견" };
+  var Q5_LABEL = { often: "자주 이용하겠다", sometimes: "가끔 이용하겠다", unsure: "잘 모르겠다", no: "이용하지 않을 것 같다" };
+
+  function qs(id) { return document.getElementById(id); }
+  function db() { return (typeof getFirestoreDb === "function") ? getFirestoreDb() : null; }
+
+  function fmtDateTime(ts) {
+    var d = (ts && typeof ts.toDate === "function") ? ts.toDate() : null;
+    if (!d || isNaN(d.getTime())) return "-";
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function pct(count, total) {
+    if (!total) return "0.0%";
+    return (count / total * 100).toFixed(1) + "%";
+  }
+
+  // 현재 언어 필터가 적용된 응답 목록 — render()와 CSV 취합(exportResultsCsv)
+  // 양쪽에서 재사용해 같은 필터 로직을 중복 작성하지 않습니다.
+  function getFiltered() {
+    var docs = allDocs || [];
+    var filterLang = els.langFilter ? els.langFilter.value : "all";
+    return (filterLang === "all") ? docs : docs.filter(function (d) { return d.selectedLanguage === filterLang; });
+  }
+
+  // 인원+% 텍스트만 쌓는 단순 통계 블록(새 차트 라이브러리 없음 — 36번).
+  function renderCountStats(container, rows, total) {
+    container.innerHTML = "";
+    rows.forEach(function (r) {
+      var p = document.createElement("p");
+      p.className = "weekend-survey-stat-row";
+      p.innerHTML = "<strong>" + r.label + "</strong> — " + r.count + "명 / " + pct(r.count, total);
+      container.appendChild(p);
+    });
+    if (!rows.length) container.innerHTML = "<p class=\"empty-note\">데이터가 없습니다.</p>";
+  }
+
+  function countBy(docs, field, keys) {
+    var counts = {};
+    keys.forEach(function (k) { counts[k] = 0; });
+    docs.forEach(function (d) { if (counts[d[field]] !== undefined) counts[d[field]] += 1; });
+    return counts;
+  }
+
+  // 테스트/스팸 응답을 지울 때 씁니다 — 재조회 없이 캐시(allDocs)에서만
+  // 지우고 다시 그립니다(비용 최소화 40번과 같은 원칙).
+  function deleteEntry(docId, btn) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("이 응답을 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
+    btn.disabled = true;
+    d.collection("weekendBreakfastSurveys").doc(docId).delete().then(function () {
+      allDocs = (allDocs || []).filter(function (d) { return d.id !== docId; });
+      render();
+    }).catch(function () {
+      window.alert("삭제 실패(관리자 권한이 없을 수 있습니다).");
+      btn.disabled = false;
+    });
+  }
+
+  /* ---------------- 결과 취합 다운로드(CSV) ----------------
+     새 라이브러리 없이 브라우저 기본 Blob/URL.createObjectURL만 사용합니다.
+     화면에 이미 그려둔 통계와 같은 집계 로직(countBy/pct/getFiltered)을
+     그대로 재사용해 중복 계산을 만들지 않습니다. 언어별 응답 수는 필터와
+     무관하게 항상 전체 기준이고(화면 통계와 동일), 문항별 통계·기타
+     의견·건의사항은 현재 선택된 언어 필터를 그대로 반영합니다. */
+  function csvEscape(v) {
+    var s = (v === undefined || v === null) ? "" : String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function csvRow(cells) { return cells.map(csvEscape).join(",") + "\r\n"; }
+
+  function fmtNow() {
+    var d = new Date();
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function buildResultsCsv() {
+    var docs = allDocs || [];
+    var filtered = getFiltered();
+    var total = filtered.length;
+    var filterLang = els.langFilter ? els.langFilter.value : "all";
+    var out = "";
+
+    out += csvRow(["1,000원의 아침밥 주말·공휴일 설문조사 결과 취합"]);
+    out += csvRow(["생성일시", fmtNow()]);
+    out += csvRow(["언어 필터", filterLang === "all" ? "전체" : (LANG_LABEL[filterLang] || filterLang)]);
+    out += csvRow(["응답 수(필터 기준)", total + "명"]);
+    out += csvRow([]);
+
+    out += csvRow(["[언어별 응답 — 전체 기준, 필터 무관]"]);
+    out += csvRow(["언어", "인원", "비율"]);
+    var langCounts = countBy(docs, "selectedLanguage", LANG_ORDER);
+    LANG_ORDER.forEach(function (l) { out += csvRow([LANG_LABEL[l], langCounts[l], pct(langCounts[l], docs.length)]); });
+    out += csvRow([]);
+
+    function statSection(title, field, labelMap) {
+      out += csvRow(["[" + title + "]"]);
+      out += csvRow(["선택지", "인원", "비율"]);
+      var counts = countBy(filtered, field, Object.keys(labelMap));
+      Object.keys(labelMap).forEach(function (k) { out += csvRow([labelMap[k], counts[k], pct(counts[k], total)]); });
+      out += csvRow([]);
+    }
+    function freeTextSection(title, field) {
+      out += csvRow(["[" + title + "]"]);
+      out += csvRow(["작성일", "언어", "내용"]);
+      var rows = filtered.filter(function (d) { return d[field] && d[field].trim(); })
+        .sort(function (a, b) { return (b._createdMs || 0) - (a._createdMs || 0); });
+      if (!rows.length) { out += csvRow(["(없음)"]); }
+      rows.forEach(function (d) { out += csvRow([fmtDateTime(d.createdAt), LANG_LABEL[d.selectedLanguage] || d.selectedLanguage, d[field]]); });
+      out += csvRow([]);
+    }
+
+    statSection("질문 1 — 귀하는 어디에 해당합니까?", "nationalityType", Q1_LABEL);
+    statSection("질문 2 — 현재 생활 형태는?", "livingType", Q2_LABEL);
+    statSection("질문 3 — 희망 운영시간", "preferredTime", Q3_LABEL);
+    statSection("질문 4 — 메뉴 구성", "menuPreference", Q4_LABEL);
+    freeTextSection("질문 4 기타 의견", "menuOtherOpinion");
+    statSection("질문 5 — 이용 의향", "usageIntent", Q5_LABEL);
+    freeTextSection("건의사항", "suggestion");
+
+    return out;
+  }
+
+  function downloadResultsCsv() {
+    if (!allDocs) { window.alert("먼저 데이터를 불러온 뒤 다운로드해주세요."); return; }
+    var csv = buildResultsCsv();
+    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var d = new Date();
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    a.href = url;
+    a.download = "weekend-survey-results-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function render() {
+    var docs = allDocs || [];
+    var filtered = getFiltered();
+    var total = filtered.length;
+
+    if (els.totalCount) els.totalCount.textContent = total + "명";
+
+    // 선택 언어 통계는 필터와 무관하게 전체 기준으로 보여줍니다(필터는
+    // "그 언어만 기준으로 나머지 문항 통계를 다시 계산"하는 용도 — 35번).
+    var langCounts = countBy(docs, "selectedLanguage", LANG_ORDER);
+    renderCountStats(els.langStats, LANG_ORDER.map(function (l) {
+      return { label: LANG_LABEL[l], count: langCounts[l] };
+    }), docs.length);
+
+    var q1Counts = countBy(filtered, "nationalityType", Object.keys(Q1_LABEL));
+    renderCountStats(els.q1Stats, Object.keys(Q1_LABEL).map(function (k) {
+      return { label: Q1_LABEL[k], count: q1Counts[k] };
+    }), total);
+
+    var q2Counts = countBy(filtered, "livingType", Object.keys(Q2_LABEL));
+    renderCountStats(els.q2Stats, Object.keys(Q2_LABEL).map(function (k) {
+      return { label: Q2_LABEL[k], count: q2Counts[k] };
+    }), total);
+
+    var q3Counts = countBy(filtered, "preferredTime", Object.keys(Q3_LABEL));
+    renderCountStats(els.q3Stats, Object.keys(Q3_LABEL).map(function (k) {
+      return { label: Q3_LABEL[k], count: q3Counts[k] };
+    }), total);
+
+    var q4Counts = countBy(filtered, "menuPreference", Object.keys(Q4_LABEL));
+    renderCountStats(els.q4Stats, Object.keys(Q4_LABEL).map(function (k) {
+      return { label: Q4_LABEL[k], count: q4Counts[k] };
+    }), total);
+
+    // 기타 의견(menuOtherOpinion) — 비어있지 않은 것만, 최근순.
+    var q4Others = filtered.filter(function (d) { return d.menuOtherOpinion && d.menuOtherOpinion.trim(); })
+      .sort(function (a, b) { return (b._createdMs || 0) - (a._createdMs || 0); });
+    els.q4Other.innerHTML = "";
+    if (!q4Others.length) {
+      els.q4Other.innerHTML = "<p class=\"empty-note\">기타 의견이 없습니다.</p>";
+    } else {
+      q4Others.forEach(function (d) {
+        var p = document.createElement("p");
+        p.innerHTML = "<strong>" + fmtDateTime(d.createdAt) + " (" + (LANG_LABEL[d.selectedLanguage] || d.selectedLanguage) + "):</strong> ";
+        p.appendChild(document.createTextNode(d.menuOtherOpinion + " "));
+        var delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", function () { deleteEntry(d.id, delBtn); });
+        p.appendChild(delBtn);
+        els.q4Other.appendChild(p);
+      });
+    }
+
+    var q5Counts = countBy(filtered, "usageIntent", Object.keys(Q5_LABEL));
+    renderCountStats(els.q5Stats, Object.keys(Q5_LABEL).map(function (k) {
+      return { label: Q5_LABEL[k], count: q5Counts[k] };
+    }), total);
+
+    // 건의사항(suggestion) — 비어있지 않은 것만, 최근순(34번).
+    var suggestions = filtered.filter(function (d) { return d.suggestion && d.suggestion.trim(); })
+      .sort(function (a, b) { return (b._createdMs || 0) - (a._createdMs || 0); });
+    els.suggestions.innerHTML = "";
+    if (!suggestions.length) {
+      els.suggestions.innerHTML = "<p class=\"empty-note\">건의사항이 없습니다.</p>";
+    } else {
+      var table = document.createElement("table");
+      table.className = "results-table";
+      table.innerHTML = "<thead><tr><th>작성일</th><th>선택 언어</th><th>건의사항</th><th>작업</th></tr></thead>";
+      var tbody = document.createElement("tbody");
+      suggestions.forEach(function (d) {
+        var tr = document.createElement("tr");
+        var tdDate = document.createElement("td"); tdDate.textContent = fmtDateTime(d.createdAt); tr.appendChild(tdDate);
+        var tdLang = document.createElement("td"); tdLang.textContent = LANG_LABEL[d.selectedLanguage] || d.selectedLanguage; tr.appendChild(tdLang);
+        var tdText = document.createElement("td"); tdText.textContent = d.suggestion; tr.appendChild(tdText);
+        var tdActions = document.createElement("td");
+        var delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", function () { deleteEntry(d.id, delBtn); });
+        tdActions.appendChild(delBtn);
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      els.suggestions.appendChild(table);
+    }
+  }
+
+  function load() {
+    var d = db();
+    if (!d) return;
+    els.totalCount.textContent = "불러오는 중...";
+    d.collection("weekendBreakfastSurveys").orderBy("createdAt", "desc").limit(2000).get().then(function (snap) {
+      allDocs = [];
+      snap.forEach(function (doc) {
+        var data = doc.data();
+        data.id = doc.id;
+        data._createdMs = (data.createdAt && typeof data.createdAt.toMillis === "function") ? data.createdAt.toMillis() : 0;
+        allDocs.push(data);
+      });
+      render();
+    }).catch(function () {
+      els.totalCount.textContent = "불러오지 못했습니다(관리자 로그인이 필요할 수 있습니다).";
+    });
+  }
+
+  function init() {
+    els.totalCount = qs("weekendSurveyTotalCount");
+    if (!els.totalCount) return; // 탭 마크업이 없으면(구버전) 아무 것도 하지 않음
+    els.langFilter = qs("weekendSurveyLangFilter");
+    els.langStats = qs("weekendSurveyLangStats");
+    els.q1Stats = qs("weekendSurveyQ1Stats");
+    els.q2Stats = qs("weekendSurveyQ2Stats");
+    els.q3Stats = qs("weekendSurveyQ3Stats");
+    els.q4Stats = qs("weekendSurveyQ4Stats");
+    els.q4Other = qs("weekendSurveyQ4Other");
+    els.q5Stats = qs("weekendSurveyQ5Stats");
+    els.suggestions = qs("weekendSurveySuggestions");
+    els.exportBtn = qs("weekendSurveyExportBtn");
+
+    if (els.langFilter) els.langFilter.addEventListener("change", render);
+    if (els.exportBtn) els.exportBtn.addEventListener("click", downloadResultsCsv);
+
+    if (allDocs === null) load(); else render(); // 탭을 다시 열 때는 재조회하지 않고 캐시만 다시 그림
+  }
+
+  return { init: init };
+})();
 </script>
 </body>
 </html>

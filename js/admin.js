@@ -30,7 +30,13 @@
     { code: "tue", label: "화요일", offset: 1 },
     { code: "wed", label: "수요일", offset: 2 },
     { code: "thu", label: "목요일", offset: 3 },
-    { code: "fri", label: "금요일", offset: 4 }
+    { code: "fri", label: "금요일", offset: 4 },
+    // 2026-10-15 지시 — 주말 천원의 아침밥(토·일 08:00~10:00) 운영에 맞춰
+    // 입력 범위를 금요일에서 토·일요일까지로 늘립니다. 날짜 계산
+    // (addDaysToKey)과 카드 렌더링(renderWeekDayGrid)이 모두 이 배열을
+    // 그대로 순회하므로 코드 변경 없이 항목만 추가하면 됩니다.
+    { code: "sat", label: "토요일", offset: 5 },
+    { code: "sun", label: "일요일", offset: 6 }
   ];
 
   var els = {};
@@ -408,7 +414,7 @@
      탭 내비게이션
      ================================================================ */
 
-  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity" };
+  var PAGE_EL_ID = { dashboard: "pageDashboard", ratings: "pageRatings", language: "pageLanguage", hellokorean: "pageHelloKorean", weeklymenu: "pageWeeklyMenu", community: "pageCommunity", popup: "pagePopup", menu: "pageMenu", roomInquiry: "pageRoomInquiry" };
   var pageLoaded = {};
 
   function showPage(page) {
@@ -431,6 +437,9 @@
     else if (page === "hellokorean") initHelloKoreanPage();
     else if (page === "weeklymenu") initWeeklyMenuPage();
     else if (page === "community") { if (window.AdminCommunity) AdminCommunity.init(); }
+    else if (page === "popup") { if (window.AdminPopup) AdminPopup.init(); }
+    else if (page === "menu") { if (window.AdminMenu) AdminMenu.init(); }
+    else if (page === "roomInquiry") { if (window.AdminRoomInquiry) AdminRoomInquiry.init(); }
   }
 
   /* ================================================================
@@ -1405,11 +1414,13 @@
       scheduleAutosave();
     }
 
-    fileInput.addEventListener("change", function () {
+    // 파일 선택(change)과 붙여넣기(paste) 둘 다 같은 검증·미리보기
+    // 로직을 타도록 공통 함수로 뺐습니다(새 저장 로직 없음, 기존
+    // 흐름 그대로 재사용).
+    function applySelectedImageFile(file) {
       errorEl.textContent = "";
       statusEl.hidden = true;
       resetAnalyzeFailureActions();
-      var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (ALLOWED_IMAGE_TYPES.indexOf(file.type) === -1) {
         errorEl.textContent = "jpg, jpeg, png, webp 파일만 업로드할 수 있습니다.";
@@ -1430,7 +1441,58 @@
         weeklyMenuState.pendingImageMimeType = resized.mimeType;
         scheduleAutosave();
       }).catch(function () { /* 미리보기 실패는 무시 — 분석 시도 시 다시 시도됨 */ });
+    }
+
+    fileInput.addEventListener("change", function () {
+      var file = fileInput.files && fileInput.files[0];
+      applySelectedImageFile(file);
     });
+
+    // 주간메뉴표 스크린샷을 클립보드에서 바로 붙여넣기(Ctrl+V) — 파일
+    // 저장 없이 캡처 도구에서 복사한 이미지를 즉시 쓸 수 있게 합니다.
+    // "주간메뉴 관리" 탭이 보이는 동안에만 가로채고, 다른 탭/화면에서는
+    // 평소처럼 텍스트 붙여넣기가 그대로 동작합니다.
+    document.addEventListener("paste", function (e) {
+      var pageEl = qs("pageWeeklyMenu");
+      if (!pageEl || pageEl.hidden) return;
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      var imageItem = null;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) { imageItem = items[i]; break; }
+      }
+      if (!imageItem) return; // 이미지가 없는 일반 붙여넣기는 건드리지 않음
+      e.preventDefault();
+      var file = imageItem.getAsFile();
+      if (file) applySelectedImageFile(file);
+    });
+
+    // [붙여넣기] 버튼 — Ctrl+V를 모르거나 포커스 문제로 키보드 붙여넣기가
+    // 안 먹힐 때를 위한 눈에 보이는 대안입니다. 비동기 클립보드
+    // API(navigator.clipboard.read)로 클립보드의 이미지를 직접 읽어와
+    // 같은 applySelectedImageFile로 넘깁니다 — 저장/분석 로직은 전혀
+    // 새로 만들지 않고 그대로 재사용.
+    var pasteBtn = qs("weekPasteBtn");
+    if (pasteBtn) {
+      pasteBtn.addEventListener("click", function () {
+        errorEl.textContent = "";
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+          errorEl.textContent = "이 브라우저는 버튼으로 붙여넣기를 지원하지 않습니다. Ctrl+V를 이용해 주세요.";
+          return;
+        }
+        navigator.clipboard.read().then(function (clipItems) {
+          for (var i = 0; i < clipItems.length; i++) {
+            var imgType = clipItems[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
+            if (!imgType) continue;
+            return clipItems[i].getType(imgType).then(function (blob) {
+              applySelectedImageFile(new File([blob], "pasted." + (imgType.split("/")[1] || "png"), { type: imgType }));
+            });
+          }
+          errorEl.textContent = "클립보드에 복사된 이미지가 없습니다. 먼저 스크린샷을 복사해 주세요.";
+        }).catch(function () {
+          errorEl.textContent = "클립보드 읽기 권한이 필요합니다. 브라우저 권한 요청을 허용해 주세요.";
+        });
+      });
+    }
 
     function runAnalyze() {
       var user = requireAdminUser();
@@ -1872,7 +1934,10 @@
 
   function initApp() {
     els.warnBanner = qs("adminFirebaseWarning");
-    els.navBtns = document.querySelectorAll(".admin-nav-btn");
+    // "메뉴 관리"의 매장 선택 버튼(#menuStoreNav)도 같은 admin-nav-btn
+    // 스타일을 재사용하므로, 페이지 탭 목록은 #adminNav로 범위를 좁혀
+    // 서로 섞이지 않게 합니다.
+    els.navBtns = document.querySelectorAll("#adminNav .admin-nav-btn");
 
     var configured = (typeof isFirebaseConfigured === "function") && isFirebaseConfigured();
     els.warnBanner.hidden = configured;
