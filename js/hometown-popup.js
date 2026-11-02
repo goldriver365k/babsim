@@ -1,5 +1,5 @@
 /* ==========================================================================
-   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 "화산불백" 홍보 영상 +
+   babsim.store 홈 이벤트 팝업 — 후루룩찹찹 "치즈불닭" 홍보 영상 +
    "점심 영업 안내"(기간 한정)
    (js/hometown-popup.js)
    - 관리자 등록 팝업(js/site-popup.js)과 같은 방식(.modal-overlay/.modal,
@@ -21,6 +21,12 @@
      images/hururuk/hwasan-bulbaek.mp4를 교체하고(웹 재생에 맞춰 폭
      640px·오디오 제거로 재인코딩, 30MB→6MB) POPUP_SUSPENDED를 다시
      꺼서(false) 노출을 재개합니다.
+   - 2026-11-03 지시 — 가장 먼저 올라갔던 화산불백 홍보 영상 팝업을
+     삭제하고, 새로 받은 치즈불닭 홍보 영상(images/hururuk/cheese-buldak.mp4,
+     웹 재생에 맞춰 폭 640px·오디오 제거로 재인코딩)으로 교체합니다.
+     기존 hwasan-bulbaek.mp4 파일도 함께 삭제했습니다(다른 곳에서 참조
+     없음 확인). 치즈불닭도 후루룩찹찹 매장의 메뉴라 CTA(goToHururuk)는
+     그대로 재사용합니다.
    - 일반 관리자 팝업(SitePopup) → 이 팝업 → 천원의 아침밥 평가 팝업 순서로
      app.js가 순차 호출해 동시에 겹치지 않습니다(app.js의 체인에서 호출되는
      한 단계만 이 파일이 담당).
@@ -33,8 +39,8 @@ var HometownPopup = (function () {
   var TODAY_DISMISS_KEY = "hometownPopupDismissedDate";
   var LANG_KEY = "foodhall_lang"; // js/app.js LANG_KEY와 동일한 값(공용 저장소 재사용)
 
-  // 2026-10-06 지시로 중단했다가, 2026-10-21 지시 — 새 화산불백 홍보
-  // 영상(images/hururuk/hwasan-bulbaek.mp4 교체)을 받아 다시 켭니다.
+  // 2026-10-06 지시로 중단했다가, 2026-10-21 지시로 재개. 2026-11-03
+  // 지시로 영상만 치즈불닭으로 교체(계속 노출).
   var POPUP_SUSPENDED = false;
 
   function todayKey() {
@@ -111,17 +117,16 @@ var HometownPopup = (function () {
     closeBtn.addEventListener("click", closeNow);
     modal.appendChild(closeBtn);
 
-    // 화산불백 홍보 영상(2026-10-05 지시) — ①영상 ②매장 배지 ③메뉴명
-    // ④짧은 설명 순서. 영상 자체에 "화산불백"/"불백덮밥전문점" 문구가
-    // 이미 들어있어 한국어 사용자는 그대로 보이고, 다른 언어 사용자를
-    // 위해 매장 배지(영문 고정)와 짧은 설명만 번역해 아래에 덧붙입니다.
-    // 메뉴명은 다른 브랜드/메뉴명과 같이 언어와 무관하게 원문(한국어)
-    // 그대로 고정합니다.
+    // 치즈불닭 홍보 영상(2026-11-03 지시) — ①영상 ②매장 배지 ③메뉴명
+    // ④짧은 설명 순서. 영상 자체에 "치즈불닭"(4개 언어 표기)/HALAL
+    // 배지/"모인관 2F" 문구가 이미 들어있어 그대로 보이고, 매장 배지(영문
+    // 고정)와 짧은 설명만 번역해 아래에 덧붙입니다. 메뉴명은 다른
+    // 브랜드/메뉴명과 같이 언어와 무관하게 원문(한국어) 그대로 고정합니다.
     var poster = el("div", "hometown-popup-poster");
 
     var video = document.createElement("video");
     video.className = "hometown-popup-image";
-    video.src = "images/hururuk/hwasan-bulbaek.mp4";
+    video.src = "images/hururuk/cheese-buldak.mp4";
     video.autoplay = true;
     video.muted = true;
     video.loop = true;
@@ -132,10 +137,10 @@ var HometownPopup = (function () {
     poster.appendChild(el("p", "hometown-popup-eyebrow", "HURURUK CHAPCHAP"));
 
     var titleBlock = el("div", "hometown-popup-title-block");
-    titleBlock.appendChild(el("p", "hometown-popup-title-main", "화산불백"));
+    titleBlock.appendChild(el("p", "hometown-popup-title-main", "치즈불닭"));
     poster.appendChild(titleBlock);
 
-    poster.appendChild(el("p", "hometown-popup-tagline", t("hwasanTagline")));
+    poster.appendChild(el("p", "hometown-popup-tagline", t("cheeseBuldakTagline")));
 
     modal.appendChild(poster);
 
