@@ -13687,67 +13687,69 @@ var WeekendSurvey = (function () {
 })();
 </script>
 
-<!-- ===================== 천원의 아침밥 팝업 시작 ===================== -->
+<!-- ===================== 자취방(룸) 문자 안내 팝업 시작 ===================== -->
 <style>
-#bsp-overlay{position:fixed;inset:0;z-index:99999;background:rgba(20,14,8,.55);display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans",system-ui,sans-serif}
-#bsp-overlay.bsp-show{display:flex}
-#bsp-box{width:100%;max-width:360px;max-height:100%;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-#bsp-top{background:#B3400B;color:#fff;padding:20px 20px 18px;text-align:center;position:relative}
-#bsp-close{position:absolute;top:6px;right:6px;width:44px;height:44px;border:none;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer}
-#bsp-price{font-size:44px;font-weight:900;letter-spacing:-1px;line-height:1}
-#bsp-price small{font-size:20px;font-weight:800;margin-left:2px}
-#bsp-hours{display:inline-block;margin-top:12px;background:#fff;color:#B3400B;font-size:22px;font-weight:900;padding:6px 16px;border-radius:12px}
-#bsp-list{list-style:none;margin:0;padding:6px 20px;color:#3A2A1E}
-#bsp-list li{padding:11px 0;border-bottom:1px solid #F0E4D4;text-align:center}
-#bsp-list li:last-child{border-bottom:none}
-#bsp-list b{display:block;font-size:17px;font-weight:800;line-height:1.3}
-#bsp-list span{display:block;font-size:14px;color:#6B5646;margin-top:2px}
-#bsp-btns{display:flex;gap:8px;padding:8px 16px 16px}
-#bsp-btns button{flex:1;min-height:48px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-#bsp-today{background:#fff;border:1px solid #E3D3BE;color:#6B5646}
-#bsp-ok{background:#3A2A1E;border:none;color:#fff}
+#room-popup-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,20,14,.55);display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans",system-ui,sans-serif}
+#room-popup-overlay.room-popup-show{display:flex}
+#room-popup-box{width:100%;max-width:380px;max-height:100%;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+#room-popup-top{background:#1D5E3A;color:#fff;padding:22px 20px 18px;text-align:center;position:relative}
+#room-popup-close{position:absolute;top:6px;right:6px;width:44px;height:44px;border:none;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer}
+#room-popup-heading{margin:0 0 14px;font-size:19px;font-weight:800;line-height:1.35}
+#room-popup-phone{display:block;font-size:38px;font-weight:900;letter-spacing:-1px;color:#fff;text-decoration:none;white-space:nowrap}
+#room-popup-list{list-style:none;margin:0;padding:10px 20px;color:#223A2C}
+#room-popup-list li{padding:10px 0;border-bottom:1px solid #E6F0EA;text-align:center;font-size:17px;font-weight:800}
+#room-popup-list li:last-child{border-bottom:none}
+#room-popup-cta{display:block;width:calc(100% - 32px);margin:12px 16px 14px;min-height:52px;border-radius:14px;background:#1D5E3A;color:#fff;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+#room-popup-btns{display:flex;gap:8px;padding:0 16px 16px}
+#room-popup-btns button{flex:1;min-height:46px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+#room-popup-today{background:#fff;border:1px solid #DCE7E0;color:#50685B}
+#room-popup-ok{background:#F2F7F4;border:none;color:#1D5E3A}
 </style>
 
-<div id="bsp-overlay" role="dialog" aria-modal="true" aria-label="천원의 아침밥 주말 오픈">
-  <div id="bsp-box">
-    <div id="bsp-top">
-      <button id="bsp-close" type="button" aria-label="닫기 Close">&times;</button>
-      <div id="bsp-price">1,000<small>₩</small></div>
-      <div id="bsp-hours">08:00 ~ 10:00</div>
+<div id="room-popup-overlay" role="dialog" aria-modal="true" aria-label="자취방 문자 안내">
+  <div id="room-popup-box">
+    <div id="room-popup-top">
+      <button id="room-popup-close" type="button" aria-label="닫기 Close">&times;</button>
+      <p id="room-popup-heading" lang="ko">자취방을 구하고 계신가요?</p>
+      <a id="room-popup-phone" href="sms:01021716006">010-2171-6006</a>
     </div>
-    <ul id="bsp-list">
-      <li lang="ko"><b>천원의 아침밥 주말 오픈</b><span>토요일 · 일요일</span></li>
-      <li lang="en"><b>1,000 Won Breakfast – Weekends</b><span>Saturday · Sunday</span></li>
-      <li lang="zh"><b>千元早餐 周末开放</b><span>周六 · 周日</span></li>
-      <li lang="vi"><b>Bữa sáng 1.000 won cuối tuần</b><span>Thứ Bảy · Chủ Nhật</span></li>
-      <li lang="mn"><b>1,000 воны өглөөний хоол</b><span>Бямба · Ням гараг</span></li>
+    <ul id="room-popup-list">
+      <li lang="ko">문자하세요</li>
+      <li lang="zh">请发短信</li>
+      <li lang="vi">Hãy nhắn tin</li>
+      <li lang="bn">মেসেজ করুন</li>
+      <li lang="mn">Бичгээр холбогдоно уу</li>
     </ul>
-    <div id="bsp-btns">
-      <button id="bsp-today" type="button">오늘 하루 보지 않기</button>
-      <button id="bsp-ok" type="button">확인 OK</button>
+    <button id="room-popup-cta" type="button">문자 보내기</button>
+    <div id="room-popup-btns">
+      <button id="room-popup-today" type="button">오늘 하루 보지 않기</button>
+      <button id="room-popup-ok" type="button">닫기</button>
     </div>
   </div>
 </div>
 
 <script>
 (function(){
-  var KEY = "bsp_breakfast_hide_until";
+  var KEY = "room_text_popup_hide_until";
   var d = new Date(), today = d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
   try { if (localStorage.getItem(KEY) === today) return; } catch(e) {}
-  var o = document.getElementById("bsp-overlay");
-  function close(){ o.classList.remove("bsp-show"); }
-  document.getElementById("bsp-ok").onclick = close;
-  document.getElementById("bsp-close").onclick = close;
-  document.getElementById("bsp-today").onclick = function(){
+  var o = document.getElementById("room-popup-overlay");
+  function close(){ o.classList.remove("room-popup-show"); }
+  document.getElementById("room-popup-ok").onclick = close;
+  document.getElementById("room-popup-close").onclick = close;
+  document.getElementById("room-popup-today").onclick = function(){
     try { localStorage.setItem(KEY, today); } catch(e) {}
     close();
   };
+  document.getElementById("room-popup-cta").onclick = function(){
+    window.location.href = "sms:01021716006";
+  };
   o.onclick = function(e){ if (e.target === o) close(); };
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") close(); });
-  o.classList.add("bsp-show");
+  o.classList.add("room-popup-show");
 })();
 </script>
-<!-- ===================== 천원의 아침밥 팝업 끝 ===================== -->
+<!-- ===================== 자취방(룸) 문자 안내 팝업 끝 ===================== -->
 
 </body>
 </html>
