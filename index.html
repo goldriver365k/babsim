@@ -13700,42 +13700,36 @@ var WeekendSurvey = (function () {
 
 <!-- ===================== 자취방(룸) 문자 안내 팝업 시작 ===================== -->
 <style>
-#room-popup-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,20,14,.55);display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans",system-ui,sans-serif}
+#room-popup-overlay{position:fixed;inset:0;z-index:99999;background:#DCE8EE;display:none;flex-direction:column;padding:28px 22px;box-sizing:border-box;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans",system-ui,sans-serif;overflow:auto}
 #room-popup-overlay.room-popup-show{display:flex}
-#room-popup-box{width:100%;max-width:380px;max-height:100%;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-#room-popup-top{background:#1D5E3A;color:#fff;padding:22px 20px 18px;text-align:center;position:relative}
-#room-popup-close{position:absolute;top:6px;right:6px;width:44px;height:44px;border:none;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer}
-#room-popup-heading{margin:0 0 14px;font-size:19px;font-weight:800;line-height:1.35}
-#room-popup-phone{display:block;font-size:38px;font-weight:900;letter-spacing:-1px;color:#fff;text-decoration:none;white-space:nowrap}
-#room-popup-list{list-style:none;margin:0;padding:10px 20px;color:#223A2C}
-#room-popup-list li{padding:10px 0;border-bottom:1px solid #E6F0EA;text-align:center;font-size:17px;font-weight:800}
-#room-popup-list li:last-child{border-bottom:none}
-#room-popup-cta{display:block;width:calc(100% - 32px);margin:12px 16px 14px;min-height:52px;border-radius:14px;background:#1D5E3A;color:#fff;border:none;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
-#room-popup-btns{display:flex;gap:8px;padding:0 16px 16px}
-#room-popup-btns button{flex:1;min-height:46px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-#room-popup-today{background:#fff;border:1px solid #DCE7E0;color:#50685B}
-#room-popup-ok{background:#F2F7F4;border:none;color:#1D5E3A}
+#room-popup-close{position:absolute;top:14px;right:14px;width:44px;height:44px;border:none;background:transparent;color:#15202B;font-size:28px;line-height:1;cursor:pointer}
+#room-popup-eyebrow{margin:30px 0 10px;font-size:13px;font-weight:800;letter-spacing:2px;color:#55707F;text-transform:uppercase}
+#room-popup-title{margin:0 0 22px;font-size:42px;font-weight:900;letter-spacing:-1px;color:#15202B;line-height:1.1}
+#room-popup-list{margin:0 0 26px;padding-top:14px;border-top:1px solid rgba(21,32,43,.15)}
+#room-popup-list p{margin:0;padding:10px 0;font-size:19px;font-weight:600;color:#15202B}
+#room-popup-phone{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:18px;border-top:1px solid rgba(21,32,43,.15);font-size:34px;font-weight:900;letter-spacing:-1px;color:#15202B;text-decoration:none;white-space:nowrap}
+#room-popup-phone em{font-style:normal;font-size:26px}
+#room-popup-btns{display:flex;gap:8px;margin-top:18px}
+#room-popup-btns button{flex:1;min-height:50px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+#room-popup-today{background:transparent;border:1px solid rgba(21,32,43,.2);color:#55707F}
+#room-popup-ok{background:#15202B;border:none;color:#fff}
 </style>
 
-<div id="room-popup-overlay" role="dialog" aria-modal="true" aria-label="자취방 문자 안내">
-  <div id="room-popup-box">
-    <div id="room-popup-top">
-      <button id="room-popup-close" type="button" aria-label="닫기 Close">&times;</button>
-      <p id="room-popup-heading" lang="ko">자취방을 구하고 계신가요?</p>
-      <a id="room-popup-phone" href="sms:01021716006">010-2171-6006</a>
-    </div>
-    <ul id="room-popup-list">
-      <li lang="ko">문자하세요</li>
-      <li lang="zh">请发短信</li>
-      <li lang="vi">Hãy nhắn tin</li>
-      <li lang="bn">মেসেজ করুন</li>
-      <li lang="mn">Бичгээр холбогдоно уу</li>
-    </ul>
-    <button id="room-popup-cta" type="button">문자 보내기</button>
-    <div id="room-popup-btns">
-      <button id="room-popup-today" type="button">오늘 하루 보지 않기</button>
-      <button id="room-popup-ok" type="button">닫기</button>
-    </div>
+<div id="room-popup-overlay" role="dialog" aria-modal="true" aria-label="자취방 문의">
+  <button id="room-popup-close" type="button" aria-label="닫기 Close">&times;</button>
+  <p id="room-popup-eyebrow">HOUSING</p>
+  <h2 id="room-popup-title">Room Inquiry</h2>
+  <div id="room-popup-list">
+    <p lang="ko">방 문의</p>
+    <p lang="en">Room &amp; Studio Inquiry</p>
+    <p lang="zh">房间与单间咨询</p>
+    <p lang="bn">রুম ও স্টুডিও ইনকোয়ারি</p>
+    <p lang="mn">Өрөө болон студийн лавлагаа</p>
+  </div>
+  <a id="room-popup-phone" href="sms:01021716006">010-2171-6006<em>&rarr;</em></a>
+  <div id="room-popup-btns">
+    <button id="room-popup-today" type="button">오늘 하루 보지 않기</button>
+    <button id="room-popup-ok" type="button">닫기</button>
   </div>
 </div>
 
@@ -13752,12 +13746,8 @@ var WeekendSurvey = (function () {
     try { localStorage.setItem(KEY, today); } catch(e) {}
     close();
   };
-  document.getElementById("room-popup-cta").onclick = function(){
-    window.location.href = "sms:01021716006";
-  };
-  o.onclick = function(e){ if (e.target === o) close(); };
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape") close(); });
   o.classList.add("room-popup-show");
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") close(); });
 })();
 </script>
 <!-- ===================== 자취방(룸) 문자 안내 팝업 끝 ===================== -->
