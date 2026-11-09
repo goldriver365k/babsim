@@ -10844,6 +10844,11 @@ var SitePopup = (function () {
      기존 hwasan-bulbaek.mp4 파일도 함께 삭제했습니다(다른 곳에서 참조
      없음 확인). 치즈불닭도 후루룩찹찹 매장의 메뉴라 CTA(goToHururuk)는
      그대로 재사용합니다.
+   - 2026-11-09 지시 — 치즈불닭 영상 팝업도 삭제 요청으로 POPUP_SUSPENDED를
+     다시 켜서(true) 노출을 중단합니다. 코드/영상 파일은 남겨 두어(다른
+     기존 중단·재개 이력과 같은 방식) 필요시 바로 되살릴 수 있게
+     합니다. 홈 히어로 영역(HERO_MENU_PROMO)은 이 지시와 무관해 그대로
+     둡니다.
    - 일반 관리자 팝업(SitePopup) → 이 팝업 → 천원의 아침밥 평가 팝업 순서로
      app.js가 순차 호출해 동시에 겹치지 않습니다(app.js의 체인에서 호출되는
      한 단계만 이 파일이 담당).
@@ -10856,9 +10861,9 @@ var HometownPopup = (function () {
   var TODAY_DISMISS_KEY = "hometownPopupDismissedDate";
   var LANG_KEY = "foodhall_lang"; // js/app.js LANG_KEY와 동일한 값(공용 저장소 재사용)
 
-  // 2026-10-06 지시로 중단했다가, 2026-10-21 지시로 재개. 2026-11-03
-  // 지시로 영상만 치즈불닭으로 교체(계속 노출).
-  var POPUP_SUSPENDED = false;
+  // 2026-10-06 지시로 중단했다가, 2026-10-21 지시로 재개, 2026-11-03
+  // 지시로 영상만 치즈불닭으로 교체. 2026-11-09 지시로 다시 중단.
+  var POPUP_SUSPENDED = true;
 
   function todayKey() {
     var d = new Date();
